@@ -22,17 +22,4 @@ it.
 Sbopkg can be also be used strictly from the command line without the
 dialog interface, to rsync, read the ChangeLog, view package files,
 and build packages.  Typing sbopkg -h will display the command line
-options: 
-
-sbopkg v0.0.1
-Usage: ./sbopkg [OPTIONS] <packagename(s)>
-Options are:
-  -b package    Build a package.
-  -d localdir   Location of local SlackBuilds.org mirror.
-                This is currently set to /home/chess/sbo
-  -h            Display this help message.
-  -l            Display the SlackBuilds.org ChangeLog.txt and then quit.
-  -r            Rsync the SlackBuilds.org respository with
-                the local mirror and then quit.
-  -s package    Search for a package and, if found, display the README.
-
+options. 
