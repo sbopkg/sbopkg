@@ -1,0 +1,6 @@
+# $Id$
+#
+RSYNCMIRROR=slackbuilds.org::slackbuilds
+SLACKVER=12.0
+LOCALREPO=/home/sbo
+KEEPLOG=YES
