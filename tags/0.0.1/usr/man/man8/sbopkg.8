@@ -1,0 +1,82 @@
+.TH SBOPKG 8 "Mar 2008" sbopkg-0.0.1 ""
+.SH NAME
+.B sbopkg
+\ - The SlackBuilds.org Package Browser
+
+.SH SYNOPSIS
+.B sbopkg
+.B [options]
+
+.SH DESCRIPTION
+Sbopkg is a command-line and dialog-based tool to interact with the
+SlackBuilds.org ("SBo") repository, a collection of third-party
+SlackBuild scripts to build Slackware packages.
+
+.SH INSTRUCTIONS
+Before sbopkg can be used, a configuration file must be created at
+/etc/sbopkg/sbopkg.conf.  A sample file is provided at
+/etc/sbopkg/sbopkg.conf.sample. See
+.B sbopkg.conf
+(5) for more information about the configuration file.  
+
+Sbopkg can be run from the command line by simply invoking "sbopkg."
+Doing so will launch the dialog-based interface, and the menus
+provided should be fairly explanatory.  The main menu allows the user
+to rsync with the SlackBuilds.org repository, view the ChangeLog, and
+browse the local copy of the SBo repository.  Once the browse function
+is chosen, the user can select the category of software to view.
+After choosing a category, the user can then view the various software
+packages available in the local SBo repository.  Selecting a package
+will display another menu allowing the user to view the package's
+README, SlackBuild, .info, or slack-desc file.  Additionally, if
+sbopkg is run with root privileges, then the user can choose to build
+a package as well.  Please note that the package-building featue of
+sbopkg is still considered experimental but has worked well in
+testing.  Currently, the dialog interface displays a text window
+showing the build process.  Pressing "Exit" from this window will not
+stop the build process and it will continue in the background.
+Therefore, it is recommended not to start another build until the
+first has completed.  If KEEPLOG is set to YES in the sbopkg.conf
+file, then a permanent log of the build process is saved in
+/tmp/sbopkg-build-log.
+
+Alternatively, sbopkg can be run from the command line without using
+the dialog interface.  Executing "sbopkg -h" will display a list of
+options available from the command line.
+
+.SH OPTIONS
+.TP 5
+.B -b PACKAGE
+\ Search for and build PACKAGE from the local SBo repository
+
+.TP 5 
+.B -d DIRECTORY
+\ Manually specify the full path to the DIRECTORY containing the 
+\ local SBo repository
+
+.TP 5
+.B -h
+\ Display the help
+
+.TP 5
+.B -l
+\ Display the SBo ChangeLog.txt and quit
+
+.TP 5
+.B -r
+\ Rsync the local repository with SlackBuilds.org and quit
+
+.TP 5
+.B -s PACKAGE
+\ Search for PACKAGE and, if found, display the README
+
+.SH FILES
+.B /etc/sbopkg/sbopkg.conf
+\ - File to specify configuration options.
+
+.SH "SEE ALSO"
+.BR sbopkg.conf (5)
+
+.SH AUTHOR
+Chess Griffin
+<chess@chessgriffin.com>
