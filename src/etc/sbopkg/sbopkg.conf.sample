@@ -3,4 +3,5 @@
 RSYNCMIRROR=slackbuilds.org::slackbuilds
 SLACKVER=12.0
 LOCALREPO=/home/sbo
+SRCDIR=/var/cache/sbopkg
 KEEPLOG=YES
