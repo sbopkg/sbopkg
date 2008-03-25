@@ -1,6 +1,15 @@
 # $Id$
 
-Sbopkg TODO
+Sbopkg TODO (in no particular order)
+* Change download location of source tarballs.  That way, --delete can
+  be added to the rsync call, thus creating a true mirror.  See
+  discussion on SBo mailing list on 2008-03-24.
+* Add ability to manually edit a package's files (i.e. SlackBuild)
+  from within sbopkg -- perhaps call $EDITOR.  This creates the issue of
+  how to keep the changes after an rsync, which will clobber everything.
+  Possibly do something like append ".sbopkg" to a copy of the SlackBuild
+  and then add "--exclude='*.sbopkg'" to the rsync call.  See discussion on
+  SBo mailing list on 2008-03-24.  
 * Add ability to search or build more than one package at a time using
   command line only.
 * When using the dialog interface, change the listing of packages to
