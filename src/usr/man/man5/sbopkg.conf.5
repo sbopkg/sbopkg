@@ -28,7 +28,7 @@ The default value of RSYNCMIRROR is slackbuilds.org::slackbuilds
 This option allows the user to set the Slackware version in order to
 rsync with the matching SBo repository.
 
-The default value of SLACKVER is 12.0
+The default value of SLACKVER is 12.0.
 
 .TP 5
 .B LOCALREPO
@@ -37,6 +37,22 @@ This option allows the user to set the location of the local rsync
 mirror of the SBo repository.
 
 The default value of LOCALREPO is /home/sbo.
+
+.TP 5
+.B SRCDIR
+.br
+This option contains the location of the cache directory where
+source downloads will be saved.
+
+The default value of SRCDIR is /var/cache/sbopkg.
+
+.TP 5
+.B TMP
+.br
+This options sets the default directory where certain working 
+files are saved on a temporary basis.
+
+The default value of TMP is /tmp.
 
 .TP 5
 .B KEEPLOG
