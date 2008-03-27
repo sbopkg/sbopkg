@@ -1,0 +1,459 @@
+#!/bin/sh
+#
+# $Id$ 
+#
+# sbopkg - The SlackBuilds.org Package Browser
+# Copyright 2007-2008 Chess Griffin <chess@chessgriffin.com>
+#
+# Redistribution and use of this script, with or without modification,
+# is permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+#  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+#  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+#  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+#  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+#  GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#  
+#  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
+#  Wisehart, slakmagik (thanks for your diff!)
+
+# Variables
+SCRIPT=${0##*/}
+DIAG=""
+SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
+CWD="$pwd"
+VER=0.0.2
+
+sanity_checks () {
+# Check if config file is there and if yes, set some variables
+if [ ! -e $SBOPKG_CONF ]; then
+    echo "$SCRIPT: No $SBOPKG_CONF file was found."
+    echo "Please create it and run $SCRIPT again." 1>&2
+	exit 1
+else
+	. $SBOPKG_CONF
+fi
+if [ ! -d "$SRCDIR" ]; then
+    echo "Creating local cache directory $SRCDIR to keep \
+downloaded sources."
+    mkdir -p $SRCDIR
+fi
+}
+
+check_local_dir () {
+# Check to see if the main local directory for the mirror exists
+if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
+	echo "$SCRIPT: Directory $LOCALREPO/$SLACKVER does not exist."
+    echo "Please create it and run $SCRIPT again." 1>&2
+	exit 1
+else
+ 	cd $LOCALREPO/$SLACKVER
+fi
+}
+
+check_root () {
+# Check to see whether the user is root or not
+if [ ! $(id -u) = "0" ]; then
+	ROOT="false"
+else
+	ROOT="true"
+fi
+}
+
+check_write () {
+# Check to see whether the user has write permissions on the directory
+if [ ! -w $1  ]; then
+    WRITE="false"
+else
+    WRITE="true"
+fi
+}
+
+show_changelog () {
+# Show the changelog
+if [ "$DIAG" = 1 ]; then
+	dialog --title "SlackBuilds.org ChangeLog" --textbox \
+    ./ChangeLog.txt 0 0
+else
+	${PAGER:-more} ./ChangeLog.txt
+fi
+}
+
+get_category_list () {
+# This function displays the list of SBo categories in the dialog
+rm -f $TMP/sbopkg_category_list 2> /dev/null
+DIR=( */ )
+if [ -n "$DIR" ]; then
+	for i in ${DIR[*]%/}; do
+		echo "$i \"Browse the $i category\"" >> \
+        $TMP/sbopkg_category_list
+	done
+fi
+}
+
+get_category_items_list () {
+# This function makes and displays a list of all the package items in
+# the selected category.  Ideally, it would be nice to have this be a
+# checklist where the user can select multiple applications to build
+# in a queue.
+CATEGORY="$(cat $TMP/sbopkg_category_selection)"
+cd $LOCALREPO/$SLACKVER/$CATEGORY
+rm -f $TMP/sbopkg_category_items_list 2> /dev/null
+DIR=( */ )
+if [ -n "$DIR" ]; then
+	for i in ${DIR[*]%/}; do
+		DESC=$(grep -h -Z -m1 ^$i ./$i/slack-desc* | sed -e s/$i': '//) 
+		echo "$i \"$DESC\"" >> $TMP/sbopkg_category_items_list
+	done
+fi
+cd $LOCALREPO/$SLACKVER
+}
+
+info_item () {
+# This function shows the menu for each package where the user can see
+# certain information or build the package if he is root
+APP="$(cat $TMP/sbopkg_item_selection)"
+while [ 0 ]; do
+dialog --title "$APP Information" --menu "Choose an item or press \
+<Cancel> to exit\n" 20 60 5 \
+"README" "View the README file" \
+"SlackBuild" "View the SlackBuild file" \
+"Info" "View the .info file" \
+"Slack-desc" "View the slack-desc file" \
+"Build" "Build a package for $APP" 2>$TMP/sbopkg_info_selection
+
+if [ $? = 1 ]; then
+	break
+fi
+S="$(cat $TMP/sbopkg_info_selection)"
+CATEGORY="$(cat $TMP/sbopkg_category_selection)"
+if [ "$S" = "README" ]; then
+	dialog --title "Viewing README" \
+    --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/README 0 0
+fi
+if [ "$S" = "SlackBuild" ]; then
+	dialog --title "Viewing SlackBuild" \
+    --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild 0 0
+fi
+if [ "$S" = "Info" ]; then
+	dialog --title "Viewing .info" \
+    --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info 0 0
+fi
+if [ "$S" = "Slack-desc" ]; then
+PARSED_SLACK_DESC=$(mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
+sed -n "/^$APP: /s///p" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/slack-desc > $PARSED_SLACK_DESC
+	dialog --title "Viewing Slack-desc" --textbox $PARSED_SLACK_DESC 0 0
+fi
+if [ "$S" = "Build" ]; then
+	check_root
+	if [ $ROOT = "false" ]; then
+		dialog --title "ERROR" --msgbox "You must run this script \
+as the root user in order to build packages." 0 0
+		continue
+	fi
+	OUTPUT=$TMP/sbopkg_output
+	search_package $APP	
+	( build_package $APP >> $OUTPUT & ) 2>>$OUTPUT
+	while [ -f $TMP/sbopkg_build.lck ]; do
+		dialog --backtitle "Building the $APP package in the \
+background." --tailbox $OUTPUT 20 70
+	done
+	if [ "$LOGS" = "YES" ]; then 
+		cat $OUTPUT >> $TMP/sbopkg-build-log
+	fi
+	rm -f $OUTPUT
+fi
+done
+}
+
+browse_items () {
+# This function iterates through the list of software packages until
+# one is chosen.
+get_category_items_list
+while [ 0 ]; do
+	dialog --title "Browsing the $CATEGORY category" \
+--menu "Please select a software package" 20 70 15 \
+--file $TMP/sbopkg_category_items_list 2>$TMP/sbopkg_item_selection
+	if [ $? = 1 ]; then
+		break
+	fi
+	info_item
+done
+}
+
+browse_categories () {
+# This function iterates through the category list until one is
+# chosen.
+get_category_list
+while [ 0 ]; do
+	dialog --title "Choose a category" --menu "Please select the \
+category you wish to browse." 20 70 12 \
+--file $TMP/sbopkg_category_list 2>$TMP/sbopkg_category_selection
+	if [ $? = 1 ]; then
+		break
+	fi
+	browse_items
+done
+}
+
+view_cache_dir () {
+# This function displays the contents of $SRCDIR
+ls -la $SRCDIR > $TMP/sbopkg_cache_dir
+dialog --title "Displaying $SRCDIR" \
+--textbox $TMP/sbopkg_cache_dir 0 0
+}
+
+rsync_repo () {
+# This function does the rsync with SBo.
+check_write $LOCALREPO/$SLACKVER/
+if [ "$WRITE" = "false" ]; then
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "ERROR" --msgbox "You do not have write \
+permissions on the target directory." 0 0
+        continue
+    else
+        echo "You do not have write permissons on the target directory."
+		exit 0
+	fi
+fi
+if [ "$DIAG" = 1 ]; then
+	OUTPUT=$TMP/sbopkg_output
+	( /usr/bin/rsync -avz --delete $RSYNCMIRROR/$SLACKVER/ \
+$LOCALREPO/$SLACKVER/ >> $OUTPUT & ) 2>>$OUTPUT
+	dialog --backtitle "Rsyncing with SlackBuilds.org" \
+--tailbox $OUTPUT 20 70
+	rm -f $OUTPUT
+else
+	/usr/bin/rsync -avz --delete \
+$RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
+fi
+}
+
+search_package () {
+# Search for package name and exit if not found.  If it is found,
+# populate various variables with data about the package for
+# displaying information and building.
+PKG=$1
+PKGPATH=$(find -name $PKG)  
+if [ ! $( find -name "$PKG") ]; then 
+	if [ "$DIAG" = 1 ]; then
+		dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
+		continue
+	else
+		echo "$SCRIPT: Package $PKG not found.  Exiting." 1>&2
+		exit 1
+	fi
+fi
+. $PKGPATH/$PKG.info
+PKGNAME=${PKG##*/}
+SRCNAME=${DOWNLOAD##*/}
+}
+
+show_readme () {
+# Show the package's text files.
+# Add iteration of other standard files
+SBODOCS="README $PKGNAME.SlackBuild $PKGNAME.info slack-desc"
+for i in $SBODOCS; do
+    ${PAGER:-more} $PKGPATH/$i
+done
+return 0
+}
+
+get_source () {
+# Check to see if the source tarball exists in the local cache
+# directory.  If it does, make a symlink to the package directory in
+# the local mirror.  If it does not, download it and make the link.
+if [ ! -e $PKGPATH/$SRCNAME ]; then
+    if [ -e $SRCDIR/$SRCNAME ]; then
+        ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
+    else
+        cd $SRCDIR
+        wget -T 20 $DOWNLOAD || exit 1
+        cd -
+        ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
+    fi
+fi
+}
+
+build_package () {
+# Start fetching and building the package.
+touch $TMP/sbopkg_build.lck
+echo ; echo "Building $PKG"
+cd $PKGPATH
+get_source
+echo "Checking MD5SUM for "$SRCNAME"..."
+MD5CHK=`md5sum $SRCNAME | cut -d' ' -f1`
+if [ "$MD5CHK" == $MD5SUM ]; then 
+	echo "OK"
+else 
+	echo "MD5SUM check failed.  Exiting." 
+	continue
+fi
+echo "Building Slackware package for "$SRCNAME"..."
+TMP=$TMP sh $PKG.SlackBuild
+echo "Done building $PKG."
+rm $TMP/sbopkg_build.lck
+cd $LOCALREPO/$SLACKVER
+}
+
+cleanup () {
+rm -rf $TMP/sbopkg_*
+cd $CWD
+}
+
+main_menu () {
+# This is the main dialog menu.
+while [ 0 ]; do
+dialog --title "SlackBuilds.org Package Browser \
+(sbopkg version $VER)" --menu \
+"\nChoose one of the following or press <Cancel> to exit\n" \
+  15 60 5 \
+"Rsync" "Rsync with SlackBuilds.org" \
+"ChangeLog" "View the SlackBuilds.org ChangeLog" \
+"Browse" "Browse the local SlackBuilds.org repo" \
+"Cache" "View the contents of the cache directory" \
+"Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
+
+if [ $? = 1 ]; then
+	clear
+	cleanup
+	exit 0
+fi
+
+R="$(cat $TMP/sbopkg_main_menu_answer)"
+
+if [ "$R" = "Rsync" ]; then
+	rsync_repo
+fi
+
+if [ "$R" = "ChangeLog" ]; then
+	show_changelog
+fi
+
+if [ "$R" = "Browse" ]; then
+	browse_categories
+fi
+
+if [ "$R" = "Cache" ]; then
+    view_cache_dir	
+fi
+
+if [ "$R" = "Exit" ]; then
+	clear
+	cleanup
+	exit 0 
+fi
+done
+}
+
+# END OF FUNCTIONS.  What comes below is the actual start of the
+# script when it is first run.
+
+# If there are no command line options then we will use the dialog
+# version of sbopkg
+if [ $# -eq 0 ]; then 
+	DIAG=1
+	sanity_checks
+	check_local_dir
+	main_menu
+	exit 0
+fi
+
+# This is the command line options and help
+while getopts ":b:d:f:hlrs:" OPT; do
+	case $OPT in
+		b ) BUILD="$OPTARG"
+			;;
+		d ) LOCALREPO="$OPTARG"
+			;;
+		f ) SBOPKG_CONF="$OPTARG"
+			;;
+		l ) CHANGELOG=1
+			;;
+		r ) RSYNC=1
+			;;
+		s ) SEARCH="$OPTARG"
+			;;
+		h|* )
+			echo
+	 		echo "$SCRIPT v$VER"
+			echo "Usage: $SCRIPT [OPTIONS] <packagename(s)>"
+			echo "Options are:"
+			echo "  -b package   Build a package."
+			echo "  -d localdir  Location of local copy of \
+SlackBuilds.org repo."
+            echo "  -f           Override default configuration file" 
+            echo "               with specified file or environmental \
+variables."
+			echo "  -h           Display this help message."
+			echo "  -l           Display the SlackBuilds.org \
+ChangeLog.txt and then quit."
+			echo "  -r           Rsync the SlackBuilds.org respository with"
+			echo "               the local mirror and then quit."
+			echo "  -s package   Search for a package and, if found, \
+display the README."
+			echo
+            echo "Note: multiple arguments to -b and -s must be \
+quoted (\"pkg1 pkg2\")"
+			exit
+			;;
+	esac
+done
+# End of option parsing.
+shift $(($OPTIND - 1))
+
+sanity_checks
+
+check_local_dir
+
+if [ -n "$BUILD" ]; then
+	check_root
+	if [ $ROOT = "false" ]; then
+		echo "You must run this script as the root user in order \
+to build packages."
+		exit 0
+	fi
+	for PKGBUILD in $BUILD; do
+		echo "Building $PKGBUILD"
+		search_package $PKGBUILD
+		build_package $PKGBUILD
+	done
+	cleanup
+	exit 0
+fi
+
+if [ -n "$CHANGELOG" ]; then
+	show_changelog
+	cleanup
+	exit 0
+fi
+
+if [ -n "$RSYNC" ]; then
+	echo "Rsyncing with Slackbuilds.org repository into $LOCALREPO."
+	rsync_repo
+	cleanup
+	echo "Finished rsync."
+	exit 0
+fi
+
+if [ -n "$SEARCH" ]; then
+	for PKGSEARCH in $SEARCH; do
+		echo "Searching for $PKGSEARCH"
+		search_package $PKGSEARCH
+		show_readme
+	done
+	exit 0
+fi
+
+cleanup
+echo "All done."
+exit 0
