@@ -1,34 +1,23 @@
 # $Id$
 
 Sbopkg TODO (in no particular order)
-* Change download location of source tarballs.  That way, --delete can
-  be added to the rsync call, thus creating a true mirror.  See
-  discussion on SBo mailing list on 2008-03-24.
 * Add ability to manually edit a package's files (i.e. SlackBuild)
   from within sbopkg -- perhaps call $EDITOR.  This creates the issue of
   how to keep the changes after an rsync, which will clobber everything.
   Possibly do something like append ".sbopkg" to a copy of the SlackBuild
   and then add "--exclude='*.sbopkg'" to the rsync call.  See discussion on
   SBo mailing list on 2008-03-24.  
-* Add ability to search or build more than one package at a time using
-  command line only.
 * When using the dialog interface, change the listing of packages to
   be a checklist or radiolist whereby the user can select more than
   one package to build at a time.  This would possibly change how the
   user would be able to view the README, slack-desc etc. since a
   checklist or radiolist would not present the current 'view' menu.
   Not sure how the order of packages selected would be set.
-* Fix the way packages are built in the dialog so the display showing
-  the build process cannot be exited.  This is confusing as it
-  currently stands and the warning that is displayed is not an
-  adequate solution.  Look at how pkgtool removes packges.
 * Add ability to view more than just the README from the command line.
-* Allow user to change the config file location via command line, i.e.
-  with a '-c ~/.sbopkg.conf'
+  This was added, but it needs to be improved.
 * Include ability to work with more than one repo with different
   Slackware versions, i.e. /home/sbo/11.0 and /home/sbo/12.0.  The
   first menu in the dialog after selecting "Browse" would be a menu
   showing the various Slackware versions in the local mirror.
-* More error checking, such as making sure the user running the script
-  has write permissions on the local mirror.
+* More error checking.
 * General code cleanups. 
