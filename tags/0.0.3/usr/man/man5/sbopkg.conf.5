@@ -1,0 +1,73 @@
+.TH SBOPKG.CONF 5 "Mar 2008" sbopkg-0.0.3 ""
+.SH NAME
+.B sbopkg.conf
+\- Configuration file for sbopkg
+
+.SH DESCRIPTION
+
+The sbopkg.conf file contains configuration settings for 
+.B sbopkg
+(8), a tool for interacting with the SlackBuilds.org ("SBo")
+repository, a collection of third-party SlackBuild scripts to build
+Slackware packages.  A sample file is provided at
+/etc/sbopkg/sbopkg.conf.sample.
+
+The different configuration options are:
+
+.TP 5
+.B RSYNCMIRROR
+.br
+This option allows the user to set the rsync mirror of the SBo
+repository that will be used by sbopkg.
+
+The default value of RSYNCMIRROR is slackbuilds.org::slackbuilds
+
+.TP 5
+.B SLACKVER
+.br
+This option allows the user to set the Slackware version in order to
+rsync with the matching SBo repository.
+
+The default value of SLACKVER is 12.0.
+
+.TP 5
+.B LOCALREPO
+.br
+This option allows the user to set the location of the local rsync
+mirror of the SBo repository.
+
+The default value of LOCALREPO is /home/sbo.
+
+.TP 5
+.B SRCDIR
+.br
+This option contains the location of the cache directory where
+source downloads will be saved.
+
+The default value of SRCDIR is /var/cache/sbopkg.
+
+.TP 5
+.B TMP
+.br
+This options sets the default directory where certain working 
+files are saved on a temporary basis.
+
+The default value of TMP is /tmp.
+
+.TP 5
+.B KEEPLOG
+.br
+This option should be set to YES or NO.  This option allows the user
+to choose whether to keep a permanent log of packages that are build
+with sbopkg in order to go back and review the build, and any errors,
+after exiting sbopkg.  If set to YES, this permanent log is saved at
+/tmp/sbopkg-build-log.
+
+The default value of KEEPLOG is YES.
+
+.SH FILES
+.TP 5
+.B /etc/sbopkg/sbopkg.conf
+
+.SH "SEE ALSO"
+.BR sbopkg (8)
