@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id$ 
+# $Id: sbopkg 16 2008-03-28 02:57:25Z chess.griffin $ 
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2008 Chess Griffin <chess@chessgriffin.com>
@@ -24,15 +24,14 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
-#  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers,
-#  Michiel van Wessem
+#  Wisehart, slakmagik (thanks for your diff!)
 
 # Variables
 SCRIPT=${0##*/}
 DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
-CWD="$(pwd)"
-VER=0.0.4
+CWD="$pwd"
+VER=0.0.3
 
 sanity_checks () {
 # Check if config file is there and if yes, set some variables
@@ -125,13 +124,11 @@ info_item () {
 APP="$(cat $TMP/sbopkg_item_selection)"
 while [ 0 ]; do
 dialog --title "$APP Information" --menu "Choose an item or press \
-<Cancel> to exit\n" 20 60 7 \
+<Cancel> to exit\n" 20 60 5 \
 "README" "View the README file" \
+"SlackBuild" "View the SlackBuild file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
-"SlackBuild" "View the SlackBuild file" \
-"Edit" "Create and edit a local SlackBuild" \
-"Delete" "Delete the local SlackBuild" \
 "Build" "Build a package for $APP" 2>$TMP/sbopkg_info_selection
 
 if [ $? = 1 ]; then
@@ -143,6 +140,10 @@ if [ "$S" = "README" ]; then
     dialog --title "Viewing README" \
     --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/README 0 0
 fi
+if [ "$S" = "SlackBuild" ]; then
+    dialog --title "Viewing SlackBuild" \
+    --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild 0 0
+fi
 if [ "$S" = "Info" ]; then
     dialog --title "Viewing .info" \
     --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info 0 0
@@ -152,16 +153,6 @@ PARSED_SLACK_DESC=$(mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
 sed -n "/^$APP: /s///p" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/slack-desc > $PARSED_SLACK_DESC
     dialog --title "Viewing Slack-desc" --textbox $PARSED_SLACK_DESC 0 0
 fi
-if [ "$S" = "SlackBuild" ]; then
-    dialog --title "Viewing SlackBuild" \
-    --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild 0 0
-fi
-if [ "$S" = "Edit" ]; then
-    edit_local_slackbuild $APP
-fi
-if [ "$S" = "Delete" ]; then
-    delete_local_slackbuild $APP
-fi
 if [ "$S" = "Build" ]; then
     check_root
     if [ $ROOT = "false" ]; then
@@ -170,40 +161,7 @@ as the root user in order to build packages." 0 0
         continue
     fi
     OUTPUT=$TMP/sbopkg_output
-    search_package $APP
-    SLACKBUILD=""
-    if [ ! -e $PKGPATH/$APP.SlackBuild.sbopkg ]; then
-        SLACKBUILD="original"
-    else
-        if [ "$DIAG" = 1 ]; then
-            while [ 0 ]; do
-                dialog --title "Choose SlackBuild" --menu "A local \
-SlackBuild was found in addition to the original SlackBuild. \
-Which one would you like to use?" 10 60 2 \
-"Original" "Use the original SlackBuild" \
-"Local" "Use the local SlackBuild" 2>$TMP/sbopkg_bld_selection
-
-                if [ $? = 1 ]; then
-                    SLACKBUILD="cancel"
-                    break
-                fi
-                B="$(cat $TMP/sbopkg_bld_selection)"
-                if [ "$B" = "Original" ]; then
-                    SLACKBUILD="original"
-                    break
-                fi
-                if [ "$B" = "Local" ]; then
-                    SLACKBUILD="local"
-                    break
-                fi
-            done
-        else
-            SLACKBUILD="original"
-        fi
-    fi
-    if [ $SLACKBUILD = "cancel" ]; then
-        continue 
-    fi
+    search_package $APP	
     rm -rf $TMP/sbopkg_build.lck
     touch $TMP/sbopkg_build.lck
     ( build_package $APP >> $OUTPUT & ) 2>>$OUTPUT
@@ -211,7 +169,7 @@ Which one would you like to use?" 10 60 2 \
         dialog --backtitle "Building the $APP package in the \
 background." --tailbox $OUTPUT 20 70
     done
-    if [ "$KEEPLOG" = "YES" ]; then 
+    if [ "$LOGS" = "YES" ]; then 
         cat $OUTPUT >> $TMP/sbopkg-build-log
     fi
     rm -f $OUTPUT
@@ -258,7 +216,7 @@ dialog --title "Displaying $SRCDIR" \
 
 rsync_command () {
 # This function holds the rsync command
-/usr/bin/rsync -avz --delete --timeout=5 --exclude="*.sbopkg" \
+/usr/bin/rsync -avz --delete --timeout=5 \
 $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/ 
 rm -rf $TMP/sbopkg_rsync.lck
 }
@@ -316,18 +274,9 @@ SRCNAME=${DOWNLOAD##*/}
 
 show_readme () {
 # Show the package's text files.
-# I am still not happy with how this works and am trying to think
-# of a better way to have these 4 docs available for viewing from the
-# cli.  Maybe have -s just return the readme, as the result of a
-# search, and maybe have another option like -v to view all 4 docs?
-# Also, maybe have a way for the user to choose which of the 4 docs he
-# wants to view?  Or have a menu listing the 4 docs?  Undecided.
 SBODOCS="README $PKGNAME.SlackBuild $PKGNAME.info slack-desc"
 for i in $SBODOCS; do
-    echo
-    echo "Viewing "$i":"
     ${PAGER:-more} $PKGPATH/$i
-    read # This was added because README was scrolling past too quickly
 done
 return 0
 }
@@ -362,51 +311,10 @@ else
     continue
 fi
 echo "Building Slackware package for "$SRCNAME"..."
-if [ "$SLACKBUILD" = "original" ]; then
-    sh $PKG.SlackBuild
-fi
-if [ "$SLACKBUILD" = "local" ]; then
-    sh $PKG.SlackBuild.sbopkg
-fi
-#sh $PKG.SlackBuild
+sh $PKG.SlackBuild
 echo "Done building $PKG."
 rm -rf $TMP/sbopkg_build.lck
 cd $LOCALREPO/$SLACKVER
-}
-
-edit_local_slackbuild () {
-# This function allows the user to create and edit a local copy of the
-# SlackBuild
-check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
-if [ "$WRITE" = "false" ]; then
-    dialog --title "ERROR" --msgbox "You do not have write \
-permissions on the target directory." 0 0
-    continue
-fi
-if [ ! -e $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg ]; then
-    cp $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild \
-    $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg
-fi
-${EDITOR:-vi} $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg
-}
-
-delete_local_slackbuild () {
-# This function allows the user to delete the local SlackBuild
-check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
-if [ "$WRITE" = "false" ]; then
-    dialog --title "ERROR" --msgbox "You do not have write \
-permissions on the target directory." 0 0
-    continue
-fi
-if [ ! -e $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg ]; then
-    dialog --title "ERROR" --msgbox "There is no local copy of the \
-SlackBuild to delete." 0 0
-    continue
-else
-    rm $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg
-    dialog --title "DONE" --msgbox "The local copy of the SlackBuild \
-has been deleted." 0 0
-fi
 }
 
 cleanup () {

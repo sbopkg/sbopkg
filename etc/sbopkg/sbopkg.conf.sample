@@ -1,4 +1,5 @@
-# $Id$
+#!/bin/sh
+# $Id: sbopkg.conf.sample 14 2008-03-27 02:35:12Z chess.griffin $
 
 RSYNCMIRROR=${RSYNCMIRROR:-slackbuilds.org::slackbuilds}
 SLACKVER=${SLACKVER:-12.0}
