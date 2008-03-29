@@ -547,8 +547,7 @@ while getopts ":b:d:f:hlrs:" OPT; do
             echo "  -d localdir  Location of local copy of \
 SlackBuilds.org repo."
             echo "  -f           Override default configuration file" 
-            echo "               with specified file or environmental \
-variables."
+            echo "               with specified file."
             echo "  -h           Display this help message."
             echo "  -l           Display the SlackBuilds.org \
 ChangeLog.txt and then quit."
