@@ -24,13 +24,14 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
-#  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers
+#  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers,
+#  Michiel van Wessem
 
 # Variables
 SCRIPT=${0##*/}
 DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
-CWD="$(pwd)"
+CWD="($pwd)"
 VER=0.0.4
 
 sanity_checks () {
@@ -129,8 +130,8 @@ dialog --title "$APP Information" --menu "Choose an item or press \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
 "SlackBuild" "View the SlackBuild file" \
-"Edit" "Create and edit a local copy of the SlackBuild file" \
-"Delete" "Delete the local copy of the SlackBuild file" \
+"Edit" "Create and edit a local SlackBuild" \
+"Delete" "Delete the local SlackBuild" \
 "Build" "Build a package for $APP" 2>$TMP/sbopkg_info_selection
 
 if [ $? = 1 ]; then
@@ -169,7 +170,40 @@ as the root user in order to build packages." 0 0
         continue
     fi
     OUTPUT=$TMP/sbopkg_output
-    search_package $APP	
+    search_package $APP
+    SLACKBUILD=""
+    if [ ! -e $PKGPATH/$APP.SlackBuild.sbopkg ]; then
+        SLACKBUILD="original"
+    else
+        if [ "$DIAG" = 1 ]; then
+            while [ 0 ]; do
+                dialog --title "Choose SlackBuild" --menu "A local \
+SlackBuild was found in addition to the original SlackBuild. \
+Which one would you like to use?" 10 60 2 \
+"Original" "Use the original SlackBuild" \
+"Local" "Use the local SlackBuild" 2>$TMP/sbopkg_bld_selection
+
+                if [ $? = 1 ]; then
+                    SLACKBUILD="cancel"
+                    break
+                fi
+                B="$(cat $TMP/sbopkg_bld_selection)"
+                if [ "$B" = "Original" ]; then
+                    SLACKBUILD="original"
+                    break
+                fi
+                if [ "$B" = "Local" ]; then
+                    SLACKBUILD="local"
+                    break
+                fi
+            done
+        else
+            SLACKBUILD="original"
+        fi
+    fi
+    if [ $SLACKBUILD = "cancel" ]; then
+        continue 
+    fi
     rm -rf $TMP/sbopkg_build.lck
     touch $TMP/sbopkg_build.lck
     ( build_package $APP >> $OUTPUT & ) 2>>$OUTPUT
@@ -177,7 +211,7 @@ as the root user in order to build packages." 0 0
         dialog --backtitle "Building the $APP package in the \
 background." --tailbox $OUTPUT 20 70
     done
-    if [ "$LOGS" = "YES" ]; then 
+    if [ "$KEEPLOG" = "YES" ]; then 
         cat $OUTPUT >> $TMP/sbopkg-build-log
     fi
     rm -f $OUTPUT
@@ -328,7 +362,13 @@ else
     continue
 fi
 echo "Building Slackware package for "$SRCNAME"..."
-sh $PKG.SlackBuild
+if [ "$SLACKBUILD" = "original" ]; then
+    sh $PKG.SlackBuild
+fi
+if [ "$SLACKBUILD" = "local" ]; then
+    sh $PKG.SlackBuild.sbopkg
+fi
+#sh $PKG.SlackBuild
 echo "Done building $PKG."
 rm -rf $TMP/sbopkg_build.lck
 cd $LOCALREPO/$SLACKVER
