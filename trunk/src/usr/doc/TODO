@@ -6,7 +6,8 @@ Sbopkg TODO (in no particular order)
   how to keep the changes after an rsync, which will clobber everything.
   Possibly do something like append ".sbopkg" to a copy of the SlackBuild
   and then add "--exclude='*.sbopkg'" to the rsync call.  See discussion on
-  SBo mailing list on 2008-03-24.  
+  SBo mailing list on 2008-03-24.  UPDATED:  This is working in 0.0.4
+  for the dialog interface, but not the cli yet. 
 * When using the dialog interface, change the listing of packages to
   be a checklist or radiolist whereby the user can select more than
   one package to build at a time.  This would possibly change how the

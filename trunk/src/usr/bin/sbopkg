@@ -218,8 +218,8 @@ Which one would you like to use?" 10 60 2 \
     touch $TMP/sbopkg_build.lck
     ( build_package $APP >> $OUTPUT & ) 2>>$OUTPUT
     while [ -f $TMP/sbopkg_build.lck ]; do
-        dialog --backtitle "Building the $APP package in the \
-background." --tailbox $OUTPUT 20 70
+        dialog --backtitle "Building the $APP package." \
+ --tailbox $OUTPUT 20 70
     done
     if [ "$KEEPLOG" = "YES" ]; then 
         cat $OUTPUT >> $TMP/sbopkg-build-log
@@ -555,7 +555,7 @@ ChangeLog.txt and then quit."
             echo "  -r           Rsync the SlackBuilds.org respository with"
             echo "               the local mirror and then quit."
             echo "  -s package   Search for a package and, if found, \
-display the README."
+display package information."
             echo
             echo "Note: multiple arguments to -b and -s must be \
 quoted (\"pkg1 pkg2\")"
