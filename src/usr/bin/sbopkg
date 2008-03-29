@@ -24,13 +24,13 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
-#  Wisehart, slakmagik (thanks for your diff!)
+#  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers
 
 # Variables
 SCRIPT=${0##*/}
 DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
-CWD="$pwd"
+CWD="$(pwd)"
 VER=0.0.4
 
 sanity_checks () {
