@@ -259,6 +259,30 @@ dialog --title "Displaying $SRCDIR" \
 --textbox $TMP/sbopkg_cache_dir 0 0
 }
 
+view_perm_log () {
+# This function displays the contents of the permanent build log,
+# which is kept if KEEPLOG is set to YES in the config file
+if [ ! -e $TMP/sbopkg-build-log ]; then
+    dialog --title "ERROR" --msgbox "No permanent log \
+sbopkg-build-log found.  Please make sure KEEPLOG is set to YES \
+in the configuration file." 0 0
+    continue
+else
+    dialog --title "Displaying $TMP/sbopkg-build-log" \
+--textbox $TMP/sbopkg-build-log 0 0
+    dialog --title "Keep Log?" --yesno "Would you like to keep the \
+permanent build log $TMP/sbopkg-build-log?  Select YES to keep or NO
+to delete." 0 0 
+#2>$TMP/sbopkg_keep_log
+    if [ $? = 1 ]; then
+        rm -rf $TMP/sbopkg-build-log
+        continue
+    else
+        continue
+    fi
+fi
+}
+
 rsync_command () {
 # This function holds the rsync command
 /usr/bin/rsync -avz --delete --timeout=5 --exclude="*.sbopkg" \
@@ -423,11 +447,12 @@ while [ 0 ]; do
 dialog --title "SlackBuilds.org Package Browser \
 (sbopkg version $VER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit\n" \
-  15 60 5 \
+  15 60 6 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Browse" "Browse the local SlackBuilds.org repo" \
 "Cache" "View the contents of the cache directory" \
+"Log" "View the permanent build log" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
 if [ $? = 1 ]; then
@@ -452,6 +477,10 @@ fi
 
 if [ "$R" = "Cache" ]; then
     view_cache_dir	
+fi
+
+if [ "$R" = "Log" ]; then
+    view_perm_log	
 fi
 
 if [ "$R" = "Exit" ]; then
