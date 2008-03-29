@@ -82,8 +82,15 @@ fi
 show_changelog () {
 # Show the changelog
 if [ "$DIAG" = 1 ]; then
-    dialog --title "SlackBuilds.org ChangeLog" --textbox \
-    ./ChangeLog.txt 0 0
+    if [ ! -e ./ChangeLog.txt ]; then
+        dialog --title "ERROR" --msgbox "No ChangeLog.txt \
+found.  Please make sure your repository directory is set \
+correctly and that you have done an rsync first." 10 30
+        continue
+    else
+        dialog --title "SlackBuilds.org ChangeLog" --textbox \
+./ChangeLog.txt 0 0
+    fi
 else
     ${PAGER:-more} ./ChangeLog.txt
 fi
@@ -166,7 +173,7 @@ if [ "$S" = "Build" ]; then
     check_root
     if [ $ROOT = "false" ]; then
         dialog --title "ERROR" --msgbox "You must run this script \
-as the root user in order to build packages." 0 0
+as the root user in order to build packages." 8 30
         continue
     fi
     OUTPUT=$TMP/sbopkg_output
@@ -264,26 +271,26 @@ view_perm_log () {
 # which is kept if KEEPLOG is set to YES in the config file
 if [ ! -e $TMP/sbopkg-build-log ]; then
     dialog --title "ERROR" --msgbox "No permanent log \
-sbopkg-build-log found.  Please make sure KEEPLOG is set to YES \
-in the configuration file." 0 0
+found.  Please make sure KEEPLOG is set to YES \
+in the configuration file." 10 30
     continue
 else
     dialog --title "Displaying $TMP/sbopkg-build-log" \
 --textbox $TMP/sbopkg-build-log 0 0
     dialog --title "Keep Log?" --yesno "Would you like to keep the \
 permanent build log $TMP/sbopkg-build-log?  Select YES to keep or NO \
-to delete." 0 0 
+to delete." 10 30 
 #2>$TMP/sbopkg_keep_log
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
             dialog --title "ERROR" --msgbox "Sorry, only the root \
-user can delete the build log." 0 0
+user can delete the build log." 8 30
             continue
         else
             rm -rf $TMP/sbopkg-build-log
             dialog --title "Done" --msgbox "The build log has been \
-deleted." 0 0
+deleted." 8 30
             continue
         fi
     else
@@ -305,7 +312,7 @@ check_write $LOCALREPO/$SLACKVER/
 if [ "$WRITE" = "false" ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "You do not have write \
-permissions on the target directory." 0 0
+permissions on the target directory." 8 30
         continue
     else
         echo "You do not have write permissons on the target directory."
@@ -416,7 +423,7 @@ edit_local_slackbuild () {
 check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
 if [ "$WRITE" = "false" ]; then
     dialog --title "ERROR" --msgbox "You do not have write \
-permissions on the target directory." 0 0
+permissions on the target directory." 8 30
     continue
 fi
 if [ ! -e $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg ]; then
@@ -431,17 +438,17 @@ delete_local_slackbuild () {
 check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
 if [ "$WRITE" = "false" ]; then
     dialog --title "ERROR" --msgbox "You do not have write \
-permissions on the target directory." 0 0
+permissions on the target directory." 8 30
     continue
 fi
 if [ ! -e $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg ]; then
     dialog --title "ERROR" --msgbox "There is no local copy of the \
-SlackBuild to delete." 0 0
+SlackBuild to delete." 8 30
     continue
 else
     rm $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg
     dialog --title "DONE" --msgbox "The local copy of the SlackBuild \
-has been deleted." 0 0
+has been deleted." 8 30
 fi
 }
 
