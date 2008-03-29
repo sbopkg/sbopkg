@@ -25,7 +25,7 @@
 #  
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers,
-#  Michiel van Wessem
+#  Michiel van Wessem, hba
 
 # Variables
 SCRIPT=${0##*/}
@@ -35,13 +35,25 @@ CWD="$(pwd)"
 VER=0.0.4
 
 sanity_checks () {
-# Check if config file is there and if yes, set some variables
+# Check if config file is there and if so check that it has all 
+# needed variables with any value, and set them; also create
+# $SRCDIR if it's not there..
 if [ ! -e $SBOPKG_CONF ]; then
     echo "$SCRIPT: No $SBOPKG_CONF file was found."
     echo "Please create it and run $SCRIPT again." 1>&2
     exit 1
 else
+    for i in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP KEEPLOG
+    do
+        grep "^$i=.\{1,\}" "$SBOPKG_CONF" > /dev/null
+        if [ "$?" != 0 ]; then
+            echo "$SCRIPT: Can't find variable $i declared in"
+            echo "$SCRIPT: $SBOPKG_CONF."
+            echo "Please declare it and run $SCRIPT again."
+            exit 1
+    fi
     . $SBOPKG_CONF
+done    
 fi
 if [ ! -d "$SRCDIR" ]; then
     echo "Creating local cache directory $SRCDIR to keep \
@@ -280,7 +292,6 @@ else
     dialog --title "Keep Log?" --yesno "Would you like to keep the \
 permanent build log $TMP/sbopkg-build-log?  Select YES to keep or NO \
 to delete." 10 30 
-#2>$TMP/sbopkg_keep_log
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -323,7 +334,6 @@ if [ "$DIAG" = 1 ]; then
     rm -rf $TMP/sbopkg_rsync.lck
     touch $TMP/sbopkg_rsync.lck
     OUTPUT=$TMP/sbopkg_output
-    #( /usr/bin/rsync -avz --delete --dry-run --timeout=5 --contimeout=5 $RSYNCMIRROR/$SLACKVER/ \
     ( rsync_command >> $OUTPUT & ) 2>>$OUTPUT 
     while [ -f $TMP/sbopkg_rsync.lck ]; do
         dialog --backtitle "Rsyncing with SlackBuilds.org" \
@@ -331,8 +341,6 @@ if [ "$DIAG" = 1 ]; then
     done
     rm -f $OUTPUT
 else
-#    /usr/bin/rsync -avz --delete \
-#$RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
     rsync_command
 fi
 }
@@ -411,7 +419,6 @@ fi
 if [ "$SLACKBUILD" = "local" ]; then
     sh $PKG.SlackBuild.sbopkg
 fi
-#sh $PKG.SlackBuild
 echo "Done building $PKG."
 rm -rf $TMP/sbopkg_build.lck
 cd $LOCALREPO/$SLACKVER
@@ -513,7 +520,7 @@ done
 # If there are no command line options then we will use the dialog
 # version of sbopkg
 
-cleanup
+cleanup # Do this first just in case there is cruft left over
 
 if [ $# -eq 0 ]; then 
     DIAG=1
