@@ -184,6 +184,7 @@ Which one would you like to use?" 10 60 2 \
 "Local" "Use the local SlackBuild" 2>$TMP/sbopkg_bld_selection
 
                 if [ $? = 1 ]; then
+                    # Need this to get back to $APP info menu
                     SLACKBUILD="cancel"
                     break
                 fi
@@ -198,6 +199,8 @@ Which one would you like to use?" 10 60 2 \
                 fi
             done
         else
+            # Need to add a way for cli users to make the same choice;
+            # defaults to original SlackBuild for now
             SLACKBUILD="original"
         fi
     fi
