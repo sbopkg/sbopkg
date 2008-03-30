@@ -43,17 +43,20 @@ if [ ! -e $SBOPKG_CONF ]; then
     echo "Please create it and run $SCRIPT again." 1>&2
     exit 1
 else
-    for i in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP KEEPLOG
-    do
-        grep "^$i=.\{1,\}" "$SBOPKG_CONF" > /dev/null
-        if [ "$?" != 0 ]; then
-            echo "$SCRIPT: Can't find variable $i declared in"
-            echo "$SCRIPT: $SBOPKG_CONF."
-            echo "Please declare it and run $SCRIPT again."
+    . $SBOPKG_CONF
+    for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP KEEPLOG; do
+        if [ -z "${!VAR}" ]; then
+            MISSING+="$VAR "
+        fi
+    done
+    if [ "$MISSING" ]; then
+            echo "$SCRIPT: Can't find a value for variable(s):"
+            echo "$MISSING"
+            echo "Please correct this error and run $SCRIPT again."
             exit 1
     fi
-    . $SBOPKG_CONF
-done    
+    #. $SBOPKG_CONF
+#done    
 fi
 if [ ! -d "$SRCDIR" ]; then
     echo "Creating local cache directory $SRCDIR to keep \
