@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id$ 
+# $Id: sbopkg 32 2008-03-30 02:07:05Z chess.griffin $ 
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2008 Chess Griffin <chess@chessgriffin.com>
