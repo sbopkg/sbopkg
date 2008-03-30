@@ -55,8 +55,6 @@ else
             echo "Please correct this error and run $SCRIPT again."
             exit 1
     fi
-    #. $SBOPKG_CONF
-#done    
 fi
 if [ ! -d "$SRCDIR" ]; then
     echo "Creating local cache directory $SRCDIR to keep \
