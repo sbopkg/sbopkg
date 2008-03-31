@@ -364,19 +364,12 @@ SRCNAME=${DOWNLOAD##*/}
 
 show_readme () {
 # Show the package's text files.
-# I am still not happy with how this works and am trying to think
-# of a better way to have these 4 docs available for viewing from the
-# cli.  Maybe have -s just return the readme, as the result of a
-# search, and maybe have another option like -v to view all 4 docs?
-# Also, maybe have a way for the user to choose which of the 4 docs he
-# wants to view?  Or have a menu listing the 4 docs?  Undecided.
-SBODOCS="README $PKGNAME.SlackBuild $PKGNAME.info slack-desc"
-for i in $SBODOCS; do
-    echo
-    echo "Viewing "$i":"
-    ${PAGER:-more} $PKGPATH/$i
-    read # This was added because README was scrolling past too quickly
-done
+# Thanks to slakmagik, this works much better.  I may still look at
+# other ways to do this.  Perhaps have a way for the user to choose 
+# which of the 4 docs he wants to view?  Or have a menu listing 
+# the 4 docs?  Undecided.
+${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info,\
+slack-desc}
 return 0
 }
 
