@@ -364,12 +364,19 @@ SRCNAME=${DOWNLOAD##*/}
 
 show_readme () {
 # Show the package's text files.
-# Thanks to slakmagik, this works much better.  I may still look at
-# other ways to do this.  Perhaps have a way for the user to choose 
-# which of the 4 docs he wants to view?  Or have a menu listing 
-# the 4 docs?  Undecided.
-${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info,\
-slack-desc}
+# I am still not happy with how this works and am trying to think
+# of a better way to have these 4 docs available for viewing from the
+# cli.  Maybe have -s just return the readme, as the result of a
+# search, and maybe have another option like -v to view all 4 docs?
+# Also, maybe have a way for the user to choose which of the 4 docs he
+# wants to view?  Or have a menu listing the 4 docs?  Undecided.
+SBODOCS="README $PKGNAME.SlackBuild $PKGNAME.info slack-desc"
+for i in $SBODOCS; do
+    echo
+    echo "Viewing "$i":"
+    ${PAGER:-more} $PKGPATH/$i
+    read # This was added because README was scrolling past too quickly
+done
 return 0
 }
 
@@ -460,10 +467,11 @@ while [ 0 ]; do
 dialog --title "SlackBuilds.org Package Browser \
 (sbopkg version $VER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit\n" \
-  15 60 6 \
+  15 60 7 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Browse" "Browse the local SlackBuilds.org repo" \
+"Search" "Search the local SlackBuilds.org repo" \
 "Cache" "View the contents of the cache directory" \
 "Log" "View the permanent build log" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
@@ -486,6 +494,18 @@ fi
 
 if [ "$R" = "Browse" ]; then
     browse_categories
+fi
+
+if [ "$R" = "Search" ]; then
+    dialog --inputbox "Enter the name of a package you would like \
+to search for" 0 0 2>/$TMP/sbopkg_search_request
+    if [ $? = 1 ]; then
+        continue 
+    fi
+    SRCH="$(cat $TMP/sbopkg_search_request)"
+    search_package $SRCH
+    SRCHRESULT="$(echo $PKGPATH | sed 's/^.\///')"
+    dialog --title "Package location" --msgbox "$SRCHRESULT" 8 30
 fi
 
 if [ "$R" = "Cache" ]; then
