@@ -187,41 +187,6 @@ as the root user in order to build packages." 8 30
     fi
     OUTPUT=$TMP/sbopkg_output
     search_package $APP
-#    SLACKBUILD=""
-#    if [ ! -e $PKGPATH/$APP.SlackBuild.sbopkg ]; then
-#        SLACKBUILD="original"
-#    else
-#        if [ "$DIAG" = 1 ]; then
-#            while [ 0 ]; do
-#                dialog --title "Choose SlackBuild" --menu "A local \
-#SlackBuild was found in addition to the original SlackBuild. \
-#Which one would you like to use?" 10 60 2 \
-#"Original" "Use the original SlackBuild" \
-#"Local" "Use the local SlackBuild" 2>$TMP/sbopkg_bld_selection
-#
-#                if [ $? = 1 ]; then
-#                    # Need this to get back to $APP info menu
-#                    SLACKBUILD="cancel"
-#                    break
-#                fi
-#                B="$(cat $TMP/sbopkg_bld_selection)"
-#                if [ "$B" = "Original" ]; then
-#                    SLACKBUILD="original"
-#                    break
-#                fi
-#                if [ "$B" = "Local" ]; then
-#                    SLACKBUILD="local"
-#                    break
-#                fi
-#            done
-#        else
-#            echo "A local SlackBuild was found in addition to the \
-#original SlackBuild.  Which one would you like to use?  Please enter
-#'O' for original, 'L' for local, or 'X' to exit."
-#            read ANS
-#            SLACKBUILD="original"
-#        fi
-#    fi
     pick_slackbuild
     if [ $SLACKBUILD = "cancel" ]; then
         continue 
@@ -367,19 +332,12 @@ SRCNAME=${DOWNLOAD##*/}
 
 show_readme () {
 # Show the package's text files.
-# I am still not happy with how this works and am trying to think
-# of a better way to have these 4 docs available for viewing from the
-# cli.  Maybe have -s just return the readme, as the result of a
-# search, and maybe have another option like -v to view all 4 docs?
-# Also, maybe have a way for the user to choose which of the 4 docs he
-# wants to view?  Or have a menu listing the 4 docs?  Undecided.
-SBODOCS="README $PKGNAME.SlackBuild $PKGNAME.info slack-desc"
-for i in $SBODOCS; do
-    echo
-    echo "Viewing "$i":"
-    ${PAGER:-more} $PKGPATH/$i
-    read # This was added because README was scrolling past too quickly
-done
+# Thanks to slakmagik, this works much better.  I may still look at
+# other ways to do this.  Perhaps have a way for the user to choose
+# which of the 4 docs he wants to view?  Or have a menu listing the 4
+# docs?  Undecided.
+${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info,\
+slack-desc}
 return 0
 }
 
