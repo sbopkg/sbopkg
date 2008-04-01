@@ -187,39 +187,42 @@ as the root user in order to build packages." 8 30
     fi
     OUTPUT=$TMP/sbopkg_output
     search_package $APP
-    SLACKBUILD=""
-    if [ ! -e $PKGPATH/$APP.SlackBuild.sbopkg ]; then
-        SLACKBUILD="original"
-    else
-        if [ "$DIAG" = 1 ]; then
-            while [ 0 ]; do
-                dialog --title "Choose SlackBuild" --menu "A local \
-SlackBuild was found in addition to the original SlackBuild. \
-Which one would you like to use?" 10 60 2 \
-"Original" "Use the original SlackBuild" \
-"Local" "Use the local SlackBuild" 2>$TMP/sbopkg_bld_selection
-
-                if [ $? = 1 ]; then
-                    # Need this to get back to $APP info menu
-                    SLACKBUILD="cancel"
-                    break
-                fi
-                B="$(cat $TMP/sbopkg_bld_selection)"
-                if [ "$B" = "Original" ]; then
-                    SLACKBUILD="original"
-                    break
-                fi
-                if [ "$B" = "Local" ]; then
-                    SLACKBUILD="local"
-                    break
-                fi
-            done
-        else
-            # Need to add a way for cli users to make the same choice;
-            # defaults to original SlackBuild for now
-            SLACKBUILD="original"
-        fi
-    fi
+#    SLACKBUILD=""
+#    if [ ! -e $PKGPATH/$APP.SlackBuild.sbopkg ]; then
+#        SLACKBUILD="original"
+#    else
+#        if [ "$DIAG" = 1 ]; then
+#            while [ 0 ]; do
+#                dialog --title "Choose SlackBuild" --menu "A local \
+#SlackBuild was found in addition to the original SlackBuild. \
+#Which one would you like to use?" 10 60 2 \
+#"Original" "Use the original SlackBuild" \
+#"Local" "Use the local SlackBuild" 2>$TMP/sbopkg_bld_selection
+#
+#                if [ $? = 1 ]; then
+#                    # Need this to get back to $APP info menu
+#                    SLACKBUILD="cancel"
+#                    break
+#                fi
+#                B="$(cat $TMP/sbopkg_bld_selection)"
+#                if [ "$B" = "Original" ]; then
+#                    SLACKBUILD="original"
+#                    break
+#                fi
+#                if [ "$B" = "Local" ]; then
+#                    SLACKBUILD="local"
+#                    break
+#                fi
+#            done
+#        else
+#            echo "A local SlackBuild was found in addition to the \
+#original SlackBuild.  Which one would you like to use?  Please enter
+#'O' for original, 'L' for local, or 'X' to exit."
+#            read ANS
+#            SLACKBUILD="original"
+#        fi
+#    fi
+    pick_slackbuild
     if [ $SLACKBUILD = "cancel" ]; then
         continue 
     fi
@@ -233,7 +236,7 @@ Which one would you like to use?" 10 60 2 \
     if [ "$KEEPLOG" = "YES" ]; then 
         cat $OUTPUT >> $TMP/sbopkg-build-log
     fi
-    rm -f $OUTPUT
+    rm -rf $OUTPUT
 fi
 done
 }
@@ -456,6 +459,58 @@ has been deleted." 8 30
 fi
 }
 
+pick_slackbuild () {
+# This function checks to see if there is a locally-edited
+# SlackBuild (which has the *.sbopkg" suffix) and then asks the
+# user which one he wants to use to build a package.
+SLACKBUILD=""
+if [ ! -e $PKGPATH/$PKGNAME.SlackBuild.sbopkg ]; then
+    SLACKBUILD="original"
+else
+    if [ "$DIAG" = 1 ]; then
+        while [ 0 ]; do
+            dialog --title "Choose SlackBuild" --menu "A local \
+SlackBuild was found in addition to the original SlackBuild. \
+Which one would you like to use?" 10 60 2 \
+"Original" "Use the original SlackBuild" \
+"Local" "Use the local SlackBuild" 2>$TMP/sbopkg_bld_selection
+            if [ $? = 1 ]; then
+                # Need this to get back to $APP info menu
+                SLACKBUILD="cancel"
+                break
+            fi
+            B="$(cat $TMP/sbopkg_bld_selection)"
+            if [ "$B" = "Original" ]; then
+                SLACKBUILD="original"
+                break
+            fi
+            if [ "$B" = "Local" ]; then
+                SLACKBUILD="local"
+                break
+            fi
+        done
+    else
+        while true; do
+            echo "A local SlackBuild for $PKGNAME was found in \
+addition to the original SlackBuild."
+            echo "Which one would you like to use?  Please enter \
+'O' for original, 'L' for local, or 'C' to cancel."
+            read ANS
+            case $ANS in
+                o* | O* ) SLACKBUILD="original" ; break
+                ;;
+                l* | L* ) SLACKBUILD="local" ; break
+                ;;
+                c* | C* ) SLACKBUILD="cancel" ; exit 0
+                ;;
+                * ) echo "Unknown response."
+                ;;
+            esac
+        done
+    fi
+fi
+}
+
 cleanup () {
 rm -rf $TMP/sbopkg_*
 cd $CWD
@@ -497,6 +552,11 @@ if [ "$R" = "Browse" ]; then
 fi
 
 if [ "$R" = "Search" ]; then
+    # Ideally, it would be nice for the app to automatically jump to
+    # the package information screen if it is found -- i.e. the menu
+    # that displays the options to view the docs, edit the slackbuild,
+    # etc but for now, this works.  At least it provides the category,
+    # which can sometimes be hard to remember.  :-)
     dialog --inputbox "Enter the name of a package you would like \
 to search for" 0 0 2>/$TMP/sbopkg_search_request
     if [ $? = 1 ]; then
@@ -590,11 +650,23 @@ if [ -n "$BUILD" ]; then
 to build packages."
         exit 0
     fi
+    OUTPUT=$TMP/sbopkg_output
     for PKGBUILD in $BUILD; do
         echo "Building $PKGBUILD"
         search_package $PKGBUILD
-        build_package $PKGBUILD
+        pick_slackbuild
+        rm -rf $TMP/sbopkg_build.lck
+        touch $TMP/sbopkg_build.lck
+        ( build_package $PKGNAME 2>&1 | tee $OUTPUT )
+        while [ -f $TMP/sbopkg_build.lck ]; do
+            tail -f $OUTPUT
+        done
+        if [ "$KEEPLOG" = "YES" ]; then 
+            cat $OUTPUT >> $TMP/sbopkg-build-log
+        fi
     done
+    rm -rf $OUTPUT
+    exit 0
     cleanup
     exit 0
 fi
