@@ -32,7 +32,7 @@ SCRIPT=${0##*/}
 DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
-VER=0.0.5
+VER=0.0.6
 
 sanity_checks () {
 # Check if config file is there and if so check that it has all 
