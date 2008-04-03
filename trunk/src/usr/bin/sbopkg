@@ -32,7 +32,7 @@ SCRIPT=${0##*/}
 DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
-VER=0.0.6
+VER=SVN
 
 sanity_checks () {
 # Check if config file is there and if so check that it has all 
@@ -57,12 +57,13 @@ else
             exit 1
     fi
 fi
-if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
-    echo "$SCRIPT: Directory $LOCALREPO/$SLACKVER does not exist."
+if [ ! -d "$LOCALREPO" ]; then
+    echo "$SCRIPT: Directory $LOCALREPO does not exist."
     echo "Please create it and run $SCRIPT again." 1>&2
     exit 1
 else
-    cd $LOCALREPO/$SLACKVER
+    #cd $LOCALREPO/$SLACKVER
+    cd $LOCALREPO
 fi
 if [ ! -d "$SRCDIR" ]; then
     echo "Creating local cache directory $SRCDIR to keep \
@@ -89,8 +90,40 @@ else
 fi
 }
 
+check_slack_version () {
+if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "Create directory?" --yesno "The directory \
+$LOCALREPO/$SLACKVER was not found.  Would like to create it?  \
+Select YES to create or NO to return." 10 30 
+        if [ $? = 0 ]; then
+            check_root
+            if [ $ROOT = "false" ]; then
+                dialog --title "ERROR" --msgbox "Sorry, only the root \
+user can create this directory." 8 30
+                break 
+            else
+                mkdir -p $LOCALREPO/$SLACKVER
+                dialog --title "Done" --msgbox "The directory has been \
+created." 8 30
+                continue
+            fi
+        else
+            continue
+        fi
+    else
+        echo "$SCRIPT: Directory $LOCALREPO does not exist."
+        echo "Please create it and run $SCRIPT again." 1>&2
+        exit 1
+    fi
+else
+    cd $LOCALREPO/$SLACKVER
+fi
+}
+
 show_changelog () {
 # Show the changelog
+cd $LOCALREPO/$SLACKVER
 if [ "$DIAG" = 1 ]; then
     if [ ! -e ./ChangeLog.txt ]; then
         dialog --title "ERROR" --msgbox "No ChangeLog.txt \
@@ -106,8 +139,24 @@ else
 fi
 }
 
+get_version_list () {
+# This function displays the Slack versions available in the local SBo
+# repository
+cd $LOCALREPO
+rm -f $TMP/sbopkg_version_list 2> /dev/null
+DIR=( */ )
+if [ -n "$DIR" ]; then
+    for i in ${DIR[*]%/}; do
+        echo "$i \"SBo repo for Slackware version $i\"" >> \
+        $TMP/sbopkg_version_list
+    done
+fi
+exit 0
+}
+
 get_category_list () {
 # This function displays the list of SBo categories in the dialog
+cd $LOCALREPO/$SLACKVER
 rm -f $TMP/sbopkg_category_list 2> /dev/null
 DIR=( */ )
 if [ -n "$DIR" ]; then
@@ -134,6 +183,26 @@ if [ -n "$DIR" ]; then
     done
 fi
 cd $LOCALREPO/$SLACKVER
+}
+
+select_version () {
+#get_version_list
+while [ 0 ]; do
+    dialog --title "Choose a Slackware version" \
+--menu "You are currently using sbopkg to browse a local copy of SBo \
+for Slackware version $SLACKVER.  If you would like to change \
+it, please select another version below:" 20 50 3 \
+"11.0" "Slackware version 11.0" \
+"12.0" "Slackware version 12.0" 2>$TMP/sbopkg_version_selection
+#"12.1" "Slackware version 12.1"
+    if [ $? = 1 ]; then
+        break
+    fi
+#exit 0
+    SLACKVER="$(cat $TMP/sbopkg_version_selection)"
+    break
+done
+rm -rf $TMP/sbopkg_version_selection
 }
 
 info_item () {
@@ -284,6 +353,7 @@ rm -rf $TMP/sbopkg_rsync.lck
 
 rsync_repo () {
 # This function does the rsync with SBo.
+check_slack_version
 check_write $LOCALREPO/$SLACKVER/
 if [ "$WRITE" = "false" ]; then
     if [ "$DIAG" = 1 ]; then
@@ -314,6 +384,7 @@ search_package () {
 # Search for package name and exit if not found.  If it is found,
 # populate various variables with data about the package for
 # displaying information and building.
+cd $LOCALREPO/$SLACKVER 
 PKG=$1
 PKGPATH=$(find -name $PKG)  
 if [ ! $(find -name "$PKG") ]; then 
@@ -328,6 +399,7 @@ fi
 . $PKGPATH/$PKG.info
 PKGNAME=${PKG##*/}
 SRCNAME=${DOWNLOAD##*/}
+cd -
 }
 
 show_readme () {
@@ -336,6 +408,7 @@ show_readme () {
 # other ways to do this.  Perhaps have a way for the user to choose
 # which of the 4 docs he wants to view?  Or have a menu listing the 4
 # docs?  Undecided.
+cd $LOCALREPO/$SLACKVER 
 ${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info,\
 slack-desc}
 return 0
@@ -480,13 +553,14 @@ while [ 0 ]; do
 dialog --title "SlackBuilds.org Package Browser \
 (sbopkg version $VER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit\n" \
-  15 60 7 \
+  15 60 8 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Browse" "Browse the local SlackBuilds.org repo" \
 "Search" "Search the local SlackBuilds.org repo" \
 "Cache" "View the contents of the cache directory" \
 "Log" "View the permanent build log" \
+"Version" "Select Slackware version (currently: $SLACKVER)" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
 if [ $? = 1 ]; then
@@ -527,11 +601,15 @@ to search for" 0 0 2>/$TMP/sbopkg_search_request
 fi
 
 if [ "$R" = "Cache" ]; then
-    view_cache_dir	
+    view_cache_dir
 fi
 
 if [ "$R" = "Log" ]; then
-    view_perm_log	
+    view_perm_log
+fi
+
+if [ "$R" = "Version" ]; then
+    select_version
 fi
 
 if [ "$R" = "Exit" ]; then
@@ -558,7 +636,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # This is the command line options and help
-while getopts ":b:d:f:hlrs:" OPT; do
+while getopts ":b:d:f:hlrs:v:" OPT; do
     case $OPT in
         b ) BUILD="$OPTARG"
             ;;
@@ -571,6 +649,9 @@ while getopts ":b:d:f:hlrs:" OPT; do
         r ) RSYNC=1
             ;;
         s ) SEARCH="$OPTARG"
+            ;;
+        v ) VERSION=1
+            CUSTOMVER="$OPTARG"
             ;;
         h|* )
             echo
@@ -589,6 +670,8 @@ ChangeLog.txt and then quit."
             echo "               the local mirror and then quit."
             echo "  -s package   Search for a package and, if found, \
 display package information."
+            echo "  -v version   Set the Slackware version for the"
+            echo "               mirror (current choices are 11.0 and 12.0)"
             echo
             echo "Note: multiple arguments to -b and -s must be \
 quoted (\"pkg1 pkg2\")"
@@ -600,6 +683,10 @@ done
 shift $(($OPTIND - 1))
 
 sanity_checks
+
+if [ -n "$VERSION" ]; then
+    SLACKVER=$CUSTOMVER
+fi
 
 if [ -n "$BUILD" ]; then
     check_root
@@ -636,7 +723,8 @@ if [ -n "$CHANGELOG" ]; then
 fi
 
 if [ -n "$RSYNC" ]; then
-    echo "Rsyncing with Slackbuilds.org repository into $LOCALREPO."
+    echo "Rsyncing with Slackbuilds.org repository into \
+$LOCALREPO/$SLACKVER."
     rsync_repo
     cleanup
     echo "Finished rsync."
@@ -650,6 +738,10 @@ if [ -n "$SEARCH" ]; then
         show_readme
     done
     exit 0
+fi
+
+if [ -n "$VERSION" ]; then
+    SLACKVER=$NEWVER
 fi
 
 cleanup
