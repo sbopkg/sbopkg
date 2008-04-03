@@ -1,4 +1,4 @@
-.TH SBOPKG 8 "Apr 2008" sbopkg-0.0.6 ""
+.TH SBOPKG 8 "Apr 2008" sbopkg-SVN ""
 .SH NAME
 .B sbopkg
 \ - The SlackBuilds.org Package Browser
@@ -87,6 +87,11 @@ Search for PACKAGE(s) and, if found, display the README, SlackBuild,
 .info, and slack-desc files in that order.  If more than one
 package is specified, they must be in quotes.  For example
 "sbopkg -s "foo bar".
+
+.TP 5
+.B -v VERSION
+Set the Slackware version to use for the matching local SBo mirror.
+Current options are 11.0 and 12.0.
 
 .SH FILES
 .B /etc/sbopkg/sbopkg.conf
