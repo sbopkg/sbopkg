@@ -94,14 +94,14 @@ check_slack_version () {
 if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "Create directory?" --yesno "The directory \
-$LOCALREPO/$SLACKVER was not found.  Would like to create it?  \
-Select YES to create or NO to return." 10 30 
+$LOCALREPO/$SLACKVER was not found.  Would you like to create it?  \
+Select YES to create or NO to cancel." 10 30 
         if [ $? = 0 ]; then
-            check_root
-            if [ $ROOT = "false" ]; then
-                dialog --title "ERROR" --msgbox "Sorry, only the root \
-user can create this directory." 8 30
-                break 
+            check_write $LOCALREPO/$SLACKVER/
+            if [ "$WRITE" = "false" ]; then
+                dialog --title "ERROR" --msgbox "You do not have \
+write permissions on the target directory." 8 30
+                continue
             else
                 mkdir -p $LOCALREPO/$SLACKVER
                 dialog --title "Done" --msgbox "The directory has been \
@@ -156,6 +156,13 @@ exit 0
 
 get_category_list () {
 # This function displays the list of SBo categories in the dialog
+if [ ! -d $LOCALREPO/$SLACKVER ]; then
+    dialog --title "ERROR" --msgbox "The directory \
+$LOCALREPO/$SLACKVER was not found.  Please make sure your \
+repository directory is set correctly and that you have done an \
+rsync first."  10 30
+    continue
+fi
 cd $LOCALREPO/$SLACKVER
 rm -f $TMP/sbopkg_category_list 2> /dev/null
 DIR=( */ )
