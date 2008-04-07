@@ -402,13 +402,37 @@ if [ ! $(find -name "$PKG") ]; then
         dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
         continue
     else
-        echo "$SCRIPT: Package $PKG not found.  Exiting." 1>&2
-        exit 1
+        echo "$SCRIPT: Package $PKG not found." 1>&2
+        continue
     fi
 fi
 . $PKGPATH/$PKG.info
 PKGNAME=${PKG##*/}
 SRCNAME=${DOWNLOAD##*/}
+cd -
+}
+
+gen_search_package () {
+# Search for package name glob generally using grep.  Only used with
+# cli not dialog.
+cd $LOCALREPO/$SLACKVER 
+PKG=$1
+RESULTS=$(find . -type d | grep $PKG | sed -e 's/.\///') 
+if [ -n "$RESULTS" ]; then 
+    echo "Found the following matches for $PKG:"
+    for i in $RESULTS; do
+        echo $i
+    done
+    continue
+else
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
+        continue
+    else
+        echo "$SCRIPT: No match for $PKG found." 1>&2
+        continue 
+    fi
+fi
 cd -
 }
 
@@ -646,7 +670,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # This is the command line options and help
-while getopts ":b:d:f:hlrs:v:" OPT; do
+while getopts ":b:d:f:i:hlrs:v:" OPT; do
     case $OPT in
         b ) BUILD="$OPTARG"
             ;;
@@ -654,11 +678,13 @@ while getopts ":b:d:f:hlrs:v:" OPT; do
             ;;
         f ) SBOPKG_CONF="$OPTARG"
             ;;
+        i ) SEARCH="$OPTARG"
+            ;;
         l ) CHANGELOG=1
             ;;
         r ) RSYNC=1
             ;;
-        s ) SEARCH="$OPTARG"
+        s ) GENSEARCH="$OPTARG"
             ;;
         v ) VERSION=1
             CUSTOMVER="$OPTARG"
@@ -674,16 +700,18 @@ SlackBuilds.org repository"
             echo "  -f           Override default configuration file" 
             echo "               with specified file."
             echo "  -h           Display this help message."
+            echo "  -i package   Search by specific package name and, \
+if found,"
+            echo "               display package information."
             echo "  -l           Display the SlackBuilds.org \
 ChangeLog.txt and then quit."
             echo "  -r           Rsync the SlackBuilds.org repository with"
             echo "               the local mirror and then quit."
-            echo "  -s package   Search for a package and, if found, \
-display package information."
+            echo "  -s package   General search for a package name."
             echo "  -v version   Set the Slackware version for the"
             echo "               mirror (current choices are 11.0 and 12.0)"
             echo
-            echo "Note: multiple arguments to -b and -s must be \
+            echo "Note: multiple arguments to -b, -i, and -s must be \
 quoted (\"pkg1 pkg2\")"
             exit
             ;;
@@ -746,6 +774,14 @@ if [ -n "$SEARCH" ]; then
         echo "Searching for $PKGSEARCH"
         search_package $PKGSEARCH
         show_readme
+    done
+    exit 0
+fi
+
+if [ -n "$GENSEARCH" ]; then
+    for PKGSEARCH in $GENSEARCH; do
+        echo "Searching for $PKGSEARCH"
+        gen_search_package $PKGSEARCH
     done
     exit 0
 fi
