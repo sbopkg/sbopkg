@@ -24,7 +24,7 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 #  Slackware is a registered trademark of Patrick Volkerding.
-#  Linux is a registered trademark of Linux Torvalds.
+#  Linux is a registered trademark of Linus Torvalds.
 #
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers,
@@ -409,7 +409,7 @@ fi
 . $PKGPATH/$PKG.info
 PKGNAME=${PKG##*/}
 SRCNAME=${DOWNLOAD##*/}
-cd -
+#cd -
 }
 
 gen_search_package () {
@@ -418,22 +418,33 @@ gen_search_package () {
 cd $LOCALREPO/$SLACKVER 
 PKG=$1
 RESULTS=$(find . -type d | grep $PKG | sed -e 's/.\///') 
-if [ -n "$RESULTS" ]; then 
-    echo "Found the following matches for $PKG:"
-    for i in $RESULTS; do
-        echo $i
-    done
-    continue
+if [ -n "$RESULTS" ]; then
+    if [ "$DIAG" = 1 ]; then
+        #for i in ${RESULTS[*]%/}; do
+        for i in $RESULTS; do
+            echo "$i" >> $TMP/sbopkg_search_results
+        done
+        dialog --title "Matches for $PKG" --textbox \
+$TMP/sbopkg_search_results 15 50
+        rm -rf $TMP/sbopkg_search_results
+        continue
+    else
+        echo "Found the following matches for $PKG:"
+        for i in $RESULTS; do
+            echo $i
+        done
+        continue
+    fi
 else
     if [ "$DIAG" = 1 ]; then
-        dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
+        dialog --title "ERROR" --msgbox "No match for $PKG found" 8 30
         continue
     else
         echo "$SCRIPT: No match for $PKG found." 1>&2
         continue 
     fi
 fi
-cd -
+#cd -
 }
 
 show_readme () {
@@ -467,6 +478,7 @@ fi
 build_package () {
 # Start fetching and building the package.
 echo ; echo "Building $PKG"
+cd $LOCALREPO/$SLACKVER 
 cd $PKGPATH
 get_source
 echo "Checking MD5SUM for "$SRCNAME"..."
@@ -629,9 +641,10 @@ to search for" 0 0 2>/$TMP/sbopkg_search_request
         continue 
     fi
     SRCH="$(cat $TMP/sbopkg_search_request)"
-    search_package $SRCH
-    SRCHRESULT="$(echo $PKGPATH | sed 's/^.\///')"
-    dialog --title "Package location" --msgbox "$SRCHRESULT" 8 30
+    #search_package $SRCH
+    gen_search_package $SRCH
+    #SRCHRESULT="$(echo $PKGPATH | sed 's/^.\///')"
+    #dialog --title "Package location" --msgbox "$SRCHRESULT" 8 30
 fi
 
 if [ "$R" = "Cache" ]; then
