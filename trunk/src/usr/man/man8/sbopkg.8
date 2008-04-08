@@ -49,7 +49,10 @@ an editor to edit the SlackBuild.  The pager function will look to the
 environmental variable $PAGER and if that variable is not defined then
 it will default to 'more.'  Similarly, the edit SlackBuild function
 found when sbopkg is used with the dialog interface will look to
-$EDITOR and will default to 'vi' if no $EDITOR has been defined.
+$EDITOR and will default to 'vi' if no $EDITOR has been defined.  If
+the user wants sbopkg to use another EDITOR, such as nano, then adding
+the requisite information in ~/.bashrc or other similar configuration
+file to export EDITOR will suffice.
 
 .SH OPTIONS
 .TP 5
@@ -74,6 +77,14 @@ file.
 Display the help
 
 .TP 5
+.B -i PACKAGE(s)
+Search for PACKAGE(s) by specific PACKAGE name and, if found, display
+the README, SlackBuild, .info, and slack-desc files in that order
+using $PAGER, which defaults to 'more' as decribed above.   If more 
+than one package is specified, they must be in quotes.  For example 
+"sbopkg -i "foo bar".
+
+.TP 5
 .B -l
 Display the SBo ChangeLog.txt and quit
 
@@ -83,10 +94,9 @@ Rsync the local repository with SlackBuilds.org and quit
 
 .TP 5
 .B -s PACKAGE(s)
-Search for PACKAGE(s) and, if found, display the README, SlackBuild,
-.info, and slack-desc files in that order.  If more than one
-package is specified, they must be in quotes.  For example
-"sbopkg -s "foo bar".
+Search for PACKAGE(s) by glob.  For example, 'sbopkg -s nv' will return
+a list of matches, such as the nvidia packages, konversation, and 
+other packages with 'nv' in their name.
 
 .TP 5
 .B -v VERSION
