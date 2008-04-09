@@ -64,7 +64,7 @@ than one package is specified, they must be in quotes.  For example
 .TP 5 
 .B -d DIRECTORY
 Manually specify the full path to the DIRECTORY containing the 
-local SBo repository
+local SBo repository.
 
 .TP 5
 .B -f
@@ -74,29 +74,29 @@ file.
 
 .TP 5
 .B -h
-Display the help
+Display the help.
 
 .TP 5
-.B -i PACKAGE(s)
+.B -l
+Display the SBo ChangeLog.txt and quit.
+
+.TP 5
+.B -q PACKAGE(s)
+Query for PACKAGE(s) by glob.  For example, 'sbopkg -q nv' will return
+a list of matches, such as the nvidia packages, konversation, and 
+other packages with 'nv' in their name.
+
+.TP 5
+.B -r
+Rsync the local repository with SlackBuilds.org and quit.
+
+.TP 5
+.B -s PACKAGE(s)
 Search for PACKAGE(s) by specific PACKAGE name and, if found, display
 the README, SlackBuild, .info, and slack-desc files in that order
 using $PAGER, which defaults to 'more' as decribed above.   If more 
 than one package is specified, they must be in quotes.  For example 
-"sbopkg -i "foo bar".
-
-.TP 5
-.B -l
-Display the SBo ChangeLog.txt and quit
-
-.TP 5
-.B -r
-Rsync the local repository with SlackBuilds.org and quit
-
-.TP 5
-.B -s PACKAGE(s)
-Search for PACKAGE(s) by glob.  For example, 'sbopkg -s nv' will return
-a list of matches, such as the nvidia packages, konversation, and 
-other packages with 'nv' in their name.
+"sbopkg -s "foo bar".
 
 .TP 5
 .B -v VERSION
