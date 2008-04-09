@@ -682,7 +682,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # This is the command line options and help
-while getopts ":b:d:f:i:hlrs:v:" OPT; do
+while getopts ":b:d:f:hlq:rs:v:" OPT; do
     case $OPT in
         b ) BUILD="$OPTARG"
             ;;
@@ -690,13 +690,13 @@ while getopts ":b:d:f:i:hlrs:v:" OPT; do
             ;;
         f ) SBOPKG_CONF="$OPTARG"
             ;;
-        i ) SEARCH="$OPTARG"
-            ;;
         l ) CHANGELOG=1
+            ;;
+        q ) GENSEARCH="$OPTARG"
             ;;
         r ) RSYNC=1
             ;;
-        s ) GENSEARCH="$OPTARG"
+        s ) SEARCH="$OPTARG"
             ;;
         v ) VERSION=1
             CUSTOMVER="$OPTARG"
@@ -712,18 +712,18 @@ SlackBuilds.org repository"
             echo "  -f           Override default configuration file" 
             echo "               with specified file."
             echo "  -h           Display this help message."
-            echo "  -i package   Search by specific package name and, \
-if found,"
-            echo "               display package information."
             echo "  -l           Display the SlackBuilds.org \
 ChangeLog.txt and then quit."
+            echo "  -q package   Query for packages matching string."
             echo "  -r           Rsync the SlackBuilds.org repository with"
             echo "               the local mirror and then quit."
-            echo "  -s package   General search for a package name."
+            echo "  -s package   Search by specific package name and, \
+if found,"
+            echo "               display package information."
             echo "  -v version   Set the Slackware version for the"
             echo "               mirror (current choices are 11.0 and 12.0)"
             echo
-            echo "Note: multiple arguments to -b, -i, and -s must be \
+            echo "Note: multiple arguments to -b, -q, and -s must be \
 quoted (\"pkg1 pkg2\")"
             exit
             ;;
