@@ -467,7 +467,8 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     else
         cd $SRCDIR
-        wget -T 20 $DOWNLOAD || rm -rf $TMP/sbopkg_build.lck && exit 1
+        #wget -T 20 $DOWNLOAD || exit 1 
+        wget -T 20 $DOWNLOAD || rm -rf $TMP/sbopkg_build.lck
         cd -
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     fi
@@ -477,8 +478,8 @@ fi
 build_package () {
 # Start fetching and building the package.
 echo ; echo "Building $PKG"
-cd $LOCALREPO/$SLACKVER 
-cd $PKGPATH
+cd $LOCALREPO/$SLACKVER/$PKGPATH
+#cd $PKGPATH
 get_source
 echo "Checking MD5SUM for "$SRCNAME"..."
 MD5CHK=$(md5sum $SRCNAME | cut -d' ' -f1)
@@ -491,6 +492,7 @@ else
 fi
 echo "Building Slackware package for "$SRCNAME"..."
 if [ "$SLACKBUILD" = "original" ]; then
+    #sh $PKG.SlackBuild
     sh $PKG.SlackBuild || rm -rf $TMP/sbopkg_build.lck
 fi
 if [ "$SLACKBUILD" = "local" ]; then
