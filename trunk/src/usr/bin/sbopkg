@@ -416,7 +416,7 @@ gen_search_package () {
 # cli not dialog.
 cd $LOCALREPO/$SLACKVER 
 PKG=$1
-RESULTS=$(find . -type d | grep $PKG | sed -e 's/.\///') 
+RESULTS=$(find . -mindepth 2 -type d | grep $PKG | sed -e 's/.\///') 
 if [ -n "$RESULTS" ]; then
     if [ "$DIAG" = 1 ]; then
         #for i in ${RESULTS[*]%/}; do
@@ -467,7 +467,7 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     else
         cd $SRCDIR
-        wget -T 20 $DOWNLOAD || exit 1
+        wget -T 20 $DOWNLOAD || rm -rf $TMP/sbopkg_build.lck && exit 1
         cd -
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     fi
@@ -486,14 +486,15 @@ if [ "$MD5CHK" == $MD5SUM ]; then
     echo "OK"
 else 
     echo "MD5SUM check failed.  Exiting." 
-    continue
+    rm -rf $TMP/sbopkg_build.lck
+    break
 fi
 echo "Building Slackware package for "$SRCNAME"..."
 if [ "$SLACKBUILD" = "original" ]; then
-    sh $PKG.SlackBuild
+    sh $PKG.SlackBuild || rm -rf $TMP/sbopkg_build.lck
 fi
 if [ "$SLACKBUILD" = "local" ]; then
-    sh $PKG.SlackBuild.sbopkg
+    sh $PKG.SlackBuild.sbopkg || rm -rf $PKG/sbopkg_build.lck 
 fi
 echo "Done building $PKG."
 rm -rf $TMP/sbopkg_build.lck
