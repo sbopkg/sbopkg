@@ -1,14 +1,13 @@
-#summary One-sentence summary of this page.
+#summary sbopkg(8) man page
 #labels Featured
-
 = Introduction =
 
-sbopkg(8) man page
+Here is the man page for sbopkg(8).
 
 
 = Details =
 
-Here is the man page for sbopkg(8).
+
 
 {{{
 SBOPKG(8)                                                                                                                             SBOPKG(8)
