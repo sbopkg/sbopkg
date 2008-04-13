@@ -2,7 +2,7 @@
 #labels Featured
 = Introduction =
 
-Here is the man page for sbopkg(8).
+Here is the man page for sbopkg(8)
 
 
 = Details =
