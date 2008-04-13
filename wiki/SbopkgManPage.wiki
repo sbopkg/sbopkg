@@ -3,15 +3,12 @@
 
 = Introduction =
 
-Add your content here.
+sbopkg(8) man page
 
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Here is the man page for sbopkg(8).
 
 {{{
 SBOPKG(8)                                                                                                                             SBOPKG(8)
