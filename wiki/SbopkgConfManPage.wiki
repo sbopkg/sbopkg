@@ -1,0 +1,62 @@
+#summary sbopkg.conf(5) man page
+#labels Featured
+
+= Introduction =
+Here is the man page for sbopkg.conf(5)
+
+
+= Details =
+
+{{{
+SBOPKG.CONF(5)                                                                                                                   SBOPKG.CONF(5)
+
+NAME
+       sbopkg.conf - Configuration file for sbopkg
+
+DESCRIPTION
+       The sbopkg.conf file contains configuration settings for sbopkg (8), a tool for interacting with the SlackBuilds.org ("SBo") repository,
+       a collection of third-party SlackBuild scripts to build Slackware packages.  A sample file is provided  at  /etc/sbopkg/sbopkg.conf.sam-
+       ple.
+
+       The different configuration options are:
+
+       RSYNCMIRROR
+            This option allows the user to set the rsync mirror of the SBo repository that will be used by sbopkg.
+
+            The default value of RSYNCMIRROR is slackbuilds.org::slackbuilds
+
+       SLACKVER
+            This option allows the user to set the default Slackware version in order to rsync with the matching SBo repository.
+
+            The default value of SLACKVER is 12.0.
+
+       LOCALREPO
+            This option allows the user to set the location of the local rsync mirror of the SBo repository.
+
+            The default value of LOCALREPO is /home/sbo.
+
+       SRCDIR
+            This option contains the location of the cache directory where source downloads will be saved.
+
+            The default value of SRCDIR is /var/cache/sbopkg.
+
+       TMP
+            This options sets the default directory where certain working files are saved on a temporary basis.
+
+            The default value of TMP is /tmp.
+
+       KEEPLOG
+            This option should be set to YES or NO.  This option allows the user to choose whether to keep a permanent log of packages that are
+            build with sbopkg in order to go back and review the build, and any errors, after exiting sbopkg.  If set to  YES,  this  permanent
+            log is saved at /tmp/sbopkg-build-log.
+
+            The default value of KEEPLOG is YES.
+
+FILES
+       /etc/sbopkg/sbopkg.conf
+
+SEE ALSO
+       sbopkg(8)
+
+sbopkg-0.0.6                                                        Apr 2008                                                     SBOPKG.CONF(5)
+}}}
