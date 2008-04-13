@@ -1,0 +1,8 @@
+# $Id: sbopkg.conf.sample 28 2008-03-29 19:47:58Z chess.griffin $
+
+RSYNCMIRROR=slackbuilds.org::slackbuilds
+SLACKVER=12.0
+LOCALREPO=/home/sbo
+SRCDIR=/var/cache/sbopkg
+TMP=/tmp
+KEEPLOG=YES
