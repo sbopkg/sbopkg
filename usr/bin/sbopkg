@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id$ 
+# $Id: sbopkg 51 2008-04-11 14:39:03Z chess.griffin $ 
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2008 Chess Griffin <chess@chessgriffin.com>
@@ -35,7 +35,7 @@ SCRIPT=${0##*/}
 DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
-VER=SVN
+VER=0.0.6
 
 sanity_checks () {
 # Check if config file is there and if so check that it has all 
@@ -65,7 +65,6 @@ if [ ! -d "$LOCALREPO" ]; then
     echo "Please create it and run $SCRIPT again." 1>&2
     exit 1
 else
-    #cd $LOCALREPO/$SLACKVER
     cd $LOCALREPO
 fi
 if [ ! -d "$SRCDIR" ]; then
@@ -207,7 +206,6 @@ it, please select another version below:" 20 50 3 \
     if [ $? = 1 ]; then
         break
     fi
-#exit 0
     SLACKVER="$(cat $TMP/sbopkg_version_selection)"
     break
 done
@@ -479,7 +477,6 @@ build_package () {
 # Start fetching and building the package.
 echo ; echo "Building $PKG"
 cd $LOCALREPO/$SLACKVER/$PKGPATH
-#cd $PKGPATH
 get_source
 echo "Checking MD5SUM for "$SRCNAME"..."
 MD5CHK=$(md5sum $SRCNAME | cut -d' ' -f1)
@@ -643,10 +640,7 @@ to search for" 0 0 2>/$TMP/sbopkg_search_request
         continue 
     fi
     SRCH="$(cat $TMP/sbopkg_search_request)"
-    #search_package $SRCH
     gen_search_package $SRCH
-    #SRCHRESULT="$(echo $PKGPATH | sed 's/^.\///')"
-    #dialog --title "Package location" --msgbox "$SRCHRESULT" 8 30
 fi
 
 if [ "$R" = "Cache" ]; then
