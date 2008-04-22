@@ -202,6 +202,7 @@ while [ 0 ]; do
 --menu "You are currently using sbopkg to browse a local copy of SBo \
 for Slackware version $SLACKVER.  If you would like to change \
 it, please select another version below:" 20 50 3 \
+"12.1" "Slackware version 12.1" \
 "12.0" "Slackware version 12.0" \
 "11.0" "Slackware version 11.0" 2>$TMP/sbopkg_version_selection
     if [ $? = 1 ]; then
@@ -724,7 +725,8 @@ ChangeLog.txt and then quit."
 if found,"
             echo "               display package information."
             echo "  -v version   Set the Slackware version for the"
-            echo "               mirror (current choices are 11.0 and 12.0)"
+            echo "               mirror (current choices are 11.0, 12.0, \
+and 12.1)"
             echo
             echo "Note: multiple arguments to -b, -q, and -s must be \
 quoted (\"pkg1 pkg2\")"
