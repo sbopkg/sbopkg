@@ -1,7 +1,7 @@
 # $Id$
 
 RSYNCMIRROR=slackbuilds.org::slackbuilds
-SLACKVER=12.0
+SLACKVER=12.1
 LOCALREPO=/home/sbo
 SRCDIR=/var/cache/sbopkg
 TMP=/tmp
