@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id$ 
+# $Id: sbopkg 59 2008-04-22 13:58:13Z chess.griffin $ 
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2008 Chess Griffin <chess@chessgriffin.com>
@@ -35,7 +35,7 @@ SCRIPT=${0##*/}
 DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
-VER=SVN
+VER=0.0.6.1
 
 sanity_checks () {
 # Check if config file is there and if so check that it has all 
