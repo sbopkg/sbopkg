@@ -289,7 +289,7 @@ browse_categories () {
 get_category_list
 while [ 0 ]; do
     dialog --title "Choose a category" --menu "Please select the \
-category you wish to browse." 20 70 12 \
+category you wish to browse." 20 70 14 \
 --file $TMP/sbopkg_category_list 2>$TMP/sbopkg_category_selection
     if [ $? = 1 ]; then
         break
