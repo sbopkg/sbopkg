@@ -1,7 +1,5 @@
 #summary News and Updates
 
-= About = 
-
 There is no easy place to post updates/news/errata on the Google Code page, so I've created this wiki page as a place for that sort of stuff.  I also try and post important items to the sbopkg mailing list (please subscribe if you have not already).
 
 == News and Updates ==
