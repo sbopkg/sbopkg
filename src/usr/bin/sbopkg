@@ -141,6 +141,76 @@ else
 fi
 }
 
+check_for_updates () {
+# Check to see if there are any updates to installed SBo pkgs
+UPDATELIST=$TMP/sbopkg_updatelist
+rm -rf $UPDATELIST
+if [ "$DIAG" = 1 ]; then
+    dialog --title "Check for updates?" --yesno "Would you like to \
+check for updates?  This is an experimental feature and should not \
+be used as a subtitute for reading the SBo ChangeLog.txt.  If you \
+proceed, it might take a few seconds to process, depending on the \
+number of SlackBuilds.org packages you have installed.  Select \
+YES to continue or NO to cancel." 13 40 
+    if [ $? = 1 ]; then
+        continue 
+    fi
+else
+    while true; do
+        echo "Would you like to check for updates?  This is an"
+        echo "experimental feature and should not be used as a"
+        echo "substitute for reading the SBo ChangeLog.txt."
+        echo "If you proceed, it might take a few moments to process."
+        echo "Press Y to continue or N to cancel."  
+            read ANS
+            case $ANS in
+                y* | Y* ) break 
+                ;;
+                n* | N* ) exit 0 
+                ;;
+                * ) echo "Unknown response."
+                ;;
+            esac
+    done
+fi
+cd /var/log/packages
+PKGS=$(ls *SBo*)
+if [ -e "$PKGS" ]; then
+    echo "No SlackBuilds.org packages detected." >> $UPDATELIST
+else
+    echo "Listing installed SlackBuilds.org packages and flagging \
+potential updates..." >> $UPDATELIST
+    for i in $PKGS; do
+        SHORT=$(echo $i | sed -e 's/-[0-9].*$//')
+        FULL=$(echo $i | sed -e 's/-noarch.*$\|-i[0-9].*$//')
+        SBOLD=$(find $LOCALREPO/$SLACKVER -name "$SHORT.SlackBuild")
+        INFO=$(find $LOCALREPO/$SLACKVER -name "$SHORT.info")
+        CAT=$(echo $INFO | sed -e "s|$LOCALREPO/$SLACKVER/||" | sed -e "s|/$SHORT.info||" | sed -e "s|$SHORT||")
+        echo $CAT$FULL >> $UPDATELIST
+        if [ -n "$INFO" ]; then
+            PRGNAM=$(cat $SBOLD | egrep -m1 "PRGNAM" | sed -e 's/^.*=//' | sed -e 's/[ \t]*$//')
+            VERSION=$(cat $SBOLD | egrep -m1 "VERSION" | sed -e 's/^.*[=-]//' | sed -e 's/[ }\t]*$//')
+            ARCH=$(cat $SBOLD | egrep -m1 "ARCH" | sed -e 's/^.*[=-]//' | sed -e 's/[ }\t]*$//g')
+            BUILD=$(cat $SBOLD | egrep -m1 "BUILD" | sed -e 's/^.*-//' | sed -e 's/[ }\t]*$//g')
+            TAG=$(cat $SBOLD | egrep -m1 "TAG" | sed -e 's/^.*-//' | sed -e 's/[ }\t]*$//g')
+            echo $i > $TMP/sbopkg_full 
+            if ! grep -q "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG" $TMP/sbopkg_full; then
+                echo "  POTENTIAL UPDATE" >> $UPDATELIST
+                echo "  Installed version: " $i >> $UPDATELIST
+                echo "  Repo version: " $PRGNAM-$VERSION-$ARCH-$BUILD$TAG >> $UPDATELIST
+            fi
+        else
+            echo "  Not in the repo." >> $UPDATELIST
+        fi
+    done
+fi
+if [ "$DIAG" = 1 ]; then
+    dialog --title "Viewing potential updates." --textbox \
+$UPDATELIST 0 0
+else
+    cat $UPDATELIST
+fi
+}
 
 get_category_list () {
 # This function displays the list of SBo categories in the dialog
@@ -582,9 +652,10 @@ while [ 0 ]; do
 dialog --title "SlackBuilds.org Package Browser \
 (sbopkg version $VER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit\n" \
-  15 60 8 \
+  15 65 9 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
+"Updates" "List installed packages and potential updates" \
 "Browse" "Browse the local SlackBuilds.org repo" \
 "Search" "Search the local SlackBuilds.org repo" \
 "Cache" "View the contents of the cache directory" \
@@ -606,6 +677,10 @@ fi
 
 if [ "$R" = "ChangeLog" ]; then
     show_changelog
+fi
+
+if [ "$R" = "Updates" ]; then
+    check_for_updates 
 fi
 
 if [ "$R" = "Browse" ]; then
@@ -664,10 +739,12 @@ if [ $# -eq 0 ]; then
 fi
 
 # This is the command line options and help
-while getopts ":b:d:f:hlq:rs:v:" OPT; do
+while getopts ":b:cd:f:hlq:rs:v:" OPT; do
     case $OPT in
         b ) BUILD="$OPTARG"
             ;;
+	    c ) CHK_UPDATES=1
+	        ;;
         d ) LOCALREPO="$OPTARG"
             ;;
         f ) SBOPKG_CONF="$OPTARG"
@@ -689,6 +766,7 @@ while getopts ":b:d:f:hlq:rs:v:" OPT; do
             echo "Usage: $SCRIPT [OPTIONS] <packagename(s)>"
             echo "Options are:"
             echo "  -b package   Build a package."
+            echo "  -c           Check for updates."
             echo "  -d localdir  Location of local copy of \
 SlackBuilds.org repository"
             echo "  -f           Override default configuration file" 
@@ -747,6 +825,11 @@ to build packages."
     exit 0
     cleanup
     exit 0
+fi
+
+if [ -n "$CHK_UPDATES" ]; then
+  check_for_updates
+  exit 0
 fi
 
 if [ -n "$CHANGELOG" ]; then
