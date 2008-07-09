@@ -1,0 +1,11 @@
+#summary News and Updates
+
+= About = 
+
+There is no easy place to post updates/news/errata on the Google Code page, so I've created this wiki page as a place for that sort of stuff.  I also try and post important items to the sbopkg mailing list (please subscribe if you have not already).
+
+== News and Updates ==
+
+There is an sbopkg IRC channel, which is pretty quiet.  Go to irc.freenode.net and join #sbopkg.
+
+A recent (July 8, 2008) SVN commit added code to display potential updates to packages built or installed from SlackBuilds.org.  This new feature needs testers.  Please grab the SVN copy of sbopkg and try it out.  You can either grab the entire SVN tree or just the updated sbopkg script: http://code.google.com/p/sbopkg/source/browse/trunk/src/usr/bin/sbopkg.
