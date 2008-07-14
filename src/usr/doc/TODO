@@ -22,5 +22,7 @@ Sbopkg TODO (in no particular order)
   first menu in the dialog after selecting "Browse" would be a menu
   showing the various Slackware versions in the local mirror.  UPDATED:
   This has been added to SVN and should appear in version 0.0.6.
+* Include ability to search and display updates to installed SBo packages.
+  UPDATE:  Alpha code for this feature is in SVN.
 * More error checking.
 * General code cleanups. 
