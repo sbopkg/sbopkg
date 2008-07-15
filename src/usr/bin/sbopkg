@@ -188,8 +188,8 @@ potential updates..." >> $UPDATELIST
         CAT=$(echo $INFO | sed -e "s|$LOCALREPO/$SLACKVER/||" | sed -e "s|/$SHORT.info||" | sed -e "s|$SHORT||")
         echo $CAT$FULL >> $UPDATELIST
         if [ -n "$INFO" ]; then
-            PRGNAM=$(cat $SBOLD | egrep -m1 "PRGNAM" | sed -e 's/^.*=//' | sed -e 's/[ \t]*$//')
-            VERSION=$(cat $SBOLD | egrep -m1 "VERSION" | sed -e 's/^.*[=-]//' | sed -e 's/[ }\t]*$//')
+            PRGNAM=$(cat $SBOLD | egrep -m1 "PRGNAM" | sed -e 's/\"//g' | sed -e 's/^.*=//' | sed -e 's/[ \t]*$//')
+            VERSION=$(cat $SBOLD | egrep -m1 "VERSION" | sed -e 's/\"//g' | sed -e 's/^.*[=-]//' | sed -e 's/[ }\t]*$//')
             ARCH=$(cat $SBOLD | egrep -m1 "ARCH" | sed -e 's/^.*[=-]//' | sed -e 's/[ }\t]*$//g')
             BUILD=$(cat $SBOLD | egrep -m1 "BUILD" | sed -e 's/^.*-//' | sed -e 's/[ }\t]*$//g')
             TAG=$(cat $SBOLD | egrep -m1 "TAG" | sed -e 's/^.*-//' | sed -e 's/[ }\t]*$//g')
