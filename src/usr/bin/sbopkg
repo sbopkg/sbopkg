@@ -75,7 +75,7 @@ fi
 }
 
 check_root () {
-# Check to see whether the user is root or not
+# Check to see whether the user is root or not.
 if [ ! $(id -u) = "0" ]; then
     ROOT="false"
 else
@@ -84,7 +84,8 @@ fi
 }
 
 check_write () {
-# Check to see whether the user has write permissions on the directory
+# Check to see whether the user has write permissions on the
+# directory.
 if [ ! -w $1  ]; then
     WRITE="false"
 else
@@ -93,6 +94,8 @@ fi
 }
 
 check_slack_version () {
+# Check to see if the SLACKVER directory is found; if not, offer to
+# create it.
 if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "Create directory?" --yesno "The directory \
@@ -124,7 +127,7 @@ fi
 }
 
 show_changelog () {
-# Show the SlackBuilds.org changelog
+# Show the SlackBuilds.org changelog.
 cd $LOCALREPO/$SLACKVER
 if [ "$DIAG" = 1 ]; then
     if [ ! -e ./ChangeLog.txt ]; then
@@ -142,13 +145,16 @@ fi
 }
 
 check_for_updates () {
-# Check to see if there are any updates to installed SBo pkgs
+# Check to see if there are any updates to installed SBo pkgs.   This
+# is is pretty ugly code and is not really 100% reliable due to the
+# many ways upstream tags software names, versions, etc.  Consider
+# this a continual work-in-progress.  :-)
 UPDATELIST=$TMP/sbopkg_updatelist
 rm -rf $UPDATELIST
 if [ "$DIAG" = 1 ]; then
     dialog --title "Check for updates?" --yesno "Would you like to \
 check for updates?  This is an experimental feature and should not \
-be used as a subtitute for reading the SBo ChangeLog.txt.  If you \
+be used as a substitute for reading the SBo ChangeLog.txt.  If you \
 proceed, it might take a few seconds to process, depending on the \
 number of SlackBuilds.org packages you have installed.  Select \
 YES to continue or NO to cancel." 13 40 
@@ -210,10 +216,12 @@ $UPDATELIST 0 0
 else
     cat $UPDATELIST
 fi
+# Keep a copy of the $UPDATELIST for debugging purposes during RC
+cp $UPDATELIST $TMP/sbopkg-debug-updatelist
 }
 
 get_category_list () {
-# This function displays the list of SBo categories in the dialog
+# This function displays the list of SBo categories in the dialog.
 if [ ! -d $LOCALREPO/$SLACKVER ]; then
     dialog --title "ERROR" --msgbox "The directory \
 $LOCALREPO/$SLACKVER was not found.  Please make sure your \
@@ -251,6 +259,8 @@ cd $LOCALREPO/$SLACKVER
 }
 
 select_version () {
+# Create menu and list the SBo-supported versions of Slackware for
+# user to choose from.
 while [ 0 ]; do
     dialog --title "Choose a Slackware version" \
 --menu "You are currently using sbopkg to browse a local copy of SBo \
@@ -270,7 +280,7 @@ rm -rf $TMP/sbopkg_version_selection
 
 info_item () {
 # This function shows the menu for each package where the user can see
-# certain information or build the package if he is root
+# certain information or build the package if he is root.
 APP="$(cat $TMP/sbopkg_item_selection)"
 while [ 0 ]; do
 dialog --title "$APP Information" --menu "Choose an item or press \
@@ -369,7 +379,7 @@ done
 }
 
 view_cache_dir () {
-# This function displays the contents of $SRCDIR
+# This function displays the contents of $SRCDIR.
 ls -la $SRCDIR > $TMP/sbopkg_cache_dir
 dialog --title "Displaying $SRCDIR" \
 --textbox $TMP/sbopkg_cache_dir 0 0
@@ -377,7 +387,7 @@ dialog --title "Displaying $SRCDIR" \
 
 view_perm_log () {
 # This function displays the contents of the permanent build log,
-# which is kept if KEEPLOG is set to YES in the config file
+# which is kept if KEEPLOG is set to YES in the config file.
 if [ ! -e $TMP/sbopkg-build-log ]; then
     dialog --title "ERROR" --msgbox "No permanent log \
 found.  Please make sure KEEPLOG is set to YES \
@@ -408,7 +418,7 @@ fi
 }
 
 rsync_command () {
-# This function holds the rsync command
+# This function holds the rsync command.
 /usr/bin/rsync -avz --delete --timeout=5 --exclude="*.sbopkg" \
 $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/ 
 rm -rf $TMP/sbopkg_rsync.lck
@@ -556,7 +566,7 @@ cd $LOCALREPO/$SLACKVER
 
 edit_local_slackbuild () {
 # This function allows the user to create and edit a local copy of the
-# SlackBuild
+# SlackBuild.
 check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
 if [ "$WRITE" = "false" ]; then
     dialog --title "ERROR" --msgbox "You do not have write \
@@ -571,7 +581,7 @@ ${EDITOR:-vi} $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild.sbopkg
 }
 
 delete_local_slackbuild () {
-# This function allows the user to delete the local SlackBuild
+# This function allows the user to delete the local SlackBuild.
 check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
 if [ "$WRITE" = "false" ]; then
     dialog --title "ERROR" --msgbox "You do not have write \
@@ -727,9 +737,9 @@ done
 # script when it is first run.
 
 # If there are no command line options then we will use the dialog
-# version of sbopkg
+# version of sbopkg.
 
-cleanup # Do this first just in case there is cruft left over
+cleanup # Do this first just in case there is cruft left over.
 
 if [ $# -eq 0 ]; then 
     DIAG=1
@@ -738,7 +748,7 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
-# This is the command line options and help
+# This is the command line options and help.
 while getopts ":b:cd:f:hlq:rs:v:" OPT; do
     case $OPT in
         b ) BUILD="$OPTARG"
