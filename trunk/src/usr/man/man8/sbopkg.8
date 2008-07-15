@@ -1,4 +1,4 @@
-.TH SBOPKG 8 "May 2008" sbopkg-SVN ""
+.TH SBOPKG 8 "July 2008" sbopkg-SVN ""
 .SH NAME
 .B sbopkg
 \ - The SlackBuilds.org Package Browser
@@ -58,8 +58,11 @@ file to export EDITOR will suffice.
 .TP 5
 .B -b PACKAGE(s)
 Search for and build PACKAGE(s) from the local SBo repository.  If more
-than one package is specified, they must be in quotes.  For example
-"sbopkg -b "foo bar".
+than one package is specified, they must be in quotes.  For example:
+
+#sbopkg -b "foo bar"
+
+will build foo and then bar.
 
 .TP 5 
 .B -d DIRECTORY
@@ -82,9 +85,12 @@ Display the SBo ChangeLog.txt and quit.
 
 .TP 5
 .B -q PACKAGE(s)
-Query for PACKAGE(s) by glob.  For example, 'sbopkg -q nv' will return
-a list of matches, such as the nvidia packages, konversation, and 
-other packages with 'nv' in their name.
+Query for PACKAGE(s) by glob.  For example:
+
+#sbopkg -q nv 
+
+will return a list of matches, such as the nvidia packages, 
+konversation, and other packages with 'nv' in their name.
 
 .TP 5
 .B -r
@@ -95,8 +101,11 @@ Rsync the local repository with SlackBuilds.org and quit.
 Search for PACKAGE(s) by specific PACKAGE name and, if found, display
 the README, SlackBuild, .info, and slack-desc files in that order
 using $PAGER, which defaults to 'more' as decribed above.   If more 
-than one package is specified, they must be in quotes.  For example 
-"sbopkg -s "foo bar".
+than one package is specified, they must be in quotes.  For example:
+
+#sbopkg -s "foo bar"
+
+will search for foo and then bar.
 
 .TP 5
 .B -v VERSION
