@@ -36,6 +36,7 @@ DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
 VER=SVN
+UPDATE_DEBUG="1"
 
 sanity_checks () {
 # Check if config file is there and if so check that it has all 
@@ -216,8 +217,11 @@ $UPDATELIST 0 0
 else
     cat $UPDATELIST
 fi
-# Keep a copy of the $UPDATELIST for debugging purposes during RC
-cp $UPDATELIST $TMP/sbopkg-debug-updatelist
+# Next is for debugging.  See variable at top of script to turn on or
+# off.
+if [ "$UPDATE_DEBUG" = 1 ]; then 
+    cp $UPDATELIST $TMP/sbopkg-debug-updatelist
+fi
 }
 
 get_category_list () {
