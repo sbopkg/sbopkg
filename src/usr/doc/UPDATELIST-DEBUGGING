@@ -1,0 +1,34 @@
+Starting with sbopkg version 0.0.8, there is a feature that displays
+potential updates to SBo packages installed on a user's system.  This
+feature is still a work in progress, and bugs are expected.  Most bugs
+will manifest themselves as either (a) missing updates -- those
+updates that should appear in the list but do not or (b) false
+positives -- updates listed in the list that are not really updates at
+all.  If you run into either of these problems, please do the
+following in order to assist with bug-reporting:
+
+As a root user, please open up /usr/bin/sbopkg in your favorite text
+editor and uncomment the following line in the "Variables" section
+near the top of the file:
+
+#UPDATE_DEBUG="1"
+
+so that it looks like this:
+
+UPDATE_DEBUG="1"
+
+Then, save the file and rerun sbopkg.  Please select the update
+feature as normal and then exit sbopkg.  A permanent log of the update
+list will now be saved in $TMP/sbopkg-debug-updatelist.  Please
+forward this log to me via email to chess@chessgriffin.com or post in
+the sbopkg mailing list, which can be found at the project's homepage:
+http://code.google.com/p/sbopkg.
+
+Once you have forwarded or copied the log to a safe location, feel
+free to comment out that single line in /usr/bin/sbopkg again, which
+will then disable the creation of the permanent update log, keeping
+your $TMP clean.  Of course, leaving the line uncommented is fine as
+well and will create a new $TMP/sbopkg-debug-updatelist each time the
+update feature is used.
+
+Thanks for your help!
