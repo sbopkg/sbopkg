@@ -23,14 +23,15 @@ Sbopkg can be run from the command line by simply invoking "sbopkg."
 Doing so will launch the dialog-based interface, and the menus
 provided should be fairly self-explanatory.  The main menu allows the
 user to rsync with the SlackBuilds.org repository, view the
-SlackBuilds.org Changelog, display the contents of the local cache
-directory where source tarballs are saved, display the permanent build
-log, and browse or search the local copy of the SBo repository.  Once
-the browse function is chosen, the user can select the category of
-software to view.  After choosing a category, the user can then view
-the various software packages available in that category within the
-local SBo repository.  Selecting a package will display another menu
-allowing the user to view the package's README, SlackBuild, .info, or
+SlackBuilds.org Changelog, check for potential updates to SBo
+packages, display the contents of the local cache directory where
+source tarballs are saved, display the permanent build log, and browse
+or search the local copy of the SBo repository.  Once the browse
+function is chosen, the user can select the category of software to
+view.  After choosing a category, the user can then view the various
+software packages available in that category within the local SBo
+repository.  Selecting a package will display another menu allowing
+the user to view the package's README, SlackBuild, .info, or
 slack-desc files.  The user can also edit the SlackBuild and the
 edited SlackBuild will remain after doing an rsync.  Additionally, if
 sbopkg is run with root privileges, then the user can choose to build
@@ -63,6 +64,10 @@ than one package is specified, they must be in quotes.  For example:
 #sbopkg -b "foo bar"
 
 will build foo and then bar.
+
+.TP 5
+.B -c
+Display list of installed SBo packages and potential updates.
 
 .TP 5 
 .B -d DIRECTORY
