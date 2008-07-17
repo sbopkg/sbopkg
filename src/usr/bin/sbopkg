@@ -208,8 +208,8 @@ potential updates..." >> $UPDATELIST
         NEWINFO=$(find $LOCALREPO/$SLACKVER -name "$NAME.info")
         if [ -n "$NEWINFO" ]; then
             . $NEWINFO
-            NEWARCH=$(egrep -m1 "^ARCH" $NEWSB | sed -e 's/^.*[=-]//;s/[ }\t]*$//g')
-            NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*-//;s/[ }\t]*$//g')
+            NEWARCH=$(egrep -m1 "^ARCH" $NEWSB | sed -e 's/^.*[=-]//;s/[ #}\t].*$//g')
+            NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*-//;s/[ }\t].*$//g')
             echo $CURPKG > $TMP/sbopkg_full 
             if ! grep -q "$PRGNAM-$VERSION-$NEWARCH-$NEWBUILD" $TMP/sbopkg_full; then
                 echo "  POTENTIAL UPDATE" >> $UPDATELIST
