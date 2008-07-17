@@ -189,7 +189,7 @@ else
     echo "Listing installed SlackBuilds.org packages and flagging \
 potential updates..." >> $UPDATELIST
     for i in $PKGS; do
-    # This next code is borrowed and modified from pktool
+    # This next code is borrowed and modified from pkgtool
         #echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//'
         STRING=$(basename $i _SBo)
         INDEX="$(echo $STRING | tr -d -c -)"
@@ -769,8 +769,8 @@ while getopts ":b:cd:f:hlq:rs:v:" OPT; do
     case $OPT in
         b ) BUILD="$OPTARG"
             ;;
-	    c ) CHK_UPDATES=1
-	        ;;
+        c ) CHK_UPDATES=1
+            ;;
         d ) LOCALREPO="$OPTARG"
             ;;
         f ) SBOPKG_CONF="$OPTARG"
