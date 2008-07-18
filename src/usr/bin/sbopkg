@@ -158,8 +158,11 @@ if [ "$DIAG" = 1 ]; then
 check for updates?  This is an experimental feature and should not \
 be used as a substitute for reading the SBo ChangeLog.txt.  If you \
 proceed, it might take a few seconds to process, depending on the \
-number of SlackBuilds.org packages you have installed.  Select \
-YES to continue or NO to cancel." 13 40 
+number of SlackBuilds.org packages you have installed.\n\n\
+If you encounter any errors or strange behavior, please read the \
+document entitled 'UPDATELIST-DEBUGGING' in the sbopkg doc \
+directory to assist with bug reporting.\n\nSelect \
+YES to continue or NO to cancel." 19 50 
     if [ $? = 1 ]; then
         continue 
     fi
