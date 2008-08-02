@@ -171,6 +171,11 @@ else
         echo "Would you like to check for updates?  This is an"
         echo "experimental feature and should not be used as a"
         echo "substitute for reading the SBo ChangeLog.txt."
+        echo
+        echo "If you encounter any errors or strange behavior, please"
+        echo "read the document entitled 'UPDATELIST-DEBUGGING' in"
+        echo "the sbopkg doc directory to assist with bug reporting."
+        echo
         echo "If you proceed, it might take a few moments to process."
         echo "Press Y to continue or N to cancel."  
             read ANS
