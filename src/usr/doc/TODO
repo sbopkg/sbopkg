@@ -21,8 +21,9 @@ Sbopkg TODO (in no particular order)
   Slackware versions, i.e. /home/sbo/11.0 and /home/sbo/12.0.  The
   first menu in the dialog after selecting "Browse" would be a menu
   showing the various Slackware versions in the local mirror.  UPDATED:
-  This has been added to SVN and should appear in version 0.0.6.
+  This was added to version 0.0.6.
 * Include ability to search and display updates to installed SBo packages.
-  UPDATE:  Alpha code for this feature is in SVN.
+  UPDATE:  Preliminary experimental code for this feature first
+  appeared in version 0.0.8.
 * More error checking.
 * General code cleanups. 
