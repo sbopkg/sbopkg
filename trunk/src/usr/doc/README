@@ -8,16 +8,15 @@ Homepage:  http://code.google.com/p/sbopkg
 Sbopkg is a command-line and dialog-based tool to synchronize with the
 SlackBuilds.org repository, a collection of third-party SlackBuild
 scripts to build Slackware packages.  Sbopkg will allow the user to
-browse his or her local copy of the repository, read the ChangeLog,
-and view the README, SlackBuild, .info, and slack-desc files for each
-package.  Sbopkg will also allow the user to select packages to build
-and it will download the source code, check the md5sum, and build a
-Slackware package.  It will not check dependencies, automatically
-install the package, or otherwise track what has been installed.
-There are already package tools for Slackware that do those things.
-Sbopkg is one thing and one thing only: a medium to easily browse a
-local copy of the SlackBuilds.org repository and build packages from
-it.
+browse his or her local copy of the repository, read the ChangeLog, display
+potential updates to SlackBuilds.org packages, and view the README, SlackBuild,
+.info, and slack-desc files for each package.  Sbopkg will also allow the user
+to select packages to build and it will download the source code, check the
+md5sum, and build a Slackware package.  It will not check dependencies,
+automatically install the package, or otherwise track what has been installed.
+There are already package tools for Slackware that do those things.  Sbopkg is
+one thing and one thing only: a medium to easily browse a local copy of the
+SlackBuilds.org repository and build packages from it.
 
 Sbopkg can be also be used strictly from the command line without the
 dialog interface, to rsync, read the ChangeLog, view package files,
