@@ -28,8 +28,9 @@
 #
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers,
-#  Michiel van Wessem, hba, Erik Hanson.  This script would not be
-#  where it is without the help of these folks.  Thank you!
+#  Michiel van Wessem, hba, Erik Hanson, and Antoine.  This script
+#  would not be where it is without the help of these folks.  Thank
+#  you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -578,7 +579,6 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     else
         cd $SRCDIR
-        #wget -T 20 $DOWNLOAD || exit 1 
         wget -T 20 $DOWNLOAD || rm -rf $TMP/sbopkg_build.lck
         cd -
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
@@ -602,7 +602,6 @@ else
 fi
 echo "Building Slackware package for "$SRCNAME"..."
 if [ "$SLACKBUILD" = "original" ]; then
-    #sh $PKG.SlackBuild
     sh $PKG.SlackBuild || rm -rf $TMP/sbopkg_build.lck
 fi
 if [ "$SLACKBUILD" = "local" ]; then
@@ -758,7 +757,6 @@ to search for" 0 0 2>/$TMP/sbopkg_search_request
         continue 
     fi
     SRCH="$(cat $TMP/sbopkg_search_request)"
-    #search_package $SRCH
     gen_search_package $SRCH
 fi
 
