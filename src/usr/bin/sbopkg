@@ -217,6 +217,10 @@ potential updates..." >> $UPDATELIST
             if [ $PRGNAM = "openoffice.org" ]; then
                 NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
             fi
+            # Ugly hack for openarena ... is there a trend here? :-)
+            if [ $PRGNAM = "openarena" ]; then
+                VERSION=$(egrep -m1 "^FINAL_VERSION" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*-//;s/\"//g')
+            fi
             NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g')
             if [[ $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD > $VER-$ARCH-$BUILD ]]; then
                 echo $NAME: >> $UPDATELIST
