@@ -8,10 +8,11 @@ Here is the output of *sbopkg -h* which is used to display the sbopkg command li
 = Details =
 
 {{{
-sbopkg v0.0.6
+sbopkg v0.0.8
 Usage: sbopkg [OPTIONS] <packagename(s)>
 Options are:
   -b package   Build a package.
+  -c           Check for updates.
   -d localdir  Location of local copy of SlackBuilds.org repository
   -f           Override default configuration file
                with specified file.
@@ -23,7 +24,7 @@ Options are:
   -s package   Search by specific package name and, if found,
                display package information.
   -v version   Set the Slackware version for the
-               mirror (current choices are 11.0 and 12.0)
+               mirror (current choices are 11.0, 12.0, and 12.1)
 
 Note: multiple arguments to -b, -q, and -s must be quoted ("pkg1 pkg2")
 }}}
