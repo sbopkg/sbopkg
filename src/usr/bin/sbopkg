@@ -471,6 +471,8 @@ rsync_command () {
 # This function holds the rsync command.
 /usr/bin/rsync -avz --delete --timeout=5 --exclude="*.sbopkg" \
 $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/ 
+echo
+echo "Rsync with SlackBuilds.org complete."
 rm -rf $TMP/sbopkg_rsync.lck
 }
 
