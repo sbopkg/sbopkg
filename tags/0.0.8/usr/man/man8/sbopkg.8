@@ -1,0 +1,132 @@
+.TH SBOPKG 8 "August 2008" sbopkg-0.0.8 ""
+.SH NAME
+.B sbopkg
+\ - The SlackBuilds.org Package Browser
+
+.SH SYNOPSIS
+.B sbopkg
+.B [options]
+
+.SH DESCRIPTION
+Sbopkg is a command-line and dialog-based tool to interact with the
+SlackBuilds.org ("SBo") repository, a collection of third-party
+SlackBuild scripts to build Slackware packages.
+
+.SH INSTRUCTIONS
+Before sbopkg can be used, a configuration file must be created at
+/etc/sbopkg/sbopkg.conf.  A sample file is provided at
+/etc/sbopkg/sbopkg.conf.sample. See
+.B sbopkg.conf
+(5) for more information about the configuration file.  
+
+Sbopkg can be run from the command line by simply invoking "sbopkg."
+Doing so will launch the dialog-based interface, and the menus
+provided should be fairly self-explanatory.  The main menu allows the
+user to rsync with the SlackBuilds.org repository, view the
+SlackBuilds.org Changelog, check for potential updates to SBo
+packages, display the contents of the local cache directory where
+source tarballs are saved, display the permanent build log, and browse
+or search the local copy of the SBo repository.  Once the browse
+function is chosen, the user can select the category of software to
+view.  After choosing a category, the user can then view the various
+software packages available in that category within the local SBo
+repository.  Selecting a package will display another menu allowing
+the user to view the package's README, SlackBuild, .info, or
+slack-desc files.  The user can also edit the SlackBuild and the
+edited SlackBuild will remain after doing an rsync.  Additionally, if
+sbopkg is run with root privileges, then the user can choose to build
+a package as well using either the original SlackBuild or the
+locally-edited one, if present.  Finally, if KEEPLOG is set to YES in
+the sbopkg.conf file then a permanent log of the build process is
+saved in /tmp/sbopkg-build-log.
+
+Alternatively, sbopkg can be run from the command line without using
+the dialog interface.  Executing "sbopkg -h" will display a list of
+options available from the command line.
+
+Certain features of sbopkg rely on outside binaries, such as a pager
+to view the text files when sbopkg is run from the comamnd line, and
+an editor to edit the SlackBuild.  The pager function will look to the
+environmental variable $PAGER and if that variable is not defined then
+it will default to 'more.'  Similarly, the edit SlackBuild function
+found when sbopkg is used with the dialog interface will look to
+$EDITOR and will default to 'vi' if no $EDITOR has been defined.  If
+the user wants sbopkg to use another EDITOR, such as nano, then adding
+the requisite information in ~/.bashrc or other similar configuration
+file to export EDITOR will suffice.
+
+.SH OPTIONS
+.TP 5
+.B -b PACKAGE(s)
+Search for and build PACKAGE(s) from the local SBo repository.  If more
+than one package is specified, they must be in quotes.  For example:
+
+#sbopkg -b "foo bar"
+
+will build foo and then bar.
+
+.TP 5
+.B -c
+Display list of installed SBo packages and potential updates.  This is
+an experimental feature.  Please see UPDATELIST-DEBUGGING in the
+sbopkg documentation directory to assist with bug reporting.
+
+.TP 5 
+.B -d DIRECTORY
+Manually specify the full path to the DIRECTORY containing the 
+local SBo repository.
+
+.TP 5
+.B -f
+Override the default configuration file, which is located by
+default at /etc/sbopkg/sbopkg.conf, with another configuration
+file. 
+
+.TP 5
+.B -h
+Display the help.
+
+.TP 5
+.B -l
+Display the SBo ChangeLog.txt and quit.
+
+.TP 5
+.B -q PACKAGE(s)
+Query for PACKAGE(s) by glob.  For example:
+
+#sbopkg -q nv 
+
+will return a list of matches, such as the nvidia packages, 
+konversation, and other packages with 'nv' in their name.  If more
+than one glob is specified, they must be in quotes.
+
+.TP 5
+.B -r
+Rsync the local repository with SlackBuilds.org and quit.
+
+.TP 5
+.B -s PACKAGE(s)
+Search for PACKAGE(s) by specific PACKAGE name and, if found, display
+the README, SlackBuild, .info, and slack-desc files in that order
+using $PAGER, which defaults to 'more' as decribed above.   If more 
+than one package is specified, they must be in quotes.  For example:
+
+#sbopkg -s "foo bar"
+
+will search for foo and then bar.
+
+.TP 5
+.B -v VERSION
+Set the Slackware version to use for the matching local SBo mirror.
+Current options are 11.0, 12.0, and 12.1.
+
+.SH FILES
+.B /etc/sbopkg/sbopkg.conf
+\ - File to specify configuration options.
+
+.SH "SEE ALSO"
+.BR sbopkg.conf (5)
+
+.SH AUTHOR
+Chess Griffin
+<chess@chessgriffin.com>
