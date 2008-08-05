@@ -28,9 +28,9 @@
 #
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers,
-#  Michiel van Wessem, hba, Erik Hanson, and Antoine.  This script
-#  would not be where it is without the help of these folks.  Thank
-#  you!
+#  Michiel van Wessem, hba, Erik Hanson, Antoine, ktabic, and Ken
+#  Roberts.  This script would not be where it is without the help of
+#  these folks.  Thank you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -377,7 +377,7 @@ if [ "$S" = "Build" ]; then
 as the root user in order to build packages." 8 30
         continue
     fi
-    OUTPUT=$TMP/sbopkg_output
+    SBOPKGOUTPUT=$TMP/sbopkg_output
     search_package $APP
     pick_slackbuild
     if [ $SLACKBUILD = "cancel" ]; then
@@ -385,15 +385,15 @@ as the root user in order to build packages." 8 30
     fi
     rm -rf $TMP/sbopkg_build.lck
     touch $TMP/sbopkg_build.lck
-    ( build_package $APP >> $OUTPUT & ) 2>>$OUTPUT
+    ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
     while [ -f $TMP/sbopkg_build.lck ]; do
         dialog --backtitle "Building the $APP package." \
- --tailbox $OUTPUT 20 70
+ --tailbox $SBOPKGOUTPUT 20 70
     done
     if [ "$KEEPLOG" = "YES" ]; then 
-        cat $OUTPUT >> $TMP/sbopkg-build-log
+        cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
     fi
-    rm -rf $OUTPUT
+    rm -rf $SBOPKGOUTPUT
 fi
 done
 }
@@ -493,13 +493,13 @@ fi
 if [ "$DIAG" = 1 ]; then
     rm -rf $TMP/sbopkg_rsync.lck
     touch $TMP/sbopkg_rsync.lck
-    OUTPUT=$TMP/sbopkg_output
-    ( rsync_command >> $OUTPUT & ) 2>>$OUTPUT 
+    SBOPKGOUTPUT=$TMP/sbopkg_output
+    ( rsync_command >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT 
     while [ -f $TMP/sbopkg_rsync.lck ]; do
         dialog --backtitle "Rsyncing with SlackBuilds.org" \
---tailbox $OUTPUT 20 70 
+--tailbox $SBOPKGOUTPUT 20 70 
     done
-    rm -f $OUTPUT
+    rm -f $SBOPKGOUTPUT
 else
     rsync_command
 fi
@@ -524,6 +524,7 @@ fi
 . $PKGPATH/$PKG.info
 PKGNAME=${PKG##*/}
 SRCNAME=${DOWNLOAD##*/}
+SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
 }
 
 gen_search_package () {
@@ -865,22 +866,22 @@ if [ -n "$BUILD" ]; then
 to build packages."
         exit 0
     fi
-    OUTPUT=$TMP/sbopkg_output
+    SBOPKGOUTPUT=$TMP/sbopkg_output
     for PKGBUILD in $BUILD; do
         echo "Building $PKGBUILD"
         search_package $PKGBUILD
         pick_slackbuild
         rm -rf $TMP/sbopkg_build.lck
         touch $TMP/sbopkg_build.lck
-        ( build_package $PKGNAME 2>&1 | tee $OUTPUT )
+        ( build_package $PKGNAME 2>&1 | tee $SBOPKGOUTPUT )
         while [ -f $TMP/sbopkg_build.lck ]; do
-            tail -f $OUTPUT
+            tail -f $SBOPKGOUTPUT
         done
         if [ "$KEEPLOG" = "YES" ]; then 
-            cat $OUTPUT >> $TMP/sbopkg-build-log
+            cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
         fi
     done
-    rm -rf $OUTPUT
+    rm -rf $SBOPKGOUTPUT
     exit 0
     cleanup
     exit 0
