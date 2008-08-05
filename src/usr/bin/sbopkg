@@ -227,12 +227,19 @@ potential updates..." >> $UPDATELIST
             if [ $PRGNAM = "openarena" ]; then
                 VERSION=$(egrep -m1 "^FINAL_VERSION" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*-//;s/\"//g')
             fi
+            # Ugly hack for ctorrent
+            if [ $PRGNAM = "ctorrent" ]; then
+                NEWSRCVER=""
+            fi
             NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g')
             if [[ $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD > $VER-$ARCH-$BUILD ]]; then
                 echo $NAME: >> $UPDATELIST
                 echo "  POTENTIAL UPDATE" >> $UPDATELIST
                 echo "  Installed version: " $CURPKG >> $UPDATELIST
                 echo "  Repo version: " $PRGNAM-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                if [ "$UPDATE_DEBUG" = 1 ]; then 
+                    echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                fi
             elif [[ $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD < $VER-$ARCH-$BUILD ]]; then
                 if [ "$UPDATE_DEBUG" = 1 ]; then 
                     echo $NAME: >> $UPDATELIST
