@@ -69,5 +69,23 @@ The default value of KEEPLOG is YES.
 .TP 5
 .B /etc/sbopkg/sbopkg.conf
 
+.SH OVERRIDING ENVIRONMENTAL VARIABLES
+It is possible to set or override environmental variables and pass
+them to the SlackBuild scripts when they are built from within sbopkg.
+For example, using the following in sbopkg.conf instead of a TMP line:
+ 
+export TMP:${TMP:-/home/sbo/tmp}
+
+will set $TMP both for sbopkg purposes (i.e. where sbopkg logs are
+kept) and also for building packages (i.e. instead of /tmp/SBo).
+
+You can also pass along variables in sbopkg.conf that are not used by
+sbopkg at all:
+
+export OUTPUT:${OUTPUT:-/home/sbo/packages}
+
+will set $OUTPUT for all SlackBuild packages built from within sbopkg (i.e.
+instead of /tmp, which is the default in SBo SlackBuild scripts).
+
 .SH "SEE ALSO"
 .BR sbopkg (8)
