@@ -147,6 +147,23 @@ else
 fi
 }
 
+get_sbo_packages () {
+# Get a list of SBo packages
+SBOPKGLIST=$TMP/sbopkg_pkglist
+rm -rf $SBOPKGLIST
+cd /var/log/packages
+PKGS=$(ls *SBo*)
+for i in $PKGS; do 
+    echo $i >> $SBOPKGLIST
+done
+if [ "$DIAG" = 1 ]; then
+    dialog --title "Installed SBo Packages" --textbox \
+$SBOPKGLIST 0 0
+else
+    ${PAGER:-more} $SBOPKGLIST
+fi
+}
+
 check_for_updates () {
 # Check to see if there are any updates to installed SBo pkgs.   This
 # is is pretty ugly code and is not really 100% reliable due to the
@@ -440,6 +457,25 @@ view_cache_dir () {
 ls -la $SRCDIR > $TMP/sbopkg_cache_dir
 dialog --title "Displaying $SRCDIR" \
 --textbox $TMP/sbopkg_cache_dir 0 0
+dialog --title "Keep Cache?" --yesno "Would you like to keep the \
+files in the cache directory?  Select YES to keep or NO to \
+delete." 10 30 
+if [ $? = 1 ]; then
+    check_root
+    if [ $ROOT = "false" ]; then
+        dialog --title "ERROR" --msgbox "Sorry, only the root \
+user can clear the cache directory." 8 30
+        continue
+    else
+        rm -rf $SRCDIR/*
+        dialog --title "Done" --msgbox "The cache directory has been \
+cleared." 8 30
+        continue
+    fi
+else
+    continue
+fi
+
 }
 
 view_perm_log () {
@@ -720,10 +756,11 @@ while [ 0 ]; do
 dialog --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit\n" \
-  15 65 9 \
+  19 69 10 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
-"Updates" "List potential updates to installed packages" \
+"Packages" "List installed SBo packages" \
+"Updates" "List potential updates to installed SBo packages" \
 "Browse" "Browse the local SlackBuilds.org repo" \
 "Search" "Search the local SlackBuilds.org repo" \
 "Cache" "View the contents of the cache directory" \
@@ -745,6 +782,10 @@ fi
 
 if [ "$R" = "ChangeLog" ]; then
     show_changelog
+fi
+
+if [ "$R" = "Packages" ]; then
+    get_sbo_packages
 fi
 
 if [ "$R" = "Updates" ]; then
@@ -806,7 +847,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:f:hlq:rs:v:" OPT; do
+while getopts ":b:cd:f:hlpq:rs:v:" OPT; do
     case $OPT in
         b ) BUILD="$OPTARG"
             ;;
@@ -817,6 +858,8 @@ while getopts ":b:cd:f:hlq:rs:v:" OPT; do
         f ) SBOPKG_CONF="$OPTARG"
             ;;
         l ) CHANGELOG=1
+            ;;
+        p ) GETPKGS=1
             ;;
         q ) GENSEARCH="$OPTARG"
             ;;
@@ -833,7 +876,8 @@ while getopts ":b:cd:f:hlq:rs:v:" OPT; do
             echo "Usage: $SCRIPT [OPTIONS] <packagename(s)>"
             echo "Options are:"
             echo "  -b package   Build a package."
-            echo "  -c           Check for updates."
+            echo "  -c           Check for updates to installed \
+SlackBuilds.org packages."
             echo "  -d localdir  Location of local copy of \
 SlackBuilds.org repository"
             echo "  -f           Override default configuration file" 
@@ -841,6 +885,7 @@ SlackBuilds.org repository"
             echo "  -h           Display this help message."
             echo "  -l           Display the SlackBuilds.org \
 ChangeLog.txt and then quit."
+            echo "  -p           List installed SlackBuilds.org packages."
             echo "  -q package   Query for packages matching string."
             echo "  -r           Rsync the SlackBuilds.org repository with"
             echo "               the local mirror and then quit."
@@ -902,6 +947,11 @@ fi
 if [ -n "$CHANGELOG" ]; then
     show_changelog
     cleanup
+    exit 0
+fi
+
+if [ -n "$GETPKGS" ]; then
+    get_sbo_packages
     exit 0
 fi
 
