@@ -27,10 +27,9 @@
 #  Linux is a registered trademark of Linus Torvalds.
 #
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
-#  Wisehart, slakmagik (thanks for your diff!), Eric Hameleers,
-#  Michiel van Wessem, hba, Erik Hanson, Antoine, ktabic, and Ken
-#  Roberts.  This script would not be where it is without the help of
-#  these folks.  Thank you!
+#  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
+#  Hanson, Antoine, ktabic, and Ken Roberts.  This script would not be
+#  where it is without the help of these folks.  Thank you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -212,6 +211,7 @@ PKGS=$(ls *SBo*)
 if [ -e "$PKGS" ]; then
     echo "No SlackBuilds.org packages detected." >> $UPDATELIST
 else
+    echo "Building list of potential updates..."
     echo "Listing installed SlackBuilds.org packages and flagging \
 potential updates..." >> $UPDATELIST
     echo >> $UPDATELIST
@@ -244,8 +244,8 @@ potential updates..." >> $UPDATELIST
             if [ $PRGNAM = "openarena" ]; then
                 VERSION=$(egrep -m1 "^FINAL_VERSION" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*-//;s/\"//g')
             fi
-            # Ugly hack for ctorrent
-            if [ $PRGNAM = "ctorrent" ]; then
+            # Ugly hack for ctorrent, argtable, and libevent
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" ]]; then
                 NEWSRCVER=""
             fi
             NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g')
@@ -426,14 +426,16 @@ browse_items () {
 # This function iterates through the list of software packages until
 # one is chosen.
 get_category_items_list
+if [ -z "$T" ]; then T="aaa"; fi
 while [ 0 ]; do
-    dialog --title "Browsing the $CATEGORY category" \
---menu "Please select a software package" 20 70 15 \
+    dialog --default-item "$T" --title "Browsing the $CATEGORY \
+category" --menu "Please select a software package" 20 70 15 \
 --file $TMP/sbopkg_category_items_list 2>$TMP/sbopkg_item_selection
     if [ $? = 1 ]; then
         break
     fi
     info_item
+T="$(cat $TMP/sbopkg_item_selection)"
 done
 }
 
@@ -441,14 +443,16 @@ browse_categories () {
 # This function iterates through the category list until one is
 # chosen.
 get_category_list
+if [ -z "$S" ]; then S="Academic"; fi
 while [ 0 ]; do
-    dialog --title "Choose a category" --menu "Please select the \
-category you wish to browse." 20 70 14 \
---file $TMP/sbopkg_category_list 2>$TMP/sbopkg_category_selection
+    dialog --default-item "$S" --title "Choose a category" \
+    --menu "Please select the category you wish to browse." 20 70 14 \
+    --file $TMP/sbopkg_category_list 2>$TMP/sbopkg_category_selection
     if [ $? = 1 ]; then
         break
     fi
     browse_items
+S="$(cat $TMP/sbopkg_category_selection)"
 done
 }
 
@@ -752,8 +756,9 @@ cd $CWD
 
 main_menu () {
 # This is the main dialog menu.
+if [ -z "$R" ] ; then R="Rsync" ; fi # Where Am I?
 while [ 0 ]; do
-dialog --title "SlackBuilds.org Package Browser \
+dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit\n" \
   19 69 10 \
