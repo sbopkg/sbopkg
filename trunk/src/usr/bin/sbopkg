@@ -157,7 +157,7 @@ for i in $PKGS; do
 done
 if [ "$DIAG" = 1 ]; then
     dialog --title "Installed SBo Packages" --textbox \
-$SBOPKGLIST 0 0
+$SBOPKGLIST 20 65
 else
     ${PAGER:-more} $SBOPKGLIST
 fi
@@ -575,8 +575,8 @@ SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
 }
 
 gen_search_package () {
-# Search for package name glob generally using grep.  Only used with
-# cli not dialog.
+# Search for package name glob generally using grep.  In dialog
+# interface, jump to selected package.
 cd $LOCALREPO/$SLACKVER 
 PKG=$1
 RESULTS=$(find . -mindepth 2 -type d | grep $PKG | sed -e 's/.\///') 
@@ -584,10 +584,23 @@ if [ -n "$RESULTS" ]; then
     if [ "$DIAG" = 1 ]; then
         #for i in ${RESULTS[*]%/}; do
         for i in $RESULTS; do
-            echo "$i" >> $TMP/sbopkg_search_results
+            #echo "$i" >> $TMP/sbopkg_search_results
+            echo "\"$i\"" "==" >> $TMP/sbopkg_search_results
         done
-        dialog --title "Matches for $PKG" --textbox \
-$TMP/sbopkg_search_results 15 50
+#        dialog --title "Matches for $PKG" --textbox \
+#$TMP/sbopkg_search_results 15 50
+        dialog --title "Matches for $PKG" --menu "Please select an \
+        item you wish to view." 20 70 14 --file \
+        $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
+        if [ ! $? = 1 ]; then
+            SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
+            SRCHCAT=$(echo $SRCHPICK | sed -e 's/\/.*$//')
+            SRCHPKG=$(echo $SRCHPICK | sed -e 's/^.*\///')
+            echo $SRCHCAT >> $TMP/sbopkg_category_selection
+            echo $SRCHPKG >> $TMP/sbopkg_item_selection
+            cd $LOCALREPO/$SLACKVER
+            info_item
+        fi
         rm -rf $TMP/sbopkg_search_results
         continue
     else
@@ -802,11 +815,6 @@ if [ "$R" = "Browse" ]; then
 fi
 
 if [ "$R" = "Search" ]; then
-    # Ideally, it would be nice for the app to automatically jump to
-    # the package information screen if it is found -- i.e. the menu
-    # that displays the options to view the docs, edit the slackbuild,
-    # etc but for now, this works.  At least it provides the category,
-    # which can sometimes be hard to remember.  :-)
     dialog --inputbox "Enter the name of a package you would like \
 to search for" 0 0 2>/$TMP/sbopkg_search_request
     if [ $? = 1 ]; then
