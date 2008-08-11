@@ -356,8 +356,9 @@ info_item () {
 # This function shows the menu for each package where the user can see
 # certain information or build the package if he is root.
 APP="$(cat $TMP/sbopkg_item_selection)"
+U="README"
 while [ 0 ]; do
-dialog --title "$APP Information" --menu "Choose an item or press \
+dialog --default-item "$U" --title "$APP Information" --menu "Choose an item or press \
 <Cancel> to exit\n" 20 60 7 \
 "README" "View the README file" \
 "Info" "View the .info file" \
@@ -369,32 +370,32 @@ dialog --title "$APP Information" --menu "Choose an item or press \
 if [ $? = 1 ]; then
     break
 fi
-S="$(cat $TMP/sbopkg_info_selection)"
+U="$(cat $TMP/sbopkg_info_selection)"
 CATEGORY="$(cat $TMP/sbopkg_category_selection)"
-if [ "$S" = "README" ]; then
+if [ "$U" = "README" ]; then
     dialog --title "Viewing README" \
     --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/README 0 0
 fi
-if [ "$S" = "Info" ]; then
+if [ "$U" = "Info" ]; then
     dialog --title "Viewing .info" \
     --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info 0 0
 fi
-if [ "$S" = "Slack-desc" ]; then
+if [ "$U" = "Slack-desc" ]; then
 PARSED_SLACK_DESC=$(mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
 sed -n "/^$APP: /s///p" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/slack-desc > $PARSED_SLACK_DESC
     dialog --title "Viewing Slack-desc" --textbox $PARSED_SLACK_DESC 0 0
 fi
-if [ "$S" = "SlackBuild" ]; then
+if [ "$U" = "SlackBuild" ]; then
     dialog --title "Viewing SlackBuild" \
     --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild 0 0
 fi
-if [ "$S" = "Edit" ]; then
+if [ "$U" = "Edit" ]; then
     edit_local_slackbuild $APP
 fi
-if [ "$S" = "Delete" ]; then
+if [ "$U" = "Delete" ]; then
     delete_local_slackbuild $APP
 fi
-if [ "$S" = "Build" ]; then
+if [ "$U" = "Build" ]; then
     check_root
     if [ $ROOT = "false" ]; then
         dialog --title "ERROR" --msgbox "You must run this script \
