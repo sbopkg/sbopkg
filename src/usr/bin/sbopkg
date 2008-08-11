@@ -583,13 +583,9 @@ PKG=$1
 RESULTS=$(find . -mindepth 2 -type d | grep $PKG | sed -e 's/.\///') 
 if [ -n "$RESULTS" ]; then
     if [ "$DIAG" = 1 ]; then
-        #for i in ${RESULTS[*]%/}; do
         for i in $RESULTS; do
-            #echo "$i" >> $TMP/sbopkg_search_results
-            echo "\"$i\"" "==" >> $TMP/sbopkg_search_results
+            echo "\"$i\"" "__" >> $TMP/sbopkg_search_results
         done
-#        dialog --title "Matches for $PKG" --textbox \
-#$TMP/sbopkg_search_results 15 50
         dialog --title "Matches for $PKG" --menu "Please select an \
         item you wish to view." 20 70 14 --file \
         $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
