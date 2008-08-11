@@ -597,8 +597,8 @@ if [ -n "$RESULTS" ]; then
             SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
             SRCHCAT=$(echo $SRCHPICK | sed -e 's/\/.*$//')
             SRCHPKG=$(echo $SRCHPICK | sed -e 's/^.*\///')
-            echo $SRCHCAT >> $TMP/sbopkg_category_selection
-            echo $SRCHPKG >> $TMP/sbopkg_item_selection
+            echo $SRCHCAT > $TMP/sbopkg_category_selection
+            echo $SRCHPKG > $TMP/sbopkg_item_selection
             cd $LOCALREPO/$SLACKVER
             info_item
         fi
