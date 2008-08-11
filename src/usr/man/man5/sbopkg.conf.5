@@ -58,10 +58,10 @@ The default value of TMP is /tmp.
 .B KEEPLOG
 .br
 This option should be set to YES or NO.  This option allows the user
-to choose whether to keep a permanent log of packages that are build
+to choose whether to keep a permanent log of packages that are built
 with sbopkg in order to go back and review the build, and any errors,
 after exiting sbopkg.  If set to YES, this permanent log is saved at
-/tmp/sbopkg-build-log.
+$TMP/sbopkg-build-log.
 
 The default value of KEEPLOG is YES.
 
@@ -76,11 +76,10 @@ For example, using the following in sbopkg.conf instead of a TMP line:
  
 export TMP:${TMP:-/home/sbo/tmp}
 
-will set $TMP both for sbopkg purposes (i.e. where sbopkg logs are
+will set $TMP to /home/sbo/tmp for sbopkg purposes (i.e. where sbopkg logs are
 kept) and also for building packages (i.e. instead of /tmp/SBo).
 
-You can also pass along variables in sbopkg.conf that are not used by
-sbopkg at all:
+You can also pass variables in sbopkg.conf that are not used by sbopkg at all:
 
 export OUTPUT:${OUTPUT:-/home/sbo/packages}
 
