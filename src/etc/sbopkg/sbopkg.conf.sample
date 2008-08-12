@@ -1,4 +1,13 @@
 # $Id$
+#
+# Please read the sbopkg.conf(5) man page for information about this
+# configuration file, including an explanation of how to set these
+# variables and others (like $OUTPUT that is used in the SBo
+# SlackBuilds) in ways that will be honored by the SlackBuilds.  Doing
+# so will allow you to segregate all SBo-related directories if you
+# wish, i.e. /home/sbo/tmp, /home/sbo/cache, /home/sbo/packages.  This
+# can be helpful if you wish to keep all SBo stuff on a separate
+# share, partition, or machine.
 
 RSYNCMIRROR=slackbuilds.org::slackbuilds
 SLACKVER=12.1
