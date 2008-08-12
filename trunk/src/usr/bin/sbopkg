@@ -325,8 +325,8 @@ rm -f $TMP/sbopkg_category_items_list 2> /dev/null
 DIR=( */ )
 if [ -n "$DIR" ]; then
     for i in ${DIR[*]%/}; do
-        DESC=$(grep -h -Z -m1 ^$i ./$i/slack-desc* | sed -e s/$i': '//) 
-        echo "$i \"$DESC\"" >> $TMP/sbopkg_category_items_list
+        DESC=$(grep -hZm1 ^$i ./$i/slack-desc* | cut -d\( -f2- | cut -d\) -f1)
+        echo "\"$i\" \"$DESC\"" >> $TMP/sbopkg_category_items_list
     done
 fi
 cd $LOCALREPO/$SLACKVER
@@ -584,10 +584,11 @@ RESULTS=$(find . -mindepth 2 -type d | grep $PKG | sed -e 's/.\///')
 if [ -n "$RESULTS" ]; then
     if [ "$DIAG" = 1 ]; then
         for i in $RESULTS; do
-            echo "\"$i\"" "__" >> $TMP/sbopkg_search_results
+            DESC=$(grep -hZm1 ^$(echo "$i" | cut -d/ -f2) ./$i/slack-desc* | cut -d\( -f2- | cut -d\) -f1)
+            echo "\"$i\" \"$DESC\"" >> $TMP/sbopkg_search_results
         done
         dialog --title "Matches for $PKG" --menu "Please select an \
-        item you wish to view." 20 70 14 --file \
+item you wish to view." 20 70 14 --file \
         $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
         if [ ! $? = 1 ]; then
             SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
