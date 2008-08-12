@@ -580,26 +580,29 @@ gen_search_package () {
 # interface, jump to selected package.
 cd $LOCALREPO/$SLACKVER 
 PKG=$1
-RESULTS=$(find . -mindepth 2 -type d | grep $PKG | sed -e 's/.\///') 
+RESULTS=$(find . -mindepth 2 -maxdepth 2 -type d | grep $PKG | sed -e 's/.\///') 
 if [ -n "$RESULTS" ]; then
     if [ "$DIAG" = 1 ]; then
         for i in $RESULTS; do
             DESC=$(grep -hZm1 ^$(echo "$i" | cut -d/ -f2) ./$i/slack-desc* | cut -d\( -f2- | cut -d\) -f1)
             echo "\"$i\" \"$DESC\"" >> $TMP/sbopkg_search_results
         done
-        dialog --title "Matches for $PKG" --menu "Please select an \
+        while [ -f $TMP/sbopkg_search_results ]; do
+            dialog --title "Matches for $PKG" --menu "Please select an \
 item you wish to view." 20 70 14 --file \
-        $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
-        if [ ! $? = 1 ]; then
-            SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
-            SRCHCAT=$(echo $SRCHPICK | sed -e 's/\/.*$//')
-            SRCHPKG=$(echo $SRCHPICK | sed -e 's/^.*\///')
-            echo $SRCHCAT > $TMP/sbopkg_category_selection
-            echo $SRCHPKG > $TMP/sbopkg_item_selection
-            cd $LOCALREPO/$SLACKVER
-            info_item
-        fi
-        rm -rf $TMP/sbopkg_search_results
+            $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
+            if [ ! $? = 1 ]; then
+                SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
+                SRCHCAT=$(echo $SRCHPICK | sed -e 's/\/.*$//')
+                SRCHPKG=$(echo $SRCHPICK | sed -e 's/^.*\///')
+                echo $SRCHCAT > $TMP/sbopkg_category_selection
+                echo $SRCHPKG > $TMP/sbopkg_item_selection
+                cd $LOCALREPO/$SLACKVER
+                info_item
+            else
+                rm -rf $TMP/sbopkg_search_results
+            fi
+        done
         continue
     else
         echo "Found the following matches for $PKG:"
