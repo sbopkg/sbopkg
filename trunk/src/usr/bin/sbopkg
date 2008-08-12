@@ -580,7 +580,7 @@ gen_search_package () {
 # interface, jump to selected package.
 cd $LOCALREPO/$SLACKVER 
 PKG=$1
-RESULTS=$(find . -mindepth 2 -maxdepth 2 -type d | grep -i $PKG | sed -e 's/.\///') 
+RESULTS=$(find . -mindepth 2 -maxdepth 2 -type d -iname "*$PKG*" | sed -e 's/.\///') 
 if [ -n "$RESULTS" ]; then
     if [ "$DIAG" = 1 ]; then
         for i in $RESULTS; do
