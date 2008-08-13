@@ -339,7 +339,8 @@ while [ 0 ]; do
     dialog --title "Choose a Slackware version" \
 --menu "You are currently using sbopkg to browse a local copy of SBo \
 for Slackware version $SLACKVER.  If you would like to change \
-it, please select another version below:" 20 50 3 \
+it, please select another version below or press <Cancel> to \
+exit." 20 50 3 \
 "12.1" "Slackware version 12.1" \
 "12.0" "Slackware version 12.0" \
 "11.0" "Slackware version 11.0" 2>$TMP/sbopkg_version_selection
@@ -358,8 +359,8 @@ info_item () {
 APP="$(cat $TMP/sbopkg_item_selection)"
 U="README"
 while [ 0 ]; do
-dialog --default-item "$U" --title "$APP Information" --menu "Choose an item or press \
-<Cancel> to exit\n" 20 60 7 \
+dialog --default-item "$U" --title "$APP Information" --menu \
+"Please choose an item or press <Cancel> to exit.\n" 20 60 7 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
@@ -430,7 +431,8 @@ get_category_items_list
 if [ -z "$T" ]; then T="aaa"; fi
 while [ 0 ]; do
     dialog --default-item "$T" --title "Browsing the $CATEGORY \
-category" --menu "Please select a software package" 20 70 15 \
+category" --menu "Please select a software package or press \
+<Cancel> to exit." 20 70 15 \
 --file $TMP/sbopkg_category_items_list 2>$TMP/sbopkg_item_selection
     if [ $? = 1 ]; then
         break
@@ -447,7 +449,8 @@ get_category_list
 if [ -z "$S" ]; then S="Academic"; fi
 while [ 0 ]; do
     dialog --default-item "$S" --title "Choose a category" \
-    --menu "Please select the category you wish to browse." 20 70 14 \
+    --menu "Please select a category or press <Cancel> to \
+exit." 20 70 14 \
     --file $TMP/sbopkg_category_list 2>$TMP/sbopkg_category_selection
     if [ $? = 1 ]; then
         break
@@ -589,7 +592,7 @@ if [ -n "$RESULTS" ]; then
         done
         while [ -f $TMP/sbopkg_search_results ]; do
             dialog --title "Matches for $PKG" --menu "Please select an \
-item you wish to view." 20 70 14 --file \
+item you wish to view or press <Cancel> to exit." 20 70 14 --file \
             $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
             if [ ! $? = 1 ]; then
                 SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
@@ -774,7 +777,7 @@ if [ -z "$R" ] ; then R="Rsync" ; fi
 while [ 0 ]; do
 dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --menu \
-"\nChoose one of the following or press <Cancel> to exit\n" \
+"\nChoose one of the following or press <Cancel> to exit.\n" \
   19 69 10 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
