@@ -22,7 +22,7 @@
 #  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 #  Slackware is a registered trademark of Patrick Volkerding.
 #  Linux is a registered trademark of Linus Torvalds.
 #
@@ -40,7 +40,7 @@ SBOVER=SVN
 UPDATE_DEBUG="1" # This will be uncommented in SVN and RC releases
 
 sanity_checks () {
-# Check if config file is there and if so check that it has all 
+# Check if config file is there and if so check that it has all
 # needed variables with any value, and set them; also check and
 # see if local repository directory exists; also create $SRCDIR
 # if it's not there.
@@ -102,7 +102,7 @@ if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "Create directory?" --yesno "The directory \
 $LOCALREPO/$SLACKVER was not found.  Would you like to create it?  \
-Select YES to create or NO to cancel." 10 30 
+Select YES to create or NO to cancel." 10 30
         if [ $? = 0 ]; then
             check_write $LOCALREPO
             if [ "$WRITE" = "false" ]; then
@@ -152,7 +152,7 @@ SBOPKGLIST=$TMP/sbopkg_pkglist
 rm -rf $SBOPKGLIST
 cd /var/log/packages
 PKGS=$(ls *SBo*)
-for i in $PKGS; do 
+for i in $PKGS; do
     echo $i >> $SBOPKGLIST
 done
 if [ "$DIAG" = 1 ]; then
@@ -179,9 +179,9 @@ number of SlackBuilds.org packages you have installed.\n\n\
 If you encounter any errors or strange behavior, please read the \
 document entitled 'UPDATELIST-DEBUGGING' in the sbopkg doc \
 directory to assist with bug reporting.\n\nSelect \
-YES to continue or NO to cancel." 19 50 
+YES to continue or NO to cancel." 19 50
     if [ $? = 1 ]; then
-        continue 
+        continue
     fi
 else
     while true; do
@@ -194,12 +194,12 @@ else
         echo "the sbopkg doc directory to assist with bug reporting."
         echo
         echo "If you proceed, it might take a few moments to process."
-        echo "Press Y to continue or N to cancel."  
+        echo "Press Y to continue or N to cancel."
             read ANS
             case $ANS in
-                y* | Y* ) break 
+                y* | Y* ) break
                 ;;
-                n* | N* ) exit 0 
+                n* | N* ) exit 0
                 ;;
                 * ) echo "Unknown response."
                 ;;
@@ -254,25 +254,25 @@ potential updates..." >> $UPDATELIST
                 echo "  POTENTIAL UPDATE" >> $UPDATELIST
                 echo "  Installed version: " $CURPKG >> $UPDATELIST
                 echo "  Repo version: " $PRGNAM-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
-                if [ "$UPDATE_DEBUG" = 1 ]; then 
+                if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                 fi
             elif [[ $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD < $VER-$ARCH-$BUILD ]]; then
                 if [ "$UPDATE_DEBUG" = 1 ]; then 
                     echo $NAME: >> $UPDATELIST
-                    echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST 
+                    echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
                     echo "  Installed version: " $CURPKG >> $UPDATELIST
                     echo "  Repo version: " $PRGNAM-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                 fi
             elif [[ $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD = $VER-$ARCH-$BUILD ]]; then
-                if [ "$UPDATE_DEBUG" = 1 ]; then 
+                if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  No update." >> $UPDATELIST
                 fi
             fi
         else
-            if [ "$UPDATE_DEBUG" = 1 ]; then 
+            if [ "$UPDATE_DEBUG" = 1 ]; then
                 echo $NAME: >> $UPDATELIST
                 echo "  Not in the repo." >> $UPDATELIST
             fi
@@ -289,7 +289,7 @@ else
 fi
 # Permanent log of the updatelist is saved when UPDATE_DEBUG is
 # uncommented
-if [ "$UPDATE_DEBUG" = 1 ]; then 
+if [ "$UPDATE_DEBUG" = 1 ]; then
     cp $UPDATELIST $TMP/sbopkg-debug-updatelist
 fi
 }
@@ -406,7 +406,7 @@ as the root user in order to build packages." 8 30
     search_package $APP
     pick_slackbuild
     if [ $SLACKBUILD = "cancel" ]; then
-        continue 
+        continue
     fi
     rm -rf $TMP/sbopkg_build.lck
     touch $TMP/sbopkg_build.lck
@@ -415,7 +415,7 @@ as the root user in order to build packages." 8 30
         dialog --backtitle "Building the $APP package." \
  --tailbox $SBOPKGOUTPUT 20 70
     done
-    if [ "$KEEPLOG" = "YES" ]; then 
+    if [ "$KEEPLOG" = "YES" ]; then
         cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
     fi
     rm -rf $SBOPKGOUTPUT
@@ -464,7 +464,7 @@ dialog --title "Displaying $SRCDIR" \
 --textbox $TMP/sbopkg_cache_dir 0 0
 dialog --title "Keep Cache?" --yesno "Would you like to keep the \
 files in the cache directory?  Select YES to keep or NO to \
-delete." 10 30 
+delete." 10 30
 if [ $? = 1 ]; then
     check_root
     if [ $ROOT = "false" ]; then
@@ -496,7 +496,7 @@ else
 --textbox $TMP/sbopkg-build-log 0 0
     dialog --title "Keep Log?" --yesno "Would you like to keep the \
 permanent build log $TMP/sbopkg-build-log?  Select YES to keep or NO \
-to delete." 10 30 
+to delete." 10 30
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -518,7 +518,7 @@ fi
 rsync_command () {
 # This function holds the rsync command.
 /usr/bin/rsync -avz --delete --timeout=5 --exclude="*.sbopkg" \
-$RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/ 
+$RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
 echo
 echo "Rsync with SlackBuilds.org complete."
 rm -rf $TMP/sbopkg_rsync.lck
@@ -542,10 +542,10 @@ if [ "$DIAG" = 1 ]; then
     rm -rf $TMP/sbopkg_rsync.lck
     touch $TMP/sbopkg_rsync.lck
     SBOPKGOUTPUT=$TMP/sbopkg_output
-    ( rsync_command >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT 
+    ( rsync_command >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
     while [ -f $TMP/sbopkg_rsync.lck ]; do
         dialog --backtitle "Rsyncing with SlackBuilds.org" \
---tailbox $SBOPKGOUTPUT 20 70 
+--tailbox $SBOPKGOUTPUT 20 70
     done
     rm -f $SBOPKGOUTPUT
 else
@@ -557,10 +557,10 @@ search_package () {
 # Search for package name and exit if not found.  If it is found,
 # populate various variables with data about the package for
 # displaying information and building.
-cd $LOCALREPO/$SLACKVER 
+cd $LOCALREPO/$SLACKVER
 PKG=$1
-PKGPATH=$(find -name $PKG)  
-if [ ! $(find -name "$PKG") ]; then 
+PKGPATH=$(find -name $PKG)
+if [ ! $(find -name "$PKG") ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
         continue
@@ -578,9 +578,9 @@ SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
 gen_search_package () {
 # Search for package name glob generally using grep.  In dialog
 # interface, jump to selected package.
-cd $LOCALREPO/$SLACKVER 
+cd $LOCALREPO/$SLACKVER
 PKG=$1
-RESULTS=$(find . -mindepth 2 -maxdepth 2 -type d -iname "*$PKG*" | sed -e 's/.\///') 
+RESULTS=$(find . -mindepth 2 -maxdepth 2 -type d -iname "*$PKG*" | sed -e 's/.\///')
 if [ -n "$RESULTS" ]; then
     if [ "$DIAG" = 1 ]; then
         for i in $RESULTS; do
@@ -617,7 +617,7 @@ else
         continue
     else
         echo "$SCRIPT: No match for $PKG found." 1>&2
-        continue 
+        continue
     fi
 fi
 }
@@ -628,7 +628,7 @@ show_readme () {
 # other ways to do this.  Perhaps have a way for the user to choose
 # which of the 4 docs he wants to view?  Or have a menu listing the 4
 # docs?  Undecided.
-cd $LOCALREPO/$SLACKVER 
+cd $LOCALREPO/$SLACKVER
 ${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info,\
 slack-desc}
 return 0
@@ -657,10 +657,10 @@ cd $LOCALREPO/$SLACKVER/$PKGPATH
 get_source
 echo "Checking MD5SUM for "$SRCNAME"..."
 MD5CHK=$(md5sum $SRCNAME | cut -d' ' -f1)
-if [ "$MD5CHK" == $MD5SUM ]; then 
+if [ "$MD5CHK" == $MD5SUM ]; then
     echo "OK"
-else 
-    echo "MD5SUM check failed.  Exiting." 
+else
+    echo "MD5SUM check failed.  Exiting."
     rm -rf $TMP/sbopkg_build.lck
     break
 fi
@@ -669,7 +669,7 @@ if [ "$SLACKBUILD" = "original" ]; then
     sh $PKG.SlackBuild || rm -rf $TMP/sbopkg_build.lck
 fi
 if [ "$SLACKBUILD" = "local" ]; then
-    sh $PKG.SlackBuild.sbopkg || rm -rf $PKG/sbopkg_build.lck 
+    sh $PKG.SlackBuild.sbopkg || rm -rf $PKG/sbopkg_build.lck
 fi
 echo "Done building $PKG."
 rm -rf $TMP/sbopkg_build.lck
@@ -770,7 +770,7 @@ cd $CWD
 
 main_menu () {
 # This is the main dialog menu.
-if [ -z "$R" ] ; then R="Rsync" ; fi # Where Am I?
+if [ -z "$R" ] ; then R="Rsync" ; fi
 while [ 0 ]; do
 dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --menu \
@@ -808,7 +808,7 @@ if [ "$R" = "Packages" ]; then
 fi
 
 if [ "$R" = "Updates" ]; then
-    check_for_updates 
+    check_for_updates
 fi
 
 if [ "$R" = "Browse" ]; then
@@ -819,7 +819,7 @@ if [ "$R" = "Search" ]; then
     dialog --inputbox "Enter the name of a package you would like \
 to search for" 0 0 2>/$TMP/sbopkg_search_request
     if [ $? = 1 ]; then
-        continue 
+        continue
     fi
     SRCH="$(cat $TMP/sbopkg_search_request)"
     gen_search_package $SRCH
@@ -840,7 +840,7 @@ fi
 if [ "$R" = "Exit" ]; then
     clear
     cleanup
-    exit 0 
+    exit 0
 fi
 done
 }
@@ -853,7 +853,7 @@ done
 
 cleanup # Do this first just in case there is cruft left over.
 
-if [ $# -eq 0 ]; then 
+if [ $# -eq 0 ]; then
     DIAG=1
     sanity_checks
     main_menu
@@ -894,7 +894,7 @@ while getopts ":b:cd:f:hlpq:rs:v:" OPT; do
 SlackBuilds.org packages."
             echo "  -d localdir  Location of local copy of \
 SlackBuilds.org repository"
-            echo "  -f           Override default configuration file" 
+            echo "  -f           Override default configuration file"
             echo "               with specified file."
             echo "  -h           Display this help message."
             echo "  -l           Display the SlackBuilds.org \
@@ -943,7 +943,7 @@ to build packages."
         while [ -f $TMP/sbopkg_build.lck ]; do
             tail -f $SBOPKGOUTPUT
         done
-        if [ "$KEEPLOG" = "YES" ]; then 
+        if [ "$KEEPLOG" = "YES" ]; then
             cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
         fi
     done
