@@ -27,7 +27,7 @@ permanent log, described below.
 After this variable has been uncommented, save the sbopkg file and
 rerun sbopkg.  Please select the update feature as normal and then
 exit sbopkg.  The permanent log of the update list will now be saved
-in $TMP/sbopkg-debug-updatelist.  
+in $TMP/sbopkg-debug-updatelist.
 
 Finally, in order to compare this permanent log with the actual list
 of installed packages, please do as a root user:

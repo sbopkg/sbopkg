@@ -17,7 +17,7 @@ Before sbopkg can be used, a configuration file must be created at
 /etc/sbopkg/sbopkg.conf.  A sample file is provided at
 /etc/sbopkg/sbopkg.conf.sample. See
 .B sbopkg.conf
-(5) for more information about the configuration file.  
+(5) for more information about the configuration file.
 
 Sbopkg can be run from the command line by simply invoking "sbopkg."
 Doing so will launch the dialog-based interface, and the menus
@@ -71,16 +71,16 @@ Display list of installed SBo packages and potential updates.  This is
 an experimental feature.  Please see UPDATELIST-DEBUGGING in the
 sbopkg documentation directory to assist with bug reporting.
 
-.TP 5 
+.TP 5
 .B -d DIRECTORY
-Manually specify the full path to the DIRECTORY containing the 
+Manually specify the full path to the DIRECTORY containing the
 local SBo repository.
 
 .TP 5
 .B -f
 Override the default configuration file, which is located by
 default at /etc/sbopkg/sbopkg.conf, with another configuration
-file. 
+file.
 
 .TP 5
 .B -h
@@ -94,9 +94,9 @@ Display the SBo ChangeLog.txt and quit.
 .B -q PACKAGE(s)
 Query for PACKAGE(s) by glob.  For example:
 
-#sbopkg -q nv 
+#sbopkg -q nv
 
-will return a list of matches, such as the nvidia packages, 
+will return a list of matches, such as the nvidia packages,
 konversation, and other packages with 'nv' in their name.  If more
 than one glob is specified, they must be in quotes.
 
@@ -108,7 +108,7 @@ Rsync the local repository with SlackBuilds.org and quit.
 .B -s PACKAGE(s)
 Search for PACKAGE(s) by specific PACKAGE name and, if found, display
 the README, SlackBuild, .info, and slack-desc files in that order
-using $PAGER, which defaults to 'more' as described above.   If more 
+using $PAGER, which defaults to 'more' as described above.   If more
 than one package is specified, they must be in quotes.  For example:
 
 #sbopkg -s "foo bar"
