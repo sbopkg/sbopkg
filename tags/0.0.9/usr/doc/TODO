@@ -1,0 +1,29 @@
+# $Id: TODO 117 2008-08-14 00:30:05Z chess.griffin $
+
+Sbopkg TODO (in no particular order)
+* Add ability to manually edit a package's files (i.e. SlackBuild)
+  from within sbopkg -- perhaps call $EDITOR.  This creates the issue of
+  how to keep the changes after an rsync, which will clobber everything.
+  Possibly do something like append ".sbopkg" to a copy of the SlackBuild
+  and then add "--exclude='*.sbopkg'" to the rsync call.  See discussion on
+  SBo mailing list on 2008-03-24.  UPDATED:  This is working in 0.0.4
+  for the dialog interface, but not the cli yet.
+* When using the dialog interface, change the listing of packages to
+  be a checklist or radiolist whereby the user can select more than
+  one package to build at a time.  This would possibly change how the
+  user would be able to view the README, slack-desc etc. since a
+  checklist or radiolist would not present the current 'view' menu.
+  Not sure how the order of packages selected would be set.
+* Add ability to view more than just the README from the command line.
+  This was added, but it needs to be improved.  UPDATED:  This works
+  much better now.
+* Include ability to work with more than one repo with different
+  Slackware versions, i.e. /home/sbo/11.0 and /home/sbo/12.0.  The
+  first menu in the dialog after selecting "Browse" would be a menu
+  showing the various Slackware versions in the local mirror.  UPDATED:
+  This was added to version 0.0.6.
+* Include ability to search and display updates to installed SBo packages.
+  UPDATE:  Preliminary experimental code for this feature first
+  appeared in version 0.0.8.
+* More error checking.
+* General code cleanups.
