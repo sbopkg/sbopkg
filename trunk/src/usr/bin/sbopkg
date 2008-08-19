@@ -28,8 +28,9 @@
 #
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
-#  Hanson, Antoine, ktabic, and Ken Roberts.  This script would not be
-#  where it is without the help of these folks.  Thank you!
+#  Hanson, Antoine, ktabic, Ken Roberts, Bert Babington, and Murat D.
+#  Kadirov.  This script would not be where it is without the help of
+#  these folks.  Thank you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -229,6 +230,7 @@ potential updates..." >> $UPDATELIST
         ARCH="$(echo $STRING | cut -f $ARCH -d -)"
         BUILD="$(echo $STRING | cut -f $INDEX -d -)"
     # End pkgtool code
+    	NAME="$(echo $NAME | sed 's/+/x/g')"
         CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
         NEWSB=$(find $LOCALREPO/$SLACKVER -name "$NAME.SlackBuild")
         NEWINFO=$(find $LOCALREPO/$SLACKVER -name "$NAME.info")
@@ -245,11 +247,11 @@ potential updates..." >> $UPDATELIST
                 VERSION=$(egrep -m1 "^FINAL_VERSION" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*-//;s/\"//g')
             fi
             # Ugly hack for ctorrent, argtable, and libevent
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" ]]; then
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" ]]; then
                 NEWSRCVER=""
             fi
             NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g')
-            if [[ $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD > $VER-$ARCH-$BUILD ]]; then
+	     if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
                 echo $NAME: >> $UPDATELIST
                 echo "  POTENTIAL UPDATE" >> $UPDATELIST
                 echo "  Installed version: " $CURPKG >> $UPDATELIST
@@ -257,7 +259,7 @@ potential updates..." >> $UPDATELIST
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                 fi
-            elif [[ $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD < $VER-$ARCH-$BUILD ]]; then
+	     elif [[ $VERSION$NEWSRCVER < $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD < $BUILD ) ]]; then
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
@@ -265,7 +267,7 @@ potential updates..." >> $UPDATELIST
                     echo "  Repo version: " $PRGNAM-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                 fi
-            elif [[ $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD = $VER-$ARCH-$BUILD ]]; then
+	     elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  No update." >> $UPDATELIST
