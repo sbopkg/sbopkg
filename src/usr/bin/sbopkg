@@ -362,14 +362,15 @@ APP="$(cat $TMP/sbopkg_item_selection)"
 U="README"
 while [ 0 ]; do
 dialog --default-item "$U" --title "$APP Information" --menu \
-"Please choose an item or press <Cancel> to exit.\n" 20 60 7 \
+"Please choose an item or press <Cancel> to exit.\n" 20 60 8 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
 "SlackBuild" "View the SlackBuild file" \
 "Edit" "Create and edit a local SlackBuild" \
 "Delete" "Delete the local SlackBuild" \
-"Build" "Build a package for $APP" 2>$TMP/sbopkg_info_selection
+"Build" "Build a package for $APP" \
+"Return" "Return to Main Menu" 2>$TMP/sbopkg_info_selection
 if [ $? = 1 ]; then
     break
 fi
@@ -422,6 +423,10 @@ as the root user in order to build packages." 8 30
         cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
     fi
     rm -rf $SBOPKGOUTPUT
+fi
+if [ "$U" = "Return" ]; then
+    rm -rf $TMP/sbopkg_*
+    main_menu
 fi
 done
 }
