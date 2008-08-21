@@ -31,7 +31,7 @@ HELP
 
 Sbopkg comes with two man pages:  sbopkg.conf(5) and sbopkg(8).  These
 man pages are kept up-to-date with functional changes in the script
-itself, so they are a good source of information on how to use sbopkg.  
+itself, so they are a good source of information on how to use sbopkg.
 
 If the man pages are not sufficient, please consider joining the
 sbopkg mailing list and posting your question there.  You can reach
