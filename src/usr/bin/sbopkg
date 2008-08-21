@@ -356,6 +356,24 @@ done
 rm -rf $TMP/sbopkg_version_selection
 }
 
+sbopkg_readme () {
+# Show the sbopkg README
+#cd /usr/share/doc/sbopkg-$SBOVER
+cd /usr/share/doc/sbopkg-0.0.9
+if [ "$DIAG" = 1 ]; then
+    if [ ! -e ./README ]; then
+        dialog --title "ERROR" --msgbox "It appears the sbopkg \
+documents have not been installed as the README cannot be found." 10 30
+        continue
+    else
+        dialog --title "sbopkg README" --textbox ./README 0 0
+    fi
+else
+    ${PAGER:-more} ./README
+fi
+cd -
+}
+
 info_item () {
 # This function shows the menu for each package where the user can see
 # certain information or build the package if he is root.
@@ -491,7 +509,6 @@ cleared." 8 30
 else
     continue
 fi
-
 }
 
 view_perm_log () {
@@ -786,7 +803,7 @@ while [ 0 ]; do
 dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit.\n" \
-  19 69 10 \
+  19 69 11 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Packages" "List installed SBo packages" \
@@ -796,6 +813,7 @@ dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 "Cache" "View the contents of the cache directory" \
 "Log" "View the permanent build log" \
 "Version" "Select Slackware version (currently: $SLACKVER)" \
+"README" "View the sbopkg README" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
 if [ $? = 1 ]; then
@@ -846,6 +864,10 @@ fi
 
 if [ "$R" = "Version" ]; then
     select_version
+fi
+
+if [ "$R" = "README" ]; then
+    sbopkg_readme
 fi
 
 if [ "$R" = "Exit" ]; then
