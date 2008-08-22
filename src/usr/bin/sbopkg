@@ -813,7 +813,7 @@ dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 "Cache" "View the contents of the cache directory" \
 "Log" "View the permanent build log" \
 "Version" "Select Slackware version (currently: $SLACKVER)" \
-"README" "View the sbopkg README" \
+"Readme" "View the sbopkg README" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
 if [ $? = 1 ]; then
@@ -866,7 +866,7 @@ if [ "$R" = "Version" ]; then
     select_version
 fi
 
-if [ "$R" = "README" ]; then
+if [ "$R" = "Readme" ]; then
     sbopkg_readme
 fi
 
