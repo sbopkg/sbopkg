@@ -230,7 +230,12 @@ potential updates..." >> $UPDATELIST
         ARCH="$(echo $STRING | cut -f $ARCH -d -)"
         BUILD="$(echo $STRING | cut -f $INDEX -d -)"
     # End pkgtool code
-    	NAME="$(echo $NAME | sed 's/+/x/g')"
+        NAME="$(echo $NAME | sed 's/+/x/g')"
+        # Ugly hack #1 for artwiz-aleczapka
+        if $(echo $NAME | grep -q "^artwiz"); then
+            OLDNAME=$NAME
+            NAME="artwiz-aleczapka"
+        fi
         CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
         NEWSB=$(find $LOCALREPO/$SLACKVER -name "$NAME.SlackBuild")
         NEWINFO=$(find $LOCALREPO/$SLACKVER -name "$NAME.info")
@@ -238,6 +243,7 @@ potential updates..." >> $UPDATELIST
             . $NEWINFO
             NEWARCH=$(egrep -m1 "^ARCH" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*[=-]//;s/\"//g')
             NEWSRCVER=$(egrep -m1 "^SRCVER" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*[=-]/_/;s/\"//g')
+            NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
             # Ugly hack for openoffice.org
             if [ $PRGNAM = "openoffice.org" ]; then
                 NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
@@ -246,13 +252,18 @@ potential updates..." >> $UPDATELIST
             if [ $PRGNAM = "openarena" ]; then
                 VERSION=$(egrep -m1 "^FINAL_VERSION" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*-//;s/\"//g')
             fi
-            # Ugly hack for ctorrent, argtable, libevent, and
-            # ubuntulooks
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" ]]; then
+            # Ugly hack #2 for artwiz-aleczapka :-(
+            if [ $PRGNAM = "artwiz-aleczapka" ]; then
+                NAME=$OLDNAME
+                PRGNAM="$PRGNAM$(egrep -m1 "^FONTLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/_/-/g')"
+            fi
+            # Ugly hack for ctorrent, argtable, libevent, 
+            # ubuntulooks, and graveman
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "graveman" ]]; then
                 NEWSRCVER=""
             fi
-            NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
-	     if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
+            CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
+	          if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
                 echo $NAME: >> $UPDATELIST
                 echo "  POTENTIAL UPDATE" >> $UPDATELIST
                 echo "  Installed version: " $CURPKG >> $UPDATELIST
@@ -260,7 +271,7 @@ potential updates..." >> $UPDATELIST
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                 fi
-	     elif [[ $VERSION$NEWSRCVER < $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD < $BUILD ) ]]; then
+	          elif [[ $VERSION$NEWSRCVER < $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD < $BUILD ) ]]; then
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
@@ -268,7 +279,7 @@ potential updates..." >> $UPDATELIST
                     echo "  Repo version: " $PRGNAM$NEWSRCVER-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                 fi
-	     elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
+	          elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  No update." >> $UPDATELIST
