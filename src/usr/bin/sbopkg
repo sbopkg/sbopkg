@@ -65,7 +65,7 @@ else
 fi
 if [ ! -d "$LOCALREPO" ]; then
     echo "Creating local repo directory $LOCALREPO for the rsync \
-mirror." 
+mirror."
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
     mkdir -p $LOCALREPO
@@ -83,7 +83,7 @@ if [ ! -d "$TMP" ]; then
     echo "Creating local TMP directory $TMP."
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
-    mkdir -p $TMP 
+    mkdir -p $TMP
 fi
 }
 
@@ -267,7 +267,7 @@ potential updates..." >> $UPDATELIST
                 NAME=$OLDNAME
                 PRGNAM="$PRGNAM$(egrep -m1 "^FONTLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/_/-/g')"
             fi
-            # Ugly hack for ctorrent, argtable, libevent, 
+            # Ugly hack for ctorrent, argtable, libevent,
             # ubuntulooks, and graveman
             if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "graveman" ]]; then
                 NEWSRCVER=""
