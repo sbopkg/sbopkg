@@ -2,16 +2,18 @@
 #
 # Please read the sbopkg.conf(5) man page for information about this
 # configuration file, including an explanation of how to set these
-# variables and others (like $OUTPUT that is used in the SBo
-# SlackBuilds) in ways that will be honored by the SlackBuilds.  Doing
-# so will allow you to segregate all SBo-related directories if you
-# wish, i.e. /home/sbo/tmp, /home/sbo/cache, /home/sbo/packages.  This
-# can be helpful if you wish to keep all SBo stuff on a separate
-# share, partition, or machine.
+# variables.
 
+# The following are variables used by sbopkg.  NOTE:  $TMP must be
+# exported as it is used by the SlackBuild scripts as well.  Any of
+# the other variables could be exported as well, if desired.
 RSYNCMIRROR=slackbuilds.org::slackbuilds
 SLACKVER=12.1
-LOCALREPO=/home/sbo
-SRCDIR=/var/cache/sbopkg
-TMP=/tmp
+LOCALREPO=${LOCALREPO:-/home/sbo}
+SRCDIR=${SRCDIR:-/var/cache/sbopkg}
+export TMP=${TMP:-/tmp/SBo}
 KEEPLOG=YES
+
+# Optional - the $OUTPUT variable is used by SlackBuild scripts only
+# and can be used to change the output location of compiled packages.
+#export OUTPUT=${OUTPUT:-/tmp}
