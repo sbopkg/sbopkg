@@ -68,7 +68,11 @@ if [ ! -d "$LOCALREPO" ]; then
 mirror."
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
-    mkdir -p $LOCALREPO
+    # One of these days, I'll see about implementing a cleaner way of
+    # exiting with a nice error message if the user does not have
+    # sufficient permissions to create these directories.  For now,
+    # the || exit 1 will suffice.
+    mkdir -p $LOCALREPO || exit 1
 else
     cd $LOCALREPO
 fi
@@ -77,13 +81,13 @@ if [ ! -d "$SRCDIR" ]; then
 downloaded sources."
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
-    mkdir -p $SRCDIR
+    mkdir -p $SRCDIR || exit 1
 fi
 if [ ! -d "$TMP" ]; then
     echo "Creating local TMP directory $TMP."
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
-    mkdir -p $TMP
+    mkdir -p $TMP || exit 1
 fi
 }
 
@@ -813,7 +817,17 @@ fi
 }
 
 cleanup () {
-rm -rf $TMP/sbopkg_*
+check_write $TMP
+if [ $WRITE = "false" ]; then
+    echo "Sbopkg attempted to clean out leftover files in \$TMP, but"
+    echo "it appears that you do not have sufficient permissions to"
+    echo "do so.  Please check your \$TMP setting in sbopkg.conf,"
+    echo "verify that your permissions are correct, or manually"
+    echo "delete any leftover files in \$TMP.  Exiting."
+    exit 0
+else
+    rm -rf $TMP/sbopkg_*
+fi
 cd $CWD
 }
 
