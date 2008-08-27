@@ -120,7 +120,7 @@ fi
 
 check_if_repo_exists () {
 # Check to see if $LOCALREPO/$SLACKVER exists and not empty
-if [ ! -d $LOCALREPO/$SLACKVER/* ]; then
+if [ ! -d $LOCALREPO/$SLACKVER/academic ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "The directory \
 $LOCALREPO/$SLACKVER was not found or is empty.  Please make \
