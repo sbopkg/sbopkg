@@ -113,11 +113,18 @@ fi
 check_if_repo_exists () {
 # Check to see if $LOCALREPO/$SLACKVER exists
 if [ ! -d $LOCALREPO/$SLACKVER ]; then
-    dialog --title "ERROR" --msgbox "The directory \
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "ERROR" --msgbox "The directory \
 $LOCALREPO/$SLACKVER was not found.  Please make sure your \
 repository directory is set correctly and that you have done an \
 rsync first."  12 30
-    continue
+        continue
+    else
+        echo "The directory $LOCALREPO/$SLACKVER was not found."
+        echo "Please make sure your respository directory is set"
+        echo "correctly and that you have done an rsync first."
+        exit 0
+    fi
 fi
 }
 
@@ -1056,6 +1063,7 @@ $LOCALREPO/$SLACKVER."
 fi
 
 if [ -n "$SEARCH" ]; then
+    check_if_repo_exists
     for PKGSEARCH in $SEARCH; do
         echo "Searching for $PKGSEARCH"
         search_package $PKGSEARCH
@@ -1065,6 +1073,7 @@ if [ -n "$SEARCH" ]; then
 fi
 
 if [ -n "$GENSEARCH" ]; then
+    check_if_repo_exists
     for PKGSEARCH in $GENSEARCH; do
         echo "Searching for $PKGSEARCH"
         gen_search_package $PKGSEARCH
