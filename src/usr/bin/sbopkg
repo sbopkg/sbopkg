@@ -57,34 +57,42 @@ else
         fi
     done
     if [ "$MISSING" ]; then
+            echo
+            echo "ERROR"
             echo "$SCRIPT: Can't find a value for variable(s):"
             echo "$MISSING"
             echo "Please correct this error and run $SCRIPT again."
             exit 1
     fi
 fi
-if [ ! -d "$LOCALREPO" ]; then
-    echo "Creating local repo directory $LOCALREPO for the rsync \
-mirror."
+if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
+    echo
+    echo "Creating local repo directory $LOCALREPO/$SLACKVER"
+    echo "for the rsync mirror."
+    echo
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
     # One of these days, I'll see about implementing a cleaner way of
     # exiting with a nice error message if the user does not have
     # sufficient permissions to create these directories.  For now,
     # the || exit 1 will suffice.
-    mkdir -p $LOCALREPO || exit 1
+    mkdir -p $LOCALREPO/$SLACKVER || exit 1
 else
     cd $LOCALREPO
 fi
 if [ ! -d "$SRCDIR" ]; then
+    echo
     echo "Creating local cache directory $SRCDIR to keep \
 downloaded sources."
+    echo
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
     mkdir -p $SRCDIR || exit 1
 fi
 if [ ! -d "$TMP" ]; then
+    echo
     echo "Creating local TMP directory $TMP."
+    echo
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
     mkdir -p $TMP || exit 1
@@ -111,53 +119,23 @@ fi
 }
 
 check_if_repo_exists () {
-# Check to see if $LOCALREPO/$SLACKVER exists
-if [ ! -d $LOCALREPO/$SLACKVER ]; then
+# Check to see if $LOCALREPO/$SLACKVER exists and not empty
+if [ ! -d $LOCALREPO/$SLACKVER/* ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "The directory \
-$LOCALREPO/$SLACKVER was not found.  Please make sure your \
-repository directory is set correctly and that you have done an \
-rsync first."  12 30
+$LOCALREPO/$SLACKVER was not found or is empty.  Please make \
+sure your repository directory is set correctly and that you \
+have done an rsync first."  12 30
         continue
     else
-        echo "The directory $LOCALREPO/$SLACKVER was not found."
-        echo "Please make sure your respository directory is set"
-        echo "correctly and that you have done an rsync first."
+        echo
+        echo "ERROR"
+        echo "The directory $LOCALREPO/$SLACKVER was not found"
+        echo "or is empty.  Please make sure your respository"
+        echo "directory is set correctly and that you have done"
+        echo "an rsync first."
         exit 0
     fi
-fi
-}
-
-check_slack_version () {
-# Check to see if the SLACKVER directory is found; if not, offer to
-# create it.
-if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
-    if [ "$DIAG" = 1 ]; then
-        dialog --title "Create directory?" --yesno "The directory \
-$LOCALREPO/$SLACKVER was not found.  Would you like to create it?  \
-Select YES to create or NO to cancel." 10 30
-        if [ $? = 0 ]; then
-            check_write $LOCALREPO
-            if [ "$WRITE" = "false" ]; then
-                dialog --title "ERROR" --msgbox "You do not have \
-write permissions on the target directory." 8 30
-                continue
-            else
-                mkdir -p $LOCALREPO/$SLACKVER
-                dialog --title "Done" --msgbox "The directory has been \
-created." 8 30
-                continue
-            fi
-        else
-            continue
-        fi
-    else
-        echo "$SCRIPT: Directory $LOCALREPO does not exist."
-        echo "Please create it and run $SCRIPT again." 1>&2
-        exit 1
-    fi
-else
-    cd $LOCALREPO/$SLACKVER
 fi
 }
 
@@ -165,18 +143,27 @@ show_changelog () {
 # Show the SlackBuilds.org changelog.
 check_if_repo_exists
 cd $LOCALREPO/$SLACKVER
-if [ "$DIAG" = 1 ]; then
-    if [ ! -e ./ChangeLog.txt ]; then
+if [ ! -e ./ChangeLog.txt ]; then
+    if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "No ChangeLog.txt \
 found.  Please make sure your repository directory is set \
 correctly and that you have done an rsync first." 10 30
         continue
     else
-        dialog --title "SlackBuilds.org ChangeLog.txt" --textbox \
-./ChangeLog.txt 0 0
+        echo
+        echo "ERROR"
+        echo "No ChangeLog.txt found.  Please make sure your"
+        echo "repository directory is set correctly and that"
+        echo "you have done an rsync first.  Exiting."
+        exit 0
     fi
 else
-    ${PAGER:-more} ./ChangeLog.txt
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "SlackBuilds.org ChangeLog.txt" --textbox \
+./ChangeLog.txt 0 0
+    else
+        ${PAGER:-more} ./ChangeLog.txt
+    fi
 fi
 }
 
@@ -588,6 +575,7 @@ rsync_command () {
 $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
 echo
 echo "Rsync with SlackBuilds.org complete."
+echo
 rm -rf $TMP/sbopkg_rsync.lck
 }
 
@@ -833,12 +821,15 @@ fi
 cleanup () {
 check_write $TMP
 if [ $WRITE = "false" ]; then
+    echo
+    echo "ERROR"
     echo "Sbopkg attempted to clean out leftover files in \$TMP,"
     echo "which is set to $TMP in sbopkg.conf, but"
     echo "it appears that you do not have sufficient permissions to"
     echo "do so.  Please check your \$TMP setting in sbopkg.conf,"
     echo "verify that your permissions are correct, or manually"
     echo "delete any leftover files in \$TMP.  Exiting."
+    echo
     exit 0
 else
     rm -rf $TMP/sbopkg_*
