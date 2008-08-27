@@ -1,4 +1,4 @@
-# $Id$
+# $Id: TODO 126 2008-08-21 04:15:28Z chess.griffin $
 
 Sbopkg TODO (in no particular order)
 * Add ability to manually edit a package's files (i.e. SlackBuild)
