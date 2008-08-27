@@ -110,6 +110,17 @@ else
 fi
 }
 
+check_if_repo_exists () {
+# Check to see if $LOCALREPO/$SLACKVER exists
+if [ ! -d $LOCALREPO/$SLACKVER ]; then
+    dialog --title "ERROR" --msgbox "The directory \
+$LOCALREPO/$SLACKVER was not found.  Please make sure your \
+repository directory is set correctly and that you have done an \
+rsync first."  12 30
+    continue
+fi
+}
+
 check_slack_version () {
 # Check to see if the SLACKVER directory is found; if not, offer to
 # create it.
@@ -145,6 +156,7 @@ fi
 
 show_changelog () {
 # Show the SlackBuilds.org changelog.
+check_if_repo_exists
 cd $LOCALREPO/$SLACKVER
 if [ "$DIAG" = 1 ]; then
     if [ ! -e ./ChangeLog.txt ]; then
@@ -183,6 +195,7 @@ check_for_updates () {
 # is is pretty ugly code and is not really 100% reliable due to the
 # many ways upstream tags software names, versions, etc.  Consider
 # this a continual work-in-progress.  :-)
+check_if_repo_exists
 UPDATELIST=$TMP/sbopkg_updatelist
 rm -rf $UPDATELIST
 if [ "$DIAG" = 1 ]; then
@@ -324,13 +337,7 @@ fi
 
 get_category_list () {
 # This function displays the list of SBo categories in the dialog.
-if [ ! -d $LOCALREPO/$SLACKVER ]; then
-    dialog --title "ERROR" --msgbox "The directory \
-$LOCALREPO/$SLACKVER was not found.  Please make sure your \
-repository directory is set correctly and that you have done an \
-rsync first."  10 30
-    continue
-fi
+check_if_repo_exists
 cd $LOCALREPO/$SLACKVER
 rm -f $TMP/sbopkg_category_list 2> /dev/null
 DIR=( */ )
@@ -880,6 +887,7 @@ if [ "$R" = "Browse" ]; then
 fi
 
 if [ "$R" = "Search" ]; then
+    check_if_repo_exists
     dialog --inputbox "Enter the name of a package you would like \
 to search for" 0 0 2>/$TMP/sbopkg_search_request
     if [ $? = 1 ]; then
