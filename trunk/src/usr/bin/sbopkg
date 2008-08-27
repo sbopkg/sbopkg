@@ -384,8 +384,7 @@ rm -rf $TMP/sbopkg_version_selection
 
 sbopkg_readme () {
 # Show the sbopkg README
-#cd /usr/share/doc/sbopkg-$SBOVER
-cd /usr/share/doc/sbopkg-0.0.9
+cd /usr/share/doc/sbopkg-$SBOVER
 if [ "$DIAG" = 1 ]; then
     if [ ! -e ./README ]; then
         dialog --title "ERROR" --msgbox "It appears the sbopkg \
