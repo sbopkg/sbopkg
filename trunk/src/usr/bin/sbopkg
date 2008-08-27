@@ -365,11 +365,11 @@ select_version () {
 # Create menu and list the SBo-supported versions of Slackware for
 # user to choose from.
 while [ 0 ]; do
-    dialog --title "Choose a Slackware version" \
+    dialog --cancel-label "Back" --title "Choose a Slackware version" \
 --menu "You are currently using sbopkg to browse a local copy of SBo \
 for Slackware version $SLACKVER.  If you would like to change \
-it, please select another version below or press <Cancel> to \
-exit." 20 50 3 \
+it, please select another version below or press <Back> to \
+go back." 15 50 3 \
 "12.1" "Slackware version 12.1" \
 "12.0" "Slackware version 12.0" \
 "11.0" "Slackware version 11.0" 2>$TMP/sbopkg_version_selection
@@ -405,72 +405,75 @@ info_item () {
 APP="$(cat $TMP/sbopkg_item_selection)"
 U="README"
 while [ 0 ]; do
-dialog --default-item "$U" --title "$APP Information" --menu \
-"Please choose an item or press <Cancel> to exit.\n" 20 60 8 \
+dialog --default-item "$U" --title "$APP Information" \
+--extra-button --extra-label "Back" --cancel-label \
+"Main Menu" --menu \
+"Please choose an item or press <Back> to go back or press \
+<Main Menu> to return to the main menu.\n" 20 60 8 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
 "SlackBuild" "View the SlackBuild file" \
 "Edit" "Create and edit a local SlackBuild" \
 "Delete" "Delete the local SlackBuild" \
-"Build" "Build a package for $APP" \
-"Return" "Return to Main Menu" 2>$TMP/sbopkg_info_selection
-if [ $? = 1 ]; then
+"Build" "Build a package for $APP" 2>$TMP/sbopkg_info_selection
+CHOICE=$?
+if [ $CHOICE = 3 ]; then
     break
-fi
-U="$(cat $TMP/sbopkg_info_selection)"
-CATEGORY="$(cat $TMP/sbopkg_category_selection)"
-if [ "$U" = "README" ]; then
-    dialog --title "Viewing README" \
-    --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/README 0 0
-fi
-if [ "$U" = "Info" ]; then
-    dialog --title "Viewing .info" \
-    --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info 0 0
-fi
-if [ "$U" = "Slack-desc" ]; then
-PARSED_SLACK_DESC=$(mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
-sed -n "/^$APP: /s///p" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/slack-desc > $PARSED_SLACK_DESC
-    dialog --title "Viewing Slack-desc" --textbox $PARSED_SLACK_DESC 0 0
-fi
-if [ "$U" = "SlackBuild" ]; then
-    dialog --title "Viewing SlackBuild" \
-    --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild 0 0
-fi
-if [ "$U" = "Edit" ]; then
-    edit_local_slackbuild $APP
-fi
-if [ "$U" = "Delete" ]; then
-    delete_local_slackbuild $APP
-fi
-if [ "$U" = "Build" ]; then
-    check_root
-    if [ $ROOT = "false" ]; then
-        dialog --title "ERROR" --msgbox "You must run this script \
-as the root user in order to build packages." 8 30
-        continue
-    fi
-    SBOPKGOUTPUT=$TMP/sbopkg_output
-    search_package $APP
-    pick_slackbuild
-    if [ $SLACKBUILD = "cancel" ]; then
-        continue
-    fi
-    rm -rf $TMP/sbopkg_build.lck
-    touch $TMP/sbopkg_build.lck
-    ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
-    while [ -f $TMP/sbopkg_build.lck ]; do
-        dialog --backtitle "Building the $APP package." \
- --tailbox $SBOPKGOUTPUT 20 70
-    done
-    if [ "$KEEPLOG" = "YES" ]; then
-        cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
-    fi
-    rm -rf $SBOPKGOUTPUT
-fi
-if [ "$U" = "Return" ]; then
+elif [ $CHOICE = 1 ]; then
     rm -rf $TMP/sbopkg_*
     main_menu
+elif [ $CHOICE = 0 ]; then
+    U="$(cat $TMP/sbopkg_info_selection)"
+    CATEGORY="$(cat $TMP/sbopkg_category_selection)"
+    if [ "$U" = "README" ]; then
+        dialog --title "Viewing README" \
+        --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/README 0 0
+    fi
+    if [ "$U" = "Info" ]; then
+        dialog --title "Viewing .info" \
+        --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info 0 0
+    fi
+    if [ "$U" = "Slack-desc" ]; then
+    PARSED_SLACK_DESC=$(mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
+    sed -n "/^$APP: /s///p" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/slack-desc > $PARSED_SLACK_DESC
+    dialog --title "Viewing Slack-desc" --textbox $PARSED_SLACK_DESC 0 0
+    fi
+    if [ "$U" = "SlackBuild" ]; then
+        dialog --title "Viewing SlackBuild" \
+        --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild 0 0
+    fi
+    if [ "$U" = "Edit" ]; then
+        edit_local_slackbuild $APP
+    fi
+    if [ "$U" = "Delete" ]; then
+        delete_local_slackbuild $APP
+    fi
+    if [ "$U" = "Build" ]; then
+        check_root
+        if [ $ROOT = "false" ]; then
+            dialog --title "ERROR" --msgbox "You must run this script \
+as the root user in order to build packages." 8 30
+            continue
+        fi
+        SBOPKGOUTPUT=$TMP/sbopkg_output
+        search_package $APP
+        pick_slackbuild
+        if [ $SLACKBUILD = "cancel" ]; then
+            continue
+        fi
+        rm -rf $TMP/sbopkg_build.lck
+        touch $TMP/sbopkg_build.lck
+        ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
+        while [ -f $TMP/sbopkg_build.lck ]; do
+            dialog --backtitle "Building the $APP package." \
+ --tailbox $SBOPKGOUTPUT 20 70
+        done
+        if [ "$KEEPLOG" = "YES" ]; then
+            cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
+        fi
+        rm -rf $SBOPKGOUTPUT
+    fi
 fi
 done
 }
@@ -481,9 +484,9 @@ browse_items () {
 get_category_items_list
 if [ -z "$T" ]; then T="aaa"; fi
 while [ 0 ]; do
-    dialog --default-item "$T" --title "Browsing the $CATEGORY \
-category" --menu "Please select a software package or press \
-<Cancel> to exit." 20 70 15 \
+    dialog --default-item "$T" --cancel-label "Back" --title \
+"Browsing the $CATEGORY category" --menu "Please select a \
+software package or press <Back> to go back." 20 70 15 \
 --file $TMP/sbopkg_category_items_list 2>$TMP/sbopkg_item_selection
     if [ $? = 1 ]; then
         break
@@ -499,9 +502,9 @@ browse_categories () {
 get_category_list
 if [ -z "$S" ]; then S="Academic"; fi
 while [ 0 ]; do
-    dialog --default-item "$S" --title "Choose a category" \
-    --menu "Please select a category or press <Cancel> to \
-exit." 20 70 14 \
+    dialog --default-item "$S" --cancel-label "Back" --title \
+"Choose a category" --menu "Please select a category or press \
+<Back> to go back." 20 70 14 \
     --file $TMP/sbopkg_category_list 2>$TMP/sbopkg_category_selection
     if [ $? = 1 ]; then
         break
