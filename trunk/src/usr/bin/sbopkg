@@ -826,7 +826,8 @@ fi
 cleanup () {
 check_write $TMP
 if [ $WRITE = "false" ]; then
-    echo "Sbopkg attempted to clean out leftover files in \$TMP, but"
+    echo "Sbopkg attempted to clean out leftover files in \$TMP,"
+    echo "which is set to $TMP in sbopkg.conf, but"
     echo "it appears that you do not have sufficient permissions to"
     echo "do so.  Please check your \$TMP setting in sbopkg.conf,"
     echo "verify that your permissions are correct, or manually"
