@@ -78,33 +78,33 @@ file:
 export TMP=${TMP:-/tmp/SBo}
 
 This sets $TMP to /tmp/SBo for sbopkg purposes (i.e. where sbopkg logs
-are kept) and also for building packages.  Since this variable is
-exported, it could be changed for both sbopkg and for building
-packages from SBo SlackBuilds within sbopkg.  For example, changing
-this line so it reads:
+are kept) and also for building SBo packages within sbopkg (which is
+current default for SBo SlackBuilds already).  Since this variable is
+exported, it could be changed for both sbopkg and for building SBo
+packages within sbopkg.  For example, changing this line so it reads:
 
 export TMP=${TMP:-/home/sbo/tmp}
 
-would then set $TMP to /home/sbo/tmp for sbopkg and SBo SlackBuild
-script purposes.
+would then set $TMP to /home/sbo/tmp for sbopkg and for building SBo
+packages.
 
-You can also export variables in sbopkg.conf that are not used by sbopkg
-at all, as demonstrated by the commented out line towards the bottom
-of sbopkg.conf:
+You can also export variables in sbopkg.conf that are not used by
+sbopkg at all, as demonstrated by the commented out line towards the
+bottom of sbopkg.conf:
 
 export OUTPUT=${OUTPUT:-/tmp}
 
 $OUTPUT is only used in the SBo SlackBuild scripts.  The default
 setting of /tmp is the same that is currently used in the SBo
 SlackBuild scripts.  By uncommenting the $OUTPUT line in sbopkg.conf,
-one can export $OUTPUT for all SlackBuild packages built from within
+you can export $OUTPUT for all SlackBuild packages built from within
 sbopkg.  For example, you could change this to /home/sbo/packages.
 
-As you can probably see, by making a few changes to these variables you
-could have a completely separated sandbox for SBo purposes -- the repo
-at /home/sbo, the $TMP directory at /home/sbo/tmp, the source cache
-directory at /home/sbo/cache, and the $OUTPUT directory where compiled
-packages are saved at /home/sbo/packages.
+As you can probably see, by making a few changes to these variables,
+you could have a completely separated sandbox for SBo purposes -- the
+repo at /home/sbo, the $TMP directory at /home/sbo/tmp, the source
+cache directory at /home/sbo/cache, and the $OUTPUT directory where
+compiled packages are saved at /home/sbo/packages.
 
 .SH "SEE ALSO"
 .BR sbopkg (8)
