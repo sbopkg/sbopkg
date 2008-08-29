@@ -65,6 +65,17 @@ $TMP/sbopkg-build-log.
 
 The default value of KEEPLOG is YES.
 
+.TP 5
+.B TERMBUILD
+.br
+This option should be set to YES or NO.  This option allows the user
+to have the package building process take place in a regular terminal
+instead of the dialog interface.  The advantage of doing so allows
+the user to use Ctrl-S to pause the output, Ctrl-Q to resume the
+output, and to page up and down to view the final output.
+
+The default value of TERMBUILD is NO.
+
 .SH FILES
 .TP 5
 .B /etc/sbopkg/sbopkg.conf
