@@ -464,11 +464,16 @@ as the root user in order to build packages." 8 30
         fi
         rm -rf $TMP/sbopkg_build.lck
         touch $TMP/sbopkg_build.lck
-        ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
-        while [ -f $TMP/sbopkg_build.lck ]; do
-            dialog --backtitle "Building the $APP package." \
+        if [ "$TERMBUILD" = "YES" ]; then
+            build_package $APP | tee $SBOPKGOUTPUT
+            read -n 1 -p "Press any key to continue."
+        else
+            ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
+            while [ -f $TMP/sbopkg_build.lck ]; do
+                dialog --backtitle "Building the $APP package." \
  --tailbox $SBOPKGOUTPUT 20 70
-        done
+            done
+        fi
         if [ "$KEEPLOG" = "YES" ]; then
             cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
         fi
