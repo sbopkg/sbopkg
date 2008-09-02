@@ -278,9 +278,9 @@ potential updates..." >> $UPDATELIST
                 NAME=$OLDNAME
                 PRGNAM="$PRGNAM$(egrep -m1 "^FONTLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/_/-/g')"
             fi
-            # Ugly hack for ctorrent, argtable, libevent,
-            # ubuntulooks, and graveman
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "graveman" ]]; then
+	    # Ugly hack for several SlackBuilds that use $SRCVER but not in 
+	    # the final package name, so we need to blank out $NEWSRCVER
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "graveman"  || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" ]]; then
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
