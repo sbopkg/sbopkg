@@ -28,9 +28,9 @@
 #
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
-#  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, and
-#  Murat D. Kadirov.  This script would not be where it is without
-#  the help of these folks.  Thank you!
+#  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
+#  D. Kadirov, The-spiki, and David Somero.  This script would not be
+#  where it is without the help of these folks.  Thank you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -64,6 +64,20 @@ else
             echo "Please correct this error and run $SCRIPT again."
             exit 1
     fi
+fi
+PIDFILE=$TMP/sbopkg.pid
+trap 'rm -rf $PIDFILE; exit 1' TERM INT
+if [ -e $PIDFILE ]; then
+    echo
+    echo "Another instance of sbopkg appears to be running"
+    echo "with process id $(cat $PIDFILE).  Running more than"
+    echo "one instance of sbopkg is not recommended.  "
+    echo
+    echo "If this is incorrect, you can delete the lockfile"
+    echo "'${PIDFILE}' and restart.  Exiting now."
+    exit 1
+else
+   echo $$ > $PIDFILE
 fi
 if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
     echo
@@ -884,6 +898,7 @@ if [ $WRITE = "false" ]; then
     exit 0
 else
     rm -rf $TMP/sbopkg_*
+    rm -f $PIDFILE
 fi
 cd $CWD
 }
