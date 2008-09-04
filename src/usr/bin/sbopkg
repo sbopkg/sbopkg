@@ -286,7 +286,7 @@ potential updates..." >> $UPDATELIST
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
             # blank out $NEWSRCVER
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "graveman"  || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" ]]; then
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "graveman"  || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" ]]; then
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
