@@ -297,10 +297,22 @@ potential updates..." >> $UPDATELIST
                 VERSION=$(echo $VERSION | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/./g')
                 NEWSRCVER=""
             fi
+            # It took me a lot longer than I would like to admit to
+            # figure out why 0.9.12_8 is greater than 0.9.12_12.  This
+            # ugly hack for ubuntulooks is one attempt to fix decimal
+            # type problem, otherwise sbopkg thinks the installed
+            # version is newer than the repo.
+            if [ "$PRGNAM" = "ubuntulooks" ]; then
+                MINIVER=$(echo $VER | sed -e 's/^.*_//') | wc -m)
+                if [ $MINIVER -le 2 ]; then
+                    VER=$(echo $VER | sed -e 's/_/_0/')
+                fi
+                NEWSRCVER=""
+            fi
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
             # blank out $NEWSRCVER
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "graveman"  || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" ]]; then
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman"  || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" ]]; then
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
