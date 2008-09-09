@@ -303,7 +303,7 @@ potential updates..." >> $UPDATELIST
             # type problem, otherwise sbopkg thinks the installed
             # version is newer than the repo.
             if [ "$PRGNAM" = "ubuntulooks" ]; then
-                MINIVER=$(echo $VER | sed -e 's/^.*_//') | wc -m)
+                MINIVER=$(echo $VER | sed -e 's/^.*_//' | wc -m)
                 if [ $MINIVER -le 2 ]; then
                     VER=$(echo $VER | sed -e 's/_/_0/')
                 fi
