@@ -36,9 +36,12 @@ slack-desc files.  The user can also edit the SlackBuild and the
 edited SlackBuild will remain after doing an rsync.  Additionally, if
 sbopkg is run with root privileges, then the user can choose to build
 a package as well using either the original SlackBuild or the
-locally-edited one, if present.  Finally, if KEEPLOG is set to YES in
-the sbopkg.conf file then a permanent log of the build process is
-saved in /tmp/sbopkg-build-log.
+locally-edited one, if present.  If using the dialog interface, and if
+sbopkg finds a built package for a particular piece of software in the
+OUTPUT directory, then sbopkg will automatically add a new menu entry
+allowing the user to install the package if he so choosed.  Finally,
+if KEEPLOG is set to YES in the sbopkg.conf file then a permanent log
+of the build process is saved in /tmp/sbopkg-build-log.
 
 Alternatively, sbopkg can be run from the command line without using
 the dialog interface.  Executing "sbopkg -h" will display a list of
