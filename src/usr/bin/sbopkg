@@ -896,6 +896,7 @@ fi
 }
 
 cleanup () {
+# Clean up cruft and remove temporary files.
 check_write $TMP
 if [ $WRITE = "false" ]; then
     echo
