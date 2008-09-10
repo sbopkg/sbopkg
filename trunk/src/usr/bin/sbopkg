@@ -71,7 +71,7 @@ if [ -e $PIDFILE ]; then
     echo
     echo "Another instance of sbopkg appears to be running"
     echo "with process id $(cat $PIDFILE).  Running more than"
-    echo "one instance of sbopkg is not recommended.  "
+    echo "one instance of sbopkg is not recommended."
     echo
     echo "If this is incorrect, you can delete the lockfile"
     echo "'${PIDFILE}' and restart.  Exiting now."
