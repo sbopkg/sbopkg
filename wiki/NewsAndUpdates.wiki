@@ -6,5 +6,3 @@ There is no easy place to post updates/news/errata on the Google Code page, so I
 == Latest News ==
 
 There is an sbopkg IRC channel, which is pretty quiet.  Go to irc.freenode.net and join #sbopkg.
-
-Update 2008-08-17: I am on vacation until Monday, August 25, 2008 so my SVN updates will be minimal or nonexistent until then.  However, I plan to get back to it upon my return and address some of the issues that have been posted to the Issue tracker here on the project's home page as well as some bug reports that have come in by email.  Version 0.10.0 of sbopkg should be released in a couple of weeks - maybe by mid September.
