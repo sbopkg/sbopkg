@@ -13,7 +13,7 @@ LOCALREPO=${LOCALREPO:-/home/sbo}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 export TMP=${TMP:-/tmp/SBo}
 KEEPLOG=YES
-TERMBUILD=YES
+TERMBUILD=NO
 
 # Optional - the $OUTPUT variable is used by SlackBuild scripts only
 # and can be used to change the output location of compiled packages.
