@@ -1,0 +1,20 @@
+# $Id: sbopkg.conf.new 172 2008-09-12 16:17:16Z chess.griffin $
+#
+# Please read the sbopkg.conf(5) man page for information about this
+# configuration file, including an explanation of how to set these
+# variables.
+
+# The following are variables used by sbopkg.  NOTE:  $TMP must be
+# exported as it is used by the SlackBuild scripts as well.  Any of
+# the other variables could be exported as well, if desired.
+RSYNCMIRROR=slackbuilds.org::slackbuilds
+SLACKVER=12.1
+LOCALREPO=${LOCALREPO:-/home/sbo}
+SRCDIR=${SRCDIR:-/var/cache/sbopkg}
+export TMP=${TMP:-/tmp/SBo}
+KEEPLOG=YES
+TERMBUILD=NO
+
+# Optional - the $OUTPUT variable is used by SlackBuild scripts only
+# and can be used to change the output location of compiled packages.
+#export OUTPUT=${OUTPUT:-/tmp}

@@ -1,0 +1,19 @@
+# $Id: TODO 161 2008-09-04 23:16:39Z chess.griffin $
+
+Sbopkg TODO (in no particular order)
+* Add ability to install packages from the command line using a -i
+  switch.
+* Add 'long' switches to the cli options, i.e. --build in addition to
+  the current -b switch.
+* Add in ability to edit the *.info file so folks can quickly change
+  the version or download link (though they'd also have to change the
+  MD5SUM).
+* Perhaps make the MD5SUM check a variable that a user can turn off?
+* When using the dialog interface, change the listing of packages to
+  be a checklist or radiolist whereby the user can select more than
+  one package to build at a time.  This would possibly change how the
+  user would be able to view the README, slack-desc etc. since a
+  checklist or radiolist would not present the current 'view' menu.
+  Not sure how the order of packages selected would be set.
+* More error checking.
+* General code cleanups.
