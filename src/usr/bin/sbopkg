@@ -29,8 +29,9 @@
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
-#  D. Kadirov, The-spiki, and David Somero.  This script would not be
-#  where it is without the help of these folks.  Thank you!
+#  D. Kadirov, The-spiki, David Somero; and LukenShiro.  This script
+#  would not be where it is without the help of these folks.  Thank
+#  you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -312,7 +313,7 @@ potential updates..." >> $UPDATELIST
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
             # blank out $NEWSRCVER
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman"  || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" ]]; then
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" ]]; then
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
@@ -649,7 +650,6 @@ rm -rf $TMP/sbopkg_rsync.lck
 
 rsync_repo () {
 # This function does the rsync with SBo.
-check_slack_version
 check_write $LOCALREPO/$SLACKVER/
 if [ "$WRITE" = "false" ]; then
     if [ "$DIAG" = 1 ]; then
@@ -1102,7 +1102,6 @@ to build packages."
         fi
     done
     rm -rf $SBOPKGOUTPUT
-    exit 0
     cleanup
     exit 0
 fi
