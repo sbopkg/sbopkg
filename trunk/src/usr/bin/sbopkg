@@ -41,11 +41,9 @@ CWD="$(pwd)"
 SBOVER=SVN
 UPDATE_DEBUG="1" # This will be uncommented in SVN and RC releases
 
-sanity_checks () {
+config_check () {
 # Check if config file is there and if so check that it has all
-# needed variables with any value, and set them; also check and
-# see if local repository directory exists; also create $SRCDIR
-# if it's not there.
+# needed variables with any value, and set them.
 if [ ! -e $SBOPKG_CONF ]; then
     echo "$SCRIPT: No $SBOPKG_CONF file was found."
     echo "Please create it and run $SCRIPT again." 1>&2
@@ -66,6 +64,11 @@ else
             exit 1
     fi
 fi
+}
+
+sanity_checks () {
+# Set and check for pid file; check and see if local repository,
+# $SRCDIR, and $TMPDIR exist and if not, offer to create them.
 PIDFILE=$TMP/sbopkg.pid
 trap 'rm -rf $PIDFILE; exit 1' TERM INT
 if [ -e $PIDFILE ]; then
@@ -149,6 +152,7 @@ have done an rsync first."  12 30
         echo "or is empty.  Please make sure your respository"
         echo "directory is set correctly and that you have done"
         echo "an rsync first."
+        cleanup
         exit 0
     fi
 fi
@@ -170,6 +174,7 @@ correctly and that you have done an rsync first." 10 30
         echo "No ChangeLog.txt found.  Please make sure your"
         echo "repository directory is set correctly and that"
         echo "you have done an rsync first.  Exiting."
+        cleanup
         exit 0
     fi
 else
@@ -658,6 +663,7 @@ permissions on the target directory." 8 30
         continue
     else
         echo "You do not have write permissons on the target directory."
+        cleanup
         exit 0
     fi
 fi
@@ -885,7 +891,7 @@ addition to the original SlackBuild."
                 ;;
                 l* | L* ) SLACKBUILD="local" ; break
                 ;;
-                c* | C* ) SLACKBUILD="cancel" ; exit 0
+                c* | C* ) SLACKBUILD="cancel" ; cleanup; exit 0
                 ;;
                 * ) echo "Unknown response."
                 ;;
@@ -1007,10 +1013,13 @@ done
 
 cleanup # Do this first just in case there is cruft left over.
 
+config_check # Next, check to make sure we have a valid config.
+
 if [ $# -eq 0 ]; then
     DIAG=1
     sanity_checks
     main_menu
+    cleanup
     exit 0
 fi
 
@@ -1073,17 +1082,18 @@ done
 # End of option parsing.
 shift $(($OPTIND - 1))
 
-sanity_checks
-
 if [ -n "$VERSION" ]; then
     SLACKVER=$CUSTOMVER
 fi
+
+sanity_checks
 
 if [ -n "$BUILD" ]; then
     check_root
     if [ $ROOT = "false" ]; then
         echo "You must run this script as the root user in order \
 to build packages."
+        cleanup
         exit 0
     fi
     SBOPKGOUTPUT=$TMP/sbopkg_output
@@ -1102,33 +1112,25 @@ to build packages."
         fi
     done
     rm -rf $SBOPKGOUTPUT
-    cleanup
-    exit 0
 fi
 
 if [ -n "$CHK_UPDATES" ]; then
-  check_for_updates
-  exit 0
+    check_for_updates
 fi
 
 if [ -n "$CHANGELOG" ]; then
     show_changelog
-    cleanup
-    exit 0
 fi
 
 if [ -n "$GETPKGS" ]; then
     get_sbo_packages
-    exit 0
 fi
 
 if [ -n "$RSYNC" ]; then
     echo "Rsyncing with Slackbuilds.org repository into \
 $LOCALREPO/$SLACKVER."
     rsync_repo
-    cleanup
     echo "Finished rsync."
-    exit 0
 fi
 
 if [ -n "$SEARCH" ]; then
@@ -1138,7 +1140,6 @@ if [ -n "$SEARCH" ]; then
         search_package $PKGSEARCH
         show_readme
     done
-    exit 0
 fi
 
 if [ -n "$GENSEARCH" ]; then
@@ -1147,11 +1148,6 @@ if [ -n "$GENSEARCH" ]; then
         echo "Searching for $PKGSEARCH"
         gen_search_package $PKGSEARCH
     done
-    exit 0
-fi
-
-if [ -n "$VERSION" ]; then
-    SLACKVER=$NEWVER
 fi
 
 cleanup
