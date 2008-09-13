@@ -41,7 +41,7 @@ CWD="$(pwd)"
 SBOVER=SVN
 UPDATE_DEBUG="1" # This will be uncommented in SVN and RC releases
 
-config_check () {
+sanity_checks () {
 # Check if config file is there and if so check that it has all
 # needed variables with any value, and set them.
 if [ ! -e $SBOPKG_CONF ]; then
@@ -63,25 +63,6 @@ else
             echo "Please correct this error and run $SCRIPT again."
             exit 1
     fi
-fi
-}
-
-sanity_checks () {
-# Set and check for pid file; check and see if local repository,
-# $SRCDIR, and $TMPDIR exist and if not, offer to create them.
-PIDFILE=$TMP/sbopkg.pid
-trap 'rm -rf $PIDFILE; exit 1' TERM INT
-if [ -e $PIDFILE ]; then
-    echo
-    echo "Another instance of sbopkg appears to be running"
-    echo "with process id $(cat $PIDFILE).  Running more than"
-    echo "one instance of sbopkg is not recommended."
-    echo
-    echo "If this is incorrect, you can delete the lockfile"
-    echo "'${PIDFILE}' and restart.  Exiting now."
-    exit 1
-else
-   echo $$ > $PIDFILE
 fi
 if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
     echo
@@ -114,6 +95,25 @@ if [ ! -d "$TMP" ]; then
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
     echo
     mkdir -p $TMP || exit 1
+fi
+}
+
+pid_check () {
+# Set and check for pid file.
+PIDFILE=$TMP/sbopkg.pid
+trap 'rm -rf $PIDFILE; exit 1' TERM INT
+if [ -e $PIDFILE ]; then
+    echo
+    echo "Another instance of sbopkg appears to be running"
+    echo "with process id $(cat $PIDFILE).  Running more than"
+    echo "one instance of sbopkg is not recommended."
+    echo
+    echo "If this is incorrect, you can delete the lockfile"
+    echo "'${PIDFILE}' and restart.  Exiting now."
+    exit 1
+else
+    cleanup
+    echo $$ > $PIDFILE
 fi
 }
 
@@ -912,7 +912,9 @@ if [ $WRITE = "false" ]; then
     echo "it appears that you do not have sufficient permissions to"
     echo "do so.  Please check your \$TMP setting in sbopkg.conf,"
     echo "verify that your permissions are correct, or manually"
-    echo "delete any leftover files in \$TMP.  Exiting."
+    echo "delete any leftover files in \$TMP.  Some features of"
+    echo "sbopkg are generally available only to the root user,"
+    echo "so running sbopkg as root may be advisable.  Exiting."
     echo
     exit 0
 else
@@ -1011,13 +1013,14 @@ done
 # If there are no command line options then we will use the dialog
 # version of sbopkg.
 
-cleanup # Do this first just in case there is cruft left over.
+sanity_checks # Do this first to make sure we have a valid config.
 
-config_check # Next, check to make sure we have a valid config.
+pid_check
+
+#cleanup # Do this next just in case there is cruft left over.
 
 if [ $# -eq 0 ]; then
     DIAG=1
-    sanity_checks
     main_menu
     cleanup
     exit 0
@@ -1085,8 +1088,6 @@ shift $(($OPTIND - 1))
 if [ -n "$VERSION" ]; then
     SLACKVER=$CUSTOMVER
 fi
-
-sanity_checks
 
 if [ -n "$BUILD" ]; then
     check_root
