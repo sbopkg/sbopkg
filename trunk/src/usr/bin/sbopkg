@@ -41,7 +41,7 @@ CWD="$(pwd)"
 SBOVER=SVN
 UPDATE_DEBUG="1" # This will be uncommented in SVN and RC releases
 
-sanity_checks () {
+config_check () {
 # Check if config file is there and if so check that it has all
 # needed variables with any value, and set them.
 if [ ! -e $SBOPKG_CONF ]; then
@@ -64,6 +64,9 @@ else
             exit 1
     fi
 fi
+}
+
+directory_checks () {
 if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
     echo
     echo "Creating local repo directory $LOCALREPO/$SLACKVER"
@@ -1013,14 +1016,17 @@ done
 # If there are no command line options then we will use the dialog
 # version of sbopkg.
 
-sanity_checks # Do this first to make sure we have a valid config.
+#config_check # Do this first to make sure we have a valid config.
 
-pid_check
+#pid_check
 
 #cleanup # Do this next just in case there is cruft left over.
 
 if [ $# -eq 0 ]; then
     DIAG=1
+    config_check
+    directory_checks
+    pid_check
     main_menu
     cleanup
     exit 0
@@ -1085,9 +1091,15 @@ done
 # End of option parsing.
 shift $(($OPTIND - 1))
 
+config_check
+
 if [ -n "$VERSION" ]; then
     SLACKVER=$CUSTOMVER
 fi
+
+directory_checks
+
+pid_check
 
 if [ -n "$BUILD" ]; then
     check_root
