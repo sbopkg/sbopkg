@@ -67,6 +67,8 @@ fi
 }
 
 directory_checks () {
+# Check and make sure certain sbopkg-related directories exist.
+# If not, create them.
 if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
     echo
     echo "Creating local repo directory $LOCALREPO/$SLACKVER"
@@ -325,7 +327,7 @@ potential updates..." >> $UPDATELIST
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
-	          if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
+            if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
                 echo $NAME: >> $UPDATELIST
                 echo "  POTENTIAL UPDATE" >> $UPDATELIST
                 echo "  Installed version: " $CURPKG >> $UPDATELIST
@@ -1016,12 +1018,6 @@ done
 # If there are no command line options then we will use the dialog
 # version of sbopkg.
 
-#config_check # Do this first to make sure we have a valid config.
-
-#pid_check
-
-#cleanup # Do this next just in case there is cruft left over.
-
 if [ $# -eq 0 ]; then
     DIAG=1
     config_check
@@ -1091,14 +1087,18 @@ done
 # End of option parsing.
 shift $(($OPTIND - 1))
 
+# Check for a good config file and set initial variables
 config_check
 
+# Change $SLACKVER if set manually using cli -v
 if [ -n "$VERSION" ]; then
     SLACKVER=$CUSTOMVER
 fi
 
+# Check for required directories
 directory_checks
 
+# Check for another instance
 pid_check
 
 if [ -n "$BUILD" ]; then
