@@ -777,7 +777,7 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     else
         cd $SRCDIR
-        wget -t 5 -T 10 --progress=bar $DOWNLOAD || rm -rf $TMP/sbopkg_build.lck
+        wget -c -t 5 -T 10 --progress=bar $DOWNLOAD || rm -rf $TMP/sbopkg_build.lck
         cd -
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     fi
