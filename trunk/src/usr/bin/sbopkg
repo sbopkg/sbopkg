@@ -449,7 +449,11 @@ APP="$(cat $TMP/sbopkg_item_selection)"
 U="README"
 while [ 0 ]; do
 PKGOUTPUT=${OUTPUT:-/tmp}
-IPACKAGE="$(basename $(ls -1t $PKGOUTPUT/${APP}*tgz | head -n 1))"
+if $(echo $(ls -lt $PKGOUTPUT) | grep -q "$APP"); then
+    IPACKAGE="$(basename $(ls -1t $PKGOUTPUT/${APP}*tgz | head -n 1))"
+else
+    IPACKAGE=""
+fi
 if [ "$IPACKAGE" = "" ]; then
 	JPACKAGE=""
 else
@@ -459,13 +463,14 @@ dialog --default-item "$U" --title "$APP Information" \
 --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
 "Please choose an item or press <Back> to go back or press \
-<Main Menu> to return to the main menu.\n" 20 60 8 \
+<Main Menu> to return to the main menu.\n" 20 60 9 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
 "SlackBuild" "View the SlackBuild file" \
 "Edit" "Create and edit a local SlackBuild" \
 "Delete" "Delete the local SlackBuild" \
+"Remove" "Remove $APP sources in cache" \
 "Build" "Build a package for $APP" \
 $JPACKAGE 2>$TMP/sbopkg_info_selection
 CHOICE=$?
@@ -500,6 +505,9 @@ elif [ $CHOICE = 0 ]; then
     if [ "$U" = "Delete" ]; then
         delete_local_slackbuild $APP
     fi
+    if [ "$U" = "Remove" ]; then
+        remove_sources $APP
+    fi
     if [ "$U" = "Build" ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -524,6 +532,9 @@ as the root user in order to build packages." 8 30
                 dialog --backtitle "Building the $APP package." \
  --tailbox $SBOPKGOUTPUT 20 70
             done
+        fi
+        if [ -e $TMP/sbopkg_failcheck ]; then
+            checksum_fail
         fi
         if [ "$KEEPLOG" = "YES" ]; then
             cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
@@ -593,26 +604,31 @@ done
 
 view_cache_dir () {
 # This function displays the contents of $SRCDIR.
-ls -la $SRCDIR > $TMP/sbopkg_cache_dir
-dialog --title "Displaying $SRCDIR" \
+if [ "$(ls -A $SRCDIR)" ]; then
+    ls -la $SRCDIR > $TMP/sbopkg_cache_dir
+    dialog --title "Displaying $SRCDIR" \
 --textbox $TMP/sbopkg_cache_dir 0 0
-dialog --title "Keep Cache?" --yesno "Would you like to keep the \
+    dialog --title "Keep Cache?" --yesno "Would you like to keep the \
 files in the cache directory?  Select YES to keep or NO to \
 delete." 10 30
-if [ $? = 1 ]; then
-    check_root
-    if [ $ROOT = "false" ]; then
-        dialog --title "ERROR" --msgbox "Sorry, only the root \
+    if [ $? = 1 ]; then
+        check_root
+        if [ $ROOT = "false" ]; then
+            dialog --title "ERROR" --msgbox "Sorry, only the root \
 user can clear the cache directory." 8 30
-        continue
-    else
-        rm -rf $SRCDIR/*
-        dialog --title "Done" --msgbox "The cache directory has been \
+            continue
+        else
+            rm -rf $SRCDIR/*
+            dialog --title "Done" --msgbox "The cache directory has been \
 cleared." 8 30
+            continue
+        fi
+    else
         continue
     fi
 else
-    continue
+    dialog --title "ERROR" --msgbox "It appears the cache \
+directory is empty." 8 30
 fi
 }
 
@@ -784,13 +800,71 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
 fi
 }
 
+remove_sources () {
+# Remove sources from $SRCDIR for a particular $APP
+if $(echo $(ls -la $SRCDIR) | grep -q "$APP"); then
+    ls -la $SRCDIR | grep $APP > $TMP/sbopkg_app_sources
+    dialog --title "Displaying $APP sources" \
+--textbox $TMP/sbopkg_app_sources 0 0
+    dialog --title "Keep $APP sources?" --yesno "Would you like to \
+keep the $APP sources in the cache directory $SRCDIR?  Select YES \
+to keep or NO to delete." 10 30
+        if [ $? = 1 ]; then
+            check_root
+            if [ $ROOT = "false" ]; then
+                dialog --title "ERROR" --msgbox "Sorry, only the \
+root user can delete the sources in the cache directory." 8 30
+            else
+                for i in $(cat $TMP/sbopkg_app_sources); do
+                    rm -rf $SRCDIR/$i
+                done
+                dialog --title "Done" --msgbox "The $APP \
+sources have been cleared." 8 30
+            fi
+        else
+            continue
+        fi
+else
+    dialog --title "ERROR" --msgbox "It appears there are no \
+$APP sources in the cache directory." 8 30
+fi
+}
+
 install_package () {
-# Install the package
+# Install the package.
 INSTDIR=$1
 INSTPKG=$2
 upgradepkg --reinstall --install-new $INSTDIR/$INSTPKG
 echo "Done installing/upgrading package."
 rm -rf $TMP/sbopkg_install.lck
+}
+
+checksum_fail () {
+# Offer to remove source if MD5SUM check fails.
+if [ "$DIAG" = 1 ]; then
+    dialog --title "MD5SUM Failed" --yesno "It appears the \
+MD5SUM check failed for the downloaded source.  The build process \
+will not continue.  Would you still like to keep the the downloaded \
+source for $PKG in $SRCDIR or would you like to delete the source \
+and try again?  Select YES to keep or NO to delete." 15 35
+    if [ $? = 1 ]; then
+        check_root
+        if [ $ROOT = "false" ]; then
+            dialog --title "ERROR" --msgbox "Sorry, only the root \
+user can delete the source." 8 30
+        else
+            rm -rf $SRCDIR/$SRCNAME
+            dialog --title "Done" --msgbox "The source has been \
+deleted." 8 30
+        fi
+    else
+            dialog --title "Done" --msgbox "The source has been \
+saved." 8 30
+    fi
+else
+    echo "placeholder"
+    break
+fi
 }
 
 build_package () {
@@ -804,8 +878,12 @@ if [ "$MD5CHK" == $MD5SUM ]; then
     echo "OK"
 else
     echo "MD5SUM check failed.  Exiting."
+    touch $TMP/sbopkg_failcheck
     rm -rf $TMP/sbopkg_build.lck
-    break
+    rm $SRCNAME
+    cd $LOCALREPO/$SLACKVER
+    #break
+    continue
 fi
 echo "Building Slackware package for "$SRCNAME"..."
 if [ "$SLACKBUILD" = "original" ]; then
@@ -816,6 +894,7 @@ if [ "$SLACKBUILD" = "local" ]; then
 fi
 echo "Done building package."
 rm -rf $TMP/sbopkg_build.lck
+rm $SRCNAME
 cd $LOCALREPO/$SLACKVER
 }
 
