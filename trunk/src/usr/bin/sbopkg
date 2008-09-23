@@ -862,8 +862,8 @@ deleted." 8 30
 saved." 8 30
     fi
 else
-    echo "placeholder"
-    break
+    echo "You may wish to delete the downloaded $PKG source in"
+    echo "$SRCDIR and try the build again."
 fi
 }
 
@@ -1199,6 +1199,9 @@ to build packages."
         while [ -f $TMP/sbopkg_build.lck ]; do
             tail -f $SBOPKGOUTPUT
         done
+        if [ -e $TMP/sbopkg_failcheck ]; then
+            checksum_fail
+        fi
         if [ "$KEEPLOG" = "YES" ]; then
             cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
         fi
