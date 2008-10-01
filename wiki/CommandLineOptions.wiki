@@ -8,16 +8,17 @@ Here is the output of *sbopkg -h* which is used to display the sbopkg command li
 = Details =
 
 {{{
-sbopkg v0.0.8
+sbopkg v0.11.2
 Usage: sbopkg [OPTIONS] <packagename(s)>
 Options are:
   -b package   Build a package.
-  -c           Check for updates.
+  -c           Check for updates to installed SlackBuilds.org packages.
   -d localdir  Location of local copy of SlackBuilds.org repository
   -f           Override default configuration file
                with specified file.
   -h           Display this help message.
   -l           Display the SlackBuilds.org ChangeLog.txt and then quit.
+  -p           List installed SlackBuilds.org packages.
   -q package   Query for packages matching string.
   -r           Rsync the SlackBuilds.org repository with
                the local mirror and then quit.
