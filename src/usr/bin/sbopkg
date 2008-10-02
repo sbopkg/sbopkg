@@ -29,9 +29,9 @@
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
-#  D. Kadirov, The-spiki, David Somero, LukenShiro, and Drew.  This script
-#  would not be where it is without the help of these folks.  Thank
-#  you!
+#  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, and
+#  nille.  This script would not be where it is without the help of
+#  these folks.  Thank you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -463,13 +463,15 @@ dialog --default-item "$U" --title "$APP Information" \
 --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
 "Please choose an item or press <Back> to go back or press \
-<Main Menu> to return to the main menu.\n" 20 60 9 \
+<Main Menu> to return to the main menu.\n" 20 60 11 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
 "SlackBuild" "View the SlackBuild file" \
 "Edit" "Create and edit a local SlackBuild" \
 "Delete" "Delete the local SlackBuild" \
+"Edit-Info" "Create and edit a local .info file" \
+"Delete-Info" "Delete the local .info file" \
 "Remove" "Remove $APP sources in cache" \
 "Build" "Build a package for $APP" \
 $JPACKAGE 2>$TMP/sbopkg_info_selection
@@ -505,6 +507,12 @@ elif [ $CHOICE = 0 ]; then
     if [ "$U" = "Delete" ]; then
         delete_local_slackbuild $APP
     fi
+    if [ "$U" = "Edit-Info" ]; then
+        edit_local_info $APP
+    fi
+    if [ "$U" = "Delete-Info" ]; then
+        delete_local_info $APP
+    fi
     if [ "$U" = "Remove" ]; then
         remove_sources $APP
     fi
@@ -519,6 +527,9 @@ as the root user in order to build packages." 8 30
         search_package $APP
         pick_slackbuild
         if [ $SLACKBUILD = "cancel" ]; then
+            continue
+        fi
+        if [ $DOTINFO = "cancel" ]; then
             continue
         fi
         rm -rf $TMP/sbopkg_build.lck
@@ -719,7 +730,13 @@ if [ ! $(find -name "$PKG") ]; then
         continue
     fi
 fi
-. $PKGPATH/$PKG.info
+pick_info
+if [ "$DOTINFO" = "original" ]; then
+    . $PKGPATH/$PKG.info
+fi
+if [ "$DOTINFO" = "local" ]; then
+    . $PKGPATH/$PKG.info.sbopkg
+fi
 PKGNAME=${PKG##*/}
 SRCNAME=${DOWNLOAD##*/}
 SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
@@ -976,6 +993,91 @@ addition to the original SlackBuild."
                 l* | L* ) SLACKBUILD="local" ; break
                 ;;
                 c* | C* ) SLACKBUILD="cancel" ; cleanup; exit 0
+                ;;
+                * ) echo "Unknown response."
+                ;;
+            esac
+        done
+    fi
+fi
+}
+
+edit_local_info () {
+# This function allows the user to create and edit a local copy of the
+# .info file.
+check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
+if [ "$WRITE" = "false" ]; then
+    dialog --title "ERROR" --msgbox "You do not have write \
+permissions on the target directory." 8 30
+    continue
+fi
+if [ ! -e $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info.sbopkg ]; then
+    cp $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info \
+    $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info.sbopkg
+fi
+${EDITOR:-vi} $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info.sbopkg
+}
+
+delete_local_info () {
+# This function allows the user to delete the local .info file.
+check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
+if [ "$WRITE" = "false" ]; then
+    dialog --title "ERROR" --msgbox "You do not have write \
+permissions on the target directory." 8 30
+    continue
+fi
+if [ ! -e $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info.sbopkg ]; then
+    dialog --title "ERROR" --msgbox "There is no local copy of the \
+.info file to delete." 8 30
+    continue
+else
+    rm $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info.sbopkg
+    dialog --title "DONE" --msgbox "The local copy of the .info file \
+has been deleted." 8 30
+fi
+}
+
+pick_info () {
+# This function checks to see if there is a locally-edited
+# .info file (which has the *.sbopkg" suffix) and then asks the
+# user which one he wants to use to build a package.
+DOTINFO=""
+if [ ! -e $PKGPATH/$PKG.info.sbopkg ]; then
+    DOTINFO="original"
+else
+    if [ "$DIAG" = 1 ]; then
+        while [ 0 ]; do
+            dialog --title "Choose .info file" --menu "A local \
+.info file was found in addition to the original .info file. \
+Which one would you like to use?" 10 60 2 \
+"Original" "Use the original .info" \
+"Local" "Use the local .info" 2>$TMP/sbopkg_info_selection
+            if [ $? = 1 ]; then
+                break
+            fi
+            I="$(cat $TMP/sbopkg_info_selection)"
+            if [ "$I" = "Original" ]; then
+                DOTINFO="original"
+                break
+            fi
+            if [ "$I" = "Local" ]; then
+                DOTINFO="local"
+                break
+            fi
+        done
+    else
+        while true; do
+            echo "A local .info file for $PKG was found in \
+addition to the original .info file."
+            echo "Which one would you like to use?  Please enter \
+'O' for original, 'L' for local, or 'C' to cancel."
+            read ANS
+            case $ANS in
+                o* | O* ) DOTINFO="original" ; break
+                ;;
+                l* | L* ) DOTINFO="local" ; break
+                ;;
+                c* | C* ) DOTINFO="cancel" ; cleanup; exit 0
                 ;;
                 * ) echo "Unknown response."
                 ;;
