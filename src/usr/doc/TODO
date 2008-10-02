@@ -7,7 +7,7 @@ Sbopkg TODO (in no particular order)
   the current -b switch.
 * Add in ability to edit the *.info file so folks can quickly change
   the version or download link (though they'd also have to change the
-  MD5SUM).
+  MD5SUM).  UPDATE:  this is now part of sbopkg 0.12.0.
 * Perhaps make the MD5SUM check a variable that a user can turn off?
 * When using the dialog interface, change the listing of packages to
   be a checklist or radiolist whereby the user can select more than
