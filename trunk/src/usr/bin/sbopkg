@@ -463,15 +463,12 @@ dialog --default-item "$U" --title "$APP Information" \
 --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
 "Please choose an item or press <Back> to go back or press \
-<Main Menu> to return to the main menu.\n" 20 60 11 \
+<Main Menu> to return to the main menu.\n" 20 60 8 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
 "SlackBuild" "View the SlackBuild file" \
-"Edit" "Create and edit a local SlackBuild" \
-"Delete" "Delete the local SlackBuild" \
-"Edit-Info" "Create and edit a local .info file" \
-"Delete-Info" "Delete the local .info file" \
+"Custom" "Customize the .info or SlackBuild" \
 "Remove" "Remove $APP sources in cache" \
 "Build" "Build a package for $APP" \
 $JPACKAGE 2>$TMP/sbopkg_info_selection
@@ -501,17 +498,8 @@ elif [ $CHOICE = 0 ]; then
         dialog --title "Viewing SlackBuild" \
         --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild 0 0
     fi
-    if [ "$U" = "Edit" ]; then
-        edit_local_slackbuild $APP
-    fi
-    if [ "$U" = "Delete" ]; then
-        delete_local_slackbuild $APP
-    fi
-    if [ "$U" = "Edit-Info" ]; then
-        edit_local_info $APP
-    fi
-    if [ "$U" = "Delete-Info" ]; then
-        delete_local_info $APP
+    if [ "$U" = "Custom" ]; then
+        customize_item
     fi
     if [ "$U" = "Remove" ]; then
         remove_sources $APP
@@ -572,6 +560,42 @@ as the root user in order to build packages." 8 30
             cat $SBOPKGINSTALLOUTPUT >> $TMP/sbopkg-build-log
         fi
         rm -rf $SBOPKGINSTALLOUTPUT
+    fi
+fi
+done
+}
+
+customize_item () {
+# This function shows the menu for customizing the SlackBuild
+# and .info file.
+V="Edit"
+while [ 0 ]; do
+dialog --default-item "$V" --title "$APP Customization" \
+--cancel-label "Back" --menu \
+"Please choose an item or press <Back> to go back or press \
+<Main Menu> to return to the main menu.\n" 20 60 4 \
+"Edit" "Create and edit a local SlackBuild" \
+"Delete" "Delete the local SlackBuild" \
+"Edit-Info" "Create and edit a local .info file" \
+"Delete-Info" "Delete the local .info file" \
+2>$TMP/sbopkg_custom_selection
+CCHOICE=$?
+if [ $CCHOICE = 1 ]; then
+    rm -rf $TMP/sbopkg_custom_selection
+    break
+elif [ $CCHOICE = 0 ]; then
+    V="$(cat $TMP/sbopkg_custom_selection)"
+    if [ "$V" = "Edit" ]; then
+        edit_local_slackbuild $APP
+    fi
+    if [ "$V" = "Delete" ]; then
+        delete_local_slackbuild $APP
+    fi
+    if [ "$V" = "Edit-Info" ]; then
+        edit_local_info $APP
+    fi
+    if [ "$V" = "Delete-Info" ]; then
+        delete_local_info $APP
     fi
 fi
 done
@@ -858,6 +882,7 @@ rm -rf $TMP/sbopkg_install.lck
 
 checksum_fail () {
 # Offer to remove source if MD5SUM check fails.
+rm -rf $TMP/sbopkg_failcheck
 if [ "$DIAG" = 1 ]; then
     dialog --title "MD5SUM Failed" --yesno "It appears the \
 MD5SUM check failed for the downloaded source.  The build process \
