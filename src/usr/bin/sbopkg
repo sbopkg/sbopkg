@@ -29,9 +29,9 @@
 #  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
-#  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, and
-#  nille.  This script would not be where it is without the help of
-#  these folks.  Thank you!
+#  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
+#  and acidchild.  This script would not be where it is without the
+#  help of these folks.  Thank you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -834,7 +834,8 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     else
         cd $SRCDIR
-        wget -c -t 5 -T 10 --progress=bar $DOWNLOAD || rm -rf $TMP/sbopkg_build.lck
+        DOWNLOADFILE=$(echo $DOWNLOAD | sed -e 's/^.*\///g')
+        wget -c -t 5 -T 10 --progress=bar $DOWNLOAD -O $DOWNLOADFILE || rm -rf $TMP/sbopkg_build.lck
         cd -
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     fi
