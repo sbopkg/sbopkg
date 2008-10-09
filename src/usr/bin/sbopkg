@@ -529,7 +529,7 @@ as the root user in order to build packages." 8 30
             ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
             while [ -f $TMP/sbopkg_build.lck ]; do
                 dialog --backtitle "Building the $APP package." \
- --tailbox $SBOPKGOUTPUT 20 70
+ --tailbox $SBOPKGOUTPUT 18 70
             done
         fi
         if [ -e $TMP/sbopkg_failcheck ]; then
@@ -552,7 +552,7 @@ as the root user in order to build packages." 8 30
             ( install_package $PKGOUTPUT/$IPACKAGE >> $SBOPKGINSTALLOUTPUT & ) 2>>$SBOPKGINSTALLOUTPUT
             while [ -f $TMP/sbopkg_install.lck ]; do
                 dialog --backtitle "Installing the $APP package." \
---tailbox $SBOPKGINSTALLOUTPUT 20 70
+--tailbox $SBOPKGINSTALLOUTPUT 18 70
             rm -rf $TMP/sbopkg_install.lck
             done
         fi
@@ -730,7 +730,7 @@ if [ "$DIAG" = 1 ]; then
     ( rsync_command >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
     while [ -f $TMP/sbopkg_rsync.lck ]; do
         dialog --backtitle "Rsyncing with SlackBuilds.org" \
---tailbox $SBOPKGOUTPUT 20 70
+--tailbox $SBOPKGOUTPUT 18 70
     done
     rm -f $SBOPKGOUTPUT
 else
