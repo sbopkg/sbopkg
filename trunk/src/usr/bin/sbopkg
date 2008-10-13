@@ -30,8 +30,8 @@
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
-#  and acidchild.  This script would not be where it is without the
-#  help of these folks.  Thank you!
+#  acidchild, and mancha.  This script would not be where it is
+#  without the help of these folks.  Thank you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -744,8 +744,8 @@ search_package () {
 # displaying information and building.
 cd $LOCALREPO/$SLACKVER
 PKG=$1
-PKGPATH=$(find -name $PKG)
-if [ ! $(find -name "$PKG") ]; then
+PKGPATH=$(find -mindepth 2 -name $PKG)
+if [ ! $(find -mindepth 2 -name "$PKG") ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
         continue
