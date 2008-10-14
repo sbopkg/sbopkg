@@ -30,8 +30,8 @@
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
-#  acidchild, and mancha.  This script would not be where it is
-#  without the help of these folks.  Thank you!
+#  acidchild, mancha, and macavity.  This script would not be where it
+#  is without the help of these folks.  Thank you!
 
 # Variables
 SCRIPT=${0##*/}
@@ -701,12 +701,23 @@ fi
 
 rsync_command () {
 # This function holds the rsync command.
-/usr/bin/rsync -avz --delete --timeout=5 --exclude="*.sbopkg" \
+# We do not use -z as this causes heavy CPU load on the server
+# and has very limited effect when most of the pull is .gz files.
+# Time out is set to 10 since SBo can be under heavy load at times.
+/usr/bin/rsync -av --delete --timeout=10 --exclude="*.sbopkg" \
 $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
-echo
-echo "Rsync with SlackBuilds.org complete."
-echo
+RSYNC_RETVAL=$?
 rm -rf $TMP/sbopkg_rsync.lck
+if [ ! $RSYNC_RETVAL = 0 ]; then
+    echo
+    echo "Rsync with SlackBuilds.org failed."
+    echo "Please try again."
+    echo
+else
+    echo
+    echo "Rsync with SlackBuilds.org complete."
+    echo
+fi
 }
 
 rsync_repo () {
