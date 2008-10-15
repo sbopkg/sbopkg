@@ -30,8 +30,9 @@
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
-#  acidchild, mancha, and macavity.  This script would not be where it
-#  is without the help of these folks.  Thank you!
+#  acidchild, mancha, macavity, and Zordrak.  This script would not be
+#  where it is without the help of these folks.  Thank you!
+#set -x
 
 # Variables
 SCRIPT=${0##*/}
@@ -106,7 +107,7 @@ fi
 pid_check () {
 # Set and check for pid file.
 PIDFILE=$TMP/sbopkg.pid
-trap 'rm -rf $PIDFILE; exit 1' TERM INT
+#trap 'rm -rf $PIDFILE; exit 1' TERM INT
 if [ -e $PIDFILE ]; then
     echo
     echo "Another instance of sbopkg appears to be running"
@@ -526,7 +527,15 @@ as the root user in order to build packages." 8 30
             build_package $APP | tee $SBOPKGOUTPUT
             read -n 1 -p "Press any key to continue."
         else
-            ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
+            # ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
+            # The above line is the old code.  The line below is the
+            # new code, which is the first step in trying to implement
+            # a way for users to cleanly abort the wget and package
+            # building steps with sbopkg properly killing all pids
+            # that were created along the way.  See the comment to the
+            # control_c function as well.  Also, see the similar code
+            # at the get_source function.
+            ( build_package $APP >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkg-build.pid ) 2>>$SBOPKGOUTPUT
             while [ -f $TMP/sbopkg_build.lck ]; do
                 dialog --backtitle "Building the $APP package." \
  --tailbox $SBOPKGOUTPUT 18 70
@@ -846,7 +855,15 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
     else
         cd $SRCDIR
         DOWNLOADFILE=$(echo $DOWNLOAD | sed -e 's/^.*\///g')
-        wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE || rm -rf $TMP/sbopkg_build.lck
+        #wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE || rm -rf $TMP/sbopkg_build.lck
+        # The above line was the old, default code.  The line below is
+        # the new addition to capture PID's, allowing a clean abort
+        # when a user presses Control-C.  Please see the comments
+        # above around line 530 when build_package is first called as
+        # well as the comments to the control_c function, below.
+        wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkg-build.pid 2>>$SBOPKGOUTPUT
+        #( wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkg-build.pid ) 2>>$SBOPKGOUTPUT
+        wait
         cd -
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     fi
@@ -936,15 +953,20 @@ else
     rm -rf $TMP/sbopkg_build.lck
     rm $SRCNAME
     cd $LOCALREPO/$SLACKVER
-    #break
     continue
 fi
 echo "Building Slackware package for "$SRCNAME"..."
 if [ "$SLACKBUILD" = "original" ]; then
     sh $PKG.SlackBuild || rm -rf $TMP/sbopkg_build.lck
+    # The following pid stuff isn't working right now.  If a user
+    # exists the build process, it continues going in the background.
+    # This works for cancelling the wget source, but not the build.
+    # Search this script for other instances of sbopkg-build.pid and
+    # you'll see where I'm hacking on this.
+    # ( sh $PKG.SlackBuild & >> $SBOPKGOUTPUT echo $! >> $TMP/sbopkg-build.pid ) 2>>$SBOPKGOUTPUT
 fi
 if [ "$SLACKBUILD" = "local" ]; then
-    sh $PKG.SlackBuild.sbopkg || rm -rf $PKG/sbopkg_build.lck
+    sh $PKG.SlackBuild.sbopkg || rm -rf $TMP/sbopkg_build.lck
 fi
 echo "Done building package."
 rm -rf $TMP/sbopkg_build.lck
@@ -1147,6 +1169,31 @@ fi
 cd $CWD
 }
 
+control_c () {
+# This function holds the commands that will be executed when the user
+# presses Control-C.  The $TMP/sbopkg-build.pid file is file to which
+# various PID's are written to as certain background processes etc.
+# are executed.  For example, look at the wget command in the
+# get_source function, above.  I am trying to work out a way where a
+# user can press Control-C during the wget source step or during the
+# package building step and cleanly return to the main menu with all
+# related background processes killed.  So far, this is working for
+# the wget step but not the building step.  I would really like to
+# have this working well, so suggestions/diffs etc. would be greatly
+# appreciated.  :-)
+echo "Trying to exit cleanly...";
+for pid in $(cat $TMP/sbopkg-build.pid); do
+    echo "killing $pid"
+    kill -9 $pid;
+done;
+rm -rf $TMP/sbopkg_*
+rm -rf $TMP/oldbuildpid
+mv $TMP/sbopkg-build.pid $TMP/oldbuildpid
+#rm -rf $TMP/sbopkg-build.pid
+break
+#exit 0
+}
+
 main_menu () {
 # This is the main dialog menu.
 if [ -z "$R" ] ; then R="Rsync" ; fi
@@ -1232,6 +1279,10 @@ done
 
 # END OF FUNCTIONS.  What comes below is the actual start of the
 # script when it is first run.
+
+# Let's catch Control-C and try to exit cleanly.  Please see the
+# comment to the control_c function, above.
+trap 'control_c' 2 14 15
 
 # If there are no command line options then we will use the dialog
 # version of sbopkg.
