@@ -76,6 +76,16 @@ output, and to page up and down to view the final output.
 
 The default value of TERMBUILD is NO.
 
+.TP 5
+.B TIMEOUT
+.br
+This option allows the user to define what the timeout value (in
+seconds) should be for both the rsync and wget commands used in sbopkg
+for downloading the SlackBuilds.org repository and downloading the
+sources when building a package, respectively.
+
+The default value of TIMEOUT is 10.
+
 .SH FILES
 .TP 5
 .B /etc/sbopkg/sbopkg.conf
