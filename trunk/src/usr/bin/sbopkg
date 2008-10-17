@@ -712,16 +712,42 @@ rsync_command () {
 # This function holds the rsync command.
 # We do not use -z as this causes heavy CPU load on the server
 # and has very limited effect when most of the pull is .gz files.
-# Time out is set to 10 since SBo can be under heavy load at times.
-/usr/bin/rsync -av --delete --timeout=$TIMEOUT --exclude="*.sbopkg" \
+/usr/bin/rsync -av --delete --contimeout=$TIMEOUT --exclude="*.sbopkg" \
 $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
 RSYNC_RETVAL=$?
 rm -rf $TMP/sbopkg_rsync.lck
 if [ ! $RSYNC_RETVAL = 0 ]; then
-    echo
-    echo "Rsync with SlackBuilds.org failed."
-    echo "Please try again."
-    echo
+    case $RSYNC_RETVAL in
+      35)
+         echo
+         echo "The connection to $RSYNCMIRROR timed out."
+         echo "You can modify the TIMEOUT value in sbopkg.conf"
+         echo "if this problem persists."
+         echo "(TIMEOUT is currently set to:  $TIMEOUT seconds)".
+         echo
+         ;;
+      30)
+         echo
+         echo "Rsync reported a timeout while waiting for data."
+         echo "$RSYNCMIRROR may under a heavy load."
+         echo "Please try again later."
+         echo
+         ;;
+      10)
+         echo
+         echo "Rsync reported a socket error which may be due to"
+         echo "a problem with the RSYNCMIRROR value in sbopkg.conf."
+         echo "(RSYNCMIRROR is currently set to:  $RSYNCMIRROR)."
+         echo "Please check your settings and try again later."
+         echo
+         ;;
+       *)
+         echo
+         echo "Rsync with SlackBuilds.org failed."
+         echo "Please try again."
+         echo
+         ;;
+    esac
 else
     echo
     echo "Rsync with SlackBuilds.org complete."
