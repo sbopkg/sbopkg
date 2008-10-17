@@ -291,6 +291,10 @@ potential updates..." >> $UPDATELIST
             NEWARCH=$(egrep -m1 "^ARCH" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*[=-]//;s/\"//g')
             NEWSRCVER=$(egrep -m1 "^SRCVER" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*[=-]/_/;s/\"//g')
             NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+            # Ugly hack for acroread
+            if [ $PRGNAM = "acroread" ]; then
+                NEWSRCVER=$(egrep -m1 "^ADOBE_LANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
+            fi
             # Ugly hack for openoffice.org
             if [ $PRGNAM = "openoffice.org" ]; then
                 NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
@@ -324,7 +328,7 @@ potential updates..." >> $UPDATELIST
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
             # blank out $NEWSRCVER
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" ]]; then
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" || "$PRGNAM" == "gnubg" ]]; then
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
