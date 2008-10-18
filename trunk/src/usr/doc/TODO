@@ -8,6 +8,8 @@ Sbopkg TODO (in no particular order)
   many subprocesses are forked off during the package building process
   and it's difficult to capture all the pids.  If anyone want to help
   with this, please let me know.
+* Include a way to change the sync from rsync to lftp for those who
+  have rsync blocked.
 * Add ability to install packages from the command line using a -i
   switch.
 * Add 'long' switches to the cli options, i.e. --build in addition to
