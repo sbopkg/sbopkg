@@ -30,8 +30,9 @@
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
-#  acidchild, mancha, macavity, and Zordrak.  This script would not be
-#  where it is without the help of these folks.  Thank you!
+#  acidchild, mancha, macavity, Zordrak, and Joao Felipe Santos.  This
+#  script would not be where it is without the help of these folks.
+#  Thank you!
 #set -x
 
 # Variables
@@ -317,41 +318,74 @@ potential updates..." >> $UPDATELIST
             # figure out why 0.9.12_8 is greater than 0.9.12_12.  This
             # ugly hack for ubuntulooks is one attempt to fix decimal
             # type problem, otherwise sbopkg thinks the installed
-            # version is newer than the repo.
-            if [ "$PRGNAM" = "ubuntulooks" ]; then
-                MINIVER=$(echo $VER | sed -e 's/^.*_//' | wc -m)
-                if [ $MINIVER -le 2 ]; then
-                    VER=$(echo $VER | sed -e 's/_/_0/')
-                fi
-                NEWSRCVER=""
-            fi
+            # version is newer than the repo.  UPDATE:  I am
+            # commenting out this hack to see if the new solution,
+            # below, catches it.
+            #if [ "$PRGNAM" = "ubuntulooks" ]; then
+            #    MINIVER=$(echo $VER | sed -e 's/^.*_//' | wc -m)
+            #    if [ $MINIVER -le 2 ]; then
+            #        VER=$(echo $VER | sed -e 's/_/_0/')
+            #    fi
+            #    NEWSRCVER=""
+            #fi
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
             # blank out $NEWSRCVER
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" || "$PRGNAM" == "gnubg" ]]; then
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" || "$PRGNAM" == "gnubg" || "$PRGNAM" == "ubuntulooks" ]]; then
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
-            if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
+            # Okay, these next three lines were added as an attempt to
+            # fix the so-called 'decimal' problem that exists in bash,
+            # since bash typically compares strings using their ascii
+            # values, which is why 3.9 will show up as greater than
+            # 3.11.  Essentially, these lines look for a single number
+            # that is surrounded by dots, or a single number at the
+            # start of a line, and then puts a 0 in front of it.
+            # Thus, 10.4.12 would become 10.04.12 and 3.4 would become
+            # 03.04.  Believe me, I tried _many_ things to fix this
+            # problem, including stripping out the decimals and
+            # running them through bc.  The problem is that the
+            # version numbers of many source tarballs are so
+            # different.  Anyway, this seems to be working and the
+            # good news is that I might be able to get rid of some of
+            # the other hacks.
+            TESTVERSION=$(echo $VERSION | sed -e 's/[_.]\([0-9]\)\b/\.0\1/g;s/^\([0-9]\)\.\b/0\1\./')
+            TESTNEWSRCVER=$(echo $NEWSRCVER | sed -e 's/[_.]\([0-9]\)\b/\.0\1/g;s/^\([0-9]\)\.\b/0\1\./')
+            TESTVER=$(echo $VER | sed -e 's/[_.]\([0-9]\)\b/\.0\1/g;s/^\([0-9]\)\.\b/0\1\./')
+            #if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
+            if [[ $TESTVERSION$TESTNEWSRCVER > $TESTVER || ( $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD > $BUILD ) ]]; then
                 echo $NAME: >> $UPDATELIST
                 echo "  POTENTIAL UPDATE" >> $UPDATELIST
                 echo "  Installed version: " $CURPKG >> $UPDATELIST
                 echo "  Repo version: " $PRGNAM-$VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                    echo "  Debug2: " $TESTVERSION$TESTNEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                    echo "  Debug3: " $VER >> $UPDATELIST
+                    echo "  Debug4: " $TESTVER >> $UPDATELIST
                 fi
-	          elif [[ $VERSION$NEWSRCVER < $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD < $BUILD ) ]]; then
+	          #elif [[ $VERSION$NEWSRCVER < $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD < $BUILD ) ]]; then
+	          elif [[ $TESTVERSION$TESTNEWSRCVER < $TESTVER || ( $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD < $BUILD ) ]]; then
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
                     echo "  Installed version: " $CURPKG >> $UPDATELIST
                     echo "  Repo version: " $PRGNAM$NEWSRCVER-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                    echo "  Debug2: " $TESTVERSION$TESTNEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                    echo "  Debug3: " $VER >> $UPDATELIST
+                    echo "  Debug4: " $TESTVER >> $UPDATELIST
                 fi
-	          elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
+	          #elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
+	          elif [[ $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD = $BUILD ]]; then
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  No update." >> $UPDATELIST
+                    echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                    echo "  Debug2: " $TESTVERSION$TESTNEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                    echo "  Debug3: " $VER >> $UPDATELIST
+                    echo "  Debug4: " $TESTVER >> $UPDATELIST
                 fi
             fi
         else
