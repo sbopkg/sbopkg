@@ -350,9 +350,9 @@ potential updates..." >> $UPDATELIST
             # different.  Anyway, this seems to be working and the
             # good news is that I might be able to get rid of some of
             # the other hacks.
-            TESTVERSION=$(echo $VERSION | sed -e 's/[_.]\([0-9]\)\b/\.0\1/g;s/^\([0-9]\)\.\b/0\1\./')
-            TESTNEWSRCVER=$(echo $NEWSRCVER | sed -e 's/[_.]\([0-9]\)\b/\.0\1/g;s/^\([0-9]\)\.\b/0\1\./')
-            TESTVER=$(echo $VER | sed -e 's/[_.]\([0-9]\)\b/\.0\1/g;s/^\([0-9]\)\.\b/0\1\./')
+            TESTVERSION=$(echo $VERSION | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
+            TESTNEWSRCVER=$(echo $NEWSRCVER | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
+            TESTVER=$(echo $VER | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
             #if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
             if [[ $TESTVERSION$TESTNEWSRCVER > $TESTVER || ( $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD > $BUILD ) ]]; then
                 echo $NAME: >> $UPDATELIST
@@ -371,7 +371,8 @@ potential updates..." >> $UPDATELIST
                     echo $NAME: >> $UPDATELIST
                     echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
                     echo "  Installed version: " $CURPKG >> $UPDATELIST
-                    echo "  Repo version: " $PRGNAM$NEWSRCVER-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                    #echo "  Repo version: " $PRGNAM$NEWSRCVER-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                    echo "  Repo version: " $PRGNAM-$VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug2: " $TESTVERSION$TESTNEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug3: " $VER >> $UPDATELIST
