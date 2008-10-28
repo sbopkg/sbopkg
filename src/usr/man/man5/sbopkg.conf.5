@@ -1,4 +1,4 @@
-.TH SBOPKG.CONF 5 "August 2008" sbopkg-SVN ""
+.TH SBOPKG.CONF 5 "October 2008" sbopkg-SVN ""
 .SH NAME
 .B sbopkg.conf
 \- Configuration file for sbopkg
@@ -77,14 +77,31 @@ output, and to page up and down to view the final output.
 The default value of TERMBUILD is NO.
 
 .TP 5
-.B TIMEOUT
+.B RSYNCFLAGS
 .br
-This option allows the user to define what the timeout value (in
-seconds) should be for both the rsync and wget commands used in sbopkg
-for downloading the SlackBuilds.org repository and downloading the
-sources when building a package, respectively.
+Rsync is used by sbopkg to mirror the SlackBuilds.org repository.
+This option allows the user to manually tweak the rsync flags
+(options) that are used by sbopkg.  Users are cautioned against making
+any changes to the default values since new flags may or may not work.
+Note:  the rsync command in sbopkg already uses the --archive,
+--delete, and --exclude flags, so there is no need to add them to the
+RSYNCFLAGS option.  Changing these default options is not recommended.
 
-The default value of TIMEOUT is 10.
+The default value of RSYNCFLAGS is "--timeout=10 --verbose".
+
+.TP 5
+.B WGETFLAGS
+.br
+Wget is used by sbopkg to download the source files for package
+building.  This option allows the user to manually tweak the wget
+flags (options) that are used by sbopkg.  Users are cautioned against
+making any changes to the default values since new flags may or may
+not work.  Note:  the wget command in sbopkg already uses the -O flag,
+so there is no need to add that to the WGETFLAGS option.  Changing
+these default options is not recommended.
+
+The default value of WGETFLAGS is "--continue --progress-bar
+--timeout=10 --tries=5".
 
 .SH FILES
 .TP 5
