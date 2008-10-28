@@ -8,121 +8,131 @@ Here is the man page for sbopkg.conf(5)
 = Details =
 
 {{{
-SBOPKG.CONF(5)                                                SBOPKG.CONF(5)
+SBOPKG.CONF(5)                                                  SBOPKG.CONF(5)
 
 NAME
        sbopkg.conf - Configuration file for sbopkg
 
 DESCRIPTION
-       The  sbopkg.conf file contains configuration settings for sbopkg (8),
-       a tool for interacting with the SlackBuilds.org ("SBo") repository, a
-       collection of third-party SlackBuild scripts to build Slackware pack-
+       The  sbopkg.conf file contains configuration settings for sbopkg (8), a
+       tool for interacting with the  SlackBuilds.org  ("SBo")  repository,  a
+       collection  of  third-party SlackBuild scripts to build Slackware pack-
        ages.  A sample file is provided at /etc/sbopkg/sbopkg.conf.new.
 
        The different configuration options are:
 
        RSYNCMIRROR
-            This option allows the user to set the rsync mirror of  the  SBo
+            This option allows the user to set the rsync  mirror  of  the  SBo
             repository that will be used by sbopkg.
 
-            The  default  value  of  RSYNCMIRROR  is slackbuilds.org::slack-
-            builds.
+            The  default value of RSYNCMIRROR is slackbuilds.org::slackbuilds.
 
        SLACKVER
-            This option allows the user to set the default Slackware version
+            This option allows the user to set the default  Slackware  version
             in order to rsync with the matching SBo repository.
 
             The default value of SLACKVER is 12.1.
 
        LOCALREPO
-            This  option  allows  the  user to set the location of the local
-            rsync mirror of the SBo repository.
+            This option allows the user to set the location of the local rsync
+            mirror of the SBo repository.
 
             The default value of LOCALREPO is /home/sbo.
 
        SRCDIR
-            This option contains the location of the cache  directory  where
+            This option contains the location of  the  cache  directory  where
             source downloads will be saved.
 
             The default value of SRCDIR is /var/cache/sbopkg.
 
        TMP
-            This  options  sets  the default directory where certain working
+            This  options  sets  the  default  directory where certain working
             files are saved on a temporary basis.
 
             The default value of TMP is /tmp/SBo.
 
        KEEPLOG
-            This option should be set to YES or NO.  This option allows  the
-            user  to choose whether to keep a permanent log of packages that
-            are built with sbopkg in order to go back and review the  build,
-            and  any errors, after exiting sbopkg.  If set to YES, this per-
-            manent log is saved at $TMP/sbopkg-build-log.
+            This option should be set to YES or NO.  This  option  allows  the
+            user  to  choose  whether to keep a permanent log of packages that
+            are built with sbopkg in order to go back and  review  the  build,
+            and  any errors, after exiting sbopkg.  If set to YES, this perma-
+            nent log is saved at $TMP/sbopkg-build-log.
 
             The default value of KEEPLOG is YES.
 
        TERMBUILD
-            This option should be set to YES or NO.  This option allows  the
-            user  to have the package building process take place in a regu-
-            lar terminal instead of the dialog interface.  The advantage  of
-            doing  so  allows  the  user  to use Ctrl-S to pause the output,
-            Ctrl-Q to resume the output, and to page up and down to view the
-            final output.
+            This option should be set to YES or NO.  This  option  allows  the
+            user  to have the package building process take place in a regular
+            terminal instead of the dialog interface.  The advantage of  doing
+            so  allows  the  user to use Ctrl-S to pause the output, Ctrl-Q to
+            resume the output, and to page up and down to view the final  out-
+            put.
 
-            The default value of TERMBUILD is NO.
+       RSYNCFLAGS
+            Rsync  is used by sbopkg to mirror the SlackBuilds.org repository.
+            This option allows the user to  manually  tweak  the  rsync  flags
+            (options)  that  are  used by sbopkg.  Users are cautioned against
+            making any changes to the default values since new  flags  may  or
+            may not work.  Note:  the rsync command in sbopkg already uses the
+            --archive, --delete, and --exclude flags, so there is no  need  to
+            add them to the RSYNCFLAGS option.  Changing these default options
+            is not recommended.
 
-       TIMEOUT
-            This option allows the user to define what the timeout value (in
-            seconds) should be for both the rsync and wget commands used  in
-            sbopkg  for downloading the SlackBuilds.org repository and down-
-            loading the sources when building a package, respectively.
+            The default value of RSYNCFLAGS is "--timeout=10 --verbose".
 
-            The default value of TIMEOUT is 10.
+       WGETFLAGS
+            Wget is used by sbopkg to download the source  files  for  package
+            building.   This option allows the user to manually tweak the wget
+            flags (options) that are used  by  sbopkg.   Users  are  cautioned
+            against  making  any changes to the default values since new flags
+            may or may not work.  Note:  the wget command  in  sbopkg  already
+            uses the -O flag, so there is no need to add that to the WGETFLAGS
+            option.  Changing these default options is not recommended.
+
+            The default  value  of  WGETFLAGS  is  "--continue  --progress-bar
+            --timeout=10 --tries=5".
 
 FILES
        /etc/sbopkg/sbopkg.conf
 
 OVERRIDING ENVIRONMENTAL VARIABLES
-       It is possible to set or override environmental  variables  and  pass
-       them  to  the  SlackBuild  scripts  when  they  are built from within
-       sbopkg.  This is already demonstrated in the following  line  in  the
-       sbopkg.conf file:
+       It is possible to set or override environmental variables and pass them
+       to the SlackBuild scripts when they are built from within sbopkg.  This
+       is already demonstrated in the following line in the sbopkg.conf file:
 
        export TMP=${TMP:-/tmp/SBo}
 
-       This  sets  $TMP  to  /tmp/SBo for sbopkg purposes (i.e. where sbopkg
-       logs are kept) and also  for  building  SBo  packages  within  sbopkg
-       (which  is  current default for SBo SlackBuilds already).  Since this
-       variable is exported, it could be changed for  both  sbopkg  and  for
-       building SBo packages within sbopkg.  For example, changing this line
-       so it reads:
+       This  sets $TMP to /tmp/SBo for sbopkg purposes (i.e. where sbopkg logs
+       are kept) and also for building SBo packages within  sbopkg  (which  is
+       current  default  for SBo SlackBuilds already).  Since this variable is
+       exported, it could be changed for both  sbopkg  and  for  building  SBo
+       packages within sbopkg.  For example, changing this line so it reads:
 
        export TMP=${TMP:-/home/sbo/tmp}
 
-       would then set $TMP to /home/sbo/tmp for sbopkg and for building  SBo
+       would  then  set  $TMP to /home/sbo/tmp for sbopkg and for building SBo
        packages.
 
-       You  can  also  export  variables in sbopkg.conf that are not used by
-       sbopkg at all, as demonstrated by the commented out line towards  the
+       You can also export variables in  sbopkg.conf  that  are  not  used  by
+       sbopkg  at  all,  as demonstrated by the commented out line towards the
        bottom of sbopkg.conf:
 
        export OUTPUT=${OUTPUT:-/tmp}
 
-       $OUTPUT is only used in the SBo SlackBuild scripts.  The default set-
-       ting of /tmp is the same that is currently used in the SBo SlackBuild
-       scripts.   By  uncommenting  the $OUTPUT line in sbopkg.conf, you can
-       export $OUTPUT for all SlackBuild packages built from within  sbopkg.
+       $OUTPUT is only used in the SBo SlackBuild scripts.  The  default  set-
+       ting  of  /tmp is the same that is currently used in the SBo SlackBuild
+       scripts.  By uncommenting the $OUTPUT  line  in  sbopkg.conf,  you  can
+       export  $OUTPUT  for  all SlackBuild packages built from within sbopkg.
        For example, you could change this to /home/sbo/packages.
 
-       As  you can probably see, by making a few changes to these variables,
-       you could have a completely separated sandbox for SBo purposes -- the
-       repo  at  /home/sbo,  the $TMP directory at /home/sbo/tmp, the source
-       cache directory at /home/sbo/cache, and the $OUTPUT  directory  where
+       As you can probably see, by making a few changes  to  these  variables,
+       you  could  have a completely separated sandbox for SBo purposes -- the
+       repo at /home/sbo, the $TMP  directory  at  /home/sbo/tmp,  the  source
+       cache  directory  at  /home/sbo/cache,  and the $OUTPUT directory where
        compiled packages are saved at /home/sbo/packages.
 
 SEE ALSO
        sbopkg(8)
 
-sbopkg-0.13.0                   October 2008                  SBOPKG.CONF(5)
-
+sbopkg-0.13.1                    October 2008                   SBOPKG.CONF(5)
 }}}
