@@ -919,7 +919,7 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
     else
         cd $SRCDIR
-        DOWNLOADFILE=$(echo $DOWNLOAD | sed -e 's/^.*\///g')
+        DOWNLOADFILE=$(echo $DOWNLOAD | sed -e 's/^.*\///g;s/\%2B/+/g')
         #wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE || rm -rf $TMP/sbopkg_build.lck
         # The above line was the old, default code.  The line below is
         # the new addition to capture PID's, allowing a clean abort
