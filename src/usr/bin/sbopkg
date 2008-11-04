@@ -103,6 +103,9 @@ if [ ! -d "$TMP" ]; then
     echo
     mkdir -p $TMP || exit 1
 fi
+# Let's catch Control-C and try to exit cleanly.  Please see the
+# comment to the control_c function, above.
+trap 'control_c' 2 14 15
 }
 
 pid_check () {
@@ -499,11 +502,19 @@ if [ "$IPACKAGE" = "" ]; then
 else
 	JPACKAGE="Install $IPACKAGE"
 fi
-dialog --default-item "$U" --title "$APP Information" \
---extra-button --extra-label "Back" --cancel-label \
+KPACKAGE="$(basename $(ls -1t /var/log/packages/*_SBo | grep -hZm1 $APP))"
+if [ "$KPACKAGE" = "" ]; then
+	LPACKAGE="$APP (Not Installed)"
+else
+	LPACKAGE="$APP (Installed: $KPACKAGE)"
+fi
+CATEGORY="$(cat $TMP/sbopkg_category_selection)"
+RVERSION=$(grep VERSION $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info | cut -d= -f2 | sed s/\"//g)
+dialog --default-item "$U" --title "$APP ($RVERSION)" \
+--backtitle "$LPACKAGE" --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
 "Please choose an item or press <Back> to go back or press \
-<Main Menu> to return to the main menu.\n" 20 60 8 \
+<Main Menu> to return to the main menu.\n" 18 60 8 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
@@ -1346,8 +1357,10 @@ done
 # script when it is first run.
 
 # Let's catch Control-C and try to exit cleanly.  Please see the
-# comment to the control_c function, above.
-trap 'control_c' 2 14 15
+# comment to the control_c function, above.  Moved to the
+# directory_checks function in SVN to allow Control-C during directory
+# creation.
+#trap 'control_c' 2 14 15
 
 # If there are no command line options then we will use the dialog
 # version of sbopkg.
