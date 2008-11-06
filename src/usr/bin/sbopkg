@@ -502,7 +502,7 @@ if [ "$IPACKAGE" = "" ]; then
 else
 	JPACKAGE="Install $IPACKAGE"
 fi
-KPACKAGE="$(basename $(ls -1t /var/log/packages/*_SBo | grep -hZm1 $APP))"
+KPACKAGE="$(basename $(ls -1t /var/log/packages/* | grep -hZm1 $APP))"
 if [ "$KPACKAGE" = "" ]; then
 	LPACKAGE="$APP (Not Installed)"
 else
