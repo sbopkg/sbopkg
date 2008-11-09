@@ -287,6 +287,16 @@ potential updates..." >> $UPDATELIST
             OLDNAME=$NAME
             NAME="artwiz-aleczapka"
         fi
+        # Three hacks for names that changed.
+        if $(echo $NAME | grep -q "^MPlayer"); then
+            NAME="mplayer"
+        fi
+        if $(echo $NAME | grep -q "^libsigcxx"); then
+            NAME="libsigc++"
+        fi
+        if $(echo $NAME | grep -q "^libxmlxx"); then
+            NAME="libxml++"
+        fi
         CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
         NEWSB=$(find $LOCALREPO/$SLACKVER -name "$NAME.SlackBuild")
         NEWINFO=$(find $LOCALREPO/$SLACKVER -name "$NAME.info")
@@ -302,6 +312,12 @@ potential updates..." >> $UPDATELIST
             # Ugly hack for openoffice.org
             if [ $PRGNAM = "openoffice.org" ]; then
                 NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
+            fi
+            # Ugly hack for mplayer
+            if [[ "$PRGNAM" == "MPlayer" || "$PRGNAM" == "mplayer" ]]; then
+                PRGNAM="mplayer"
+                NAME="mplayer"
+                #NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
             fi
             # Ugly hack for openarena ... is there a trend here? :-)
             if [ $PRGNAM = "openarena" ]; then
