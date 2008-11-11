@@ -30,9 +30,9 @@
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
-#  acidchild, mancha, macavity, Zordrak, and Joao Felipe Santos.  This
-#  script would not be where it is without the help of these folks.
-#  Thank you!
+#  acidchild, mancha, macavity, Zordrak, Joao Felipe Santos, and
+#  cotterochan.  This script would not be where it is without the help
+#  of these folks.  Thank you!
 #set -x
 
 # Variables
@@ -601,7 +601,7 @@ as the root user in order to build packages." 8 30
             # that were created along the way.  See the comment to the
             # control_c function as well.  Also, see the similar code
             # at the get_source function.
-            ( build_package $APP >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkg-build.pid ) 2>>$SBOPKGOUTPUT
+            ( build_package $APP >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkgpidlist ) 2>>$SBOPKGOUTPUT
             while [ -f $TMP/sbopkg_build.lck ]; do
                 dialog --backtitle "Building the $APP package." \
  --tailbox $SBOPKGOUTPUT 18 70
@@ -953,8 +953,8 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
         # when a user presses Control-C.  Please see the comments
         # above around line 530 when build_package is first called as
         # well as the comments to the control_c function, below.
-        wget $WGETFLAGS $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkg-build.pid 2>>$SBOPKGOUTPUT
-        #( wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkg-build.pid ) 2>>$SBOPKGOUTPUT
+        wget $WGETFLAGS $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo "$!" >> $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
+        #( wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkgpidlist ) 2>>$SBOPKGOUTPUT
         wait
         cd -
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
@@ -1053,9 +1053,11 @@ if [ "$SLACKBUILD" = "original" ]; then
     # The following pid stuff isn't working right now.  If a user
     # exists the build process, it continues going in the background.
     # This works for cancelling the wget source, but not the build.
-    # Search this script for other instances of sbopkg-build.pid and
+    # Search this script for other instances of sbopkgpidlist and
     # you'll see where I'm hacking on this.
-    # ( sh $PKG.SlackBuild & >> $SBOPKGOUTPUT echo $! >> $TMP/sbopkg-build.pid ) 2>>$SBOPKGOUTPUT
+    #sh $PKG.SlackBuild &
+    #echo "$!" >> $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
+    #wait
 fi
 if [ "$SLACKBUILD" = "local" ]; then
     sh $PKG.SlackBuild.sbopkg || rm -rf $TMP/sbopkg_build.lck
@@ -1263,7 +1265,7 @@ cd $CWD
 
 control_c () {
 # This function holds the commands that will be executed when the user
-# presses Control-C.  The $TMP/sbopkg-build.pid file is file to which
+# presses Control-C.  The $TMP/sbopkgpidlist file is file to which
 # various PID's are written to as certain background processes etc.
 # are executed.  For example, look at the wget command in the
 # get_source function, above.  I am trying to work out a way where a
@@ -1273,17 +1275,22 @@ control_c () {
 # the wget step but not the building step.  I would really like to
 # have this working well, so suggestions/diffs etc. would be greatly
 # appreciated.  :-)
-echo "Trying to exit cleanly...";
-for pid in $(cat $TMP/sbopkg-build.pid); do
-    echo "killing $pid"
-    kill -9 $pid;
-done;
+echo "Control-C detected.  Trying to exit cleanly...";
+if [ -e $TMP/sbopkgpidlist ]; then
+    for pid in $(cat $TMP/sbopkgpidlist); do
+        echo "killing $pid"
+        kill -9 $pid;
+    done;
+    rm -rf $TMP/oldbuildpid
+    mv $TMP/sbopkgpidlist $TMP/oldbuildpid
+    rm -rf $TMP/sbopkgpidlist
+fi
 rm -rf $TMP/sbopkg_*
-rm -rf $TMP/oldbuildpid
-mv $TMP/sbopkg-build.pid $TMP/oldbuildpid
-#rm -rf $TMP/sbopkg-build.pid
-break
-#exit 0
+if [ "$DIAG" = 1 ]; then
+    break
+else
+    exit 0
+fi
 }
 
 main_menu () {
