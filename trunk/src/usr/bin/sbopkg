@@ -104,7 +104,7 @@ if [ ! -d "$TMP" ]; then
     mkdir -p $TMP || exit 1
 fi
 # Let's catch Control-C and try to exit cleanly.  Please see the
-# comment to the control_c function, above.
+# comment to the control_c function, below.
 trap 'control_c' 2 14 15
 }
 
@@ -333,20 +333,6 @@ potential updates..." >> $UPDATELIST
                 VERSION=$(echo $VERSION | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/./g')
                 NEWSRCVER=""
             fi
-            # It took me a lot longer than I would like to admit to
-            # figure out why 0.9.12_8 is greater than 0.9.12_12.  This
-            # ugly hack for ubuntulooks is one attempt to fix decimal
-            # type problem, otherwise sbopkg thinks the installed
-            # version is newer than the repo.  UPDATE:  I am
-            # commenting out this hack to see if the new solution,
-            # below, catches it.
-            #if [ "$PRGNAM" = "ubuntulooks" ]; then
-            #    MINIVER=$(echo $VER | sed -e 's/^.*_//' | wc -m)
-            #    if [ $MINIVER -le 2 ]; then
-            #        VER=$(echo $VER | sed -e 's/_/_0/')
-            #    fi
-            #    NEWSRCVER=""
-            #fi
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
             # blank out $NEWSRCVER
@@ -542,6 +528,11 @@ $JPACKAGE 2>$TMP/sbopkg_info_selection
 CHOICE=$?
 if [ $CHOICE = 3 ]; then
     break
+# Not sure why the following isn't working.  Pressing ESC in the info
+# item menu should quit the application.
+elif [ $CHOICE = -1 ]; then
+    cleanup
+    exit 0
 elif [ $CHOICE = 1 ]; then
     rm -rf $TMP/sbopkg_*
     main_menu
@@ -1265,7 +1256,7 @@ cd $CWD
 
 control_c () {
 # This function holds the commands that will be executed when the user
-# presses Control-C.  The $TMP/sbopkgpidlist file is file to which
+# presses Control-C.  The $TMP/sbopkgpidlist file is the file to which
 # various PID's are written to as certain background processes etc.
 # are executed.  For example, look at the wget command in the
 # get_source function, above.  I am trying to work out a way where a
@@ -1285,10 +1276,11 @@ if [ -e $TMP/sbopkgpidlist ]; then
     mv $TMP/sbopkgpidlist $TMP/oldbuildpid
     rm -rf $TMP/sbopkgpidlist
 fi
-rm -rf $TMP/sbopkg_*
 if [ "$DIAG" = 1 ]; then
+    rm -rf $TMP/sbopkg_*
     break
 else
+    cleanup
     exit 0
 fi
 }
@@ -1380,12 +1372,6 @@ done
 
 # END OF FUNCTIONS.  What comes below is the actual start of the
 # script when it is first run.
-
-# Let's catch Control-C and try to exit cleanly.  Please see the
-# comment to the control_c function, above.  Moved to the
-# directory_checks function in SVN to allow Control-C during directory
-# creation.
-#trap 'control_c' 2 14 15
 
 # If there are no command line options then we will use the dialog
 # version of sbopkg.
