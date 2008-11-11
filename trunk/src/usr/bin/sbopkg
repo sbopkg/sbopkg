@@ -1349,7 +1349,9 @@ to search for" 0 0 2>/$TMP/sbopkg_search_request
         continue
     fi
     SRCH="$(cat $TMP/sbopkg_search_request)"
-    gen_search_package $SRCH
+    if [ ! "$SRCH" = "" ]; then
+        gen_search_package $SRCH
+    fi
 fi
 
 if [ "$R" = "Cache" ]; then
