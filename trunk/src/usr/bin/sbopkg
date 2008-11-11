@@ -720,7 +720,7 @@ if [ "$(ls -A $SRCDIR)" ]; then
 --textbox $TMP/sbopkg_cache_dir 0 0
     dialog --title "Keep Cache?" --yesno "Would you like to keep the \
 files in the cache directory?  Select YES to keep or NO to \
-delete." 10 30
+delete." 8 40
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -755,7 +755,7 @@ else
 --textbox $TMP/sbopkg-build-log 0 0
     dialog --title "Keep Log?" --yesno "Would you like to keep the \
 permanent build log $TMP/sbopkg-build-log?  Select YES to keep or NO \
-to delete." 10 30
+to delete." 8 40
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -970,7 +970,7 @@ if $(echo $(ls -la $SRCDIR) | grep -q "$APP"); then
 --textbox $TMP/sbopkg_app_sources 0 0
     dialog --title "Keep $APP sources?" --yesno "Would you like to \
 keep the $APP sources in the cache directory $SRCDIR?  Select YES \
-to keep or NO to delete." 10 30
+to keep or NO to delete." 8 40
         if [ $? = 1 ]; then
             check_root
             if [ $ROOT = "false" ]; then
