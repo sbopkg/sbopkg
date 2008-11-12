@@ -500,19 +500,20 @@ else
     IPACKAGE=""
 fi
 if [ "$IPACKAGE" = "" ]; then
-	JPACKAGE=""
+    JPACKAGE=""
 else
-	JPACKAGE="Install $IPACKAGE"
+    JPACKAGE="Install $IPACKAGE"
 fi
 KPACKAGE="$(basename $(ls -1t /var/log/packages/* | grep -hZm1 $APP))"
 if [ "$KPACKAGE" = "" ]; then
-	LPACKAGE="$APP (Not Installed)"
+    LPACKAGE="$APP (Not Installed)"
 else
-	LPACKAGE="$APP (Installed: $KPACKAGE)"
+    LPACKAGE="$APP (Installed: $KPACKAGE)"
 fi
 CATEGORY="$(cat $TMP/sbopkg_category_selection)"
 RVERSION=$(grep VERSION $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info | cut -d= -f2 | sed s/\"//g)
-dialog --default-item "$U" --title "$APP ($RVERSION)" \
+RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+dialog --default-item "$U" --title "$APP ($RVERSION-$RBUILD)" \
 --backtitle "$LPACKAGE" --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
 "Please choose an item or press <Back> to go back or press \
