@@ -3,7 +3,7 @@
 Sbopkg README
 Copyright 2007-2008 Chess Griffin <chess@chessgriffin.com>
 
-Homepage:  http://code.google.com/p/sbopkg
+Homepage:  http://www.sbopkg.org
 
 ABOUT
 
@@ -34,11 +34,10 @@ man pages are kept up-to-date with functional changes in the script
 itself, so they are a good source of information on how to use sbopkg.
 
 If the man pages are not sufficient, please consider joining the
-sbopkg mailing list and posting your question there.  You can reach
-the list at:  http://groups.google.com/group/sbopkg-discuss.
-Additionally, you find me (Chess Griffin - nick _chess_) on IRC in the
-#sbopkg channel on irc.freenode.com or in the ##slackware and
-#slackbuilds channels, also on freenode.
+sbopkg mailing list and posting your question there.  There is also an
+IRC channel for sbopkg.  Information on all of these resources is on
+the project's website at http://www.sbopkg.org - click the "Docs/Help"
+tab.
 
 CONTRIBUTORS
 
