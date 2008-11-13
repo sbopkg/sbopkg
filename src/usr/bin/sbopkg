@@ -336,7 +336,7 @@ potential updates..." >> $UPDATELIST
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
             # blank out $NEWSRCVER
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" || "$PRGNAM" == "gnubg" || "$PRGNAM" == "ubuntulooks" ]]; then
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" || "$PRGNAM" == "gnubg" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "xerces-c" ]]; then
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
@@ -612,8 +612,8 @@ as the root user in order to build packages." 8 30
         rm -rf $TMP/sbopkg_install.lck
         touch $TMP/sbopkg_install.lck
         if [ "$TERMBUILD" = "YES" ]; then
-	        install_package $PKGOUTPUT/$IPACKAGE | tee $SBOPKGINSTALLOUTPUT
-    	    read -n 1 -p "Press any key to continue."
+	          install_package $PKGOUTPUT/$IPACKAGE | tee $SBOPKGINSTALLOUTPUT
+    	      read -n 1 -p "Press any key to continue."
             rm -rf $TMP/sbopkg_install.lck
         else
             ( install_package $PKGOUTPUT/$IPACKAGE >> $SBOPKGINSTALLOUTPUT & ) 2>>$SBOPKGINSTALLOUTPUT
@@ -1443,6 +1443,7 @@ quoted (\"pkg1 pkg2\")"
             ;;
     esac
 done
+
 # End of option parsing.
 shift $(($OPTIND - 1))
 
