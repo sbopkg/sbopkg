@@ -457,8 +457,7 @@ while [ 0 ]; do
 --menu "You are currently using sbopkg to browse a local copy of SBo \
 for Slackware version $SLACKVER.  If you would like to change \
 it, please select another version below or press <Back> to \
-go back." 15 50 4 \
-"12.2" "Slackware version 12.2" \
+go back." 15 50 3 \
 "12.1" "Slackware version 12.1" \
 "12.0" "Slackware version 12.0" \
 "11.0" "Slackware version 11.0" 2>$TMP/sbopkg_version_selection

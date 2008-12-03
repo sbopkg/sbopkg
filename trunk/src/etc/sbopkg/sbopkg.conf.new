@@ -8,7 +8,7 @@
 # exported as it is used by the SlackBuild scripts as well.  Any of
 # the other variables could be exported as well, if desired.
 RSYNCMIRROR=slackbuilds.org::slackbuilds
-SLACKVER=12.2
+SLACKVER=12.1
 LOCALREPO=${LOCALREPO:-/home/sbo}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 export TMP=${TMP:-/tmp/SBo}
