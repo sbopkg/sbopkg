@@ -1,4 +1,4 @@
-.TH SBOPKG.CONF 5 "October 2008" sbopkg-SVN ""
+.TH SBOPKG.CONF 5 "December 2008" sbopkg-SVN ""
 .SH NAME
 .B sbopkg.conf
 \- Configuration file for sbopkg
@@ -20,7 +20,7 @@ The different configuration options are:
 This option allows the user to set the rsync mirror of the SBo
 repository that will be used by sbopkg.
 
-The default value of RSYNCMIRROR is slackbuilds.org::slackbuilds.
+The default value of RSYNCMIRROR is: slackbuilds.org::slackbuilds.
 
 .TP 5
 .B SLACKVER
@@ -28,7 +28,7 @@ The default value of RSYNCMIRROR is slackbuilds.org::slackbuilds.
 This option allows the user to set the default Slackware version in
 order to rsync with the matching SBo repository.
 
-The default value of SLACKVER is 12.1.
+The default value of SLACKVER is: 12.1.
 
 .TP 5
 .B LOCALREPO
@@ -36,7 +36,8 @@ The default value of SLACKVER is 12.1.
 This option allows the user to set the location of the local rsync
 mirror of the SBo repository.
 
-The default value of LOCALREPO is /home/sbo.
+The default value of LOCALREPO is:
+export LOCALREPO=${LOCALREPO:-/home/sbo}.
 
 .TP 5
 .B SRCDIR
@@ -44,15 +45,17 @@ The default value of LOCALREPO is /home/sbo.
 This option contains the location of the cache directory where
 source downloads will be saved.
 
-The default value of SRCDIR is /var/cache/sbopkg.
+The default value of SRCDIR is:
+export SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
 
 .TP 5
 .B TMP
 .br
 This options sets the default directory where certain working
-files are saved on a temporary basis.
+files are saved on a temporary basis.  TMP must be exported as it is
+also used by the SBo SlackBuilds.
 
-The default value of TMP is /tmp/SBo.
+The default value of TMP is: export TMP=${TMP:-/tmp/SBo}.
 
 .TP 5
 .B KEEPLOG
@@ -63,7 +66,7 @@ with sbopkg in order to go back and review the build, and any errors,
 after exiting sbopkg.  If set to YES, this permanent log is saved at
 $TMP/sbopkg-build-log.
 
-The default value of KEEPLOG is YES.
+The default value of KEEPLOG is: YES.
 
 .TP 5
 .B TERMBUILD
@@ -74,7 +77,7 @@ instead of the dialog interface.  The advantage of doing so allows
 the user to use Ctrl-S to pause the output, Ctrl-Q to resume the
 output, and to page up and down to view the final output.
 
-The default value of TERMBUILD is NO.
+The default value of TERMBUILD is: NO.
 
 .TP 5
 .B RSYNCFLAGS
@@ -87,7 +90,7 @@ Note:  the rsync command in sbopkg already uses the --archive,
 --delete, and --exclude flags, so there is no need to add them to the
 RSYNCFLAGS option.  Changing these default options is not recommended.
 
-The default value of RSYNCFLAGS is "--timeout=10 --verbose".
+The default value of RSYNCFLAGS is: "--timeout=10 --verbose".
 
 .TP 5
 .B WGETFLAGS
@@ -100,7 +103,7 @@ not work.  Note:  the wget command in sbopkg already uses the -O flag,
 so there is no need to add that to the WGETFLAGS option.  Changing
 these default options is not recommended.
 
-The default value of WGETFLAGS is "--continue --progress-bar
+The default value of WGETFLAGS is: "--continue --progress-bar
 --timeout=10 --tries=5".
 
 .SH FILES

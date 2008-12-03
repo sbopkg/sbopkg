@@ -30,9 +30,9 @@
 #  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
-#  acidchild, mancha, macavity, Zordrak, Joao Felipe Santos, and
-#  cotterochan.  This script would not be where it is without the help
-#  of these folks.  Thank you!
+#  acidchild, mancha, macavity, Zordrak, Joao Felipe Santos,
+#  cotterochan, and necropresto.  This script would not be where it is
+#  without the help of these folks.  Thank you!
 #set -x
 
 # Variables
@@ -491,10 +491,13 @@ info_item () {
 # This function shows the menu for each package where the user can see
 # certain information or build the package if he is root.
 APP="$(cat $TMP/sbopkg_item_selection)"
+CATEGORY="$(cat $TMP/sbopkg_category_selection)"
+RVERSION=$(grep VERSION $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info | cut -d= -f2 | sed s/\"//g)
+RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 U="README"
 while [ 0 ]; do
 PKGOUTPUT=${OUTPUT:-/tmp}
-if $(echo $(ls -lt $PKGOUTPUT) | grep -q "$APP"); then
+if $(echo $(ls -lt $PKGOUTPUT) | grep -E -q "$APP.*$RVERSION"); then
     IPACKAGE="$(basename $(ls -1t $PKGOUTPUT/${APP}*tgz | head -n 1))"
 else
     IPACKAGE=""
@@ -510,9 +513,6 @@ if [ "$KPACKAGE" = "" ]; then
 else
     LPACKAGE="$APP (Installed: $KPACKAGE)"
 fi
-CATEGORY="$(cat $TMP/sbopkg_category_selection)"
-RVERSION=$(grep VERSION $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info | cut -d= -f2 | sed s/\"//g)
-RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 dialog --default-item "$U" --title "$APP ($RVERSION-$RBUILD)" \
 --backtitle "$LPACKAGE" --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
@@ -1250,6 +1250,7 @@ if [ $WRITE = "false" ]; then
     exit 0
 else
     rm -rf $TMP/sbopkg_*
+    rm -rf $TMP/sbopkgpidlist
     rm -f $PIDFILE
 fi
 cd $CWD
@@ -1273,8 +1274,6 @@ if [ -e $TMP/sbopkgpidlist ]; then
         echo "killing $pid"
         kill -9 $pid;
     done;
-    rm -rf $TMP/oldbuildpid
-    mv $TMP/sbopkgpidlist $TMP/oldbuildpid
     rm -rf $TMP/sbopkgpidlist
 fi
 if [ "$DIAG" = 1 ]; then
