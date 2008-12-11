@@ -37,6 +37,7 @@ This option allows the user to set the location of the local rsync
 mirror of the SBo repository.
 
 The default value of LOCALREPO is:
+.br
 export LOCALREPO=${LOCALREPO:-/home/sbo}.
 
 .TP 5
@@ -46,6 +47,7 @@ This option contains the location of the cache directory where
 source downloads will be saved.
 
 The default value of SRCDIR is:
+.br
 export SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
 
 .TP 5
@@ -104,8 +106,9 @@ not work.  Note:  the wget command in sbopkg already uses the -O flag,
 so there is no need to add that to the WGETFLAGS option.  Changing
 these default options is not recommended.
 
-The default value of WGETFLAGS is: "--continue --progress-bar
---timeout=10 --tries=5".
+The default value of WGETFLAGS is:
+.br
+"--continue --progress-bar --timeout=10 --tries=5".
 
 .SH FILES
 .TP 5
