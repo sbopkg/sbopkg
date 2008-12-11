@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id$
+# $Id: sbopkg 230 2008-12-11 01:50:07Z chess.griffin $
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2008 Chess Griffin <chess@chessgriffin.com>
@@ -40,8 +40,8 @@ SCRIPT=${0##*/}
 DIAG=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
-SBOVER=SVN
-UPDATE_DEBUG="1" # This will be uncommented in SVN and RC releases
+SBOVER=0.15.0
+#UPDATE_DEBUG="1" # This will be uncommented in SVN and RC releases
 
 config_check () {
 # Check if config file is there and if so check that it has all
