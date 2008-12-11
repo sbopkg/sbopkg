@@ -31,8 +31,8 @@
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
 #  acidchild, mancha, macavity, Zordrak, Joao Felipe Santos,
-#  cotterochan, and necropresto.  This script would not be where it is
-#  without the help of these folks.  Thank you!
+#  cotterochan, necropresto, and Pierre Cazenave.  This script would
+#  not be where it is without the help of these folks.  Thank you!
 #set -x
 
 # Variables
@@ -457,7 +457,8 @@ while [ 0 ]; do
 --menu "You are currently using sbopkg to browse a local copy of SBo \
 for Slackware version $SLACKVER.  If you would like to change \
 it, please select another version below or press <Back> to \
-go back." 15 50 3 \
+go back." 15 50 4 \
+"12.2" "Slackware version 12.2" \
 "12.1" "Slackware version 12.1" \
 "12.0" "Slackware version 12.0" \
 "11.0" "Slackware version 11.0" 2>$TMP/sbopkg_version_selection
@@ -497,8 +498,8 @@ RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild 
 U="README"
 while [ 0 ]; do
 PKGOUTPUT=${OUTPUT:-/tmp}
-if $(echo $(ls -lt $PKGOUTPUT) | grep -E -q "$APP.*$RVERSION"); then
-    IPACKAGE="$(basename $(ls -1t $PKGOUTPUT/${APP}*tgz | head -n 1))"
+if $(echo $(ls -1 $PKGOUTPUT) | grep -E -q "$APP.*$RVERSION"); then
+    IPACKAGE="$(basename $(ls -1 $PKGOUTPUT/${APP}*${RVERSION}*tgz | head -n 1))"
 else
     IPACKAGE=""
 fi
@@ -507,7 +508,7 @@ if [ "$IPACKAGE" = "" ]; then
 else
     JPACKAGE="Install $IPACKAGE"
 fi
-KPACKAGE="$(basename $(ls -1t /var/log/packages/* | grep -hZm1 $APP))"
+KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP.*$RVERSION))"
 if [ "$KPACKAGE" = "" ]; then
     LPACKAGE="$APP (Not Installed)"
 else
@@ -770,8 +771,8 @@ rsync_command () {
 # This function holds the rsync command.
 # We do not use -z as this causes heavy CPU load on the server
 # and has very limited effect when most of the pull is .gz files.
-/usr/bin/rsync --archive --delete --exclude="*.sbopkg" $RSYNCFLAGS \
-$RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
+/usr/bin/rsync --archive --delete --no-owner --exclude="*.sbopkg" \
+$RSYNCFLAGS $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
 RSYNC_RETVAL=$?
 rm -rf $TMP/sbopkg_rsync.lck
 if [ ! $RSYNC_RETVAL = 0 ]; then
@@ -1434,7 +1435,7 @@ if found,"
             echo "               display package information."
             echo "  -v version   Set the Slackware version for the"
             echo "               mirror (current choices are 11.0, 12.0, \
-and 12.1)"
+12.1, and 12.2)"
             echo
             echo "Note: multiple arguments to -b, -q, and -s must be \
 quoted (\"pkg1 pkg2\")"

@@ -28,7 +28,7 @@ The default value of RSYNCMIRROR is: slackbuilds.org::slackbuilds.
 This option allows the user to set the default Slackware version in
 order to rsync with the matching SBo repository.
 
-The default value of SLACKVER is: 12.1.
+The default value of SLACKVER is: 12.2.
 
 .TP 5
 .B LOCALREPO
@@ -87,8 +87,9 @@ This option allows the user to manually tweak the rsync flags
 (options) that are used by sbopkg.  Users are cautioned against making
 any changes to the default values since new flags may or may not work.
 Note:  the rsync command in sbopkg already uses the --archive,
---delete, and --exclude flags, so there is no need to add them to the
-RSYNCFLAGS option.  Changing these default options is not recommended.
+--delete, --no-owner, and --exclude flags, so there is no need to add
+them to the RSYNCFLAGS option.  Changing these default options is not
+recommended.
 
 The default value of RSYNCFLAGS is: "--timeout=10 --verbose".
 
