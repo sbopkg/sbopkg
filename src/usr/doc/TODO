@@ -12,6 +12,7 @@ Sbopkg TODO (in no particular order)
   have rsync blocked.
 * Add ability to install packages from the command line using a -i
   switch.
+* Add a build queue.
 * Add 'long' switches to the cli options, i.e. --build in addition to
   the current -b switch.
 * Add in ability to edit the *.info file so folks can quickly change
