@@ -508,7 +508,8 @@ if [ "$IPACKAGE" = "" ]; then
 else
     JPACKAGE="Install $IPACKAGE"
 fi
-KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP.*$RVERSION))"
+KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP[-_][rs0-9]))"
+#KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP.*$RVERSION))"
 if [ "$KPACKAGE" = "" ]; then
     LPACKAGE="$APP (Not Installed)"
 else
