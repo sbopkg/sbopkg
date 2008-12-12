@@ -508,7 +508,7 @@ if [ "$IPACKAGE" = "" ]; then
 else
     JPACKAGE="Install $IPACKAGE"
 fi
-KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP[-_][rs0-9]))"
+KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP[-_][crs0-9]))"
 #KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP.*$RVERSION))"
 if [ "$KPACKAGE" = "" ]; then
     LPACKAGE="$APP (Not Installed)"
@@ -870,6 +870,9 @@ fi
 PKGNAME=${PKG##*/}
 SRCNAME=${DOWNLOAD##*/}
 SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
+if [ "$PKG" = "django" ]; then
+    SRCNAME="Django-$RVERSION.tar.gz"
+fi
 }
 
 gen_search_package () {
@@ -941,6 +944,9 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
     else
         cd $SRCDIR
         DOWNLOADFILE=$(echo $DOWNLOAD | sed -e 's/^.*\///g;s/\%2B/+/g')
+        if [ "$PKG" = "django" ]; then
+            DOWNLOADFILE=$SRCNAME
+        fi
         #wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE || rm -rf $TMP/sbopkg_build.lck
         # The above line was the old, default code.  The line below is
         # the new addition to capture PID's, allowing a clean abort
@@ -1028,7 +1034,7 @@ build_package () {
 # Start fetching and building the package.
 echo ; echo "Building $PKG"
 cd $LOCALREPO/$SLACKVER/$PKGPATH
-get_source
+get_source $PKG
 echo "Checking MD5SUM for "$SRCNAME"..."
 MD5CHK=$(md5sum $SRCNAME | cut -d' ' -f1)
 if [ "$MD5CHK" == $MD5SUM ]; then
