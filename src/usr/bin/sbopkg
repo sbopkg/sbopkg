@@ -52,7 +52,7 @@ if [ ! -e $SBOPKG_CONF ]; then
     exit 1
 else
     . $SBOPKG_CONF
-    for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP KEEPLOG TERMBUILD RSYNCFLAGS WGETFLAGS; do
+    for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT KEEPLOG TERMBUILD RSYNCFLAGS WGETFLAGS; do
         if [ -z "${!VAR}" ]; then
             MISSING+="$VAR "
         fi
@@ -497,9 +497,8 @@ RVERSION=$(grep VERSION $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info | cut -d= 
 RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 U="README"
 while [ 0 ]; do
-PKGOUTPUT=${OUTPUT:-/tmp}
-if $(echo $(ls -1 $PKGOUTPUT) | grep -E -q "$APP.*$RVERSION"); then
-    IPACKAGE="$(basename $(ls -1 $PKGOUTPUT/${APP}*${RVERSION}*tgz | head -n 1))"
+if $(echo $(ls -1 $OUTPUT) | grep -E -q "$APP.*$RVERSION"); then
+    IPACKAGE="$(basename $(ls -1 $OUTPUT/${APP}*${RVERSION}*tgz | head -n 1))"
 else
     IPACKAGE=""
 fi
@@ -614,11 +613,11 @@ as the root user in order to build packages." 8 30
         rm -rf $TMP/sbopkg_install.lck
         touch $TMP/sbopkg_install.lck
         if [ "$TERMBUILD" = "YES" ]; then
-	          install_package $PKGOUTPUT/$IPACKAGE | tee $SBOPKGINSTALLOUTPUT
+	          install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
     	      read -n 1 -p "Press any key to continue."
             rm -rf $TMP/sbopkg_install.lck
         else
-            ( install_package $PKGOUTPUT/$IPACKAGE >> $SBOPKGINSTALLOUTPUT & ) 2>>$SBOPKGINSTALLOUTPUT
+            ( install_package $IPACKAGE >> $SBOPKGINSTALLOUTPUT & ) 2>>$SBOPKGINSTALLOUTPUT
             while [ -f $TMP/sbopkg_install.lck ]; do
                 dialog --backtitle "Installing the $APP package." \
 --tailbox $SBOPKGINSTALLOUTPUT 18 70
@@ -712,9 +711,8 @@ if [ "$(ls -A $SRCDIR)" ]; then
     ls -la $SRCDIR > $TMP/sbopkg_cache_dir
     dialog --title "Displaying $SRCDIR" \
 --textbox $TMP/sbopkg_cache_dir 0 0
-    dialog --title "Keep Cache?" --yesno "Would you like to keep the \
-files in the cache directory?  Select YES to keep or NO to \
-delete." 8 40
+    dialog --title "Keep Cache?" --yes-label "Keep" --no-label "Delete" \
+--yesno "Would you like to keep the files in the cache directory?" 5 60
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -747,9 +745,8 @@ in the configuration file." 10 30
 else
     dialog --title "Displaying $TMP/sbopkg-build-log" \
 --textbox $TMP/sbopkg-build-log 0 0
-    dialog --title "Keep Log?" --yesno "Would you like to keep the \
-permanent build log $TMP/sbopkg-build-log?  Select YES to keep or NO \
-to delete." 8 40
+    dialog --title "Keep Log?" --yes-label "Keep" --no-label "Delete" \
+--yesno "Would you like to keep the permanent build log $TMP/sbopkg-build-log?" 6 50
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -994,10 +991,12 @@ fi
 
 install_package () {
 # Install the package.
-INSTDIR=$1
-INSTPKG=$2
-upgradepkg --reinstall --install-new $INSTDIR/$INSTPKG
-echo "Done installing/upgrading package."
+INSTPKG=$1
+if [ "$INSTALLPKGS" = "1" ]; then
+    upgradepkg --reinstall --install-new $OUTPUT/*
+else
+    upgradepkg --reinstall --install-new $OUTPUT/$INSTPKG
+fi
 rm -rf $TMP/sbopkg_install.lck
 }
 
@@ -1005,11 +1004,11 @@ checksum_fail () {
 # Offer to remove source if MD5SUM check fails.
 rm -rf $TMP/sbopkg_failcheck
 if [ "$DIAG" = 1 ]; then
-    dialog --title "MD5SUM Failed" --yesno "It appears the \
-MD5SUM check failed for the downloaded source.  The build process \
-will not continue.  Would you still like to keep the the downloaded \
-source for $PKG in $SRCDIR or would you like to delete the source \
-and try again?  Select YES to keep or NO to delete." 15 35
+    dialog --title "MD5SUM Failed" --yes-label "Keep" --no-label "Delete" \
+--yesno "It appears the MD5SUM check failed for the downloaded source. \
+The build process will not continue.  Would you still like to keep the \
+the downloaded source for $PKG in $SRCDIR or would you like to delete \
+the source and try again?" 15 35
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -1033,6 +1032,20 @@ fi
 build_package () {
 # Start fetching and building the package.
 echo ; echo "Building $PKG"
+OLDOUTPUT=$OUTPUT
+NEWOUTPUT=$TMP/sbooutput
+if [ ! -d "$NEWOUTPUT" ]; then
+    mkdir $NEWOUTPUT
+fi
+SUMMARYLOG=$TMP/sbopkg_summary
+if [ ! -e $SUMMARYLOG ]; then
+    touch $SUMMARYLOG
+    echo >> $SUMMARYLOG
+    echo "******************************************" >> $SUMMARYLOG
+    echo "PACKAGE BUILDING/INSTALLATION SUMMARY:" >> $SUMMARYLOG
+    echo >> $SUMMARYLOG
+fi
+OUTPUT=$NEWOUTPUT
 cd $LOCALREPO/$SLACKVER/$PKGPATH
 get_source $PKG
 echo "Checking MD5SUM for "$SRCNAME"..."
@@ -1047,7 +1060,7 @@ else
     cd $LOCALREPO/$SLACKVER
     continue
 fi
-echo "Building Slackware package for "$SRCNAME"..."
+echo "Building Slackware package for $SRCNAME..."
 if [ "$SLACKBUILD" = "original" ]; then
     sh $PKG.SlackBuild || rm -rf $TMP/sbopkg_build.lck
     # The following pid stuff isn't working right now.  If a user
@@ -1062,9 +1075,18 @@ fi
 if [ "$SLACKBUILD" = "local" ]; then
     sh $PKG.SlackBuild.sbopkg || rm -rf $TMP/sbopkg_build.lck
 fi
-echo "Done building package."
+echo "Done building package for "$SRCNAME"."
+echo "Built package for $SRCNAME" >> $SUMMARYLOG
+if [ "$INSTALLPKGS" = "1" ]; then
+    install_package $SRCNAME
+    echo "Done installing/upgrading package for $SRCNAME."
+    echo "Installed package: $SRCNAME" >> $SUMMARYLOG
+    mv $OUTPUT/* $OLDOUTPUT/
+fi
+echo >> $SUMMARYLOG
 rm -rf $TMP/sbopkg_build.lck
 rm $SRCNAME
+OUTPUT=$OLDOUTPUT
 cd $LOCALREPO/$SLACKVER
 }
 
@@ -1259,6 +1281,7 @@ if [ $WRITE = "false" ]; then
 else
     rm -rf $TMP/sbopkg_*
     rm -rf $TMP/sbopkgpidlist
+    rm -rf $TMP/sbooutput
     rm -f $PIDFILE
 fi
 cd $CWD
@@ -1395,7 +1418,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:f:hlpq:rs:v:" OPT; do
+while getopts ":b:cd:f:hi:lpq:rs:v:" OPT; do
     case $OPT in
         b ) BUILD="$OPTARG"
             ;;
@@ -1404,6 +1427,9 @@ while getopts ":b:cd:f:hlpq:rs:v:" OPT; do
         d ) LOCALREPO="$OPTARG"
             ;;
         f ) SBOPKG_CONF="$OPTARG"
+            ;;
+        i ) INSTALLPKGS=1
+            BUILD="$OPTARG"
             ;;
         l ) CHANGELOG=1
             ;;
@@ -1431,6 +1457,7 @@ SlackBuilds.org repository"
             echo "  -f           Override default configuration file"
             echo "               with specified file."
             echo "  -h           Display this help message."
+            echo "  -i package   Build and install a package."
             echo "  -l           Display the SlackBuilds.org \
 ChangeLog.txt and then quit."
             echo "  -p           List installed SlackBuilds.org packages."
@@ -1494,7 +1521,11 @@ to build packages."
             cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
         fi
     done
+    if [ "$INSTALLPKGS" = "1" ]; then
+        cat $TMP/sbopkg_summary
+    fi
     rm -rf $SBOPKGOUTPUT
+    rm -rf $TMP/sbopkg_summary
 fi
 
 if [ -n "$CHK_UPDATES" ]; then
