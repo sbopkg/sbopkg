@@ -53,11 +53,22 @@ export SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
 .TP 5
 .B TMP
 .br
-This options sets the default directory where certain working
+This option sets the default directory where certain working
 files are saved on a temporary basis.  TMP must be exported as it is
-also used by the SBo SlackBuilds.
+also used by the SBo SlackBuilds.  Also note that the default value of
+TMP is therefore the same as in the SBo SlackBuild scripts.
 
 The default value of TMP is: export TMP=${TMP:-/tmp/SBo}.
+
+.TP 5
+.B OUTPUT
+.br
+This option sets the default directory where compiled packages are
+saved.  OUTPUT must be exported as it is also used by the SBo
+SlackBuilds.  Also note that the default value of OUTPUT is therefore
+the same as in the SBo SlackBuilds.
+
+The default value of OUTPUT is: export OUTPUT=${OUTPUT:-/tmp}.
 
 .TP 5
 .B KEEPLOG
@@ -131,19 +142,11 @@ packages within sbopkg.  For example, changing this line so it reads:
 export TMP=${TMP:-/home/sbo/tmp}
 
 would then set $TMP to /home/sbo/tmp for sbopkg and for building SBo
-packages.
+packages.  OUTPUT can also be changed to save compiled packages in a
+location other than the default of /tmp.
 
 You can also export variables in sbopkg.conf that are not used by
-sbopkg at all, as demonstrated by the commented out line towards the
-bottom of sbopkg.conf:
-
-export OUTPUT=${OUTPUT:-/tmp}
-
-$OUTPUT is only used in the SBo SlackBuild scripts.  The default
-setting of /tmp is the same that is currently used in the SBo
-SlackBuild scripts.  By uncommenting the $OUTPUT line in sbopkg.conf,
-you can export $OUTPUT for all SlackBuild packages built from within
-sbopkg.  For example, you could change this to /home/sbo/packages.
+sbopkg at all.
 
 As you can probably see, by making a few changes to these variables,
 you could have a completely separated sandbox for SBo purposes -- the
