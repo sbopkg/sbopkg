@@ -640,12 +640,11 @@ V="Edit"
 while [ 0 ]; do
 dialog --default-item "$V" --title "$APP Customization" \
 --cancel-label "Back" --menu \
-"Please choose an item or press <Back> to go back or press \
-<Main Menu> to return to the main menu.\n" 20 60 4 \
-"Edit" "Create and edit a local SlackBuild" \
-"Delete" "Delete the local SlackBuild" \
-"Edit-Info" "Create and edit a local .info file" \
-"Delete-Info" "Delete the local .info file" \
+"Please choose an item or press <Back> to go back.\n" 15 75 4 \
+"Edit SlackBuild" "Create and edit a local copy of the SlackBuild" \
+"Delete SlackBuild" "Delete the local copy of the SlackBuild" \
+"Edit Info" "Create and edit a local copy of the .info file" \
+"Delete Info" "Delete the local copy of the .info file" \
 2>$TMP/sbopkg_custom_selection
 CCHOICE=$?
 if [ $CCHOICE = 1 ]; then
@@ -653,16 +652,16 @@ if [ $CCHOICE = 1 ]; then
     break
 elif [ $CCHOICE = 0 ]; then
     V="$(cat $TMP/sbopkg_custom_selection)"
-    if [ "$V" = "Edit" ]; then
+    if [ "$V" = "Edit SlackBuild" ]; then
         edit_local_slackbuild $APP
     fi
-    if [ "$V" = "Delete" ]; then
+    if [ "$V" = "Delete SlackBuild" ]; then
         delete_local_slackbuild $APP
     fi
-    if [ "$V" = "Edit-Info" ]; then
+    if [ "$V" = "Edit Info" ]; then
         edit_local_info $APP
     fi
-    if [ "$V" = "Delete-Info" ]; then
+    if [ "$V" = "Delete Info" ]; then
         delete_local_info $APP
     fi
 fi
