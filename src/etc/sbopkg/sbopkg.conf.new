@@ -12,6 +12,7 @@ SLACKVER=12.2
 LOCALREPO=${LOCALREPO:-/home/sbo}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 export TMP=${TMP:-/tmp/SBo}
+export OUTPUT=${OUTPUT:-/tmp}
 KEEPLOG=YES
 TERMBUILD=NO
 
@@ -24,7 +25,3 @@ TERMBUILD=NO
 # change these default values.
 RSYNCFLAGS="--verbose --timeout=10"
 WGETFLAGS="--continue --progress=bar --timeout=10 --tries=5"
-
-# Optional - the $OUTPUT variable is used by SlackBuild scripts only
-# and can be used to change the output location of compiled packages.
-#export OUTPUT=${OUTPUT:-/tmp}

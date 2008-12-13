@@ -40,8 +40,10 @@ or the locally-edited one, if present.  If using the dialog interface,
 and if sbopkg finds a built package for a particular piece of software
 in the OUTPUT directory, then sbopkg will automatically add a new menu
 entry allowing the user to install the package if he so choosed.
-Finally, if KEEPLOG is set to YES in the sbopkg.conf file then a
-permanent log of the build process is saved in /tmp/sbopkg-build-log.
+Alternatively, if sbopkg is run from the command line, the user can
+choose to build or build and install packages automatically.  Finally,
+if KEEPLOG is set to YES in the sbopkg.conf file then a permanent log
+of the build process is saved in /tmp/sbopkg-build-log.
 
 Alternatively, sbopkg can be run from the command line without using
 the dialog interface.  Executing "sbopkg -h" will display a list of
@@ -88,6 +90,21 @@ file.
 .TP 5
 .B -h
 Display the help.
+
+.TP 5
+.B -i PACKAGE(s)
+Search for and build and then install PACKAGE(s) from the local SBo
+repository.  If more than one package is specified, they must be in
+quotes, and the packages will be built and then installed in the
+listed order.  For example:
+
+#sbopkg -b "foo bar"
+
+will build and install foo and then build and install bar.  By
+carefully considering the order of the packages listed, the user may
+be able to build and install dependencies in the right order before
+the final application is built and installed.  Of course, given the
+nature of dependencies, this may not always be possible.
 
 .TP 5
 .B -l
