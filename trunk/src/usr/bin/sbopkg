@@ -1076,7 +1076,7 @@ if [ "$SLACKBUILD" = "local" ]; then
     sh $PKG.SlackBuild.sbopkg || rm -rf $TMP/sbopkg_build.lck
 fi
 echo "Done building package for "$SRCNAME"."
-echo "Built package for $SRCNAME" >> $SUMMARYLOG
+echo "Built package: $SRCNAME" >> $SUMMARYLOG
 if [ "$INSTALLPKGS" = "1" ]; then
     install_package $SRCNAME
     echo "Done installing/upgrading package for $SRCNAME."
@@ -1504,6 +1504,7 @@ to build packages."
         exit 0
     fi
     SBOPKGOUTPUT=$TMP/sbopkg_output
+    rm -rf $TMP/sbopkg_summary
     for PKGBUILD in $BUILD; do
         echo "Building $PKGBUILD"
         search_package $PKGBUILD
@@ -1521,11 +1522,10 @@ to build packages."
             cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
         fi
     done
-    if [ "$INSTALLPKGS" = "1" ]; then
-        cat $TMP/sbopkg_summary
-    fi
+    echo "******************************************" >> \
+    $TMP/sbopkg_summary
+    cat $TMP/sbopkg_summary
     rm -rf $SBOPKGOUTPUT
-    rm -rf $TMP/sbopkg_summary
 fi
 
 if [ -n "$CHK_UPDATES" ]; then
@@ -1565,5 +1565,6 @@ if [ -n "$GENSEARCH" ]; then
 fi
 
 cleanup
+echo
 echo "All done."
 exit 0
