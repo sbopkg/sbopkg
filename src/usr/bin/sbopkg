@@ -852,23 +852,44 @@ if [ ! $(find -mindepth 2 -name "$PKG") ]; then
         dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
         continue
     else
-        echo "$SCRIPT: Package $PKG not found." 1>&2
+        echo "ERROR: Package \"$PKG\" not found." 1>&2
         continue
     fi
+else
+    pick_info
+    if [ "$DOTINFO" = "original" ]; then
+        . $PKGPATH/$PKG.info
+    fi
+    if [ "$DOTINFO" = "local" ]; then
+        . $PKGPATH/$PKG.info.sbopkg
+    fi
+    PKGNAME=${PKG##*/}
+    SRCNAME=${DOWNLOAD##*/}
+    SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
+    if [ "$PKG" = "django" ]; then
+        SRCNAME="Django-$RVERSION.tar.gz"
+    fi
+    if [ ! "$DIAG" = 1 ]; then
+        echo "Found"
+        echo "Name: $PKGNAME"
+        echo "Version: $VERSION"
+        echo
+    fi
 fi
-pick_info
-if [ "$DOTINFO" = "original" ]; then
-    . $PKGPATH/$PKG.info
-fi
-if [ "$DOTINFO" = "local" ]; then
-    . $PKGPATH/$PKG.info.sbopkg
-fi
-PKGNAME=${PKG##*/}
-SRCNAME=${DOWNLOAD##*/}
-SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
-if [ "$PKG" = "django" ]; then
-    SRCNAME="Django-$RVERSION.tar.gz"
-fi
+#echo
+#pick_info
+#if [ "$DOTINFO" = "original" ]; then
+#    . $PKGPATH/$PKG.info
+#fi
+#if [ "$DOTINFO" = "local" ]; then
+#    . $PKGPATH/$PKG.info.sbopkg
+#fi
+#PKGNAME=${PKG##*/}
+#SRCNAME=${DOWNLOAD##*/}
+#SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
+#if [ "$PKG" = "django" ]; then
+#    SRCNAME="Django-$RVERSION.tar.gz"
+#fi
 }
 
 gen_search_package () {
@@ -1504,6 +1525,31 @@ to build packages."
     fi
     SBOPKGOUTPUT=$TMP/sbopkg_output
     rm -rf $TMP/sbopkg_summary
+    echo "Checking for valid package names..."
+    echo
+    for PKGBUILD in $BUILD; do
+        echo "Checking for \"$PKGBUILD\""
+        search_package $PKGBUILD
+    done
+    while true; do
+        echo
+        echo "Check complete."
+        echo
+        echo "Do you wish to proceed based on the search results above?"
+        echo "Packages not found will be skipped during the process."
+        echo
+        echo "Press (Y)es to proceed or (N)o to quit."
+        read ANS
+        case $ANS in
+            y* | Y* ) break
+            ;;
+            n* | N* ) cleanup; exit 0
+            ;;
+            * ) echo "Unknown response."
+            ;;
+        esac
+    done
+    echo
     for PKGBUILD in $BUILD; do
         echo "Building $PKGBUILD"
         search_package $PKGBUILD
