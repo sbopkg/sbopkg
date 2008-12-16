@@ -846,8 +846,8 @@ search_package () {
 # displaying information and building.
 cd $LOCALREPO/$SLACKVER
 PKG=$1
-PKGPATH=$(find -mindepth 2 -name $PKG)
-if [ ! $(find -mindepth 2 -name "$PKG") ]; then
+PKGPATH=$(find -type d -mindepth 2 -name $PKG)
+if [ ! $(find -type d -mindepth 2 -name "$PKG") ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
         continue
@@ -1016,6 +1016,7 @@ if [ "$INSTALLPKGS" = "1" ]; then
     upgradepkg --reinstall --install-new $OUTPUT/*
 else
     upgradepkg --reinstall --install-new $OUTPUT/$INSTPKG
+    echo "Done upgrading/installing package."
 fi
 rm -rf $TMP/sbopkg_install.lck
 }
@@ -1080,7 +1081,7 @@ else
     cd $LOCALREPO/$SLACKVER
     continue
 fi
-echo "Building Slackware package for $SRCNAME..."
+echo "Building Slackware package for $PKG..."
 if [ "$SLACKBUILD" = "original" ]; then
     sh $PKG.SlackBuild || rm -rf $TMP/sbopkg_build.lck
     # The following pid stuff isn't working right now.  If a user
@@ -1095,14 +1096,18 @@ fi
 if [ "$SLACKBUILD" = "local" ]; then
     sh $PKG.SlackBuild.sbopkg || rm -rf $TMP/sbopkg_build.lck
 fi
-echo "Done building package for "$SRCNAME"."
-echo "Built package: $SRCNAME" >> $SUMMARYLOG
+echo "Done building package for $PKG."
+cd $OUTPUT
+NEWPACKAGE=$(ls -1 *.tgz)
+cd -
+echo "Built package: $NEWPACKAGE" >> $SUMMARYLOG
+echo "Built package: $NEWPACKAGE"
 if [ "$INSTALLPKGS" = "1" ]; then
     install_package $SRCNAME
-    echo "Done installing/upgrading package for $SRCNAME."
-    echo "Installed package: $SRCNAME" >> $SUMMARYLOG
-    mv $OUTPUT/* $OLDOUTPUT/
+    echo "Done installing/upgrading package for $PKG."
+    echo "Installed package: $NEWPACKAGE" >> $SUMMARYLOG
 fi
+mv $OUTPUT/* $OLDOUTPUT/
 echo >> $SUMMARYLOG
 rm -rf $TMP/sbopkg_build.lck
 rm $SRCNAME
