@@ -38,6 +38,8 @@
 # Variables
 SCRIPT=${0##*/}
 DIAG=""
+BUILDPKGS=""
+INSTALLPKGS=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
 SBOVER=SVN
@@ -111,7 +113,6 @@ trap 'control_c' 2 14 15
 pid_check () {
 # Set and check for pid file.
 PIDFILE=$TMP/sbopkg.pid
-#trap 'rm -rf $PIDFILE; exit 1' TERM INT
 if [ -e $PIDFILE ]; then
     echo
     echo "Another instance of sbopkg appears to be running"
@@ -518,13 +519,14 @@ dialog --default-item "$U" --title "$APP ($RVERSION-$RBUILD)" \
 --backtitle "$LPACKAGE" --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
 "Please choose an item or press <Back> to go back or press \
-<Main Menu> to return to the main menu.\n" 18 60 8 \
+<Main Menu> to return to the main menu.\n" 18 60 9 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
 "SlackBuild" "View the SlackBuild file" \
 "Custom" "Customize the .info or SlackBuild" \
 "Remove" "Remove $APP sources in cache" \
+"Queue" "Add $APP to build queue" \
 "Build" "Build a package for $APP" \
 $JPACKAGE 2>$TMP/sbopkg_info_selection
 CHOICE=$?
@@ -564,49 +566,16 @@ elif [ $CHOICE = 0 ]; then
     if [ "$U" = "Remove" ]; then
         remove_sources $APP
     fi
+    if [ "$U" = "Queue" ]; then
+        echo $APP >> $TMP/sbopkg-build-queue
+        dialog --title "Done" --msgbox "$APP has been added to the \
+build/install queue." 8 30
+    fi
     if [ "$U" = "Build" ]; then
-        check_root
-        if [ $ROOT = "false" ]; then
-            dialog --title "ERROR" --msgbox "You must run this script \
-as the root user in order to build packages." 8 30
-            continue
-        fi
-        SBOPKGOUTPUT=$TMP/sbopkg_output
-        search_package $APP
-        pick_slackbuild
-        if [ $SLACKBUILD = "cancel" ]; then
-            continue
-        fi
-        if [ $DOTINFO = "cancel" ]; then
-            continue
-        fi
-        rm -rf $TMP/sbopkg_build.lck
-        touch $TMP/sbopkg_build.lck
-        if [ "$TERMBUILD" = "YES" ]; then
-            build_package $APP | tee $SBOPKGOUTPUT
-            read -n 1 -p "Press any key to continue."
-        else
-            # ( build_package $APP >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
-            # The above line is the old code.  The line below is the
-            # new code, which is the first step in trying to implement
-            # a way for users to cleanly abort the wget and package
-            # building steps with sbopkg properly killing all pids
-            # that were created along the way.  See the comment to the
-            # control_c function as well.  Also, see the similar code
-            # at the get_source function.
-            ( build_package $APP >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkgpidlist ) 2>>$SBOPKGOUTPUT
-            while [ -f $TMP/sbopkg_build.lck ]; do
-                dialog --backtitle "Building the $APP package." \
- --tailbox $SBOPKGOUTPUT 18 70
-            done
-        fi
-        if [ -e $TMP/sbopkg_failcheck ]; then
-            checksum_fail
-        fi
-        if [ "$KEEPLOG" = "YES" ]; then
-            cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
-        fi
-        rm -rf $SBOPKGOUTPUT
+        cp $TMP/sbopkg-build-queue $TMP/sbopkg-backup-queue
+        echo $APP > $TMP/sbopkg-build-queue
+        process_queue
+        mv $TMP/sbopkg-backup-queue $TMP/sbopkg-build-queue
     fi
     if [ "$U" = "Install" ]; then
         SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
@@ -764,6 +733,31 @@ deleted." 8 30
 fi
 }
 
+view_queue () {
+# This function displays the contents of the build/install queue.
+STARTQUEUE=$TMP/sbopkg-build-queue
+if [ ! -e $STARTQUEUE ]; then
+    dialog --title "Empty Queue" --msgbox "The build/install \
+queue is empty." 8 30
+else
+    dialog --title "Displaying build/install queue" \
+--textbox $STARTQUEUE 20 50
+    dialog --title "Keep Queue?" --yes-label "Keep" --no-label "Delete" \
+--yesno "Would you like to keep the build/install queue?" 6 50
+    if [ $? = 1 ]; then
+        check_root
+        if [ $ROOT = "false" ]; then
+            dialog --title "ERROR" --msgbox "Sorry, only the root \
+user can delete the build/install queue." 8 30
+        else
+            rm -rf $STARTQUEUE
+            dialog --title "Done" --msgbox "The build/install queue \
+has been deleted." 8 30
+        fi
+    fi
+fi
+}
+
 rsync_command () {
 # This function holds the rsync command.
 # We do not use -z as this causes heavy CPU load on the server
@@ -848,48 +842,19 @@ cd $LOCALREPO/$SLACKVER
 PKG=$1
 PKGPATH=$(find -type d -mindepth 2 -name $PKG)
 if [ ! $(find -type d -mindepth 2 -name "$PKG") ]; then
-    if [ "$DIAG" = 1 ]; then
-        dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
-        continue
+    if [ "$BUILDPKGS" = 1 ]; then
+        echo "ERROR: Package \"$PKG\" not found" >> $PRECHECKLOG
+        echo "ERROR: Package \"$PKG\" not found - skipped" >> $SUMMARYLOG
     else
-        echo "ERROR: Package \"$PKG\" not found." 1>&2
-        continue
-    fi
-else
-    pick_info
-    if [ "$DOTINFO" = "original" ]; then
-        . $PKGPATH/$PKG.info
-    fi
-    if [ "$DOTINFO" = "local" ]; then
-        . $PKGPATH/$PKG.info.sbopkg
-    fi
-    PKGNAME=${PKG##*/}
-    SRCNAME=${DOWNLOAD##*/}
-    SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
-    if [ "$PKG" = "django" ]; then
-        SRCNAME="Django-$RVERSION.tar.gz"
-    fi
-    if [ ! "$DIAG" = 1 ]; then
-        echo "Found"
-        echo "Name: $PKGNAME"
-        echo "Version: $VERSION"
-        echo
+        if [ "$DIAG" = 1 ]; then
+            dialog --title "ERROR" --msgbox "Package $PKG not found" 0 0
+            continue
+        else
+            echo "ERROR: Package \"$PKG\" not found." 1>&2
+            continue
+        fi
     fi
 fi
-#echo
-#pick_info
-#if [ "$DOTINFO" = "original" ]; then
-#    . $PKGPATH/$PKG.info
-#fi
-#if [ "$DOTINFO" = "local" ]; then
-#    . $PKGPATH/$PKG.info.sbopkg
-#fi
-#PKGNAME=${PKG##*/}
-#SRCNAME=${DOWNLOAD##*/}
-#SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
-#if [ "$PKG" = "django" ]; then
-#    SRCNAME="Django-$RVERSION.tar.gz"
-#fi
 }
 
 gen_search_package () {
@@ -946,8 +911,9 @@ show_readme () {
 # which of the 4 docs he wants to view?  Or have a menu listing the 4
 # docs?  Undecided.
 cd $LOCALREPO/$SLACKVER
-${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info,\
-slack-desc}
+${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,\
+$PKGNAME.info.build,slack-desc}
+rm -rf $PKGPATH/$PKGNAME.info.build
 return 0
 }
 
@@ -1023,11 +989,11 @@ rm -rf $TMP/sbopkg_install.lck
 
 checksum_fail () {
 # Offer to remove source if MD5SUM check fails.
-rm -rf $TMP/sbopkg_failcheck
+RMSRC=$1
 if [ "$DIAG" = 1 ]; then
     dialog --title "MD5SUM Failed" --yes-label "Keep" --no-label "Delete" \
 --yesno "It appears the MD5SUM check failed for the downloaded source. \
-The build process will not continue.  Would you still like to keep the \
+The build process will not \ continue.  Would you still like to keep the \
 the downloaded source for $PKG in $SRCDIR or would you like to delete \
 the source and try again?" 15 35
     if [ $? = 1 ]; then
@@ -1036,7 +1002,7 @@ the source and try again?" 15 35
             dialog --title "ERROR" --msgbox "Sorry, only the root \
 user can delete the source." 8 30
         else
-            rm -rf $SRCDIR/$SRCNAME
+            rm -rf $SRCDIR/$RMSRC
             dialog --title "Done" --msgbox "The source has been \
 deleted." 8 30
         fi
@@ -1045,12 +1011,14 @@ deleted." 8 30
 saved." 8 30
     fi
 else
-    echo "You may wish to delete the downloaded $PKG source in"
-    echo "$SRCDIR and try the build again."
+    echo "You may wish to delete the downloaded $PKG source: "
+    echo "$RMSRC in $SRCDIR and try the build again."
 fi
 }
 
 build_package () {
+MD5CHK=""
+MD5SUM=""
 # Start fetching and building the package.
 echo ; echo "Building $PKG"
 OLDOUTPUT=$OUTPUT
@@ -1059,15 +1027,15 @@ if [ ! -d "$NEWOUTPUT" ]; then
     mkdir $NEWOUTPUT
 fi
 SUMMARYLOG=$TMP/sbopkg_summary
-if [ ! -e $SUMMARYLOG ]; then
-    touch $SUMMARYLOG
-    echo >> $SUMMARYLOG
-    echo "******************************************" >> $SUMMARYLOG
-    echo "PACKAGE BUILDING/INSTALLATION SUMMARY:" >> $SUMMARYLOG
-    echo >> $SUMMARYLOG
-fi
 OUTPUT=$NEWOUTPUT
 cd $LOCALREPO/$SLACKVER/$PKGPATH
+. $PKG.info.build
+PKGNAME=${PKG##*/}
+SRCNAME=${DOWNLOAD##*/}
+SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
+if [ "$PKG" = "django" ]; then
+    SRCNAME="Django-$RVERSION.tar.gz"
+fi
 get_source $PKG
 echo "Checking MD5SUM for "$SRCNAME"..."
 MD5CHK=$(md5sum $SRCNAME | cut -d' ' -f1)
@@ -1075,27 +1043,18 @@ if [ "$MD5CHK" == $MD5SUM ]; then
     echo "OK"
 else
     echo "MD5SUM check failed.  Exiting."
-    touch $TMP/sbopkg_failcheck
+    checksum_fail $SRCNAME
     rm -rf $TMP/sbopkg_build.lck
     rm $SRCNAME
+    rm -rf $PKG.info.build
+    rm -rf $PKG.SlackBuild.build
+    echo "MD5SUM check failed for $PKG" >> $SUMMARYLOG
+    echo >> $SUMMARYLOG
     cd $LOCALREPO/$SLACKVER
     continue
 fi
 echo "Building Slackware package for $PKG..."
-if [ "$SLACKBUILD" = "original" ]; then
-    sh $PKG.SlackBuild || rm -rf $TMP/sbopkg_build.lck
-    # The following pid stuff isn't working right now.  If a user
-    # exists the build process, it continues going in the background.
-    # This works for cancelling the wget source, but not the build.
-    # Search this script for other instances of sbopkgpidlist and
-    # you'll see where I'm hacking on this.
-    #sh $PKG.SlackBuild &
-    #echo "$!" >> $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
-    #wait
-fi
-if [ "$SLACKBUILD" = "local" ]; then
-    sh $PKG.SlackBuild.sbopkg || rm -rf $TMP/sbopkg_build.lck
-fi
+sh $PKG.SlackBuild.build || rm -rf $TMP/sbopkg_build.lck
 echo "Done building package for $PKG."
 cd $OUTPUT
 NEWPACKAGE=$(ls -1 *.tgz)
@@ -1109,8 +1068,9 @@ if [ "$INSTALLPKGS" = "1" ]; then
 fi
 mv $OUTPUT/* $OLDOUTPUT/
 echo >> $SUMMARYLOG
-rm -rf $TMP/sbopkg_build.lck
 rm $SRCNAME
+rm -rf $PKG.info.build
+rm -rf $PKG.SlackBuild.build
 OUTPUT=$OLDOUTPUT
 cd $LOCALREPO/$SLACKVER
 }
@@ -1161,8 +1121,8 @@ else
     if [ "$DIAG" = 1 ]; then
         while [ 0 ]; do
             dialog --title "Choose SlackBuild" --menu "A local \
-SlackBuild was found in addition to the original SlackBuild. \
-Which one would you like to use?" 10 60 2 \
+SlackBuild for $PKG was found in addition to the original \
+SlackBuild.  Which one would you like to use?" 10 60 2 \
 "Original" "Use the original SlackBuild" \
 "Local" "Use the local SlackBuild" 2>$TMP/sbopkg_bld_selection
             if [ $? = 1 ]; then
@@ -1184,8 +1144,8 @@ Which one would you like to use?" 10 60 2 \
         while true; do
             echo "A local SlackBuild for $PKGNAME was found in \
 addition to the original SlackBuild."
-            echo "Which one would you like to use?  Please enter \
-'O' for original, 'L' for local, or 'C' to cancel."
+            echo "Which one would you like to use?"
+            echo "Please enter 'O' for original, 'L' for local, or 'C' to cancel."
             read ANS
             case $ANS in
                 o* | O* ) SLACKBUILD="original" ; break
@@ -1198,7 +1158,13 @@ addition to the original SlackBuild."
                 ;;
             esac
         done
+        echo
     fi
+fi
+if [ "$SLACKBUILD" = "original" ]; then
+    cp $PKGPATH/$PKG.SlackBuild $PKGPATH/$PKG.SlackBuild.build
+elif [ "$DOTINFO" = "local" ]; then
+    cp $PKGPATH/$PKG.SlackBuild.sbopkg $PKGPATH/$PKG.SlackBuild.build
 fi
 }
 
@@ -1248,7 +1214,7 @@ else
     if [ "$DIAG" = 1 ]; then
         while [ 0 ]; do
             dialog --title "Choose .info file" --menu "A local \
-.info file was found in addition to the original .info file. \
+.info file for $PKG was found in addition to the original .info file. \
 Which one would you like to use?" 10 60 2 \
 "Original" "Use the original .info" \
 "Local" "Use the local .info" 2>$TMP/sbopkg_info_selection
@@ -1269,8 +1235,8 @@ Which one would you like to use?" 10 60 2 \
         while true; do
             echo "A local .info file for $PKG was found in \
 addition to the original .info file."
-            echo "Which one would you like to use?  Please enter \
-'O' for original, 'L' for local, or 'C' to cancel."
+            echo "Which one would you like to use?"
+            echo "Please enter 'O' for original, 'L' for local, or 'C' to cancel."
             read ANS
             case $ANS in
                 o* | O* ) DOTINFO="original" ; break
@@ -1283,8 +1249,172 @@ addition to the original .info file."
                 ;;
             esac
         done
+        echo
     fi
 fi
+if [ "$DOTINFO" = "original" ]; then
+    cp $PKGPATH/$PKG.info $PKGPATH/$PKG.info.build
+elif [ "$DOTINFO" = "local" ]; then
+    cp $PKGPATH/$PKG.info.sbopkg $PKGPATH/$PKG.info.build
+fi
+. $PKGPATH/$PKG.info.build
+PKGNAME=${PKG##*/}
+#SRCNAME=${DOWNLOAD##*/}
+#SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
+#if [ "$PKG" = "django" ]; then
+#    SRCNAME="Django-$RVERSION.tar.gz"
+#fi
+}
+
+process_queue () {
+# Iterate throught the process queue to build, and optionally
+# install, the selected packages.
+SBOPKGOUTPUT=$TMP/sbopkg_output
+STARTQUEUE=$TMP/sbopkg-build-queue
+CHECKQUEUE=$TMP/sbopkg-check-queue
+FINALQUEUE=$TMP/sbopkg-final-queue
+PRECHECKLOG=$TMP/sbopkg_precheck_log
+SUMMARYLOG=$TMP/sbopkg_summary
+rm -rf $CHECKQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
+if [ ! -e $STARTQUEUE ]; then
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "Empty Queue" --msgbox "The build/install \
+queue is empty." 8 30
+        return
+    else
+        echo "The build/install queue is empty."
+        echo
+        break
+    fi
+fi
+check_root
+if [ $ROOT = "false" ]; then
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "ERROR" --msgbox "You must run this script \
+as the root user in order to build packages." 8 30
+        continue
+    else
+        echo "You must run this script as the root user in order \
+to build packages."
+        cleanup
+        exit 0
+    fi
+fi
+touch $SUMMARYLOG
+echo >> $SUMMARYLOG
+echo "******************************************" >> $SUMMARYLOG
+echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $SUMMARYLOG
+echo >> $SUMMARYLOG
+if [ "$BUILDPKGS" = 1 ]; then
+    touch $PRECHECKLOG
+    echo >> $PRECHECKLOG
+    echo "******************************************" >> $PRECHECKLOG
+    echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $PRECHECKLOG
+    echo >> $PRECHECKLOG
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "Pre-Check" --msgbox "Pre-checking for valid \
+package names and batch processing local .info and SlackBuild \
+edits." 0 0
+    else
+        echo "Pre-checking for valid package names and batch processing"
+        echo "local .info and SlackBuild edits..."
+        echo
+    fi
+    for CHKBUILD in $(cat $STARTQUEUE); do
+        PKG=""
+        echo "Checking for \"$CHKBUILD\""
+        search_package $CHKBUILD
+        pick_info $CHKBUILD
+        pick_slackbuild
+        if [ "$DIAG" = 1 ]; then
+            echo "$PKGNAME $VERSION ON" >> $CHECKQUEUE
+        else
+            echo $PKGNAME >> $CHECKQUEUE
+        fi
+        echo "$PKGNAME Found" >> $PRECHECKLOG
+        echo "Name: $PKGNAME" >> $PRECHECKLOG
+        echo "Version: $VERSION" >> $PRECHECKLOG
+        echo >> $PRECHECKLOG
+    done
+    echo "******************************************" >> $PRECHECKLOG
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "Pre-Check Log" --textbox $PRECHECKLOG 0 0
+        dialog --title "Pre-Check Selections" --separate-output \
+        --checklist "Please select or unselect those packages \
+        you wish to build/install" \
+        15 40 10 --file $CHECKQUEUE 2>$TMP/sbopkg-final-queue
+        if [ $? = 1 ]; then
+            clear
+            cleanup
+            exit 0
+        fi
+    else
+        while true; do
+            cat $PRECHECKLOG
+            echo
+            echo "Pre-check complete."
+            echo
+            echo "Do you wish to proceed based on the search results above?"
+            echo "Packages not found will be skipped during the process."
+            echo
+            echo "Press (Y)es to proceed or (N)o to quit."
+            read ANS
+            case $ANS in
+                y* | Y* ) cat $CHECKQUEUE > $FINALQUEUE; break
+                ;;
+                n* | N* ) cleanup; exit 0
+                ;;
+                * ) echo "Unknown response."
+                ;;
+            esac
+        done
+        echo
+    fi
+else
+    for CHKBUILD in $(cat $STARTQUEUE); do
+        search_package $CHKBUILD
+        pick_info $CHKBUILD
+        pick_slackbuild
+        echo $CHKBUILD >> $FINALQUEUE
+    done
+fi
+if [ "$DIAG" = 1 ]; then
+    dialog --title "Install Packages" --yes-label "Build" \
+--no-label "Build and Install" --yesno "Would you like to build the \
+packages in the queue, or build and install the packages in \
+the queue?" 8 50
+    if [ $? = 1 ]; then
+        INSTALLPKGS=1
+    fi
+fi
+rm -rf $TMP/sbopkg_build.lck
+touch $TMP/sbopkg_build.lck
+tail -f $SBOPKGOUTPUT
+while [ -f $TMP/sbopkg_build.lck ]; do
+    for PKGBUILD in $(cat $FINALQUEUE); do
+        search_package $PKGBUILD
+        build_package $PKGBUILD 2>&1 | tee $SBOPKGOUTPUT
+    done
+    rm -rf $TMP/sbopkg_build.lck
+done
+echo "******************************************" >> $SUMMARYLOG
+cat $SUMMARYLOG
+read -n 1 -p "Press any key to continue."
+if [ "$DIAG" = 1 ]; then
+    if [ "$BUILDPKGS" = 1 ]; then
+        view_queue
+    else
+        rm -rf $STARTQUEUE
+    fi
+fi
+if [ "$KEEPLOG" = "YES" ]; then
+    cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
+    cat $SUMMARYLOG >> $TMP/sbopkg-build-log
+fi
+BUILDPKGS=""
+INSTALLPKGS=""
+rm -rf $SBOPKGOUTPUT $CHECKQUEUE $FINALQUEUE $PRECHECKLOG \
+$SUMMARYLOG
 }
 
 cleanup () {
@@ -1307,6 +1437,7 @@ else
     rm -rf $TMP/sbopkg_*
     rm -rf $TMP/sbopkgpidlist
     rm -rf $TMP/sbooutput
+    rm -rf $TMP/sbopkg-*-queue
     rm -f $PIDFILE
 fi
 cd $CWD
@@ -1348,7 +1479,7 @@ while [ 0 ]; do
 dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit.\n" \
-  19 69 11 \
+  23 69 13 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Packages" "List installed SBo packages" \
@@ -1356,6 +1487,8 @@ dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 "Browse" "Browse the local SlackBuilds.org repo" \
 "Search" "Search the local SlackBuilds.org repo" \
 "Cache" "View the contents of the cache directory" \
+"View" "View the build/install queue" \
+"Queue" "Process the build/install queue" \
 "Log" "View the permanent build log" \
 "Version" "Select Slackware version (currently: $SLACKVER)" \
 "Readme" "View the sbopkg README" \
@@ -1406,6 +1539,15 @@ if [ "$R" = "Cache" ]; then
     view_cache_dir
 fi
 
+if [ "$R" = "View" ]; then
+    view_queue
+fi
+
+if [ "$R" = "Queue" ]; then
+    BUILDPKGS=1
+    process_queue
+fi
+
 if [ "$R" = "Log" ]; then
     view_perm_log
 fi
@@ -1445,7 +1587,8 @@ fi
 # This is the command line options and help.
 while getopts ":b:cd:f:hi:lpq:rs:v:" OPT; do
     case $OPT in
-        b ) BUILD="$OPTARG"
+        b ) BUILDPKGS=1
+            BUILD="$OPTARG"
             ;;
         c ) CHK_UPDATES=1
             ;;
@@ -1453,7 +1596,8 @@ while getopts ":b:cd:f:hi:lpq:rs:v:" OPT; do
             ;;
         f ) SBOPKG_CONF="$OPTARG"
             ;;
-        i ) INSTALLPKGS=1
+        i ) BUILDPKGS=1
+            INSTALLPKGS=1
             BUILD="$OPTARG"
             ;;
         l ) CHANGELOG=1
@@ -1521,61 +1665,10 @@ directory_checks
 pid_check
 
 if [ -n "$BUILD" ]; then
-    check_root
-    if [ $ROOT = "false" ]; then
-        echo "You must run this script as the root user in order \
-to build packages."
-        cleanup
-        exit 0
-    fi
-    SBOPKGOUTPUT=$TMP/sbopkg_output
-    rm -rf $TMP/sbopkg_summary
-    echo "Checking for valid package names..."
-    echo
     for PKGBUILD in $BUILD; do
-        echo "Checking for \"$PKGBUILD\""
-        search_package $PKGBUILD
+        echo $PKGBUILD >> $TMP/sbopkg-build-queue
     done
-    while true; do
-        echo
-        echo "Check complete."
-        echo
-        echo "Do you wish to proceed based on the search results above?"
-        echo "Packages not found will be skipped during the process."
-        echo
-        echo "Press (Y)es to proceed or (N)o to quit."
-        read ANS
-        case $ANS in
-            y* | Y* ) break
-            ;;
-            n* | N* ) cleanup; exit 0
-            ;;
-            * ) echo "Unknown response."
-            ;;
-        esac
-    done
-    echo
-    for PKGBUILD in $BUILD; do
-        echo "Building $PKGBUILD"
-        search_package $PKGBUILD
-        pick_slackbuild
-        rm -rf $TMP/sbopkg_build.lck
-        touch $TMP/sbopkg_build.lck
-        ( build_package $PKGNAME 2>&1 | tee $SBOPKGOUTPUT )
-        while [ -f $TMP/sbopkg_build.lck ]; do
-            tail -f $SBOPKGOUTPUT
-        done
-        if [ -e $TMP/sbopkg_failcheck ]; then
-            checksum_fail
-        fi
-        if [ "$KEEPLOG" = "YES" ]; then
-            cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
-        fi
-    done
-    echo "******************************************" >> \
-    $TMP/sbopkg_summary
-    cat $TMP/sbopkg_summary
-    rm -rf $SBOPKGOUTPUT
+    process_queue
 fi
 
 if [ -n "$CHK_UPDATES" ]; then
@@ -1602,6 +1695,7 @@ if [ -n "$SEARCH" ]; then
     for PKGSEARCH in $SEARCH; do
         echo "Searching for $PKGSEARCH"
         search_package $PKGSEARCH
+        pick_info $PKGSEARCH
         show_readme
     done
 fi
