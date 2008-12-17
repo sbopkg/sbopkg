@@ -318,6 +318,7 @@ potential updates..." >> $UPDATELIST
             if [[ "$PRGNAM" == "MPlayer" || "$PRGNAM" == "mplayer" ]]; then
                 PRGNAM="mplayer"
                 NAME="mplayer"
+                VER=$(echo $VER | sed -e 's/r//;s/_/_000/')
                 #NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
             fi
             # Ugly hack for openarena ... is there a trend here? :-)
