@@ -349,14 +349,6 @@ potential updates..." >> $UPDATELIST
             # 3.11.  Essentially, these lines look for a single number
             # that is surrounded by dots, or a single number at the
             # start of a line, and then puts a 0 in front of it.
-            # Thus, 10.4.12 would become 10.04.12 and 3.4 would become
-            # 03.04.  Believe me, I tried _many_ things to fix this
-            # problem, including stripping out the decimals and
-            # running them through bc.  The problem is that the
-            # version numbers of many source tarballs are so
-            # different.  Anyway, this seems to be working and the
-            # good news is that I might be able to get rid of some of
-            # the other hacks.
             TESTVERSION=$(echo $VERSION | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
             TESTNEWSRCVER=$(echo $NEWSRCVER | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
             TESTVER=$(echo $VER | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
@@ -494,13 +486,34 @@ info_item () {
 # This function shows the menu for each package where the user can see
 # certain information or build the package if he is root.
 APP="$(cat $TMP/sbopkg_item_selection)"
+CURAPP=$(ls /var/log/packages/*SBo* | grep $APP)
+KPACKAGE=""
+for i in $CURAPP; do
+    LONGAPP=$(echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//')
+    SHORTAPP=$(echo $LONGAPP | sed -e 's/^.*\///g')
+    if [ "$SHORTAPP" == "$APP" ]; then
+        # Again, code from pkgtool
+        STRING=$(basename $i _SBo)
+        INDEX="$(echo $STRING | tr -d -c -)"
+        INDEX="$(expr length $INDEX + 1)"
+        NAME=$(expr $INDEX - 3)
+        NAME="$(echo $STRING | cut -f 1-$NAME -d -)"
+        VER=$(expr $INDEX - 2)
+        VER="$(echo $STRING | cut -f $VER -d -)"
+        #VER="$(echo $STRING | cut -f $VER -d - | sed -e 's/_.*$//')"
+        ARCH=$(expr $INDEX - 1)
+        ARCH="$(echo $STRING | cut -f $ARCH -d -)"
+        BUILD="$(echo $STRING | cut -f $INDEX -d -)"
+        KPACKAGE=$NAME-$VER-$ARCH-$BUILD
+     fi
+done
 CATEGORY="$(cat $TMP/sbopkg_category_selection)"
 RVERSION=$(grep VERSION $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info | cut -d= -f2 | sed s/\"//g)
 RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 U="README"
 while [ 0 ]; do
 if $(echo $(ls -1 $OUTPUT) | grep -E -q "$APP.*$RVERSION"); then
-    IPACKAGE="$(basename $(ls -1 $OUTPUT/${APP}*${RVERSION}*tgz | head -n 1))"
+    IPACKAGE="$(basename $(ls -1 $OUTPUT/${APP}*${RVERSION}*${RBUILD}*tgz | head -n 1))"
 else
     IPACKAGE=""
 fi
@@ -509,8 +522,6 @@ if [ "$IPACKAGE" = "" ]; then
 else
     JPACKAGE="Install $IPACKAGE"
 fi
-KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP[-_][crs0-9]))"
-#KPACKAGE="$(basename $(ls -1 /var/log/packages/* | grep -hZm1 $APP.*$RVERSION))"
 if [ "$KPACKAGE" = "" ]; then
     LPACKAGE="$APP (Not Installed)"
 else
@@ -934,11 +945,8 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
         #wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE || rm -rf $TMP/sbopkg_build.lck
         # The above line was the old, default code.  The line below is
         # the new addition to capture PID's, allowing a clean abort
-        # when a user presses Control-C.  Please see the comments
-        # above around line 530 when build_package is first called as
-        # well as the comments to the control_c function, below.
+        # when a user presses Control-C.
         wget $WGETFLAGS $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo "$!" >> $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
-        #( wget -c -t 5 -T $TIMEOUT --progress=bar $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo $! >> $TMP/sbopkgpidlist ) 2>>$SBOPKGOUTPUT
         wait
         cd -
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
@@ -1260,11 +1268,6 @@ elif [ "$DOTINFO" = "local" ]; then
 fi
 . $PKGPATH/$PKG.info.build
 PKGNAME=${PKG##*/}
-#SRCNAME=${DOWNLOAD##*/}
-#SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
-#if [ "$PKG" = "django" ]; then
-#    SRCNAME="Django-$RVERSION.tar.gz"
-#fi
 }
 
 process_queue () {
@@ -1446,14 +1449,7 @@ control_c () {
 # This function holds the commands that will be executed when the user
 # presses Control-C.  The $TMP/sbopkgpidlist file is the file to which
 # various PID's are written to as certain background processes etc.
-# are executed.  For example, look at the wget command in the
-# get_source function, above.  I am trying to work out a way where a
-# user can press Control-C during the wget source step or during the
-# package building step and cleanly return to the main menu with all
-# related background processes killed.  So far, this is working for
-# the wget step but not the building step.  I would really like to
-# have this working well, so suggestions/diffs etc. would be greatly
-# appreciated.  :-)
+# are executed.
 echo "Control-C detected.  Trying to exit cleanly...";
 if [ -e $TMP/sbopkgpidlist ]; then
     for pid in $(cat $TMP/sbopkgpidlist); do
