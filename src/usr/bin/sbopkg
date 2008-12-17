@@ -1034,7 +1034,7 @@ PKGNAME=${PKG##*/}
 SRCNAME=${DOWNLOAD##*/}
 SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
 if [ "$PKG" = "django" ]; then
-    SRCNAME="Django-$RVERSION.tar.gz"
+    SRCNAME="Django-$VERSION.tar.gz"
 fi
 get_source $PKG
 echo "Checking MD5SUM for "$SRCNAME"..."
