@@ -740,8 +740,8 @@ if [ ! -e $STARTQUEUE ]; then
     dialog --title "Empty Queue" --msgbox "The build/install \
 queue is empty." 8 30
 else
-    dialog --title "Displaying build/install queue" \
---textbox $STARTQUEUE 20 50
+    dialog --title "Displaying queue" \
+--textbox $STARTQUEUE 13 40
     dialog --title "Keep Queue?" --yes-label "Keep" --no-label "Delete" \
 --yesno "Would you like to keep the build/install queue?" 6 50
     if [ $? = 1 ]; then
@@ -993,7 +993,7 @@ RMSRC=$1
 if [ "$DIAG" = 1 ]; then
     dialog --title "MD5SUM Failed" --yes-label "Keep" --no-label "Delete" \
 --yesno "It appears the MD5SUM check failed for the downloaded source. \
-The build process will not \ continue.  Would you still like to keep the \
+The build process will not continue.  Would you still like to keep the \
 the downloaded source for $PKG in $SRCDIR or would you like to delete \
 the source and try again?" 15 35
     if [ $? = 1 ]; then
@@ -1344,9 +1344,7 @@ edits." 0 0
         you wish to build/install" \
         15 40 10 --file $CHECKQUEUE 2>$TMP/sbopkg-final-queue
         if [ $? = 1 ]; then
-            clear
-            cleanup
-            exit 0
+            continue
         fi
     else
         while true; do
