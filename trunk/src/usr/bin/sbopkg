@@ -584,10 +584,14 @@ elif [ $CHOICE = 0 ]; then
 build/install queue." 8 30
     fi
     if [ "$U" = "Build" ]; then
-        cp $TMP/sbopkg-build-queue $TMP/sbopkg-backup-queue
+        if [ -e $TMP/sbopkg-build-queue ]; then
+            cp $TMP/sbopkg-build-queue $TMP/sbopkg-backup-queue
+        fi
         echo $APP > $TMP/sbopkg-build-queue
         process_queue
-        mv $TMP/sbopkg-backup-queue $TMP/sbopkg-build-queue
+        if [ -e $TMP/sbopkg-backup-queue ]; then
+            mv $TMP/sbopkg-backup-queue $TMP/sbopkg-build-queue
+        fi
     fi
     if [ "$U" = "Install" ]; then
         SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
@@ -1033,7 +1037,7 @@ echo ; echo "Building $PKG"
 OLDOUTPUT=$OUTPUT
 NEWOUTPUT=$TMP/sbooutput
 if [ ! -d "$NEWOUTPUT" ]; then
-    mkdir $NEWOUTPUT
+    mkdir -p $NEWOUTPUT
 fi
 SUMMARYLOG=$TMP/sbopkg_summary
 OUTPUT=$NEWOUTPUT
@@ -1326,7 +1330,7 @@ edits." 0 0
     fi
     for CHKBUILD in $(cat $STARTQUEUE); do
         PKG=""
-        echo "Checking for \"$CHKBUILD\""
+        #echo "Checking for \"$CHKBUILD\""
         search_package $CHKBUILD
         pick_info $CHKBUILD
         pick_slackbuild
@@ -1345,8 +1349,8 @@ edits." 0 0
         dialog --title "Pre-Check Log" --textbox $PRECHECKLOG 0 0
         dialog --title "Pre-Check Selections" --separate-output \
         --checklist "Please select or unselect those packages \
-        you wish to build/install" \
-        15 40 10 --file $CHECKQUEUE 2>$TMP/sbopkg-final-queue
+        you wish to build/install or press <Cancel> to exit." \
+        18 40 8 --file $CHECKQUEUE 2>$TMP/sbopkg-final-queue
         if [ $? = 1 ]; then
             continue
         fi
