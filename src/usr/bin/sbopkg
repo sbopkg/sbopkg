@@ -594,21 +594,9 @@ build/install queue." 8 30
         fi
     fi
     if [ "$U" = "Install" ]; then
-        SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
-        rm -rf $TMP/sbopkg_install.lck
-        touch $TMP/sbopkg_install.lck
-        if [ "$TERMBUILD" = "YES" ]; then
-	          install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
-    	      read -n 1 -p "Press any key to continue."
-            rm -rf $TMP/sbopkg_install.lck
-        else
-            ( install_package $IPACKAGE >> $SBOPKGINSTALLOUTPUT & ) 2>>$SBOPKGINSTALLOUTPUT
-            while [ -f $TMP/sbopkg_install.lck ]; do
-                dialog --backtitle "Installing the $APP package." \
---tailbox $SBOPKGINSTALLOUTPUT 18 70
-            rm -rf $TMP/sbopkg_install.lck
-            done
-        fi
+	    SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
+        install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
+    	read -n 1 -p "Press any key to continue."
         if [ "$KEEPLOG" = "YES" ]; then
             cat $SBOPKGINSTALLOUTPUT >> $TMP/sbopkg-build-log
         fi
@@ -1395,7 +1383,7 @@ the queue?" 8 50
 fi
 rm -rf $TMP/sbopkg_build.lck
 touch $TMP/sbopkg_build.lck
-tail -f $SBOPKGOUTPUT
+#tail -f $SBOPKGOUTPUT
 while [ -f $TMP/sbopkg_build.lck ]; do
     for PKGBUILD in $(cat $FINALQUEUE); do
         search_package $PKGBUILD
