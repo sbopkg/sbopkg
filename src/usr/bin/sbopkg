@@ -564,9 +564,9 @@ elif [ $CHOICE = 0 ]; then
         --textbox $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info 0 0
     fi
     if [ "$U" = "Slack-desc" ]; then
-    PARSED_SLACK_DESC=$(mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
-    sed -n "/^$APP: /s///p" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/slack-desc > $PARSED_SLACK_DESC
-    dialog --title "Viewing Slack-desc" --textbox $PARSED_SLACK_DESC 0 0
+        PARSED_SLACK_DESC=$(mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
+        sed -n "/^$APP: /s///p" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/slack-desc > $PARSED_SLACK_DESC
+        dialog --title "Viewing Slack-desc" --textbox $PARSED_SLACK_DESC 0 0
     fi
     if [ "$U" = "SlackBuild" ]; then
         dialog --title "Viewing SlackBuild" \
@@ -588,9 +588,9 @@ build/install queue." 8 30
         process_queue
     fi
     if [ "$U" = "Install" ]; then
-	      SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
+        SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
         install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
-    	  read -n 1 -p "Press any key to continue."
+        read -n 1 -p "Press any key to continue."
         if [ "$KEEPLOG" = "YES" ]; then
             cat $SBOPKGINSTALLOUTPUT >> $TMP/sbopkg-build-log
         fi
@@ -995,32 +995,21 @@ rm -rf $TMP/sbopkg_install.lck
 
 checksum_fail () {
 # Offer to remove source if MD5SUM check fails.
-#RMSRC=$1
-if [ "$DIAG" = 1 ]; then
-    dialog --title "MD5SUM Failed" --yes-label "Keep" --no-label \
-    "Delete" --yesno "It appears the MD5SUM check failed for the \
-    downloaded source. The build process will not continue.  Would \
-    you still like to keep the the downloaded source for $PKG in \
-    $SRCDIR or would you like to delete the source and try again?" \
-    15 45
-    if [ $? = 1 ]; then
-        check_root
-        if [ $ROOT = "false" ]; then
-            dialog --title "ERROR" --msgbox "Sorry, only the root \
-user can delete the source." 8 30
-        else
-            rm -rf $SRCDIR/$RMSRC
-            dialog --title "Done" --msgbox "The source has been \
-deleted." 8 30
-        fi
-    else
-            dialog --title "Done" --msgbox "The source has been \
-saved." 8 30
-    fi
-else
-    echo "You may wish to delete the downloaded $PKG source: "
-    echo "$RMSRC in $SRCDIR and try the build again."
-fi
+RMSRC=$1
+echo
+echo "Would you like to delete the downloaded $PKG source: "
+echo "$RMSRC in $SRCDIR?"
+echo
+echo "Press (Y)es to delete or (N)o to continue."
+read ANS
+    case $ANS in
+        y* | Y* ) rm -rf $SRCDIR/$RMSRC ; echo "Source deleted."
+        ;;
+        n* | N* ) return
+        ;;
+        * ) echo "Unknown response."
+        ;;
+    esac
 }
 
 build_package () {
@@ -1291,7 +1280,7 @@ to build packages."
         exit 0
     fi
 fi
-if [ "$BUILDPKGS" = 1 ]; then
+if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
     view_queue
 fi
 if [ "$DIAG" = 1 ]; then
@@ -1384,7 +1373,9 @@ while [ -f $TMP/sbopkg_build.lck ]; do
 done
 echo "******************************************" >> $SUMMARYLOG
 cat $SUMMARYLOG
-read -n 1 -p "Press any key to continue."
+if [ "$DIAG" = 1 ]; then
+    read -n 1 -p "Press any key to continue."
+fi
 if [ -e $TMP/sbopkg-tmp-queue ]; then
     dialog --title "Delete Queue?" --yes-label "Keep" --no-label \
     "Delete" --yesno "Would you like to keep the queue or would \
