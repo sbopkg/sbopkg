@@ -588,9 +588,9 @@ build/install queue." 8 30
         process_queue
     fi
     if [ "$U" = "Install" ]; then
-	    SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
+	      SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
         install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
-    	read -n 1 -p "Press any key to continue."
+    	  read -n 1 -p "Press any key to continue."
         if [ "$KEEPLOG" = "YES" ]; then
             cat $SBOPKGINSTALLOUTPUT >> $TMP/sbopkg-build-log
         fi
@@ -742,9 +742,9 @@ if [ ! -e $TMPQUEUE ]; then
 else
     dialog --title "Viewing Build Queue" --separate-output \
     --checklist "Please select or unselect those packages \
-    you wish to keep in the queue and then <Ok> to continue \
-    or press <Cancel> to exit." \
-    18 40 8 --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
+you wish to keep in the queue and then <Ok> to continue \
+or press <Cancel> to exit." 18 40 8 \
+--file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
     if [ $? = 1 ]; then
         rm -rf $TMP/sbopkg-ans-queue
         continue
@@ -995,13 +995,14 @@ rm -rf $TMP/sbopkg_install.lck
 
 checksum_fail () {
 # Offer to remove source if MD5SUM check fails.
-RMSRC=$1
+#RMSRC=$1
 if [ "$DIAG" = 1 ]; then
-    dialog --title "MD5SUM Failed" --yes-label "Keep" --no-label "Delete" \
---yesno "It appears the MD5SUM check failed for the downloaded source. \
-The build process will not continue.  Would you still like to keep the \
-the downloaded source for $PKG in $SRCDIR or would you like to delete \
-the source and try again?" 15 35
+    dialog --title "MD5SUM Failed" --yes-label "Keep" --no-label \
+    "Delete" --yesno "It appears the MD5SUM check failed for the \
+    downloaded source. The build process will not continue.  Would \
+    you still like to keep the the downloaded source for $PKG in \
+    $SRCDIR or would you like to delete the source and try again?" \
+    15 45
     if [ $? = 1 ]; then
         check_root
         if [ $ROOT = "false" ]; then
@@ -1290,12 +1291,13 @@ to build packages."
         exit 0
     fi
 fi
-if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
+if [ "$BUILDPKGS" = 1 ]; then
     view_queue
-    dialog --title "Install Packages" --yes-label "Build" \
+fi
+if [ "$DIAG" = 1 ]; then
+    dialog --title "Install Package(s)" --yes-label "Build" \
 --no-label "Build and Install" --yesno "Would you like to build the \
-packages in the queue, or build and install the packages in \
-the queue?" 8 50
+package(s) only, or build and install the package(s)?" 8 50
     if [ $? = 1 ]; then
         INSTALLPKGS=1
     fi
@@ -1335,8 +1337,8 @@ edits." 8 30
     if [ "$DIAG" = 1 ]; then
         dialog --title "Pre-Check Log" --textbox $PRECHECKLOG 0 0
         dialog --title "Continue?" --yesno "Do you want to continue \
-        with the build/install process?  This is your last chance to \
-        bail out.  Press <Yes> to continue or <No> to exit." 8 40
+with the build/install process?  This is your last chance to bail \
+out.  Press <Yes> to continue or <No> to exit." 8 40
         if [ $? = 1 ]; then
             rm -rf $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
             continue
@@ -1383,21 +1385,23 @@ done
 echo "******************************************" >> $SUMMARYLOG
 cat $SUMMARYLOG
 read -n 1 -p "Press any key to continue."
-#if [ "$DIAG" = 1 ]; then
-#    if [ "$BUILDPKGS" = 1 ]; then
-#        view_queue
-#    else
-#        rm -rf $STARTQUEUE
-#    fi
-#fi
+if [ -e $TMP/sbopkg-tmp-queue ]; then
+    dialog --title "Delete Queue?" --yes-label "Keep" --no-label \
+    "Delete" --yesno "Would you like to keep the queue or would \
+you like to delete it?" 6 40
+    if [ $? = 1 ]; then
+        rm -rf $TMP/sbopkg-tmp-queue
+        dialog --title "Done" --msgbox "The queue has been \
+deleted." 8 35
+    fi
+fi
 if [ "$KEEPLOG" = "YES" ]; then
     cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
     cat $SUMMARYLOG >> $TMP/sbopkg-build-log
 fi
 BUILDPKGS=""
 INSTALLPKGS=""
-rm -rf $SBOPKGOUTPUT $STARTQUEUE $FINALQUEUE \
-$PRECHECKLOG $SUMMARYLOG
+rm -rf $SBOPKGOUTPUT $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
 }
 
 cleanup () {
