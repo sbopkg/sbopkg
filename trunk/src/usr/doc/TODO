@@ -11,8 +11,8 @@ Sbopkg TODO (in no particular order)
 * Include a way to change the sync from rsync to lftp for those who
   have rsync blocked.
 * Add ability to install packages from the command line using a -i
-  switch.
-* Add a build queue.
+  switch.  UPDATE:  This will be in sbopkg 0.20.0.
+* Add a build queue.  This will be in sbopkg 0.20.0.
 * Add 'long' switches to the cli options, i.e. --build in addition to
   the current -b switch.
 * Add in ability to edit the *.info file so folks can quickly change
