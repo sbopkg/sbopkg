@@ -579,19 +579,13 @@ elif [ $CHOICE = 0 ]; then
         remove_sources $APP
     fi
     if [ "$U" = "Queue" ]; then
-        echo $APP >> $TMP/sbopkg-build-queue
+        echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
         dialog --title "Done" --msgbox "$APP has been added to the \
 build/install queue." 8 30
     fi
     if [ "$U" = "Build" ]; then
-        if [ -e $TMP/sbopkg-build-queue ]; then
-            cp $TMP/sbopkg-build-queue $TMP/sbopkg-backup-queue
-        fi
-        echo $APP > $TMP/sbopkg-build-queue
+        echo "$APP" > $TMP/sbopkg-start-queue
         process_queue
-        if [ -e $TMP/sbopkg-backup-queue ]; then
-            mv $TMP/sbopkg-backup-queue $TMP/sbopkg-build-queue
-        fi
     fi
     if [ "$U" = "Install" ]; then
 	    SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
@@ -739,24 +733,35 @@ fi
 
 view_queue () {
 # This function displays the contents of the build/install queue.
-STARTQUEUE=$TMP/sbopkg-build-queue
-if [ ! -e $STARTQUEUE ]; then
+TMPQUEUE=$TMP/sbopkg-tmp-queue
+WORKINGQUEUE=$TMP/sbopkg-working-queue
+if [ ! -e $TMPQUEUE ]; then
     dialog --title "Empty Queue" --msgbox "The build/install \
-queue is empty." 8 30
+    queue is empty." 8 30
+    continue
 else
-    dialog --title "Displaying queue" \
---textbox $STARTQUEUE 13 40
-    dialog --title "Keep Queue?" --yes-label "Keep" --no-label "Delete" \
---yesno "Would you like to keep the build/install queue?" 6 50
+    dialog --title "Viewing Build Queue" --separate-output \
+    --checklist "Please select or unselect those packages \
+    you wish to keep in the queue and then <Ok> to continue \
+    or press <Cancel> to exit." \
+    18 40 8 --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
     if [ $? = 1 ]; then
-        check_root
-        if [ $ROOT = "false" ]; then
-            dialog --title "ERROR" --msgbox "Sorry, only the root \
-user can delete the build/install queue." 8 30
+        rm -rf $TMP/sbopkg-ans-queue
+        continue
+    else
+        rm -rf $WORKINGQUEUE
+        if [ ! -s $TMP/sbopkg-ans-queue ]; then
+            rm -rf $TMP/sbopkg-tmp-queue
         else
-            rm -rf $STARTQUEUE
-            dialog --title "Done" --msgbox "The build/install queue \
-has been deleted." 8 30
+            for PICK in $(cat $TMP/sbopkg-ans-queue); do
+                echo $(egrep -m1 "^$PICK " $TMPQUEUE) >> \
+                $WORKINGQUEUE
+            done
+            mv $WORKINGQUEUE $TMPQUEUE
+            if [ "$BUILDPKGS" = 1 ]; then
+                mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
+            fi
+            #rm -rf $TMP/sbopkg-ans-queue
         fi
     fi
 fi
@@ -1266,34 +1271,33 @@ process_queue () {
 # Iterate throught the process queue to build, and optionally
 # install, the selected packages.
 SBOPKGOUTPUT=$TMP/sbopkg_output
-STARTQUEUE=$TMP/sbopkg-build-queue
-CHECKQUEUE=$TMP/sbopkg-check-queue
+STARTQUEUE=$TMP/sbopkg-start-queue
 FINALQUEUE=$TMP/sbopkg-final-queue
 PRECHECKLOG=$TMP/sbopkg_precheck_log
 SUMMARYLOG=$TMP/sbopkg_summary
-rm -rf $CHECKQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
-if [ ! -e $STARTQUEUE ]; then
-    if [ "$DIAG" = 1 ]; then
-        dialog --title "Empty Queue" --msgbox "The build/install \
-queue is empty." 8 30
-        return
-    else
-        echo "The build/install queue is empty."
-        echo
-        break
-    fi
-fi
+rm -rf $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
 check_root
 if [ $ROOT = "false" ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "You must run this script \
 as the root user in order to build packages." 8 30
+        rm -rf $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
         continue
     else
         echo "You must run this script as the root user in order \
 to build packages."
         cleanup
         exit 0
+    fi
+fi
+if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
+    view_queue
+    dialog --title "Install Packages" --yes-label "Build" \
+--no-label "Build and Install" --yesno "Would you like to build the \
+packages in the queue, or build and install the packages in \
+the queue?" 8 50
+    if [ $? = 1 ]; then
+        INSTALLPKGS=1
     fi
 fi
 touch $SUMMARYLOG
@@ -1308,25 +1312,20 @@ if [ "$BUILDPKGS" = 1 ]; then
     echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $PRECHECKLOG
     echo >> $PRECHECKLOG
     if [ "$DIAG" = 1 ]; then
-        dialog --title "Pre-Check" --msgbox "Pre-checking for valid \
-package names and batch processing local .info and SlackBuild \
-edits." 0 0
+        dialog --title "Pre-Check" --msgbox "Checking for valid \
+package names and processing local .info and .SlackBuild \
+edits." 8 30
     else
-        echo "Pre-checking for valid package names and batch processing"
-        echo "local .info and SlackBuild edits..."
+        echo "Checking for valid package names and processing"
+        echo "local .info and .SlackBuild edits..."
         echo
     fi
     for CHKBUILD in $(cat $STARTQUEUE); do
         PKG=""
-        #echo "Checking for \"$CHKBUILD\""
         search_package $CHKBUILD
         pick_info $CHKBUILD
         pick_slackbuild
-        if [ "$DIAG" = 1 ]; then
-            echo "$PKGNAME $VERSION ON" >> $CHECKQUEUE
-        else
-            echo $PKGNAME >> $CHECKQUEUE
-        fi
+        echo $PKGNAME >> $FINALQUEUE
         echo "$PKGNAME Found" >> $PRECHECKLOG
         echo "Name: $PKGNAME" >> $PRECHECKLOG
         echo "Version: $VERSION" >> $PRECHECKLOG
@@ -1335,11 +1334,11 @@ edits." 0 0
     echo "******************************************" >> $PRECHECKLOG
     if [ "$DIAG" = 1 ]; then
         dialog --title "Pre-Check Log" --textbox $PRECHECKLOG 0 0
-        dialog --title "Pre-Check Selections" --separate-output \
-        --checklist "Please select or unselect those packages \
-        you wish to build/install or press <Cancel> to exit." \
-        18 40 8 --file $CHECKQUEUE 2>$TMP/sbopkg-final-queue
+        dialog --title "Continue?" --yesno "Do you want to continue \
+        with the build/install process?  This is your last chance to \
+        bail out.  Press <Yes> to continue or <No> to exit." 8 40
         if [ $? = 1 ]; then
+            rm -rf $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
             continue
         fi
     else
@@ -1354,7 +1353,7 @@ edits." 0 0
             echo "Press (Y)es to proceed or (N)o to quit."
             read ANS
             case $ANS in
-                y* | Y* ) cat $CHECKQUEUE > $FINALQUEUE; break
+                y* | Y* ) break
                 ;;
                 n* | N* ) cleanup; exit 0
                 ;;
@@ -1372,18 +1371,8 @@ else
         echo $CHKBUILD >> $FINALQUEUE
     done
 fi
-if [ "$DIAG" = 1 ]; then
-    dialog --title "Install Packages" --yes-label "Build" \
---no-label "Build and Install" --yesno "Would you like to build the \
-packages in the queue, or build and install the packages in \
-the queue?" 8 50
-    if [ $? = 1 ]; then
-        INSTALLPKGS=1
-    fi
-fi
 rm -rf $TMP/sbopkg_build.lck
 touch $TMP/sbopkg_build.lck
-#tail -f $SBOPKGOUTPUT
 while [ -f $TMP/sbopkg_build.lck ]; do
     for PKGBUILD in $(cat $FINALQUEUE); do
         search_package $PKGBUILD
@@ -1394,21 +1383,21 @@ done
 echo "******************************************" >> $SUMMARYLOG
 cat $SUMMARYLOG
 read -n 1 -p "Press any key to continue."
-if [ "$DIAG" = 1 ]; then
-    if [ "$BUILDPKGS" = 1 ]; then
-        view_queue
-    else
-        rm -rf $STARTQUEUE
-    fi
-fi
+#if [ "$DIAG" = 1 ]; then
+#    if [ "$BUILDPKGS" = 1 ]; then
+#        view_queue
+#    else
+#        rm -rf $STARTQUEUE
+#    fi
+#fi
 if [ "$KEEPLOG" = "YES" ]; then
     cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
     cat $SUMMARYLOG >> $TMP/sbopkg-build-log
 fi
 BUILDPKGS=""
 INSTALLPKGS=""
-rm -rf $SBOPKGOUTPUT $CHECKQUEUE $FINALQUEUE $PRECHECKLOG \
-$SUMMARYLOG
+rm -rf $SBOPKGOUTPUT $STARTQUEUE $FINALQUEUE \
+$PRECHECKLOG $SUMMARYLOG
 }
 
 cleanup () {
@@ -1532,6 +1521,7 @@ fi
 
 if [ "$R" = "Queue" ]; then
     BUILDPKGS=1
+    #cp $TMP/sbopkg-tmp-queue $TMP/sbopkg-build-queue
     process_queue
 fi
 
@@ -1653,7 +1643,7 @@ pid_check
 
 if [ -n "$BUILD" ]; then
     for PKGBUILD in $BUILD; do
-        echo $PKGBUILD >> $TMP/sbopkg-build-queue
+        echo $PKGBUILD >> $TMP/sbopkg-start-queue
     done
     process_queue
 fi
