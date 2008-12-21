@@ -14,7 +14,6 @@ SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 export TMP=${TMP:-/tmp/SBo}
 export OUTPUT=${OUTPUT:-/tmp}
 KEEPLOG=YES
-TERMBUILD=NO
 
 # The following variables are required and can be tweaked if desired,
 # although most users should leave them alone.  Note:  rsync already
