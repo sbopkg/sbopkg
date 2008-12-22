@@ -44,6 +44,7 @@ SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
 SBOVER=SVN
 UPDATE_DEBUG="1" # This will be uncommented in SVN and RC releases
+#FULL_DEBUG="1" # This will be commented except for my testing
 
 config_check () {
 # Check if config file is there and if so check that it has all
@@ -384,7 +385,7 @@ potential updates..." >> $UPDATELIST
                 fi
 	          #elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
 	          elif [[ $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD = $BUILD ]]; then
-                if [ "$UPDATE_DEBUG" = 1 ]; then
+                if [[ "$UPDATE_DEBUG" = 1 && "$FULL_DEBUG" = 1 ]]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  No update." >> $UPDATELIST
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
@@ -586,7 +587,7 @@ elif [ $CHOICE = 0 ]; then
     if [ "$U" = "Queue" ]; then
         echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
         dialog --title "Done" --msgbox "$APP has been added to the \
-build/install queue." 8 30
+build queue." 8 30
     fi
     if [ "$U" = "Build" ]; then
         echo "$APP" > $TMP/sbopkg-start-queue
@@ -737,18 +738,21 @@ fi
 }
 
 view_queue () {
-# This function displays the contents of the build/install queue.
+# This function displays the contents of the build queue.
 TMPQUEUE=$TMP/sbopkg-tmp-queue
 WORKINGQUEUE=$TMP/sbopkg-working-queue
 if [ ! -e $TMPQUEUE ]; then
-    dialog --title "Empty Queue" --msgbox "The build/install \
+    dialog --title "Empty Queue" --msgbox "The build \
     queue is empty." 8 30
     continue
 else
     dialog --title "Viewing Build Queue" --separate-output \
-    --checklist "Please select or unselect those packages \
-you wish to keep in the queue and then <Ok> to continue \
-or press <Cancel> to exit." 18 40 8 \
+    --checklist "The following packages are currently in the \
+build queue.  Please note that when the build queue is processed, \
+the packages selected below will be built, and optionally installed, \
+in the order listed from top to bottom.\n\nPlease select or unselect \
+those packages you wish to keep in the build queue and then press \
+<Ok> to continue or press <Cancel> to exit." 30 50 8 \
 --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
     if [ $? = 1 ]; then
         rm -rf $TMP/sbopkg-ans-queue
@@ -766,7 +770,6 @@ or press <Cancel> to exit." 18 40 8 \
             if [ "$BUILDPKGS" = 1 ]; then
                 mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
             fi
-            #rm -rf $TMP/sbopkg-ans-queue
         fi
     fi
 fi
@@ -1383,11 +1386,11 @@ if [ "$DIAG" = 1 ]; then
 fi
 if [ -e $TMP/sbopkg-tmp-queue ]; then
     dialog --title "Delete Queue?" --yes-label "Keep" --no-label \
-    "Delete" --yesno "Would you like to keep the queue or would \
-you like to delete it?" 6 40
+    "Delete" --yesno "Would you like to keep the build queue or \
+would you like to delete it?" 6 40
     if [ $? = 1 ]; then
         rm -rf $TMP/sbopkg-tmp-queue
-        dialog --title "Done" --msgbox "The queue has been \
+        dialog --title "Done" --msgbox "The build queue has been \
 deleted." 8 35
     fi
 fi
@@ -1463,8 +1466,8 @@ dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 "Browse" "Browse the local SlackBuilds.org repo" \
 "Search" "Search the local SlackBuilds.org repo" \
 "Cache" "View the contents of the cache directory" \
-"View" "View the build/install queue" \
-"Queue" "Process the build/install queue" \
+"View" "View the build queue" \
+"Queue" "Process the build queue" \
 "Log" "View the permanent build log" \
 "Version" "Select Slackware version (currently: $SLACKVER)" \
 "Readme" "View the sbopkg README" \
@@ -1521,7 +1524,6 @@ fi
 
 if [ "$R" = "Queue" ]; then
     BUILDPKGS=1
-    #cp $TMP/sbopkg-tmp-queue $TMP/sbopkg-build-queue
     process_queue
 fi
 
