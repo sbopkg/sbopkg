@@ -318,7 +318,9 @@ potential updates..." >> $UPDATELIST
             if [[ "$PRGNAM" == "MPlayer" || "$PRGNAM" == "mplayer" ]]; then
                 PRGNAM="mplayer"
                 NAME="mplayer"
-                VER=$(echo $VER | sed -e 's/r//;s/_/_000/')
+                if $(echo $VER | grep -q "^svn_r"); then
+                    VER=$(echo $VER | sed -e 's/r//;s/_/_000/')
+                fi
                 #NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
             fi
             # Ugly hack for openarena ... is there a trend here? :-)
@@ -352,6 +354,9 @@ potential updates..." >> $UPDATELIST
             TESTVERSION=$(echo $VERSION | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
             TESTNEWSRCVER=$(echo $NEWSRCVER | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
             TESTVER=$(echo $VER | sed -e 's/[_.]\([1-9]\)\b/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
+            if [ $PRGNAM = "acroread" ]; then
+                TESTVER=$(echo $VER | sed -e 's/[_.]\([1-9]\)/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
+            fi
             #if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
             if [[ $TESTVERSION$TESTNEWSRCVER > $TESTVER || ( $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD > $BUILD ) ]]; then
                 echo $NAME: >> $UPDATELIST
