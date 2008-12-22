@@ -364,6 +364,7 @@ potential updates..." >> $UPDATELIST
                 echo "  POTENTIAL UPDATE" >> $UPDATELIST
                 echo "  Installed version: " $CURPKG >> $UPDATELIST
                 echo "  Repo version: " $PRGNAM-$VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                echo "$PRGNAM $VERSION$NEWSRCVER-$NEWBUILD ON" >> $TMP/sbopkg-update-queue
                 if [ "$UPDATE_DEBUG" = 1 ]; then
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug2: " $TESTVERSION$TESTNEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
@@ -1387,7 +1388,7 @@ fi
 if [ -e $TMP/sbopkg-tmp-queue ]; then
     dialog --title "Delete Queue?" --yes-label "Keep" --no-label \
     "Delete" --yesno "Would you like to keep the build queue or \
-would you like to delete it?" 6 40
+would you like to delete it?" 8 35
     if [ $? = 1 ]; then
         rm -rf $TMP/sbopkg-tmp-queue
         dialog --title "Done" --msgbox "The build queue has been \
@@ -1494,7 +1495,22 @@ if [ "$R" = "Packages" ]; then
 fi
 
 if [ "$R" = "Updates" ]; then
+    rm -rf $TMP/sbopkg-update-queue
     check_for_updates
+    if [ -e $TMP/sbopkg-update-queue ]; then
+        dialog --title "Add Updates to Queue?" --yesno \
+"Would you like to add the flagged updates to the build queue?" \
+8 35
+        #if [ $? = 1 ]; then
+        #    continue
+        #fi
+        if [ $? = 0 ]; then
+            cat $TMP/sbopkg-update-queue >> $TMP/sbopkg-tmp-queue
+            rm -rf $TMP/sbopkg-update-queue
+            dialog --title "Done" --msgbox "The flagged updates \
+have been added to the build queue." 8 30
+        fi
+    fi
 fi
 
 if [ "$R" = "Browse" ]; then
