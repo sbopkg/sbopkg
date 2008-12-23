@@ -31,8 +31,10 @@
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
 #  acidchild, mancha, macavity, Zordrak, Joao Felipe Santos,
-#  cotterochan, necropresto, and Pierre Cazenave.  This script would
-#  not be where it is without the help of these folks.  Thank you!
+#  cotterochan, necropresto, Pierre Cazenave, and Mauro Giachero.
+#  This script would not be where it is without the help of these
+#  folks.  Thank you!
+#
 #set -x
 
 # Variables
@@ -586,9 +588,14 @@ elif [ $CHOICE = 0 ]; then
         remove_sources $APP
     fi
     if [ "$U" = "Queue" ]; then
-        echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
-        dialog --title "Done" --msgbox "$APP has been added to the \
+        if $(cat $TMP/sbopkg-tmp-queue | grep -q "$APP"); then
+            dialog --title "ERROR" --msgbox "$APP is already in the \
+            queue." 8 20
+        else
+            echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
+            dialog --title "Done" --msgbox "$APP has been added to the \
 build queue." 8 30
+        fi
     fi
     if [ "$U" = "Build" ]; then
         echo "$APP" > $TMP/sbopkg-start-queue
@@ -1444,7 +1451,7 @@ if [ -e $TMP/sbopkgpidlist ]; then
     rm -rf $TMP/sbopkgpidlist
 fi
 if [ "$DIAG" = 1 ]; then
-    rm -rf $TMP/sbopkg_*
+    #rm -rf $TMP/sbopkg_*
     break
 else
     cleanup
@@ -1613,26 +1620,26 @@ while getopts ":b:cd:f:hi:lpq:rs:v:" OPT; do
             echo "$SCRIPT v$SBOVER"
             echo "Usage: $SCRIPT [OPTIONS] <packagename(s)>"
             echo "Options are:"
-            echo "  -b package   Build a package."
-            echo "  -c           Check for updates to installed \
+            echo "  -b package(s)   Build package(s)."
+            echo "  -c              Check for updates to installed \
 SlackBuilds.org packages."
-            echo "  -d localdir  Location of local copy of \
+            echo "  -d localdir     Location of local copy of \
 SlackBuilds.org repository"
-            echo "  -f           Override default configuration file"
-            echo "               with specified file."
-            echo "  -h           Display this help message."
-            echo "  -i package   Build and install a package."
-            echo "  -l           Display the SlackBuilds.org \
+            echo "  -f              Override default configuration file"
+            echo "                  with specified file."
+            echo "  -h              Display this help message."
+            echo "  -i package(s)   Build and install package(s)."
+            echo "  -l              Display the SlackBuilds.org \
 ChangeLog.txt and then quit."
-            echo "  -p           List installed SlackBuilds.org packages."
-            echo "  -q package   Query for packages matching string."
-            echo "  -r           Rsync the SlackBuilds.org repository with"
-            echo "               the local mirror and then quit."
-            echo "  -s package   Search by specific package name and, \
+            echo "  -p              List installed SlackBuilds.org packages."
+            echo "  -q package(s)   Query for packages matching string."
+            echo "  -r              Rsync the SlackBuilds.org repository with"
+            echo "                  the local mirror and then quit."
+            echo "  -s package(s)   Search by specific package name and, \
 if found,"
-            echo "               display package information."
-            echo "  -v version   Set the Slackware version for the"
-            echo "               mirror (current choices are 11.0, 12.0, \
+            echo "                  display package information."
+            echo "  -v version      Set the Slackware version for the"
+            echo "                  mirror (current choices are 11.0, 12.0, \
 12.1, and 12.2)"
             echo
             echo "Note: multiple arguments to -b, -i, -q, and -s must be \
