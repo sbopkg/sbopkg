@@ -590,7 +590,7 @@ elif [ $CHOICE = 0 ]; then
     if [ "$U" = "Queue" ]; then
         if $(cat $TMP/sbopkg-tmp-queue | grep -q "$APP"); then
             dialog --title "ERROR" --msgbox "$APP is already in the \
-            queue." 8 20
+queue." 8 30
         else
             echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
             dialog --title "Done" --msgbox "$APP has been added to the \
@@ -751,7 +751,7 @@ TMPQUEUE=$TMP/sbopkg-tmp-queue
 WORKINGQUEUE=$TMP/sbopkg-working-queue
 if [ ! -e $TMPQUEUE ]; then
     dialog --title "Empty Queue" --msgbox "The build \
-    queue is empty." 8 30
+queue is empty." 8 30
     continue
 else
     dialog --title "Viewing Build Queue" --separate-output \
@@ -1175,7 +1175,7 @@ addition to the original SlackBuild."
 fi
 if [ "$SLACKBUILD" = "original" ]; then
     cp $PKGPATH/$PKG.SlackBuild $PKGPATH/$PKG.SlackBuild.build
-elif [ "$DOTINFO" = "local" ]; then
+elif [ "$SLACKBUILD" = "local" ]; then
     cp $PKGPATH/$PKG.SlackBuild.sbopkg $PKGPATH/$PKG.SlackBuild.build
 fi
 }
