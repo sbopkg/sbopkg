@@ -495,6 +495,12 @@ info_item () {
 # This function shows the menu for each package where the user can see
 # certain information or build the package if he is root.
 APP="$(cat $TMP/sbopkg_item_selection)"
+CATEGORY="$(cat $TMP/sbopkg_category_selection)"
+RVERSION=$(grep VERSION $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info | cut -d= -f2 | sed s/\"//g)
+RARCH=$(egrep -m1 "^ARCH" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+U="README"
+while [ 0 ]; do
 CURAPP=$(ls /var/log/packages/*SBo* | grep $APP)
 KPACKAGE=""
 for i in $CURAPP; do
@@ -516,11 +522,6 @@ for i in $CURAPP; do
         KPACKAGE=$NAME-$VER-$ARCH-$BUILD
      fi
 done
-CATEGORY="$(cat $TMP/sbopkg_category_selection)"
-RVERSION=$(grep VERSION $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info | cut -d= -f2 | sed s/\"//g)
-RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
-U="README"
-while [ 0 ]; do
 if $(echo $(ls -1 $OUTPUT) | grep -E -q "$APP.*$RVERSION"); then
     IPACKAGE="$(basename $(ls -1 $OUTPUT/${APP}*${RVERSION}*${RBUILD}*tgz | head -n 1))"
 else
@@ -536,7 +537,7 @@ if [ "$KPACKAGE" = "" ]; then
 else
     LPACKAGE="$APP (Installed: $KPACKAGE)"
 fi
-dialog --default-item "$U" --title "$APP ($RVERSION-$RBUILD)" \
+dialog --default-item "$U" --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
 --backtitle "$LPACKAGE" --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
 "Please choose an item or press <Back> to go back or press \
