@@ -31,9 +31,9 @@
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
 #  acidchild, mancha, macavity, Zordrak, Joao Felipe Santos,
-#  cotterochan, necropresto, Pierre Cazenave, and Mauro Giachero.
-#  This script would not be where it is without the help of these
-#  folks.  Thank you!
+#  cotterochan, necropresto, Pierre Cazenave, Mauro Giachero, and
+#  The-Croupier.  This script would not be where it is without the
+#  help of these folks.  Thank you!
 #
 #set -x
 
@@ -1341,9 +1341,9 @@ edits." 8 30
     echo "******************************************" >> $PRECHECKLOG
     if [ "$DIAG" = 1 ]; then
         dialog --title "Pre-Check Log" --textbox $PRECHECKLOG 0 0
-        dialog --title "Continue?" --yesno "Do you want to continue \
-with the build/install process?  This is your last chance to bail \
-out.  Press <Yes> to continue or <No> to exit." 8 40
+        dialog --title "Begin?" --yes-label "Ok" --no-label "Cancel" \
+--yesno "The build queue is ready to process.  Press <Ok> to \
+continue or <Cancel> to return to the main menu." 8 40
         if [ $? = 1 ]; then
             rm -rf $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
             continue
