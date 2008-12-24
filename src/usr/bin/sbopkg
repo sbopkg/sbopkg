@@ -1412,6 +1412,42 @@ INSTALLPKGS=""
 rm -rf $SBOPKGOUTPUT $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
 }
 
+check_for_latest () {
+# Check for an update to sbopkg.  This code is borrowed with
+# permission from the superb mirror-slackware-current.sh
+# by Eric Hameleers which you can find at
+# http://www.slackware.com/~alien.  Thanks, Eric!
+ORIGSCR=http://www.sbopkg.org/version.php
+CVRS=$SBOVER
+NVRS=$(wget -T 10 -q -O - ${ORIGSCR})
+if [ -z "$CVRS" -o -z "$NVRS" ]; then
+    if [ -z "$NVRS" ]; then
+        MSG="Cannot determine if there is an update \
+since the remote version cannot be retrieved.  \
+Please try again later."
+    fi
+elif [ "$CVRS" != "$NVRS" ]; then
+    MSG="Different versions reported.  Please check http://\
+www.sbopkg.org for an updated release."
+elif [ "$CVRS" == "$NVRS" ]; then
+    MSG="It appears your version of sbopkg is up to date."
+fi
+if [ "$DIAG" = 1 ]; then
+    dialog --title "Done" --msgbox "Checking http://www.sbopkg.org \
+for an update...\n\nYour version of sbopkg: $CVRS\n\nLatest version \
+of sbopkg found on sbopkg.org: $NVRS\n\n$MSG" 16 40
+else
+    echo
+    echo "Checking http://www.sbopkg.org for an update..."
+    echo
+    echo "Your version of sbopkg: "$CVRS
+    echo
+    echo "Latest version of sbopkg found on sbopkg.org: "$NVRS
+    echo
+    echo $MSG
+fi
+}
+
 cleanup () {
 # Clean up cruft and remove temporary files.
 check_write $TMP
@@ -1467,7 +1503,7 @@ while [ 0 ]; do
 dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --menu \
 "\nChoose one of the following or press <Cancel> to exit.\n" \
-  23 69 13 \
+  23 69 14 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Packages" "List installed SBo packages" \
@@ -1479,6 +1515,7 @@ dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 "Queue" "Process the build queue" \
 "Log" "View the permanent build log" \
 "Version" "Select Slackware version (currently: $SLACKVER)" \
+"Latest" "Check for an update to sbopkg" \
 "Readme" "View the sbopkg README" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
@@ -1559,6 +1596,10 @@ if [ "$R" = "Version" ]; then
     select_version
 fi
 
+if [ "$R" = "Latest" ]; then
+    check_for_latest
+fi
+
 if [ "$R" = "Readme" ]; then
     sbopkg_readme
 fi
@@ -1588,7 +1629,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:f:hi:lpq:rs:v:" OPT; do
+while getopts ":b:cd:f:hi:lpq:rs:uv:" OPT; do
     case $OPT in
         b ) BUILDPKGS=1
             BUILD="$OPTARG"
@@ -1612,6 +1653,8 @@ while getopts ":b:cd:f:hi:lpq:rs:v:" OPT; do
         r ) RSYNC=1
             ;;
         s ) SEARCH="$OPTARG"
+            ;;
+        u ) UPDATE=1
             ;;
         v ) VERSION=1
             CUSTOMVER="$OPTARG"
@@ -1701,6 +1744,10 @@ if [ -n "$SEARCH" ]; then
         pick_info $PKGSEARCH
         show_readme
     done
+fi
+
+if [ -n "$UPDATE" ]; then
+    check_for_latest
 fi
 
 if [ -n "$GENSEARCH" ]; then
