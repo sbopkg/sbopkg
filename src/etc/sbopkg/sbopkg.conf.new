@@ -4,9 +4,9 @@
 # configuration file, including an explanation of how to set these
 # variables.
 
-# The following are variables used by sbopkg.  NOTE:  $TMP must be
-# exported as it is used by the SlackBuild scripts as well.  Any of
-# the other variables could be exported as well, if desired.
+# The following are variables used by sbopkg.  NOTE:  $TMP and $OUTPUT
+# must be exported as both are used by the SlackBuild scripts as well.
+# Any of the other variables could be exported as well, if desired.
 RSYNCMIRROR=slackbuilds.org::slackbuilds
 SLACKVER=12.2
 LOCALREPO=${LOCALREPO:-/home/sbo}
