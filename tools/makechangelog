@@ -5,4 +5,4 @@
 # Build ChangeLog for package inclusion using the svn2cl Perl script
 # (http://ch.tudelft.nl/~arthur/svn2cl)
 
-sh ~/svn2cl/svn2cl.sh ~/sbopkg
+sh ~/work/svn2cl/svn2cl.sh ~/work/sbopkg-read-only
