@@ -45,8 +45,6 @@ INSTALLPKGS=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
 SBOVER=SVN
-UPDATE_DEBUG="1" # This will be uncommented in SVN and RC releases
-#FULL_DEBUG="1" # This will be commented except for my testing
 
 config_check () {
 # Check if config file is there and if so check that it has all
@@ -57,7 +55,7 @@ if [ ! -e $SBOPKG_CONF ]; then
     exit 1
 else
     . $SBOPKG_CONF
-    for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT KEEPLOG RSYNCFLAGS WGETFLAGS; do
+    for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT KEEPLOG DEBUG RSYNCFLAGS WGETFLAGS; do
         if [ -z "${!VAR}" ]; then
             MISSING+="$VAR "
         fi
@@ -370,7 +368,7 @@ potential updates..." >> $UPDATELIST
                 echo "  Installed version: " $CURPKG >> $UPDATELIST
                 echo "  Repo version: " $PRGNAM-$VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                 echo "$PRGNAM $VERSION$NEWSRCVER-$NEWBUILD ON" >> $TMP/sbopkg-update-queue
-                if [ "$UPDATE_DEBUG" = 1 ]; then
+                if [ "$DEBUG" -eq "2" ]; then
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug2: " $TESTVERSION$TESTNEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Debug3: " $VER >> $UPDATELIST
@@ -378,20 +376,23 @@ potential updates..." >> $UPDATELIST
                 fi
 	          #elif [[ $VERSION$NEWSRCVER < $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD < $BUILD ) ]]; then
 	          elif [[ $TESTVERSION$TESTNEWSRCVER < $TESTVER || ( $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD < $BUILD ) ]]; then
-                if [ "$UPDATE_DEBUG" = 1 ]; then
+                if [ "$DEBUG" -ge "1" ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
                     echo "  Installed version: " $CURPKG >> $UPDATELIST
                     #echo "  Repo version: " $PRGNAM$NEWSRCVER-$VERSION-$NEWARCH-$NEWBUILD >> $UPDATELIST
                     echo "  Repo version: " $PRGNAM-$VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
-                    echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
-                    echo "  Debug2: " $TESTVERSION$TESTNEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
-                    echo "  Debug3: " $VER >> $UPDATELIST
-                    echo "  Debug4: " $TESTVER >> $UPDATELIST
+                    if [ "$DEBUG" -eq "2" ]; then
+                        echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                        echo "  Debug2: " $TESTVERSION$TESTNEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
+                        echo "  Debug3: " $VER >> $UPDATELIST
+                        echo "  Debug4: " $TESTVER >> $UPDATELIST
+                    fi
                 fi
 	          #elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
 	          elif [[ $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD = $BUILD ]]; then
-                if [[ "$UPDATE_DEBUG" = 1 && "$FULL_DEBUG" = 1 ]]; then
+                #if [[ "$DEBUG" -ge "1" && "$FULL_DEBUG" = 1 ]]; then
+                if [ "$DEBUG" -eq "2" ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  No update." >> $UPDATELIST
                     echo "  Debug: " $VERSION$NEWSRCVER-$NEWARCH-$NEWBUILD >> $UPDATELIST
@@ -401,7 +402,7 @@ potential updates..." >> $UPDATELIST
                 fi
             fi
         else
-            if [ "$UPDATE_DEBUG" = 1 ]; then
+            if [ "$DEBUG" -ge "1" ]; then
                 echo $NAME: >> $UPDATELIST
                 echo "  Not in the repo." >> $UPDATELIST
             fi
@@ -416,9 +417,8 @@ $UPDATELIST 0 0
 else
     cat $UPDATELIST
 fi
-# Permanent log of the updatelist is saved when UPDATE_DEBUG is
-# uncommented
-if [ "$UPDATE_DEBUG" = 1 ]; then
+# Permanent log of the updatelist is saved when DEBUG is enabled.
+if [ "$DEBUG" -ge "1" ]; then
     cp $UPDATELIST $TMP/sbopkg-debug-updatelist
 fi
 }
