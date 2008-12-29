@@ -360,6 +360,9 @@ potential updates..." >> $UPDATELIST
             if [ $PRGNAM = "acroread" ]; then
                 TESTVER=$(echo $VER | sed -e 's/[_.]\([1-9]\)/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
             fi
+            if [ $PRGNAM = "tmux" ]; then
+                TESTVERSION=$(echo $VERSION | sed -e 's/[_.]\([1-9]\)/\.0\1/g;s/^\([1-9]\)\.\b/0\1\./')
+            fi
             #if [[ $VERSION$NEWSRCVER > $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD > $BUILD ) ]]; then
             if [[ $TESTVERSION$TESTNEWSRCVER > $TESTVER || ( $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD > $BUILD ) ]]; then
                 echo $NAME: >> $UPDATELIST
@@ -1303,7 +1306,8 @@ fi
 if [ "$DIAG" = 1 ]; then
     dialog --title "Install Package(s)" --yes-label "Build" \
 --no-label "Build and Install" --yesno "Would you like to build the \
-package(s) only, or build and install the package(s)?" 8 50
+package(s) only, or build and install the package(s)?  (Press \
+Control-C to exit)." 8 50
     if [ $? = 1 ]; then
         INSTALLPKGS=1
     fi
