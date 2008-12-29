@@ -83,6 +83,24 @@ $TMP/sbopkg-build-log.
 The default value of KEEPLOG is: YES.
 
 .TP 5
+.B DEBUG
+.br
+This option should be set to 0, 1, or 2.  DEBUG sets the default
+debugging level for the update list feature of sbopkg.  When DEBUG is
+set to 0, then only potential updated packages are listed.  This was
+the default output prior to the DEBUG variable.  When DEBUG is set to
+1, then potential updates plus packages not in the repo and packages
+that are newer than the repo are listed.  Changing DEBUG to 1 may be
+helpful if it appears the updatelist might be missing an update.  When
+DEBUG is set to 2 (the highest level), then, in addition to the output
+at level 1, the update list displays each SBo package that is
+installed, even if there is no update, and also prints out extra
+debugging information useful in fixing bugs.  Level 2 really should
+only be used when sending in an update list bug report.
+
+The default value of DEBUG is: 0.
+
+.TP 5
 .B RSYNCFLAGS
 .br
 Rsync is used by sbopkg to mirror the SlackBuilds.org repository.
