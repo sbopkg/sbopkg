@@ -770,10 +770,11 @@ those packages you wish to keep in the build queue and then press \
         rm -rf $TMP/sbopkg-ans-queue
         continue
     else
-        rm -rf $WORKINGQUEUE
         if [ ! -s $TMP/sbopkg-ans-queue ]; then
-            rm -rf $TMP/sbopkg-tmp-queue
+            rm -rf $TMP/sbopkg-*-queue
+            continue
         else
+            rm -rf $WORKINGQUEUE
             for PICK in $(cat $TMP/sbopkg-ans-queue); do
                 echo $(egrep -m1 "^$PICK " $TMPQUEUE) >> \
                 $WORKINGQUEUE
