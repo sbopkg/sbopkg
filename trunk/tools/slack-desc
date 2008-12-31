@@ -15,5 +15,5 @@ sbopkg: interact with the SlackBuilds.org repository, a
 sbopkg: collection of third-party SlackBuild scripts to
 sbopkg: build Slackware packages.
 sbopkg:
-sbopkg: Homepage:  http://code.google.com/p/sbopkg
+sbopkg: Homepage:  http://www.sbopkg.org
 sbopkg:
