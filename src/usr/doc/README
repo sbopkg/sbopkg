@@ -1,7 +1,7 @@
 # $Id$
 
 Sbopkg README
-Copyright 2007-2008 Chess Griffin <chess@chessgriffin.com>
+Copyright 2007-2009 Chess Griffin <chess@chessgriffin.com>
 
 Homepage:  http://www.sbopkg.org
 
@@ -24,9 +24,11 @@ the 'build queue' feature.  Sbopkg will not check dependencies since
 that is not a feature native to Slackware, but since the build queue
 will process packages in the order listed, it sometimes may be
 possible to build and install dependencies in order prior to building
-and installing the final, desired package.  Ultimately, Sbopkg is one
-thing and one thing only: a medium to easily browse a local copy of
-the SlackBuilds.org repository and build packages from it.
+and installing the final, desired package.  Given the nature of
+building dependencies, however, this probably will not always work and
+is not really a supported feature.  Ultimately, Sbopkg is one thing
+and one thing only: a medium to easily browse a local copy of the
+SlackBuilds.org repository and build packages from it.
 
 Sbopkg can be also be used strictly from the command line without the
 dialog interface to do most of the above items.  Typing sbopkg -h
