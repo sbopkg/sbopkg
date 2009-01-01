@@ -31,10 +31,10 @@
 #  Hanson, Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
 #  acidchild, mancha, macavity, Zordrak, Joao Felipe Santos,
-#  cotterochan, necropresto, Pierre Cazenave, Mauro Giachero, and
-#  The-Croupier.  This script would not be where it is without the
-#  help of these folks.  If I left anyone out, I apologize.  Thank
-#  you!
+#  cotterochan, necropresto, Pierre Cazenave, Mauro Giachero,
+#  The-Croupier, and Wade Grant.  This script would not be where it is
+#  without the help of these folks.  If I left anyone out, I
+#  apologize.  Thank you!
 #
 #set -x
 
@@ -348,7 +348,7 @@ potential updates..." >> $UPDATELIST
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
             # blank out $NEWSRCVER
-            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" || "$PRGNAM" == "gnubg" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "xerces-c" ]]; then
+            if [[ "$PRGNAM" == "ctorrent" || "$PRGNAM" == "argtable" || "$PRGNAM" == "libevent" || "$PRGNAM" == "graveman" || "$PRGNAM" == "hugin" || "$PRGNAM" == "lame" || "$PRGNAM" == "kchmviewer" || "$PRGNAM" == "aircrack-ng" || "$PRGNAM" == "pygame" || "$PRGNAM" == "gnubg" || "$PRGNAM" == "ubuntulooks" || "$PRGNAM" == "xerces-c" || "$PRGNAM" == "ksmoothdock" ]]; then
                 NEWSRCVER=""
             fi
             CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
