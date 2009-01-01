@@ -65,6 +65,13 @@ else
             echo "ERROR"
             echo "$SCRIPT: Can't find a value for variable(s):"
             echo "$MISSING"
+            echo
+            echo "If you have recently upgraded sbopkg there may be"
+            echo "new variables in the sbopkg.conf file.  Please"
+            echo "merge the sbopkg.conf.new file with your existing"
+            echo "sbopkg.conf file.  Please see the sbopkg.conf(5)"
+            echo "man page for more details."
+            echo
             echo "Please correct this error and run $SCRIPT again."
             exit 1
     fi
