@@ -1,0 +1,44 @@
+Starting with sbopkg version 0.0.8, there is a feature that displays
+potential updates to SBo packages installed on a user's system.  This
+feature is still a work in progress, and bugs are expected.  Most bugs
+will manifest themselves as either (a) missing updates -- those
+updates that should appear in the list but do not or (b) false
+positives -- updates listed in the list that are not really updates at
+all.  If you run into either of these problems, please do the
+following in order to assist me with bug-reporting:
+
+To begin debugging, please edit your sbopkg.conf and change the DEBUG
+variable and set it as follows:  DEBUG=2.
+
+This variable turns on a more detailed update list.  This more
+detailed list will list all installed SlackBuilds.org packages, and
+will list package updates, packages that have no updates, packages
+that are not in the repo, and packages for which the installed version
+is newer than the repo version.  This variable also saves the update
+list as a permanent log, described below.
+
+After this variable has been changed, save the sbopkg.conf file and
+rerun sbopkg.  Please select the update feature as normal and then
+exit sbopkg.  The permanent log of the update list will now be saved
+in $TMP/sbopkg-debug-updatelist.
+
+Finally, in order to compare this permanent log with the actual list
+of installed packages, please do as a root user:
+
+# cd /var/log/packages; ls *SBo* > mypackagelist.txt
+
+Please forward the permanent log and the mypackagelist.txt files to me
+via email to chess@chessgriffin.com or post them in the sbopkg mailing
+list, which can be found at the project's Google Code page:
+http://code.google.com/p/sbopkg.
+
+Once you have forwarded or copied the log and the mypackagelist.txt to
+a safe location, feel free to change the DEBUG variable in sbopkg.conf
+back to its original setting (the default is 0, but some may have it
+set to 1), which will then disable the creation of the permanent
+update log, keeping your $TMP clean.  Of course, leaving DEBUG=2 is
+fine as well and it will create a new $TMP/sbopkg-debug-updatelist
+each time the update feature is used as well as display the detailed
+update list each time you use the update feature.
+
+Thanks for your help!
