@@ -26,5 +26,6 @@ Sbopkg TODO (in no particular order)
   checklist or radiolist would not present the current 'view' menu.
   Not sure how the order of packages selected would be set.  UPDATE:
   This is basically done for sbopkg 0.20.0 via the build queue.
+* Maybe find a way to run more than once instance for -b building.
 * More error checking.
 * General code cleanups.
