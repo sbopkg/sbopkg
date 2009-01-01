@@ -329,7 +329,6 @@ potential updates..." >> $UPDATELIST
                 if $(echo $VER | grep -q "^svn_r"); then
                     VER=$(echo $VER | sed -e 's/r//;s/_/_000/')
                 fi
-                #NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
             fi
             # Ugly hack for openarena ... is there a trend here? :-)
             if [ $PRGNAM = "openarena" ]; then
@@ -943,10 +942,6 @@ fi
 
 show_readme () {
 # Show the package's text files.
-# Thanks to slakmagik, this works much better.  I may still look at
-# other ways to do this.  Perhaps have a way for the user to choose
-# which of the 4 docs he wants to view?  Or have a menu listing the 4
-# docs?  Undecided.
 cd $LOCALREPO/$SLACKVER
 ${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,\
 $PKGNAME.info.build,slack-desc}
