@@ -32,9 +32,9 @@
 #  D. Kadirov, The-spiki, David Somero, LukenShiro, Drew Ames, nille,
 #  acidchild, mancha, macavity, Zordrak, Joao Felipe Santos,
 #  cotterochan, necropresto, Pierre Cazenave, Mauro Giachero,
-#  The-Croupier, and Wade Grant.  This script would not be where it is
-#  without the help of these folks.  If I left anyone out, I
-#  apologize.  Thank you!
+#  The-Croupier, Wade Grant, and SpacePlod.  This script would not be
+#  where it is without the help of these folks.  If I left anyone out,
+#  I apologize.  Thank you!
 #
 #set -x
 
@@ -599,7 +599,7 @@ elif [ $CHOICE = 0 ]; then
         remove_sources $APP
     fi
     if [ "$U" = "Queue" ]; then
-        if $(cat $TMP/sbopkg-tmp-queue | grep -q "$APP"); then
+        if $(cat $TMP/sbopkg-tmp-queue | grep -q "$APP "); then
             dialog --title "ERROR" --msgbox "$APP is already in the \
 queue." 8 30
         else
