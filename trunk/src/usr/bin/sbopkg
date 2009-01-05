@@ -43,6 +43,7 @@ SCRIPT=${0##*/}
 DIAG=""
 BUILDPKGS=""
 INSTALLPKGS=""
+BUILDOPTIONS=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
 SBOVER=SVN
@@ -551,13 +552,14 @@ dialog --default-item "$U" --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
 --backtitle "$LPACKAGE" --extra-button --extra-label "Back" --cancel-label \
 "Main Menu" --menu \
 "Please choose an item or press <Back> to go back or press \
-<Main Menu> to return to the main menu.\n" 18 60 9 \
+<Main Menu> to return to the main menu.\n" 18 60 10 \
 "README" "View the README file" \
 "Info" "View the .info file" \
 "Slack-desc" "View the slack-desc file" \
 "SlackBuild" "View the SlackBuild file" \
 "Custom" "Customize the .info or SlackBuild" \
 "Remove" "Remove $APP sources in cache" \
+"Options" "Edit Build Options/Flavors" \
 "Queue" "Add $APP to build queue" \
 "Build" "Build a package for $APP" \
 $JPACKAGE 2>$TMP/sbopkg_info_selection
@@ -597,6 +599,9 @@ elif [ $CHOICE = 0 ]; then
     fi
     if [ "$U" = "Remove" ]; then
         remove_sources $APP
+    fi
+    if [ "$U" = "Options" ]; then
+        add_options $APP
     fi
     if [ "$U" = "Queue" ]; then
         if $(cat $TMP/sbopkg-tmp-queue | grep -q "^$APP "); then
@@ -1005,6 +1010,34 @@ $APP sources in the cache directory." 8 30
 fi
 }
 
+add_options () {
+# Adds pre-build options to SlackBuild
+OPTIONPKG=$1
+OPTIONFILE=$LOCALREPO/$SLACKVER/$CATEGORY/$APP/options.sbopkg
+if [ ! -e $OPTIONFILE ]; then
+    CUROPTIONS="None"
+else
+    CUROPTIONS=$(cat $OPTIONFILE)
+fi
+dialog --cancel-label "Clear Options" --inputbox "Some SlackBuild \
+scripts offer the ability to pass \
+variables, or options, or flavors to the SlackBuild scripts before \
+they are run.  This is often noted in the README and the SlackBuild \
+script itself.  Currently, the following options, if any, are set \
+for the $1 SlackBuild:\n\n$CUROPTIONS\n\nIf you would like to set \
+or edit these variables for the $1 SlackBuild, please enter that \
+information below, or press <Clear Options> to clear the options." \
+0 0 2>/$TMP/sbopkg_add_options
+if [ $? = 1 ]; then
+    rm -rf $OPTIONFILE
+    continue
+fi
+CUSTOMOPTS="$(cat $TMP/sbopkg_add_options)"
+if [ ! "$CUSTOMOPTS" = "" ]; then
+    cp $TMP/sbopkg_add_options $OPTIONFILE
+fi
+}
+
 install_package () {
 # Install the package.
 INSTPKG=$1
@@ -1074,6 +1107,7 @@ else
     continue
 fi
 echo "Building Slackware package for $PKG..."
+export $BUILDOPTIONS
 sh $PKG.SlackBuild.build || rm -rf $TMP/sbopkg_build.lck
 echo "Done building package for $PKG."
 cd $OUTPUT
@@ -1281,6 +1315,49 @@ fi
 PKGNAME=${PKG##*/}
 }
 
+use_options () {
+OPTAPP=$1
+# Ask if user wants to use options.sbopkg if found
+if [ ! -e $PKGPATH/options.sbopkg ]; then
+    BUILDOPTIONS=""
+else
+    TMPOPTIONS=$(cat $PKGPATH/options.sbopkg)
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "Use Options for $OPTAPP" --yesno "Custom \
+options for \
+the $OPTAPP SlackBuild were found:\n\n$TMPOPTIONS\n\nWould you like to \
+use these options for this build?" 12 50
+        if [ $? = 1 ]; then
+            BUILDOPTIONS=""
+        else
+            BUILDOPTIONS=$TMPOPTIONS
+        fi
+    else
+        while true; do
+            echo "Custom options for the $OPTAPP SlackBuild"
+            echo "script were found:"
+            echo
+            echo $TMPOPTIONS
+            echo
+            echo "Would you like to use these options for this"
+            echo "build?  Press (Y)es to use these options or"
+            echo "(N)o to skip them."
+            echo
+            read ANS
+            case $ANS in
+                y* | Y* ) BUILDOPTIONS=$TMPOPTIONS
+                ;;
+                n* | N* ) BUILDOPTIONS=""
+                ;;
+                * ) echo "Unknown response."
+                ;;
+            esac
+        done
+        echo
+    fi
+fi
+}
+
 process_queue () {
 # Iterate throught the process queue to build, and optionally
 # install, the selected packages.
@@ -1341,10 +1418,16 @@ edits." 8 30
         search_package $CHKBUILD
         pick_info $CHKBUILD
         pick_slackbuild
+        use_options $CHKBUILD
         echo $PKGNAME >> $FINALQUEUE
         echo "$PKGNAME Found" >> $PRECHECKLOG
         echo "Name: $PKGNAME" >> $PRECHECKLOG
         echo "Version: $VERSION" >> $PRECHECKLOG
+        if [ "$BUILDOPTIONS" = "" ]; then
+            echo "Options: None" >> $PRECHECKLOG
+        else
+            echo "Options: $BUILDOPTIONS" >> $PRECHECKLOG
+        fi
         echo >> $PRECHECKLOG
     done
     echo "******************************************" >> $PRECHECKLOG
@@ -1384,6 +1467,7 @@ else
         search_package $CHKBUILD
         pick_info $CHKBUILD
         pick_slackbuild
+        use_options $CHKBUILD
         echo $CHKBUILD >> $FINALQUEUE
     done
 fi
