@@ -77,6 +77,9 @@ else
             echo "Please correct this error and run $SCRIPT again."
             exit 1
     fi
+    if [ -e $HOME/.sbopkg.conf ]; then
+        . $HOME/.sbopkg.conf
+    fi
 fi
 }
 
@@ -480,6 +483,22 @@ go back." 15 50 4 \
         break
     fi
     SLACKVER="$(cat $TMP/sbopkg_version_selection)"
+    dialog --title "Save this setting?" --defaultno --yesno "Would \
+you like to save this Slackware version setting in the user's \
+$HOME/.sbopkg.conf file? (One will be created if it is not \
+found).\n\nPress <Yes> to save in the user's $HOME/.sbopkg.conf or \
+press <No> to continue without saving, making this a temporary \
+change only." 12 60
+        if [ $? = 1 ]; then
+            break
+        else
+            if [ -e $HOME/.sbopkg.conf ]; then
+                sed -i "s/^SLACKVER.*$/SLACKVER=$SLACKVER/" $HOME/.sbopkg.conf
+            else
+                echo "SLACKVER=$SLACKVER" > $HOME/.sbopkg.conf
+            fi
+        fi
+
     break
 done
 rm -rf $TMP/sbopkg_version_selection
