@@ -1128,19 +1128,27 @@ fi
 echo "Building Slackware package for $PKG..."
 export $BUILDOPTIONS
 sh $PKG.SlackBuild.build || rm -rf $TMP/sbopkg_build.lck
-echo "Done building package for $PKG."
 cd $OUTPUT
-NEWPACKAGE=$(ls -1 *.tgz)
-cd -
-echo "Built package: $NEWPACKAGE" >> $SUMMARYLOG
-echo "Built package: $NEWPACKAGE"
-if [ "$INSTALLPKGS" = "1" ]; then
-    install_package $SRCNAME
-    echo "Done installing/upgrading package for $PKG."
-    echo "Installed package: $NEWPACKAGE" >> $SUMMARYLOG
+if [ ! -e *.tgz ]; then
+    echo "$PKG:" >> $SUMMARYLOG
+    echo "Error occurred with build.  Please check the log." \
+    >> $SUMMARYLOG
+    echo >> $SUMMARYLOG
+else
+    echo "Done building package for $PKG."
+    NEWPACKAGE=$(ls -1 *.tgz)
+    echo "$PKG:" >> $SUMMARYLOG
+    echo "Built package: $NEWPACKAGE" >> $SUMMARYLOG
+    echo "Built package: $NEWPACKAGE"
+    if [ "$INSTALLPKGS" = "1" ]; then
+        install_package $SRCNAME
+        echo "Done installing/upgrading package for $PKG."
+        echo "Installed package: $NEWPACKAGE" >> $SUMMARYLOG
+    fi
+    mv $OUTPUT/* $OLDOUTPUT/
+    echo >> $SUMMARYLOG
 fi
-mv $OUTPUT/* $OLDOUTPUT/
-echo >> $SUMMARYLOG
+cd -
 rm $SRCNAME
 rm -rf $PKG.info.build
 rm -rf $PKG.SlackBuild.build
@@ -1381,11 +1389,12 @@ process_queue () {
 # Iterate throught the process queue to build, and optionally
 # install, the selected packages.
 SBOPKGOUTPUT=$TMP/sbopkg_output
+SBOPKGTMPOUTPUT=$TMP/sbopkg_tmpoutput
 STARTQUEUE=$TMP/sbopkg-start-queue
 FINALQUEUE=$TMP/sbopkg-final-queue
 PRECHECKLOG=$TMP/sbopkg_precheck_log
 SUMMARYLOG=$TMP/sbopkg_summary
-rm -rf $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
+rm -rf $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
 check_root
 if [ $ROOT = "false" ]; then
     if [ "$DIAG" = 1 ]; then
@@ -1495,7 +1504,8 @@ touch $TMP/sbopkg_build.lck
 while [ -f $TMP/sbopkg_build.lck ]; do
     for PKGBUILD in $(cat $FINALQUEUE); do
         search_package $PKGBUILD
-        build_package $PKGBUILD 2>&1 | tee $SBOPKGOUTPUT
+        build_package $PKGBUILD 2>&1 | tee $SBOPKGTMPOUTPUT
+        cat $SBOPKGTMPOUTPUT >> $SBOPKGOUTPUT
     done
     rm -rf $TMP/sbopkg_build.lck
 done
