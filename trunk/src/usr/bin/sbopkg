@@ -780,43 +780,115 @@ deleted." 8 30
 fi
 }
 
+sort_queue () {
+# This function sorts the build queue in $TMPQUEUE.  Thanks to Mauro
+# Giachero for this contribution (and the reverse sorting)
+local PARTIALSORT=$(tempfile -d $TMP)
+local CHOICE
+local SELECTED
+local PKGSCOUNT=$(cat $TMPQUEUE |wc -l)
+local DEFAULTITEM=1
+local TMPSORTQUEUE=$TMP/sbopkg-tmp-sort-queue
+cp $TMPQUEUE $TMPSORTQUEUE
+while :; do
+    dialog --title "Sort Queue" --ok-label "Up" \
+        --extra-button --extra-label "Down" \
+        --cancel-label "OK" \
+        --help-button --help-label "Cancel" \
+        --default-item $DEFAULTITEM \
+        --menu "Use the Up/Down buttons to sort the queue items, \
+press <OK> when done, or press <Cancel> to abort changes." 30 50 15 \
+        $(cat -n $TMPSORTQUEUE |rev |cut -d" " -f3 |rev) \
+        2>$TMP/sbopkg-ans-sort
+    CHOICE=$?
+    SELECTED=$(cat $TMP/sbopkg-ans-sort)
+    DEFAULTITEM=$SELECTED
+    case $CHOICE in
+        0 ) # Up
+            if [ $SELECTED -eq 1 ]; then continue; fi
+            head -n $(($SELECTED-2)) $TMPSORTQUEUE >$PARTIALSORT
+            head -n $(($SELECTED)) $TMPSORTQUEUE |tail -n 1 >>$PARTIALSORT
+            head -n $(($SELECTED-1)) $TMPSORTQUEUE |tail -n 1 >>$PARTIALSORT
+            tail -n $(($PKGSCOUNT-$SELECTED)) $TMPSORTQUEUE >>$PARTIALSORT
+            mv $PARTIALSORT $TMPSORTQUEUE
+            DEFAULTITEM=$(($SELECTED-1))
+            continue
+            ;;
+        1 ) # OK
+            mv $TMPSORTQUEUE $TMPQUEUE
+            break
+            ;;
+        2 ) # Cancel
+            rm -f $TMPSORTQUEUE
+            break
+            ;;
+        3 ) # Down
+            if [ $SELECTED -eq $PKGSCOUNT ]; then continue; fi
+            head -n $(($SELECTED-1)) $TMPSORTQUEUE >$PARTIALSORT
+            head -n $(($SELECTED+1)) $TMPSORTQUEUE |tail -n 1 >>$PARTIALSORT
+            head -n $(($SELECTED)) $TMPSORTQUEUE |tail -n 1 >>$PARTIALSORT
+            tail -n $(($PKGSCOUNT-$SELECTED-1)) $TMPSORTQUEUE >>$PARTIALSORT
+            mv $PARTIALSORT $TMPSORTQUEUE
+            DEFAULTITEM=$(($SELECTED+1))
+            continue
+            ;;
+    esac
+done
+rm -f $TMP/sbopkg-ans-sort
+continue
+}
+
 view_queue () {
 # This function displays the contents of the build queue.
 TMPQUEUE=$TMP/sbopkg-tmp-queue
 WORKINGQUEUE=$TMP/sbopkg-working-queue
-if [ ! -e $TMPQUEUE ]; then
-    dialog --title "Empty Queue" --msgbox "The build \
+while :; do
+    if [ ! -e $TMPQUEUE ]; then
+        dialog --title "Empty Queue" --msgbox "The build \
 queue is empty." 8 30
-    continue
-else
-    dialog --title "Viewing Build Queue" --separate-output \
-    --checklist "The following packages are currently in the \
+        break
+    else
+        dialog --title "Viewing Build Queue" --separate-output \
+        --extra-button --extra-label "Reverse" \
+        --help-button --help-label "Cancel" --cancel-label "Sort" \
+        --checklist "The following packages are currently in the \
 build queue.  Please note that when the build queue is processed, \
 the packages selected below will be built, and optionally installed, \
 in the order listed from top to bottom.\n\nPlease select or unselect \
 those packages you wish to keep in the build queue and then press \
 <Ok> to continue or press <Cancel> to exit." 30 50 8 \
---file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
-    if [ $? = 1 ]; then
-        rm -rf $TMP/sbopkg-ans-queue
-        continue
-    else
-        if [ ! -s $TMP/sbopkg-ans-queue ]; then
-            rm -rf $TMP/sbopkg-*-queue
+        --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
+        CHOICE=$? # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
+        if [ $CHOICE = 2 ]; then
+            rm -rf $TMP/sbopkg-ans-queue
+            break
+        elif [ $CHOICE = 3 ]; then
+            tac $TMPQUEUE >$TMP/sbopkg-reversed-queue
+            mv $TMP/sbopkg-reversed-queue $TMPQUEUE
+            continue
+        elif [ $CHOICE = 1 ]; then
+            sort_queue $TMPQUEUE
             continue
         else
-            rm -rf $WORKINGQUEUE
-            for PICK in $(cat $TMP/sbopkg-ans-queue); do
-                echo $(egrep -m1 "^$PICK " $TMPQUEUE) >> \
-                $WORKINGQUEUE
-            done
-            mv $WORKINGQUEUE $TMPQUEUE
-            if [ "$BUILDPKGS" = 1 ]; then
-                mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
+            if [ ! -s $TMP/sbopkg-ans-queue ]; then
+                rm -rf $TMP/sbopkg-*-queue
+                return 0
+            else
+                rm -rf $WORKINGQUEUE
+                for PICK in $(cat $TMP/sbopkg-ans-queue); do
+                    echo $(egrep -m1 "^$PICK " $TMPQUEUE) >> \
+                    $WORKINGQUEUE
+                done
+                mv $WORKINGQUEUE $TMPQUEUE
+                if [ "$BUILDPKGS" = 1 ]; then
+                    mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
+                fi
+                return 0
             fi
         fi
     fi
-fi
+done
+continue
 }
 
 rsync_command () {
@@ -1114,15 +1186,33 @@ MD5CHK=$(md5sum $SRCNAME | cut -d' ' -f1)
 if [ "$MD5CHK" == $MD5SUM ]; then
     echo "OK"
 else
-    echo "MD5SUM check failed.  Exiting."
+    echo "MD5SUM check failed."
+    echo "$PKG:" >> $SUMMARYLOG
+    echo "MD5SUM check failed." >> $SUMMARYLOG
+    echo >> $SUMMARYLOG
     checksum_fail $SRCNAME
-    rm -rf $TMP/sbopkg_build.lck
     rm $SRCNAME
     rm -rf $PKG.info.build
     rm -rf $PKG.SlackBuild.build
-    echo "MD5SUM check failed for $PKG" >> $SUMMARYLOG
-    echo >> $SUMMARYLOG
     cd $LOCALREPO/$SLACKVER
+    if [ "$BUILDPKGS" = 1 ]; then
+        echo
+        echo "Would you like to continue processing the rest of the"
+        echo "build queue or would you like to abort?  If this failed"
+        echo "package is a dependency of another package in the queue"
+        echo "then it may not make sense to continue."
+        echo
+        echo "Press (Y)es to continue or (N)o to abort."
+        read ANS
+            case $ANS in
+                y* | Y* ) continue
+                ;;
+                n* | N* ) rm -rf $TMP/sbopkg_build.lck && return
+                ;;
+                * ) echo "Unknown response."
+                ;;
+            esac
+    fi
     continue
 fi
 echo "Building Slackware package for $PKG..."
@@ -1501,14 +1591,18 @@ else
 fi
 rm -rf $TMP/sbopkg_build.lck
 touch $TMP/sbopkg_build.lck
-while [ -f $TMP/sbopkg_build.lck ]; do
-    for PKGBUILD in $(cat $FINALQUEUE); do
+for PKGBUILD in $(cat $FINALQUEUE); do
         search_package $PKGBUILD
+    if [ -e $TMP/sbopkg_build.lck ]; then
         build_package $PKGBUILD 2>&1 | tee $SBOPKGTMPOUTPUT
         cat $SBOPKGTMPOUTPUT >> $SBOPKGOUTPUT
-    done
-    rm -rf $TMP/sbopkg_build.lck
+    else
+        echo "$PKG:" >> $SUMMARYLOG
+        echo "Not processed - build queue aborted." >> $SUMMARYLOG
+        echo >> $SUMMARYLOG
+    fi
 done
+rm -rf $TMP/sbopkg_build.lck
 echo "******************************************" >> $SUMMARYLOG
 cat $SUMMARYLOG
 if [ "$DIAG" = 1 ]; then
