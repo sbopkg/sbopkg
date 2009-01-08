@@ -24,4 +24,4 @@ DEBUG=0
 # add that either.  In general, it is not recommended that users
 # change these default values.
 RSYNCFLAGS="--verbose --timeout=10"
-WGETFLAGS="--continue --progress=bar --timeout=10 --tries=5"
+WGETFLAGS="--continue --progress=bar --timeout=15 --tries=5"
