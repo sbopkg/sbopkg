@@ -674,9 +674,11 @@ get_category_items_list
 if [ -z "$T" ]; then T="aaa"; fi
 while [ 0 ]; do
     dialog --default-item "$T" --cancel-label "Back" --title \
-"Browsing the $CATEGORY category" --menu "Please select a \
-software package or press <Back> to go back." 20 70 15 \
---file $TMP/sbopkg_category_items_list 2>$TMP/sbopkg_item_selection
+"Browsing the $CATEGORY category" --backtitle "Currently using the \
+SlackBuilds.org $SLACKVER repo." --menu \
+"Please select a software package or press <Back> to go back." \
+20 70 15 --file $TMP/sbopkg_category_items_list \
+2>$TMP/sbopkg_item_selection
     if [ $? = 1 ]; then
         break
     fi
@@ -692,9 +694,10 @@ get_category_list
 if [ -z "$S" ]; then S="Academic"; fi
 while [ 0 ]; do
     dialog --default-item "$S" --cancel-label "Back" --title \
-"Choose a category" --menu "Please select a category or press \
-<Back> to go back." 20 70 14 \
-    --file $TMP/sbopkg_category_list 2>$TMP/sbopkg_category_selection
+"Choose a category" --backtitle "Currently using the SlackBuilds.org \
+$SLACKVER repo." --menu "Please select a category or press <Back> to \
+go back." 20 70 14 --file $TMP/sbopkg_category_list \
+2>$TMP/sbopkg_category_selection
     if [ $? = 1 ]; then
         break
     fi
@@ -1683,6 +1686,45 @@ else
 fi
 }
 
+utilities_menu () {
+# Separate menu for various utilities
+if [ -z "$G" ] ; then G="Cache" ; fi
+while [ 0 ]; do
+dialog --default-item "$G" --title "Utilities" --backtitle \
+"Currently using the SlackBuilds.org $SLACKVER repo." --menu \
+"\nChoose one of the following or press <Cancel> to return.\n" \
+  18 69 5 \
+"Cache" "View the contents of the cache directory" \
+"Log" "View the permanent build log" \
+"Version" "Select Slackware version (currently: $SLACKVER)" \
+"Latest" "Check for an update to sbopkg"  \
+2>$TMP/sbopkg_utilities_menu_answer
+
+if [ $? = 1 ]; then
+    return
+fi
+
+H="$(cat $TMP/sbopkg_utilities_menu_answer)"
+
+if [ "$H" = "Cache" ]; then
+    view_cache_dir
+fi
+
+if [ "$H" = "Log" ]; then
+    view_perm_log
+fi
+
+if [ "$H" = "Version" ]; then
+    select_version
+fi
+
+if [ "$H" = "Latest" ]; then
+    check_for_latest
+fi
+
+done
+}
+
 cleanup () {
 # Clean up cruft and remove temporary files.
 check_write $TMP
@@ -1736,21 +1778,19 @@ main_menu () {
 if [ -z "$R" ] ; then R="Rsync" ; fi
 while [ 0 ]; do
 dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
-(sbopkg version $SBOVER)" --menu \
+(sbopkg version $SBOVER)" --backtitle "Currently using the \
+SlackBuilds.org $SLACKVER repo." --menu \
 "\nChoose one of the following or press <Cancel> to exit.\n" \
-  23 69 14 \
+  23 69 10 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Packages" "List installed SBo packages" \
 "Updates" "List potential updates to installed SBo packages" \
 "Browse" "Browse the local SlackBuilds.org repo" \
 "Search" "Search the local SlackBuilds.org repo" \
-"Cache" "View the contents of the cache directory" \
 "View" "View the build queue" \
 "Queue" "Process the build queue" \
-"Log" "View the permanent build log" \
-"Version" "Select Slackware version (currently: $SLACKVER)" \
-"Latest" "Check for an update to sbopkg" \
+"Utilities" "Go to the utilities menu" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
 if [ $? = 1 ]; then
@@ -1806,10 +1846,6 @@ to search for" 0 0 2>/$TMP/sbopkg_search_request
     fi
 fi
 
-if [ "$R" = "Cache" ]; then
-    view_cache_dir
-fi
-
 if [ "$R" = "View" ]; then
     view_queue
 fi
@@ -1819,16 +1855,8 @@ if [ "$R" = "Queue" ]; then
     process_queue
 fi
 
-if [ "$R" = "Log" ]; then
-    view_perm_log
-fi
-
-if [ "$R" = "Version" ]; then
-    select_version
-fi
-
-if [ "$R" = "Latest" ]; then
-    check_for_latest
+if [ "$R" = "Utilities" ]; then
+    utilities_menu
 fi
 
 if [ "$R" = "Exit" ]; then
