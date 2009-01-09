@@ -1139,7 +1139,6 @@ else
     upgradepkg --reinstall --install-new $OUTPUT/$INSTPKG
     echo "Done upgrading/installing package."
 fi
-rm -rf $TMP/sbopkg_install.lck
 }
 
 checksum_fail () {
@@ -1218,13 +1217,31 @@ else
 fi
 echo "Building Slackware package for $PKG..."
 export $BUILDOPTIONS
-sh $PKG.SlackBuild.build || rm -rf $TMP/sbopkg_build.lck
+sh $PKG.SlackBuild.build
 cd $OUTPUT
 if [ ! -e *.tgz ]; then
     echo "$PKG:" >> $SUMMARYLOG
     echo "Error occurred with build.  Please check the log." \
     >> $SUMMARYLOG
     echo >> $SUMMARYLOG
+    if [ "$BUILDPKGS" = 1 ]; then
+        echo
+        echo "Would you like to continue processing the rest of the"
+        echo "build queue or would you like to abort?  If this failed"
+        echo "package is a dependency of another package in the queue"
+        echo "then it may not make sense to continue."
+        echo
+        echo "Press (Y)es to continue or (N)o to abort."
+        read ANS
+            case $ANS in
+                y* | Y* ) continue
+                ;;
+                n* | N* ) rm -rf $TMP/sbopkg_build.lck && return
+                ;;
+                * ) echo "Unknown response."
+                ;;
+            esac
+    fi
 else
     echo "Done building package for $PKG."
     NEWPACKAGE=$(ls -1 *.tgz)
