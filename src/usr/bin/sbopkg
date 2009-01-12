@@ -1923,7 +1923,7 @@ while getopts ":b:cd:f:hi:lpq:rs:uv:" OPT; do
             ;;
         h|* )
             echo
-            echo "$SCRIPT v$SBOVER"
+            echo "$SCRIPT $SBOVER"
             echo "Usage: $SCRIPT [OPTIONS] <packagename(s)>"
             echo "Options are:"
             echo "  -b package(s)   Build package(s)."
