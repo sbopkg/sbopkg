@@ -51,7 +51,7 @@ mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a usr/doc/README $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a usr/doc/TODO $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a usr/doc/UPDATELIST-DEBUGGING $PKG/usr/doc/$PRGNAM-$VERSION
-cp -a usr/doc/ChangeLog $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a usr/doc/ChangeLog.txt $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a $CWD/sbopkg.SlackBuild $PKG/usr/doc/$PRGNAM-$VERSION
 
 mkdir -p $PKG/install
