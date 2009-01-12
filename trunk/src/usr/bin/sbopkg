@@ -1698,7 +1698,7 @@ dialog --default-item "$G" --title "Utilities" --backtitle \
 "Currently using the SlackBuilds.org $SLACKVER repository." \
 --cancel-label "Back" --menu \
 "\nChoose one of the following or press <Back> to go back.\n" \
-  18 69 5 \
+  15 69 5 \
 "Cache" "View the contents of the cache directory" \
 "Log" "View the permanent build log" \
 "Version" "Select Slackware version (currently: $SLACKVER)" \
@@ -1786,7 +1786,7 @@ dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --backtitle "Currently using the \
 SlackBuilds.org $SLACKVER repository." --menu \
 "\nChoose one of the following or press <Cancel> to exit.\n" \
-  23 69 10 \
+  19 69 10 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Packages" "List installed SBo packages" \
