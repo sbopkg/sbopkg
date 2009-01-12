@@ -46,7 +46,7 @@ INSTALLPKGS=""
 BUILDOPTIONS=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 CWD="$(pwd)"
-SBOVER=SVN
+SBOVER=svn_r$(grep -m1 \$Id$0 |cut -d" " -f4)
 
 config_check () {
 # Check if config file is there and if so check that it has all
@@ -88,7 +88,7 @@ directory_checks () {
 # If not, create them.
 if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
     echo
-    echo "Creating local repo directory $LOCALREPO/$SLACKVER"
+    echo "Creating local repository directory $LOCALREPO/$SLACKVER"
     echo "for the rsync mirror."
     echo
     read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
@@ -214,7 +214,7 @@ fi
 get_sbo_packages () {
 # Get a list of SBo packages
 SBOPKGLIST=$TMP/sbopkg_pkglist
-rm -rf $SBOPKGLIST
+rm -f $SBOPKGLIST
 cd /var/log/packages
 PKGS=$(ls *SBo*)
 for i in $PKGS; do
@@ -235,7 +235,7 @@ check_for_updates () {
 # this a continual work-in-progress.  :-)
 check_if_repo_exists
 UPDATELIST=$TMP/sbopkg_updatelist
-rm -rf $UPDATELIST
+rm -f $UPDATELIST
 if [ "$DIAG" = 1 ]; then
     dialog --title "Check for updates?" --yesno "Would you like to \
 check for updates?  This is an experimental feature and should not \
@@ -415,7 +415,7 @@ potential updates..." >> $UPDATELIST
         else
             if [ "$DEBUG" -ge "1" ]; then
                 echo $NAME: >> $UPDATELIST
-                echo "  Not in the repo." >> $UPDATELIST
+                echo "  Not in the repository." >> $UPDATELIST
             fi
         fi
     done
@@ -479,7 +479,7 @@ go back." 15 50 4 \
 "12.1" "Slackware version 12.1" \
 "12.0" "Slackware version 12.0" \
 "11.0" "Slackware version 11.0" 2>$TMP/sbopkg_version_selection
-    if [ $? = 1 ]; then
+    if [ $? != 0 ]; then
         break
     fi
     SLACKVER="$(cat $TMP/sbopkg_version_selection)"
@@ -489,19 +489,18 @@ $HOME/.sbopkg.conf file? (One will be created if it is not \
 found).\n\nPress <Yes> to save in the user's $HOME/.sbopkg.conf or \
 press <No> to continue without saving, making this a temporary \
 change only." 12 60
-        if [ $? = 1 ]; then
+        if [ $? != 0 ]; then
             break
+        fi
+        if [ -e $HOME/.sbopkg.conf ]; then
+            sed -i "s/^SLACKVER.*$/SLACKVER=$SLACKVER/" $HOME/.sbopkg.conf
         else
-            if [ -e $HOME/.sbopkg.conf ]; then
-                sed -i "s/^SLACKVER.*$/SLACKVER=$SLACKVER/" $HOME/.sbopkg.conf
-            else
-                echo "SLACKVER=$SLACKVER" > $HOME/.sbopkg.conf
-            fi
+            echo "SLACKVER=$SLACKVER" > $HOME/.sbopkg.conf
         fi
 
     break
 done
-rm -rf $TMP/sbopkg_version_selection
+rm -f $TMP/sbopkg_version_selection
 }
 
 info_item () {
@@ -568,14 +567,6 @@ $JPACKAGE 2>$TMP/sbopkg_info_selection
 CHOICE=$?
 if [ $CHOICE = 3 ]; then
     break
-# Not sure why the following isn't working.  Pressing ESC in the info
-# item menu should quit the application.
-elif [ $CHOICE = -1 ]; then
-    cleanup
-    exit 0
-elif [ $CHOICE = 1 ]; then
-    rm -rf $TMP/sbopkg_*
-    main_menu
 elif [ $CHOICE = 0 ]; then
     U="$(cat $TMP/sbopkg_info_selection)"
     CATEGORY="$(cat $TMP/sbopkg_category_selection)"
@@ -626,8 +617,11 @@ build queue." 8 30
         if [ "$KEEPLOG" = "YES" ]; then
             cat $SBOPKGINSTALLOUTPUT >> $TMP/sbopkg-build-log
         fi
-        rm -rf $SBOPKGINSTALLOUTPUT
+        rm -f $SBOPKGINSTALLOUTPUT
     fi
+else # ESC or Cancel
+    rm -f $TMP/sbopkg_*
+    break
 fi
 done
 }
@@ -646,10 +640,7 @@ dialog --default-item "$V" --title "$APP Customization" \
 "Delete Info" "Delete the local copy of the .info file" \
 2>$TMP/sbopkg_custom_selection
 CCHOICE=$?
-if [ $CCHOICE = 1 ]; then
-    rm -rf $TMP/sbopkg_custom_selection
-    break
-elif [ $CCHOICE = 0 ]; then
+if [ $CCHOICE = 0 ]; then
     V="$(cat $TMP/sbopkg_custom_selection)"
     if [ "$V" = "Edit SlackBuild" ]; then
         edit_local_slackbuild $APP
@@ -663,6 +654,9 @@ elif [ $CCHOICE = 0 ]; then
     if [ "$V" = "Delete Info" ]; then
         delete_local_info $APP
     fi
+else # Cancel or ESC
+    rm -f $TMP/sbopkg_custom_selection
+    break
 fi
 done
 }
@@ -675,15 +669,15 @@ if [ -z "$T" ]; then T="aaa"; fi
 while [ 0 ]; do
     dialog --default-item "$T" --cancel-label "Back" --title \
 "Browsing the $CATEGORY category" --backtitle "Currently using the \
-SlackBuilds.org $SLACKVER repo." --menu \
+SlackBuilds.org $SLACKVER repository." --menu \
 "Please select a software package or press <Back> to go back." \
 20 70 15 --file $TMP/sbopkg_category_items_list \
 2>$TMP/sbopkg_item_selection
-    if [ $? = 1 ]; then
+    if [ $? != 0 ]; then
         break
     fi
     info_item
-T="$(cat $TMP/sbopkg_item_selection)"
+    T="$(cat $TMP/sbopkg_item_selection)"
 done
 }
 
@@ -695,14 +689,14 @@ if [ -z "$S" ]; then S="Academic"; fi
 while [ 0 ]; do
     dialog --default-item "$S" --cancel-label "Back" --title \
 "Choose a category" --backtitle "Currently using the SlackBuilds.org \
-$SLACKVER repo." --menu "Please select a category or press <Back> to \
-go back." 20 70 14 --file $TMP/sbopkg_category_list \
+$SLACKVER repository." --menu "Please select a category or press \
+<Back> to go back." 20 70 14 --file $TMP/sbopkg_category_list \
 2>$TMP/sbopkg_category_selection
-    if [ $? = 1 ]; then
+    if [ $? != 0 ]; then
         break
     fi
     browse_items
-S="$(cat $TMP/sbopkg_category_selection)"
+    S="$(cat $TMP/sbopkg_category_selection)"
 done
 }
 
@@ -721,7 +715,7 @@ if [ "$(ls -A $SRCDIR)" ]; then
 user can clear the cache directory." 8 30
             continue
         else
-            rm -rf $SRCDIR/*
+            rm -f $SRCDIR/*
             dialog --title "Done" --msgbox "The cache directory has been \
 cleared." 8 30
             continue
@@ -755,7 +749,7 @@ else
 user can delete the build log." 8 30
             continue
         else
-            rm -rf $TMP/sbopkg-build-log
+            rm -f $TMP/sbopkg-build-log
             dialog --title "Done" --msgbox "The build log has been \
 deleted." 8 30
             continue
@@ -782,8 +776,8 @@ while :; do
         --cancel-label "OK" \
         --help-button --help-label "Cancel" \
         --default-item $DEFAULTITEM \
-        --menu "Use the Up/Down buttons to sort the queue items, \
-press <OK> when done, or press <Cancel> to abort changes." 30 50 15 \
+        --menu "Use the <Up/Down> buttons to sort the queue items, \
+press <OK> when done, or press <Cancel> to abort changes." 30 50 14 \
         $(cat -n $TMPSORTQUEUE |rev |cut -d" " -f3 |rev) \
         2>$TMP/sbopkg-ans-sort
     CHOICE=$?
@@ -804,10 +798,6 @@ press <OK> when done, or press <Cancel> to abort changes." 30 50 15 \
             mv $TMPSORTQUEUE $TMPQUEUE
             break
             ;;
-        2 ) # Cancel
-            rm -f $TMPSORTQUEUE
-            break
-            ;;
         3 ) # Down
             if [ $SELECTED -eq $PKGSCOUNT ]; then continue; fi
             head -n $(($SELECTED-1)) $TMPSORTQUEUE >$PARTIALSORT
@@ -817,6 +807,10 @@ press <OK> when done, or press <Cancel> to abort changes." 30 50 15 \
             mv $PARTIALSORT $TMPSORTQUEUE
             DEFAULTITEM=$(($SELECTED+1))
             continue
+            ;;
+        * ) # Cancel or ESC
+            rm -f $TMPSORTQUEUE
+            break
             ;;
     esac
 done
@@ -845,22 +839,12 @@ those packages you wish to keep in the build queue and then press \
 <Ok> to continue or press <Cancel> to exit." 30 50 8 \
         --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
         CHOICE=$? # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
-        if [ $CHOICE = 2 ]; then
-            rm -rf $TMP/sbopkg-ans-queue
-            break
-        elif [ $CHOICE = 3 ]; then
-            tac $TMPQUEUE >$TMP/sbopkg-reversed-queue
-            mv $TMP/sbopkg-reversed-queue $TMPQUEUE
-            continue
-        elif [ $CHOICE = 1 ]; then
-            sort_queue $TMPQUEUE
-            continue
-        else
+        if [ $CHOICE = 0 ]; then
             if [ ! -s $TMP/sbopkg-ans-queue ]; then
-                rm -rf $TMP/sbopkg-*-queue
+                rm -f $TMP/sbopkg-*-queue
                 return 0
             else
-                rm -rf $WORKINGQUEUE
+                rm -f $WORKINGQUEUE
                 for PICK in $(cat $TMP/sbopkg-ans-queue); do
                     echo $(egrep -m1 "^$PICK " $TMPQUEUE) >> \
                     $WORKINGQUEUE
@@ -871,6 +855,16 @@ those packages you wish to keep in the build queue and then press \
                 fi
                 return 0
             fi
+        elif [ $CHOICE = 1 ]; then
+            sort_queue $TMPQUEUE
+            continue
+        elif [ $CHOICE = 3 ]; then
+            tac $TMPQUEUE >$TMP/sbopkg-reversed-queue
+            mv $TMP/sbopkg-reversed-queue $TMPQUEUE
+            continue
+        else # Cancel or ESC
+            rm -f $TMP/sbopkg-ans-queue
+            break
         fi
     fi
 done
@@ -884,7 +878,7 @@ rsync_command () {
 /usr/bin/rsync --archive --delete --no-owner --exclude="*.sbopkg" \
 $RSYNCFLAGS $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
 RSYNC_RETVAL=$?
-rm -rf $TMP/sbopkg_rsync.lck
+rm -f $TMP/sbopkg_rsync.lck
 if [ ! $RSYNC_RETVAL = 0 ]; then
     case $RSYNC_RETVAL in
       35)
@@ -926,6 +920,7 @@ fi
 
 rsync_repo () {
 # This function does the rsync with SBo.
+directory_checks
 check_write $LOCALREPO/$SLACKVER/
 if [ "$WRITE" = "false" ]; then
     if [ "$DIAG" = 1 ]; then
@@ -939,7 +934,7 @@ permissions on the target directory." 8 30
     fi
 fi
 if [ "$DIAG" = 1 ]; then
-    rm -rf $TMP/sbopkg_rsync.lck
+    rm -f $TMP/sbopkg_rsync.lck
     touch $TMP/sbopkg_rsync.lck
     SBOPKGOUTPUT=$TMP/sbopkg_output
     ( rsync_command >> $SBOPKGOUTPUT & ) 2>>$SBOPKGOUTPUT
@@ -1020,7 +1015,7 @@ item you wish to view or press <Cancel> to exit." 20 70 14 --file \
                 fi
                 continue
             else
-                rm -rf $TMP/sbopkg_search_results
+                rm -f $TMP/sbopkg_search_results
             fi
         done
         continue
@@ -1047,7 +1042,7 @@ show_readme () {
 cd $LOCALREPO/$SLACKVER
 ${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,\
 $PKGNAME.info.build,slack-desc}
-rm -rf $PKGPATH/$PKGNAME.info.build
+rm -f $PKGPATH/$PKGNAME.info.build
 return 0
 }
 
@@ -1093,7 +1088,7 @@ to keep or NO to delete." 8 40
 root user can delete the sources in the cache directory." 8 30
             else
                 for i in $(cat $TMP/sbopkg_app_sources); do
-                    rm -rf $SRCDIR/$i
+                    rm -f $SRCDIR/$i
                 done
                 dialog --title "Done" --msgbox "The $APP \
 sources have been cleared." 8 30
@@ -1112,25 +1107,24 @@ add_options () {
 OPTIONPKG=$1
 OPTIONFILE=$LOCALREPO/$SLACKVER/$CATEGORY/$APP/options.sbopkg
 if [ ! -e $OPTIONFILE ]; then
-    CUROPTIONS="None"
+    CUROPTIONS=""
 else
     CUROPTIONS=$(cat $OPTIONFILE)
 fi
 dialog --cancel-label "Clear Options" --inputbox "Some SlackBuild \
 scripts offer the ability to pass \
 variables, or options, or flavors to the SlackBuild scripts before \
-they are run.  This is often noted in the README and the SlackBuild \
-script itself.  Currently, the following options, if any, are set \
-for the $1 SlackBuild:\n\n$CUROPTIONS\n\nIf you would like to set \
+they are run.  This is often noted in the README or the SlackBuild \
+script itself.\n\nIf you would like to set \
 or edit these variables for the $1 SlackBuild, please enter that \
 information below, or press <Clear Options> to clear the options." \
-0 0 2>/$TMP/sbopkg_add_options
-if [ $? = 1 ]; then
-    rm -rf $OPTIONFILE
-    continue
-fi
+0 0 $CUROPTIONS 2>/$TMP/sbopkg_add_options
+CHOICE=$?
 CUSTOMOPTS="$(cat $TMP/sbopkg_add_options)"
-if [ ! "$CUSTOMOPTS" = "" ]; then
+if [ $CHOICE = 1 ] || [ $CHOICE = 0 -a "$CUSTOMOPTS" = "" ]; then
+    rm -f $OPTIONFILE
+    continue
+elif [ $CHOICE = 0 ]; then
     cp $TMP/sbopkg_add_options $OPTIONFILE
 fi
 }
@@ -1156,7 +1150,7 @@ echo
 echo "Press (Y)es to delete or (N)o to continue."
 read ANS
     case $ANS in
-        y* | Y* ) rm -rf $SRCDIR/$RMSRC ; echo "Source deleted."
+        y* | Y* ) rm -f $SRCDIR/$RMSRC ; echo "Source deleted."
         ;;
         n* | N* ) return
         ;;
@@ -1197,8 +1191,8 @@ else
     echo >> $SUMMARYLOG
     checksum_fail $SRCNAME
     rm $SRCNAME
-    rm -rf $PKG.info.build
-    rm -rf $PKG.SlackBuild.build
+    rm -f $PKG.info.build
+    rm -f $PKG.SlackBuild.build
     cd $LOCALREPO/$SLACKVER
     if [ "$BUILDPKGS" = 1 ]; then
         echo
@@ -1212,7 +1206,7 @@ else
             case $ANS in
                 y* | Y* ) continue
                 ;;
-                n* | N* ) rm -rf $TMP/sbopkg_build.lck && return
+                n* | N* ) rm -f $TMP/sbopkg_build.lck && return
                 ;;
                 * ) echo "Unknown response."
                 ;;
@@ -1241,7 +1235,7 @@ if [ ! -e *.tgz ]; then
             case $ANS in
                 y* | Y* ) continue
                 ;;
-                n* | N* ) rm -rf $TMP/sbopkg_build.lck && return
+                n* | N* ) rm -f $TMP/sbopkg_build.lck && return
                 ;;
                 * ) echo "Unknown response."
                 ;;
@@ -1263,8 +1257,8 @@ else
 fi
 cd -
 rm $SRCNAME
-rm -rf $PKG.info.build
-rm -rf $PKG.SlackBuild.build
+rm -f $PKG.info.build
+rm -f $PKG.SlackBuild.build
 OUTPUT=$OLDOUTPUT
 cd $LOCALREPO/$SLACKVER
 }
@@ -1467,10 +1461,10 @@ else
 options for \
 the $OPTAPP SlackBuild were found:\n\n$TMPOPTIONS\n\nWould you like to \
 use these options for this build?" 12 50
-        if [ $? = 1 ]; then
-            BUILDOPTIONS=""
-        else
+        if [ $? = 0 ]; then
             BUILDOPTIONS=$TMPOPTIONS
+        else
+            BUILDOPTIONS=""
         fi
     else
         while true; do
@@ -1507,13 +1501,13 @@ STARTQUEUE=$TMP/sbopkg-start-queue
 FINALQUEUE=$TMP/sbopkg-final-queue
 PRECHECKLOG=$TMP/sbopkg_precheck_log
 SUMMARYLOG=$TMP/sbopkg_summary
-rm -rf $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
+rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
 check_root
 if [ $ROOT = "false" ]; then
     if [ "$DIAG" = 1 ]; then
         dialog --title "ERROR" --msgbox "You must run this script \
 as the root user in order to build packages." 8 30
-        rm -rf $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
+        rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
         continue
     else
         echo "You must run this script as the root user in order \
@@ -1577,8 +1571,8 @@ edits." 8 30
         dialog --title "Begin?" --yes-label "Ok" --no-label "Cancel" \
 --yesno "The build queue is ready to process.  Press <Ok> to \
 continue or <Cancel> to return to the main menu." 8 40
-        if [ $? = 1 ]; then
-            rm -rf $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
+        if [ $? != 0 ]; then
+            rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
             continue
         fi
     else
@@ -1612,7 +1606,7 @@ else
         echo $CHKBUILD >> $FINALQUEUE
     done
 fi
-rm -rf $TMP/sbopkg_build.lck
+rm -f $TMP/sbopkg_build.lck
 touch $TMP/sbopkg_build.lck
 for PKGBUILD in $(cat $FINALQUEUE); do
         search_package $PKGBUILD
@@ -1625,7 +1619,7 @@ for PKGBUILD in $(cat $FINALQUEUE); do
         echo >> $SUMMARYLOG
     fi
 done
-rm -rf $TMP/sbopkg_build.lck
+rm -f $TMP/sbopkg_build.lck
 echo "******************************************" >> $SUMMARYLOG
 cat $SUMMARYLOG
 if [ "$DIAG" = 1 ]; then
@@ -1636,7 +1630,7 @@ if [ -e $TMP/sbopkg-tmp-queue ]; then
     "Delete" --yesno "Would you like to keep the build queue or \
 would you like to delete it?" 8 35
     if [ $? = 1 ]; then
-        rm -rf $TMP/sbopkg-tmp-queue
+        rm -f $TMP/sbopkg-tmp-queue
         dialog --title "Done" --msgbox "The build queue has been \
 deleted." 8 35
     fi
@@ -1647,7 +1641,7 @@ if [ "$KEEPLOG" = "YES" ]; then
 fi
 BUILDPKGS=""
 INSTALLPKGS=""
-rm -rf $SBOPKGOUTPUT $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
+rm -f $SBOPKGOUTPUT $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
 }
 
 check_for_latest () {
@@ -1691,8 +1685,9 @@ utilities_menu () {
 if [ -z "$G" ] ; then G="Cache" ; fi
 while [ 0 ]; do
 dialog --default-item "$G" --title "Utilities" --backtitle \
-"Currently using the SlackBuilds.org $SLACKVER repo." --menu \
-"\nChoose one of the following or press <Cancel> to return.\n" \
+"Currently using the SlackBuilds.org $SLACKVER repository." \
+--cancel-label "Back" --menu \
+"\nChoose one of the following or press <Back> to go back.\n" \
   18 69 5 \
 "Cache" "View the contents of the cache directory" \
 "Log" "View the permanent build log" \
@@ -1700,7 +1695,7 @@ dialog --default-item "$G" --title "Utilities" --backtitle \
 "Latest" "Check for an update to sbopkg"  \
 2>$TMP/sbopkg_utilities_menu_answer
 
-if [ $? = 1 ]; then
+if [ $? != 0 ]; then
     return
 fi
 
@@ -1742,10 +1737,10 @@ if [ $WRITE = "false" ]; then
     echo
     exit 0
 else
-    rm -rf $TMP/sbopkg_*
-    rm -rf $TMP/sbopkgpidlist
-    rm -rf $TMP/sbooutput
-    rm -rf $TMP/sbopkg-*-queue
+    rm -f $TMP/sbopkg_*
+    rm -f $TMP/sbopkgpidlist
+    rm -f $TMP/sbooutput
+    rm -f $TMP/sbopkg-*-queue
     rm -f $PIDFILE
 fi
 cd $CWD
@@ -1762,7 +1757,7 @@ if [ -e $TMP/sbopkgpidlist ]; then
         echo "killing $pid"
         kill -9 $pid;
     done;
-    rm -rf $TMP/sbopkgpidlist
+    rm -f $TMP/sbopkgpidlist
 fi
 if [ "$DIAG" = 1 ]; then
     #rm -rf $TMP/sbopkg_*
@@ -1779,21 +1774,21 @@ if [ -z "$R" ] ; then R="Rsync" ; fi
 while [ 0 ]; do
 dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --backtitle "Currently using the \
-SlackBuilds.org $SLACKVER repo." --menu \
+SlackBuilds.org $SLACKVER repository." --menu \
 "\nChoose one of the following or press <Cancel> to exit.\n" \
   23 69 10 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Packages" "List installed SBo packages" \
 "Updates" "List potential updates to installed SBo packages" \
-"Browse" "Browse the local SlackBuilds.org repo" \
-"Search" "Search the local SlackBuilds.org repo" \
+"Browse" "Browse the local SlackBuilds.org repository" \
+"Search" "Search the local SlackBuilds.org repository" \
 "View" "View the build queue" \
 "Queue" "Process the build queue" \
 "Utilities" "Go to the utilities menu" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
-if [ $? = 1 ]; then
+if [ $? != 0 ]; then
     clear
     cleanup
     exit 0
@@ -1814,7 +1809,7 @@ if [ "$R" = "Packages" ]; then
 fi
 
 if [ "$R" = "Updates" ]; then
-    rm -rf $TMP/sbopkg-update-queue
+    rm -f $TMP/sbopkg-update-queue
     check_for_updates
     if [ -e $TMP/sbopkg-update-queue ]; then
         dialog --title "Add Updates to Queue?" --yesno \
@@ -1822,7 +1817,7 @@ if [ "$R" = "Updates" ]; then
 8 35
         if [ $? = 0 ]; then
             cat $TMP/sbopkg-update-queue >> $TMP/sbopkg-tmp-queue
-            rm -rf $TMP/sbopkg-update-queue
+            rm -f $TMP/sbopkg-update-queue
             dialog --title "Done" --msgbox "The flagged updates \
 have been added to the build queue." 8 30
         fi
@@ -1836,8 +1831,8 @@ fi
 if [ "$R" = "Search" ]; then
     check_if_repo_exists
     dialog --inputbox "Enter the name of a package you would like \
-to search for" 0 0 2>/$TMP/sbopkg_search_request
-    if [ $? = 1 ]; then
+to search for:" 9 40 2>/$TMP/sbopkg_search_request
+    if [ $? != 0 ]; then
         continue
     fi
     SRCH="$(cat $TMP/sbopkg_search_request)"
