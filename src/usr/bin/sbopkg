@@ -1542,12 +1542,14 @@ touch $SUMMARYLOG
 echo >> $SUMMARYLOG
 echo "******************************************" >> $SUMMARYLOG
 echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $SUMMARYLOG
+echo "Using SlackBuilds.org $SLACKVER repository" >> $SUMMARYLOG
 echo >> $SUMMARYLOG
 if [ "$BUILDPKGS" = 1 ]; then
     touch $PRECHECKLOG
     echo >> $PRECHECKLOG
     echo "******************************************" >> $PRECHECKLOG
     echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $PRECHECKLOG
+    echo "Using SlackBuilds.org $SLACKVER repository" >> $PRECHECKLOG
     echo >> $PRECHECKLOG
     if [ "$DIAG" = 1 ]; then
         dialog --title "Pre-Check" --msgbox "Checking for valid \
@@ -1749,7 +1751,7 @@ if [ $WRITE = "false" ]; then
 else
     rm -f $TMP/sbopkg_*
     rm -f $TMP/sbopkgpidlist
-    rm -f $TMP/sbooutput
+    rm -rf $TMP/sbooutput
     rm -f $TMP/sbopkg-*-queue
     rm -f $PIDFILE
 fi
