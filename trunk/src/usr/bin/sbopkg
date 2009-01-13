@@ -1066,15 +1066,13 @@ if [ ! -e $PKGPATH/$SRCNAME ]; then
     else
         mkdir -p $SRCDIR/download
         cd $SRCDIR/download
-        #DOWNLOADFILE=$(echo $DOWNLOAD | sed -e 's/^.*\///g;s/\%2B/+/g')
-        #if [ "$PKG" = "django" ]; then
-        #    DOWNLOADFILE=$SRCNAME
-        #fi
-        #wget $WGETFLAGS $DOWNLOAD -O $DOWNLOADFILE >> $SBOPKGOUTPUT & echo "$!" >> $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
         wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
         wait
         DOWNLOADFILE=$(ls *)
-        mv $DOWNLOADFILE $SRCDIR/
+        CORRECTED_DOWNLOADFILE=$(echo $DOWNLOADFILE | sed -e \
+        's/\?e=.*$//') # for Virtualbox where wget adds a '?=' at end
+        mv $DOWNLOADFILE $CORRECTED_DOWNLOADFILE
+        mv $CORRECTED_DOWNLOADFILE $SRCDIR/
         cd -
         rm -rf $SRCDIR/download
         ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
