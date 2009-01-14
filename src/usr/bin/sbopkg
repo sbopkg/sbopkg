@@ -1683,6 +1683,10 @@ check_for_latest () {
 ORIGSCR=http://www.sbopkg.org/version.php
 CVRS=$SBOVER
 NVRS=$(wget -T 10 -q -O - ${ORIGSCR})
+SBOPKGUP=""
+NEWPKG=http://www.sbopkg.org/pkg.php
+NEWSBOPKG=$(wget -T 10 -q -O - ${NEWPKG})
+NEWDLPKG=http://sbopkg.googlecode.com/files/$NEWSBOPKG
 if [ -z "$CVRS" -o -z "$NVRS" ]; then
     if [ -z "$NVRS" ]; then
         MSG="Cannot determine if there is an update \
@@ -1690,8 +1694,19 @@ since the remote version cannot be retrieved.  \
 Please try again later."
     fi
 elif [ "$CVRS" != "$NVRS" ]; then
-    MSG="Different versions reported.  Please check http://\
-www.sbopkg.org for an updated release."
+    if $(echo $CVRS | grep -q "svn_r"); then
+        MSG="You are running sbopkg from SVN and not using a regular \
+package.  Therefore, package versions cannot be compared."
+    else
+        SBOPKGUP=1
+        if [ "$DIAG" = 1 ]; then
+             MSG="Different versions reported.  Press <Ok> to \
+continue."
+        else
+             MSG="Different versions reported.  Press (Y)es to \
+download the update package or press (N)o to quit."
+        fi
+    fi
 elif [ "$CVRS" == "$NVRS" ]; then
     MSG="It appears your version of sbopkg is up to date."
 fi
@@ -1699,6 +1714,28 @@ if [ "$DIAG" = 1 ]; then
     dialog --title "Done" --msgbox "Checking http://www.sbopkg.org \
 for an update...\n\nYour version of sbopkg: $CVRS\n\nLatest version \
 of sbopkg found on sbopkg.org: $NVRS\n\n$MSG" 16 40
+    if [ $? != 0 ]; then
+        return 0
+    fi
+    if [ "$SBOPKGUP" = 1 ]; then
+        NEWPKG=http://www.sbopkg.org/pkg.php
+        NEWSBOPKG=$(wget -T 10 -q -O - ${NEWPKG})
+        NEWDLPKG=http://sbopkg.googlecode.com/files/$NEWSBOPKG
+        dialog --title "Download new package?" --yesno "Would you like to
+download the new sbopkg package:\n\n$NEWSBOPKG\n\nThe new sbopkg package
+will saved to your OUTPUT directory: $OUTPUT" 13 50
+        W=$?
+        if [ $W = 0 ]; then
+            cd $OUTPUT
+            wget $WGETFLAGS $NEWDLPKG
+            cd $LOCALREPO/$SLACKVER
+            if [ "$DIAG" = 1 ]; then
+                read -n 1 -p "Press any key to continue."
+            fi
+        elif [ $W = 1 ]; then
+            return 0
+        fi
+    fi
 else
     echo
     echo "Checking http://www.sbopkg.org for an update..."
@@ -1708,6 +1745,18 @@ else
     echo "Latest version of sbopkg found on sbopkg.org: "$NVRS
     echo
     echo $MSG
+    if [ "$SBOPKGUP" = 1 ]; then
+        read ANS
+        case $ANS in
+            y* | Y* ) cd $OUTPUT && wget $WGETFLAGS $NEWDLPKG \
+                      && cd $CWD
+            ;;
+            n* | N* ) cleanup; exit 0
+            ;;
+            * ) echo "Unknown response."
+            ;;
+        esac
+    fi
 fi
 }
 
