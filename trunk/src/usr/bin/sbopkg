@@ -1725,14 +1725,7 @@ of sbopkg found on sbopkg.org: $NVRS\n\n$MSG" 16 40
 download the new sbopkg package:\n\n$NEWSBOPKG\n\nThe new sbopkg package
 will saved to your OUTPUT directory: $OUTPUT" 13 50
         W=$?
-        if [ $W = 0 ]; then
-            cd $OUTPUT
-            wget $WGETFLAGS $NEWDLPKG
-            cd $LOCALREPO/$SLACKVER
-            if [ "$DIAG" = 1 ]; then
-                read -n 1 -p "Press any key to continue."
-            fi
-        elif [ $W = 1 ]; then
+        if [ $W = 1 ]; then
             return 0
         fi
     fi
@@ -1748,14 +1741,39 @@ else
     if [ "$SBOPKGUP" = 1 ]; then
         read ANS
         case $ANS in
-            y* | Y* ) cd $OUTPUT && wget $WGETFLAGS $NEWDLPKG \
-                      && cd $CWD
+            y* | Y* ) continue
             ;;
             n* | N* ) cleanup; exit 0
             ;;
             * ) echo "Unknown response."
             ;;
         esac
+    fi
+fi
+if [ "$SBOPKGUP" = 1 ]; then
+    cd $OUTPUT
+    wget $WGETFLAGS $NEWDLPKG
+    cd $CWD
+    echo "######################################################"
+    echo "Download complete.  The downloaded file is located at:"
+    echo
+    echo "$TMP/$NEWSBOPKG"
+    echo
+    echo "You can now quit sbopkg and upgrade sbopkg manually."
+    echo
+    echo "Once you have upgraded sbopkg, please be sure to \
+check the"
+    echo "/etc/sbopkg/sbopkg.conf.new file for any changes \
+that may"
+    echo "need to be merged into your existing \
+/etc/sbopkg/sbopkg.conf file."
+    echo
+    echo "You can also view a complete ChangeLog.txt in the"
+    echo "/usr/share/doc/sbopkg-$NVRS/ directory or online at:"
+    echo "http://www.sbopkg.org/files/ChangeLog.txt"
+    echo
+    if [ "$DIAG" = 1 ]; then
+        read -n 1 -p "Press any key to continue."
     fi
 fi
 }
