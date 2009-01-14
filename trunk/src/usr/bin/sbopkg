@@ -855,7 +855,7 @@ those packages you wish to keep in the build queue and then press \
             else
                 rm -f $WORKINGQUEUE
                 for PICK in $(cat $TMP/sbopkg-ans-queue); do
-                    echo $(egrep -m1 "^$PICK " $TMPQUEUE) >> \
+                    echo $(grep -m1 "^$PICK " $TMPQUEUE) >> \
                     $WORKINGQUEUE
                 done
                 mv $WORKINGQUEUE $TMPQUEUE
