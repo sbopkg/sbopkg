@@ -1316,7 +1316,7 @@ if [ ! -e $PKGPATH/$PKGNAME.SlackBuild.sbopkg ]; then
 else
     if [ "$DIAG" = 1 ]; then
         while [ 0 ]; do
-            dialog --title "Choose SlackBuild" --menu "A local \
+            dialog --title "Choose $PKG SlackBuild" --menu "A local \
 SlackBuild for $PKG was found in addition to the original \
 SlackBuild.  Which one would you like to use?" 10 60 2 \
 "Original" "Use the original SlackBuild" \
@@ -1324,7 +1324,9 @@ SlackBuild.  Which one would you like to use?" 10 60 2 \
             if [ $? = 1 ]; then
                 # Need this to get back to $APP info menu
                 SLACKBUILD="cancel"
-                break
+                rm -f $PKGPATH/$PKGNAME*.build
+                QUITBUILD=1
+                return 0
             fi
             B="$(cat $TMP/sbopkg_bld_selection)"
             if [ "$B" = "Original" ]; then
@@ -1409,13 +1411,15 @@ if [ ! -e $PKGPATH/$PKG.info.sbopkg ]; then
 else
     if [ "$DIAG" = 1 ]; then
         while [ 0 ]; do
-            dialog --title "Choose .info file" --menu "A local \
+            dialog --title "Choose $PKG .info file" --menu "A local \
 .info file for $PKG was found in addition to the original .info file. \
 Which one would you like to use?" 10 60 2 \
 "Original" "Use the original .info" \
 "Local" "Use the local .info" 2>$TMP/sbopkg_info_selection
-            if [ $? = 1 ]; then
-                break
+            if [ $? != 0 ]; then
+                rm -f $PKGPATH/$PKGNAME*.build
+                QUITBUILD=1
+                return 0
             fi
             I="$(cat $TMP/sbopkg_info_selection)"
             if [ "$I" = "Original" ]; then
@@ -1509,6 +1513,7 @@ STARTQUEUE=$TMP/sbopkg-start-queue
 FINALQUEUE=$TMP/sbopkg-final-queue
 PRECHECKLOG=$TMP/sbopkg_precheck_log
 SUMMARYLOG=$TMP/sbopkg_summary
+QUITBUILD=""
 rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
 check_root
 if [ $ROOT = "false" ]; then
@@ -1562,7 +1567,13 @@ edits." 8 30
         PKG=""
         search_package $CHKBUILD
         pick_info $CHKBUILD
+        if [ "$QUITBUILD" = 1 ]; then
+            return 0
+        fi
         pick_slackbuild
+        if [ "$QUITBUILD" = 1 ]; then
+            return 0
+        fi
         use_options $CHKBUILD
         echo $PKGNAME >> $FINALQUEUE
         echo "$PKGNAME Found" >> $PRECHECKLOG
@@ -1611,7 +1622,13 @@ else
     for CHKBUILD in $(cat $STARTQUEUE); do
         search_package $CHKBUILD
         pick_info $CHKBUILD
+        if [ "$QUITBUILD" = 1 ]; then
+            return 0
+        fi
         pick_slackbuild
+        if [ "$QUITBUILD" = 1 ]; then
+            return 0
+        fi
         use_options $CHKBUILD
         echo $CHKBUILD >> $FINALQUEUE
     done
