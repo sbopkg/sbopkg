@@ -888,6 +888,11 @@ if [ -e $TMPQUEUE ]; then
     cat $PERMQUEUE >> $WORKINGQUEUE
     sort $WORKINGQUEUE | uniq > $PERMQUEUE
     rm -f $WORKINGQUEUE
+    dialog --title "Saving Queue" --msgbox "Since the queue was not \
+empty upon quitting sbopkg, it has been automatically saved to a \
+backup file.  If you do not want this to happen next time, please \
+be sure the queue is empty when quitting sbopkg and delete any \
+prior backup queue file in the queue submenu." 9 65
 fi
 }
 
@@ -1926,9 +1931,6 @@ fi
 Q="$(cat $TMP/sbopkg_queue_menu_answer)"
 
 if [ "$Q" = "View" ]; then
-    if [ ! -e $TMP/sbopkg_backup_queue.lck ]; then
-        load_backup_queue
-    fi
     view_queue
 fi
 
@@ -2114,6 +2116,9 @@ to search for:" 9 40 2>/$TMP/sbopkg_search_request
 fi
 
 if [ "$R" = "Queue" ]; then
+    if [ ! -e $TMP/sbopkg_backup_queue.lck ]; then
+        load_backup_queue
+    fi
     queue_menu
 fi
 
