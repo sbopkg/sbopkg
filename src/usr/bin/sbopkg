@@ -221,7 +221,7 @@ fi
 }
 
 get_sbo_packages () {
-# Get a list of SBo packages
+# Get a list of SBo packages.
 SBOPKGLIST=$TMP/sbopkg_pkglist
 rm -f $SBOPKGLIST
 cd /var/log/packages
@@ -304,21 +304,10 @@ potential updates..." >> $UPDATELIST
         ARCH="$(echo $STRING | cut -f $ARCH -d -)"
         BUILD="$(echo $STRING | cut -f $INDEX -d -)"
     # End pkgtool code
-        NAME="$(echo $NAME | sed 's/+/x/g')"
         # Ugly hack #1 for artwiz-aleczapka
         if $(echo $NAME | grep -q "^artwiz"); then
             OLDNAME=$NAME
             NAME="artwiz-aleczapka"
-        fi
-        # Three hacks for names that changed.
-        if $(echo $NAME | grep -q "^MPlayer"); then
-            NAME="mplayer"
-        fi
-        if $(echo $NAME | grep -q "^libsigcxx"); then
-            NAME="libsigc++"
-        fi
-        if $(echo $NAME | grep -q "^libxmlxx"); then
-            NAME="libxml++"
         fi
         CURPKG=$(echo $NAME-$VER-$ARCH-$BUILD)
         NEWSB=$(find $LOCALREPO/$SLACKVER -name "$NAME.SlackBuild")
@@ -328,6 +317,19 @@ potential updates..." >> $UPDATELIST
             NEWARCH=$(egrep -m1 "^ARCH" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*[=-]//;s/\"//g')
             NEWSRCVER=$(egrep -m1 "^SRCVER" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*[=-]/_/;s/\"//g')
             NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+            # Three hacks for names that changed during 12.1 repo cycle
+            if $(echo $NAME | grep -q "^libsigcxx"); then
+                NAME="libsigc++"
+                PRGNAM="libsigc++"
+            fi
+            if $(echo $NAME | grep -q "^libxmlxx"); then
+                NAME="libxml++"
+                PRGNAM="libxml++"
+            fi
+            if $(echo $NAME | grep -q "^TiMidityxx"); then
+                NAME="TiMidity++"
+                PRGNAM="TiMidity++"
+            fi
             # Ugly hack for acroread
             if [ $PRGNAM = "acroread" ]; then
                 NEWSRCVER=$(egrep -m1 "^ADOBE_LANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
@@ -337,7 +339,7 @@ potential updates..." >> $UPDATELIST
                 NEWSRCVER=$(egrep -m1 "^OOLANG" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/_/g')
             fi
             # Ugly hack for mplayer
-            if [[ "$PRGNAM" == "MPlayer" || "$PRGNAM" == "mplayer" ]]; then
+            if [[ "$PRGNAM" == "MPlayer" || "$PRGNAM" == "mplayer" || "$NAME" == "MPlayer" ]]; then
                 PRGNAM="mplayer"
                 NAME="mplayer"
                 if $(echo $VER | grep -q "^svn_r"); then
@@ -357,6 +359,10 @@ potential updates..." >> $UPDATELIST
             if [ $PRGNAM = "djvulibre" ]; then
                 VERSION=$(echo $VERSION | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/./g')
                 NEWSRCVER=""
+            fi
+            if [ $NAME = "virtualbox-kernel" ]; then
+                UNAME="$(echo $(uname -r) | sed -e 's/-/_/')"
+                VERSION="$(echo ${VERSION}_${UNAME})"
             fi
             # Ugly hack for several SlackBuilds that use $SRCVER
             # but not in the final package name, so we need to
@@ -771,7 +777,7 @@ fi
 
 sort_queue () {
 # This function sorts the build queue in $TMPQUEUE.  Thanks to Mauro
-# Giachero for this contribution (and the reverse sorting)
+# Giachero for this contribution (and the reverse sorting).
 local PARTIALSORT=$(tempfile -d $TMP)
 local CHOICE
 local SELECTED
@@ -1779,7 +1785,7 @@ fi
 }
 
 utilities_menu () {
-# Separate menu for various utilities
+# Separate menu for various utilities.
 if [ -z "$G" ] ; then G="Cache" ; fi
 while [ 0 ]; do
 dialog --default-item "$G" --title "Utilities" --backtitle \
