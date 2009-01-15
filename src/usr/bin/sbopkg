@@ -360,7 +360,7 @@ potential updates..." >> $UPDATELIST
                 VERSION=$(echo $VERSION | sed -e 's/[ #}\t].*$//;s/^.*://;s/-/./g')
                 NEWSRCVER=""
             fi
-            if [ $NAME = "virtualbox-kernel" ]; then
+            if [[ $NAME == "virtualbox-kernel" || $NAME == "nvidia-kernel" ]]; then
                 UNAME="$(echo $(uname -r) | sed -e 's/-/_/')"
                 VERSION="$(echo ${VERSION}_${UNAME})"
             fi
