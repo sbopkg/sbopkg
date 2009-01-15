@@ -833,6 +833,72 @@ rm -f $TMP/sbopkg-ans-sort
 continue
 }
 
+delete_queue () {
+# This function deletes any saved queues.
+PERMQUEUE=$TMP/sbopkg-permanentqueue
+if [ -e $PERMQUEUE ]; then
+    dialog --title "Delete Saved Queue?" --yesno "A saved build \
+queue was found.  Would you like to delete it?  Press <Yes> to \
+delete the saved queue, or press <No> to cancel." 9 65
+    if [ $? = 0 ]; then
+        rm -f $PERMQUEUE
+    fi
+else
+    dialog --title "Error" --msgbox "No saved queue was found." 8 30
+fi
+}
+
+load_queue () {
+# This function loads any saved queues and merges it with any
+# current $TMPQUEUE.
+TMPQUEUE=$TMP/sbopkg-tmp-queue
+WORKINGQUEUE=$TMP/sbopkg-working-queue
+PERMQUEUE=$TMP/sbopkg-permanentqueue
+if [ -e $PERMQUEUE ]; then
+    dialog --title "Load Saved Queue?" --yesno "A saved build queue \
+was found.  Would you like to load it?  Press <Yes> to load the \
+saved queue into your current queue, or press <No> to cancel." \
+9 65
+    if [ $? = 0 ]; then
+        rm -f $WORKINGQUEUE
+        cat $TMPQUEUE >> $WORKINGQUEUE
+        cat $PERMQUEUE >> $WORKINGQUEUE
+        sort $WORKINGQUEUE | uniq > $TMPQUEUE
+        rm -f $WORKINGQUEUE
+        dialog --title "Done" --msgbox "The saved queue has been \
+loaded." 8 30
+    fi
+else
+    dialog --title "Error" --msgbox "No saved queue was found." 8 30
+fi
+}
+
+save_queue () {
+# This function saves the build queue and merges it with any current
+# $TMPQUEUE.
+TMPQUEUE=$TMP/sbopkg-tmp-queue
+WORKINGQUEUE=$TMP/sbopkg-working-queue
+PERMQUEUE=$TMP/sbopkg-permanentqueue
+if [ -e $TMPQUEUE ]; then
+    dialog --title "Save Queue Permanently?" --yesno "Would you \
+like to save a copy of the build queue?  Press <Yes> to save (and \
+add to an already saved queue) or press <No> to cancel without \
+saving, which will keep any currently saved queue intact." 9 65
+    if [ $? = 0 ]; then
+        rm -f $WORKINGQUEUE
+        cat $TMPQUEUE >> $WORKINGQUEUE
+        cat $PERMQUEUE >> $WORKINGQUEUE
+        sort $WORKINGQUEUE | uniq > $PERMQUEUE
+        rm -f $WORKINGQUEUE
+        dialog --title "Done" --msgbox "The build queue has been \
+saved." 8 30
+    fi
+else
+    dialog --title "Empty Queue" --msgbox "The build \
+queue is empty." 8 30
+fi
+}
+
 view_queue () {
 # This function displays the contents of the build queue.
 TMPQUEUE=$TMP/sbopkg-tmp-queue
@@ -1663,13 +1729,13 @@ if [ "$DIAG" = 1 ]; then
     read -n 1 -p "Press any key to continue."
 fi
 if [ -e $TMP/sbopkg-tmp-queue ]; then
-    dialog --title "Delete Queue?" --yes-label "Keep" --no-label \
-    "Delete" --yesno "Would you like to keep the build queue or \
-would you like to delete it?" 8 35
+    dialog --title "Clear Queue?" --yes-label "Keep" --no-label \
+    "Clear" --yesno "Would you like to keep the build queue or \
+would you like to clear it?" 8 35
     if [ $? = 1 ]; then
         rm -f $TMP/sbopkg-tmp-queue
         dialog --title "Done" --msgbox "The build queue has been \
-deleted." 8 35
+cleared." 8 35
     fi
 fi
 if [ "$KEEPLOG" = "YES" ]; then
@@ -1784,6 +1850,53 @@ that may"
 fi
 }
 
+queue_menu () {
+# Separate menu for queue functions.
+if [ -z "$Q" ] ; then Q="View" ; fi
+while [ 0 ]; do
+dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
+"Currently using the SlackBuilds.org $SLACKVER repository." \
+--cancel-label "Back" --menu \
+"\nChoose one of the following or press <Back> to go back.\n" \
+  15 60 5 \
+"View" "View the build queue" \
+"Load" "Load a saved build queue" \
+"Save" "Save the build queue" \
+"Delete" "Delete the saved build queue" \
+"Process" "Process the build queue" \
+2>$TMP/sbopkg_queue_menu_answer
+
+if [ $? != 0 ]; then
+    Q=""
+    rm -f $TMP/sbopkg_queue_menu_answer
+    return
+fi
+
+Q="$(cat $TMP/sbopkg_queue_menu_answer)"
+
+if [ "$Q" = "View" ]; then
+    view_queue
+fi
+
+if [ "$Q" = "Load" ]; then
+    load_queue
+fi
+
+if [ "$Q" = "Save" ]; then
+    save_queue
+fi
+
+if [ "$Q" = "Delete" ]; then
+    delete_queue
+fi
+
+if [ "$Q" = "Process" ]; then
+    BUILDPKGS=1
+    process_queue
+fi
+done
+}
+
 utilities_menu () {
 # Separate menu for various utilities.
 if [ -z "$G" ] ; then G="Cache" ; fi
@@ -1800,24 +1913,26 @@ dialog --default-item "$G" --title "Utilities" --backtitle \
 2>$TMP/sbopkg_utilities_menu_answer
 
 if [ $? != 0 ]; then
+    G=""
+    rm -f $TMP/sbopkg_utilities_menu_answer
     return
 fi
 
-H="$(cat $TMP/sbopkg_utilities_menu_answer)"
+G="$(cat $TMP/sbopkg_utilities_menu_answer)"
 
-if [ "$H" = "Cache" ]; then
+if [ "$G" = "Cache" ]; then
     view_cache_dir
 fi
 
-if [ "$H" = "Log" ]; then
+if [ "$G" = "Log" ]; then
     view_perm_log
 fi
 
-if [ "$H" = "Version" ]; then
+if [ "$G" = "Version" ]; then
     select_version
 fi
 
-if [ "$H" = "Latest" ]; then
+if [ "$G" = "Latest" ]; then
     check_for_latest
 fi
 
@@ -1880,15 +1995,14 @@ dialog --default-item "$R" --title "SlackBuilds.org Package Browser \
 (sbopkg version $SBOVER)" --backtitle "Currently using the \
 SlackBuilds.org $SLACKVER repository." --menu \
 "\nChoose one of the following or press <Cancel> to exit.\n" \
-  19 69 10 \
+  17 69 9 \
 "Rsync" "Rsync with SlackBuilds.org" \
 "ChangeLog" "View the SlackBuilds.org ChangeLog" \
 "Packages" "List installed SBo packages" \
 "Updates" "List potential updates to installed SBo packages" \
 "Browse" "Browse the local SlackBuilds.org repository" \
 "Search" "Search the local SlackBuilds.org repository" \
-"View" "View the build queue" \
-"Queue" "Process the build queue" \
+"Queue" "Manage the build queue" \
 "Utilities" "Go to the utilities menu" \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
@@ -1945,13 +2059,8 @@ to search for:" 9 40 2>/$TMP/sbopkg_search_request
     fi
 fi
 
-if [ "$R" = "View" ]; then
-    view_queue
-fi
-
 if [ "$R" = "Queue" ]; then
-    BUILDPKGS=1
-    process_queue
+    queue_menu
 fi
 
 if [ "$R" = "Utilities" ]; then
