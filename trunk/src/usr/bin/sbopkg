@@ -900,17 +900,19 @@ dialog --title "Load Saved Queue" --inputbox "Please enter the path \
 and filename to a saved build queue:" 10 50 2>/$TMP/sbopkg_user_queue
 if [ $? = 0 ]; then
     USERQUEUE="$(cat $TMP/sbopkg_user_queue)"
-    if [ -e $USERQUEUE ]; then
-        rm -f $WORKINGQUEUE
-        cat $TMPQUEUE >> $WORKINGQUEUE
-        cat $USERQUEUE >> $WORKINGQUEUE
-        sort $WORKINGQUEUE | uniq > $TMPQUEUE
-        rm -f $WORKINGQUEUE
-        dialog --title "Done" --msgbox "The saved queue has been \
+    if [ ! "$USERQUEUE" = "" ]; then
+        if [ -e $USERQUEUE ]; then
+            rm -f $WORKINGQUEUE
+            cat $TMPQUEUE >> $WORKINGQUEUE
+            cat $USERQUEUE >> $WORKINGQUEUE
+            sort $WORKINGQUEUE | uniq > $TMPQUEUE
+            rm -f $WORKINGQUEUE
+            dialog --title "Done" --msgbox "The saved queue has been \
 loaded." 8 30
-    else
-        dialog --title "Error" --msgbox "No saved queue was found." \
-8 30
+        else
+            dialog --title "Error" --msgbox "No saved queue was \
+found." 8 30
+        fi
     fi
 fi
 }
@@ -922,7 +924,7 @@ TMPQUEUE=$TMP/sbopkg-tmp-queue
 if [ ! -e $TMPQUEUE ]; then
     dialog --title "Empty Queue" --msgbox "The build \
 queue is empty." 8 30
-    break
+    continue
 else
     dialog --title "Save Queue" --inputbox "Please enter the path \
 and filename where you would like to save the queue:" 10 50 \
