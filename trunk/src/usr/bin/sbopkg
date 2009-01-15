@@ -833,31 +833,35 @@ rm -f $TMP/sbopkg-ans-sort
 continue
 }
 
-delete_queue () {
-# This function deletes any saved queues.
+delete_backup_queue () {
+# This function deletes any backup queues.
 PERMQUEUE=$TMP/sbopkg-savedqueue
 if [ -e $PERMQUEUE ]; then
-    dialog --title "Delete Saved Queue?" --yesno "A saved build \
-queue was found.  Would you like to delete it?  Press <Yes> to \
-delete the saved queue, or press <No> to cancel." 9 65
+    dialog --title "Delete Backup Queue?" --yesno "An \
+automatically-saved backup build queue was found.  Would you like \
+to delete it?  Press <Yes> to delete the backup queue, or press \
+<No> to cancel." 9 65
     if [ $? = 0 ]; then
         rm -f $PERMQUEUE
+        rm -f $TMP/sbopkg_backup_queue.lck
+        dialog --title "Done" --msgbox "The backup queue has been \
+deleted." 8 30
     fi
 else
-    dialog --title "Error" --msgbox "No saved queue was found." 8 30
+    dialog --title "Error" --msgbox "No backup queue was found." 8 30
 fi
 }
 
-load_queue () {
-# This function loads any saved queues and merges it with any
+load_backup_queue () {
+# This function loads any backup queue and merges it with any
 # current $TMPQUEUE.
 TMPQUEUE=$TMP/sbopkg-tmp-queue
 WORKINGQUEUE=$TMP/sbopkg-working-queue
 PERMQUEUE=$TMP/sbopkg-savedqueue
 if [ -e $PERMQUEUE ]; then
-    dialog --title "Load Saved Queue?" --yesno "A saved build queue \
+    dialog --title "Load Backup Queue?" --yesno "A backup queue \
 was found.  Would you like to load it?  Press <Yes> to load the \
-saved queue into your current queue, or press <No> to cancel." \
+backup queue into your current queue, or press <No> to cancel." \
 9 65
     if [ $? = 0 ]; then
         rm -f $WORKINGQUEUE
@@ -865,37 +869,82 @@ saved queue into your current queue, or press <No> to cancel." \
         cat $PERMQUEUE >> $WORKINGQUEUE
         sort $WORKINGQUEUE | uniq > $TMPQUEUE
         rm -f $WORKINGQUEUE
-        dialog --title "Done" --msgbox "The saved queue has been \
+        touch $TMP/sbopkg_backup_queue.lck
+        dialog --title "Done" --msgbox "The backup queue has been \
 loaded." 8 30
     fi
-else
-    dialog --title "Error" --msgbox "No saved queue was found." 8 30
 fi
 }
 
-save_queue () {
+save_backup_queue () {
 # This function saves the build queue and merges it with any current
 # $TMPQUEUE.
 TMPQUEUE=$TMP/sbopkg-tmp-queue
 WORKINGQUEUE=$TMP/sbopkg-working-queue
 PERMQUEUE=$TMP/sbopkg-savedqueue
 if [ -e $TMPQUEUE ]; then
-    dialog --title "Save Queue Permanently?" --yesno "Would you \
-like to save a copy of the build queue?  Press <Yes> to save (and \
-add to an already saved queue) or press <No> to cancel without \
-saving, which will keep any currently saved queue intact." 9 65
-    if [ $? = 0 ]; then
+    rm -f $WORKINGQUEUE
+    cat $TMPQUEUE >> $WORKINGQUEUE
+    cat $PERMQUEUE >> $WORKINGQUEUE
+    sort $WORKINGQUEUE | uniq > $PERMQUEUE
+    rm -f $WORKINGQUEUE
+fi
+}
+
+load_user_queue () {
+# This function loads a user's specified saved queue and merges it
+# with any current $TMPQUEUE.
+TMPQUEUE=$TMP/sbopkg-tmp-queue
+WORKINGQUEUE=$TMP/sbopkg-working-queue
+dialog --title "Load Saved Queue" --inputbox "Please enter the path \
+and filename to a saved build queue:" 10 50 2>/$TMP/sbopkg_user_queue
+if [ $? = 0 ]; then
+    USERQUEUE="$(cat $TMP/sbopkg_user_queue)"
+    if [ -e $USERQUEUE ]; then
         rm -f $WORKINGQUEUE
         cat $TMPQUEUE >> $WORKINGQUEUE
-        cat $PERMQUEUE >> $WORKINGQUEUE
-        sort $WORKINGQUEUE | uniq > $PERMQUEUE
+        cat $USERQUEUE >> $WORKINGQUEUE
+        sort $WORKINGQUEUE | uniq > $TMPQUEUE
         rm -f $WORKINGQUEUE
-        dialog --title "Done" --msgbox "The build queue has been \
-saved." 8 30
+        dialog --title "Done" --msgbox "The saved queue has been \
+loaded." 8 30
+    else
+        dialog --title "Error" --msgbox "No saved queue was found." \
+8 30
     fi
-else
+fi
+}
+
+save_user_queue () {
+# This function saves the build queue to a location the user
+# specifies.
+TMPQUEUE=$TMP/sbopkg-tmp-queue
+if [ ! -e $TMPQUEUE ]; then
     dialog --title "Empty Queue" --msgbox "The build \
 queue is empty." 8 30
+    break
+else
+    dialog --title "Save Queue" --inputbox "Please enter the path \
+and filename where you would like to save the queue:" 10 50 \
+2>/$TMP/sbopkg_user_queue
+    if [ $? = 0 ]; then
+        USERQUEUE="$(cat $TMP/sbopkg_user_queue)"
+        if [ ! "$USERQUEUE" = "" ]; then
+            if [ -e $USERQUEUE ]; then
+                dialog --title "Error" --yesno "Another file with \
+that name already exists.  Press <Yes> to continue and overwrite the \
+other file, or press <No> to cancel." 10 50
+                if [ $? != 0 ]; then
+                    continue
+                fi
+            fi
+            rm -f $USERQUEUE
+            touch $USERQUEUE
+            sort $TMPQUEUE | uniq > $USERQUEUE
+            dialog --title "Done" --msgbox "The build queue has been \
+saved." 8 30
+        fi
+    fi
 fi
 }
 
@@ -1861,8 +1910,8 @@ dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
   15 60 5 \
 "View" "View the build queue" \
 "Load" "Load a saved build queue" \
-"Save" "Save the build queue" \
-"Delete" "Delete the saved build queue" \
+"Save" "Save a build queue" \
+"Delete" "Delete the automatic backup queue" \
 "Process" "Process the build queue" \
 2>$TMP/sbopkg_queue_menu_answer
 
@@ -1875,19 +1924,22 @@ fi
 Q="$(cat $TMP/sbopkg_queue_menu_answer)"
 
 if [ "$Q" = "View" ]; then
+    if [ ! -e $TMP/sbopkg_backup_queue.lck ]; then
+        load_backup_queue
+    fi
     view_queue
 fi
 
 if [ "$Q" = "Load" ]; then
-    load_queue
+    load_user_queue
 fi
 
 if [ "$Q" = "Save" ]; then
-    save_queue
+    save_user_queue
 fi
 
 if [ "$Q" = "Delete" ]; then
-    delete_queue
+    delete_backup_queue
 fi
 
 if [ "$Q" = "Process" ]; then
@@ -2006,6 +2058,7 @@ SlackBuilds.org $SLACKVER repository." --menu \
 "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
 if [ $? != 0 ]; then
+    save_backup_queue
     clear
     cleanup
     exit 0
@@ -2067,6 +2120,7 @@ if [ "$R" = "Utilities" ]; then
 fi
 
 if [ "$R" = "Exit" ]; then
+    save_backup_queue
     clear
     cleanup
     exit 0
