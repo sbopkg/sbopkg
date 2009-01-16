@@ -225,7 +225,7 @@ get_sbo_packages () {
 SBOPKGLIST=$TMP/sbopkg_pkglist
 rm -f $SBOPKGLIST
 cd /var/log/packages
-PKGS=$(ls *SBo*)
+PKGS=$(ls *SBo* 2>/dev/null)
 for i in $PKGS; do
     echo $i >> $SBOPKGLIST
 done
@@ -282,7 +282,7 @@ else
     done
 fi
 cd /var/log/packages
-PKGS=$(ls *SBo*)
+PKGS=$(ls *SBo* 2>/dev/null)
 if [ -z "$PKGS" ]; then
     echo "No SlackBuilds.org packages detected." >> $UPDATELIST
 else
@@ -530,7 +530,7 @@ RARCH=$(egrep -m1 "^ARCH" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | 
 RBUILD=$(egrep -m1 "^BUILD" $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.SlackBuild | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 U="README"
 while [ 0 ]; do
-CURAPP=$(ls /var/log/packages/*SBo* | grep $APP)
+CURAPP=$(ls /var/log/packages/*SBo* 2>/dev/null | grep $APP)
 KPACKAGE=""
 for i in $CURAPP; do
     LONGAPP=$(echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//')
@@ -722,7 +722,7 @@ done
 
 view_cache_dir () {
 # This function displays the contents of $SRCDIR.
-if [ "$(ls -A $SRCDIR)" ]; then
+if [ "$(ls -A $SRCDIR 2>/dev/null)" ]; then
     ls -la $SRCDIR > $TMP/sbopkg_cache_dir
     dialog --title "Displaying $SRCDIR" \
 --textbox $TMP/sbopkg_cache_dir 0 0
@@ -907,10 +907,16 @@ load_user_queue () {
 TMPQUEUE=$TMP/sbopkg-tmp-queue
 WORKINGQUEUE=$TMP/sbopkg-working-queue
 dialog --title "Load Saved Queue" --inputbox "Please enter the path \
-and filename to a saved build queue:" 10 50 2>/$TMP/sbopkg_user_queue
+and filename to a saved build queue (if no path is specified, then \
+your queue will be saved to $TMP):" 10 50 2>/$TMP/sbopkg_user_queue
 if [ $? = 0 ]; then
     USERQUEUE="$(cat $TMP/sbopkg_user_queue)"
     if [ ! "$USERQUEUE" = "" ]; then
+        if $(echo $USERQUEUE | grep -q \/); then
+            continue
+        else
+            USERQUEUE=$TMP/$USERQUEUE
+        fi
         if [ -e $USERQUEUE ]; then
             rm -f $WORKINGQUEUE
             cat $TMPQUEUE >> $WORKINGQUEUE
@@ -937,16 +943,24 @@ queue is empty." 8 30
     continue
 else
     dialog --title "Save Queue" --inputbox "Please enter the path \
-and filename where you would like to save the queue:" 10 50 \
+and filename where you would like to save the queue (if no path is \
+specified, your queue will be saved to $TMP):" 10 50 \
 2>/$TMP/sbopkg_user_queue
     if [ $? = 0 ]; then
         USERQUEUE="$(cat $TMP/sbopkg_user_queue)"
         if [ ! "$USERQUEUE" = "" ]; then
+            if $(echo $USERQUEUE | grep -q \/); then
+                USERQUEUE=$USERQUEUE
+            else
+                USERQUEUE=$TMP/$USERQUEUE
+            fi
             if [ -e $USERQUEUE ]; then
                 dialog --title "Error" --yesno "Another file with \
 that name already exists.  Press <Yes> to continue and overwrite the \
 other file, or press <No> to cancel." 10 50
                 if [ $? != 0 ]; then
+                    dialog --title "Not saved" --msgbox "The build \
+queue has not been saved." 8 30
                     continue
                 fi
             fi
@@ -1401,7 +1415,7 @@ else
     mv $OUTPUT/* $OLDOUTPUT/
     echo >> $SUMMARYLOG
 fi
-cd -
+cd - >/dev/null
 rm $SRCNAME
 rm -f $PKG.info.build
 rm -f $PKG.SlackBuild.build
