@@ -283,7 +283,7 @@ else
 fi
 cd /var/log/packages
 PKGS=$(ls *SBo*)
-if [ -e "$PKGS" ]; then
+if [ -z "$PKGS" ]; then
     echo "No SlackBuilds.org packages detected." >> $UPDATELIST
 else
     echo "Building list of potential updates..."
@@ -441,7 +441,7 @@ if [ "$DIAG" = 1 ]; then
     dialog --title "Viewing potential updates." --textbox \
 $UPDATELIST 0 0
 else
-    cat $UPDATELIST
+    ${PAGER:-more} $UPDATELIST
 fi
 # Permanent log of the updatelist is saved when DEBUG is enabled.
 if [ "$DEBUG" -ge "1" ]; then
@@ -474,7 +474,9 @@ rm -f $TMP/sbopkg_category_items_list 2> /dev/null
 DIR=( */ )
 if [ -n "$DIR" ]; then
     for i in ${DIR[*]%/}; do
-        DESC=$(grep -hZm1 ^$i ./$i/slack-desc* | cut -d\( -f2- | cut -d\) -f1)
+        j=$(echo $i | sed 's/-plus/+/')
+        DESC=$(grep -hZm1 ^$j ./$i/slack-desc* 2>/dev/null |
+            sed 's/^[^(]*( *\(.*\) *)[^)]*$/\1/')
         echo "\"$i\" \"$DESC\"" >> $TMP/sbopkg_category_items_list
     done
 fi
@@ -580,8 +582,11 @@ dialog --default-item "$U" --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
 "Build" "Build a package for $APP" \
 $JPACKAGE 2>$TMP/sbopkg_info_selection
 CHOICE=$?
-if [ $CHOICE = 3 ]; then
+if [ $CHOICE = 1 ]; then
+    rm -f $TMP/sbopkg_*
     break
+elif [ $CHOICE = 3 ]; then
+    return 0
 elif [ $CHOICE = 0 ]; then
     U="$(cat $TMP/sbopkg_info_selection)"
     CATEGORY="$(cat $TMP/sbopkg_category_selection)"
@@ -634,7 +639,7 @@ build queue." 8 30
         fi
         rm -f $SBOPKGINSTALLOUTPUT
     fi
-else # ESC or Cancel
+else # ESC
     rm -f $TMP/sbopkg_*
     break
 fi
@@ -1127,6 +1132,10 @@ if [ -n "$RESULTS" ]; then
 item you wish to view or press <Cancel> to exit." 20 70 14 --file \
             $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
             CHOICE=$?
+            if [ $CHOICE = 1 ]; then
+                rm -f $TMP/sbopkg_search_results
+                return 0
+            fi
             SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
             SRCHCAT=$(echo $SRCHPICK | sed -e 's/\/.*$//')
             SRCHPKG=$(echo $SRCHPICK | sed -e 's/^.*\///')
@@ -1154,6 +1163,7 @@ item you wish to view or press <Cancel> to exit." 20 70 14 --file \
                 continue
             else
                 rm -f $TMP/sbopkg_search_results
+                return 0
             fi
         done
         continue
