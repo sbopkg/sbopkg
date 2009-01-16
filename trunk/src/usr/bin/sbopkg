@@ -913,7 +913,7 @@ if [ $? = 0 ]; then
     USERQUEUE="$(cat $TMP/sbopkg_user_queue)"
     if [ ! "$USERQUEUE" = "" ]; then
         if $(echo $USERQUEUE | grep -q \/); then
-            continue
+            USERQUEUE=$USERQUEUE
         else
             USERQUEUE=$TMP/$USERQUEUE
         fi
