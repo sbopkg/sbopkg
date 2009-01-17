@@ -691,7 +691,7 @@ while [ 0 ]; do
 "Browsing the $CATEGORY category" --backtitle "Currently using the \
 SlackBuilds.org $SLACKVER repository." --menu \
 "Please select a software package or press <Back> to go back." \
-20 70 15 --file $TMP/sbopkg_category_items_list \
+20 70 14 --file $TMP/sbopkg_category_items_list \
 2>$TMP/sbopkg_item_selection
     if [ $? != 0 ]; then
         break
