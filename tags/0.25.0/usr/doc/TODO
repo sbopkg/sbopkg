@@ -1,0 +1,52 @@
+# $Id: TODO 314 2009-01-15 16:16:18Z chess.griffin $
+
+Sbopkg TODO (in no particular order)
+* Add in better traps and error checks so a user can safely exit (by
+  pressing Control-C) during the source download or during the package
+  building process.  I have spent a _lot_ of time hacking on this but
+  have not come up with a workable solution yet.  The problem is that
+  many subprocesses are forked off during the package building process
+  and it's difficult to capture all the pids.  If anyone wants to help
+  with this, please let me know.
+* FIX THE UPDATE LIST FEATURE SO THERE IS NO NEED FOR UGLY HACKS! :-)
+  This is much easier said than done, IMHO.  Simply comparing $VERSION
+  (or, more accurately, $VERSION plus $BUILD), between the installed
+  package and the one in the repo is not enough.  The reasons are
+  many, such as the fact that some of the SlackBuild scripts at SBo do
+  their own thing, such as use other variables (i.e. replace $VERSION
+  with $SRCVER or something), or include the kernel version in the
+  package version, such as nvidia-kernel does, or that fail the bash
+  'decimal' problem ... Anyway, there may be some work on this
+  already, so please contact me before starting anything.
+* Include a way to change the sync from rsync to lftp for those who
+  have rsync blocked.
+* Figure out proper way of testing getopts in order to prevent certain
+  cli options from being used together, such as -b and -i.  Right now,
+  there is a crude test to prevent -b and -i from being used together,
+  but I know there is a better way.
+* Add 'long' switches to the cli options, i.e. --build in addition to
+  the current -b switch.  This is pretty low priority, IMHO, and
+  something tells me that getopts does not like long options anyway.
+* Perhaps add a way where, if sbopkg is run by non-root user, that it
+  can prompt for the root user's password before building.  I know
+  there is a password type dialog box available, but I have not looked
+  into or, nor have I investigated what it would mean if sbopkg su'd
+  to root to do the 'sh foo.SlackBuild.build'  Maybe it cannot be done
+  safely or correctly.
+* Maybe change all instances of 'dialog' to $DIALOG and set $DIALOG to
+  be a variable equal to either 'dialog' or 'xdialog' in case someone
+  wanted to run sbopkg using xdialog.  I don't know how compatible
+  dialog is with xdialog so if there was breakage, I would not want to
+  really address it as being able to use xdialog is not important to
+  me.  I prefer dialog anyway.
+* Perhaps make the MD5SUM check a variable that a user can turn off?
+* When using the dialog interface, change the listing of packages to
+  be a checklist or radiolist whereby the user can select more than
+  one package to build at a time.  This would possibly change how the
+  user would be able to view the README, slack-desc etc. since a
+  checklist or radiolist would not present the current 'view' menu.
+  Not sure how the order of packages selected would be set.  UPDATE:
+  This is basically done for sbopkg 0.20.0 via the build queue.
+* Maybe find a way to run more than once instance for -b building.
+* More error checking.
+* General code cleanups.

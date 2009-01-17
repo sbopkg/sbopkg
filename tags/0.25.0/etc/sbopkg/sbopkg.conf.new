@@ -1,0 +1,27 @@
+# $Id: sbopkg.conf.new 288 2009-01-08 19:57:08Z chess.griffin $
+#
+# Please read the sbopkg.conf(5) man page for information about this
+# configuration file, including an explanation of how to set these
+# variables.
+
+# The following are variables used by sbopkg.  NOTE:  $TMP and $OUTPUT
+# must be exported as both are used by the SlackBuild scripts as well.
+# Any of the other variables could be exported as well, if desired.
+RSYNCMIRROR=slackbuilds.org::slackbuilds
+SLACKVER=12.2
+LOCALREPO=${LOCALREPO:-/home/sbo}
+SRCDIR=${SRCDIR:-/var/cache/sbopkg}
+export TMP=${TMP:-/tmp/SBo}
+export OUTPUT=${OUTPUT:-/tmp}
+KEEPLOG=YES
+DEBUG=0
+
+# The following variables are required and can be tweaked if desired,
+# although most users should leave them alone.  Note:  rsync already
+# uses --archive, --delete, --no-owner, and --exclude in the main
+# sbopkg script so there is no need to add those flags here.
+# Similarly, wget already uses the -O options so there is no need to
+# add that either.  In general, it is not recommended that users
+# change these default values.
+RSYNCFLAGS="--verbose --timeout=10"
+WGETFLAGS="--continue --progress=bar --timeout=15 --tries=5"
