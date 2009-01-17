@@ -839,6 +839,7 @@ continue
 }
 
 delete_backup_queue () {
+# This function is not used but is being saved for the time being.
 # This function deletes any backup queues.
 PERMQUEUE=$TMP/sbopkg-savedqueue
 if [ -e $PERMQUEUE ]; then
@@ -861,22 +862,22 @@ load_backup_queue () {
 # This function loads any backup queue and merges it with any
 # current $TMPQUEUE.
 TMPQUEUE=$TMP/sbopkg-tmp-queue
-WORKINGQUEUE=$TMP/sbopkg-working-queue
 PERMQUEUE=$TMP/sbopkg-savedqueue
 if [ -e $PERMQUEUE ]; then
-    dialog --title "Load Backup Queue?" --yesno "A backup queue \
-was found.  Would you like to load it?  Press <Yes> to load the \
-backup queue into your current queue, or press <No> to cancel." \
-9 65
+    dialog --title "Load Temporary Backup Queue?" --yesno "A \
+temporary backup queue was found.  Would you like to load it? \
+Either way, the temporary backup queue will be deleted.  A new \
+temporary backup queue will be automatically created if you quit \
+sbopkg with items in the build queue.\n\nPress <Yes> to load the \
+temporary backup queue into the build queue, or press <No> to \
+cancel." 11 65
     if [ $? = 0 ]; then
-        rm -f $WORKINGQUEUE
-        cat $TMPQUEUE >> $WORKINGQUEUE
-        cat $PERMQUEUE >> $WORKINGQUEUE
-        sort $WORKINGQUEUE | uniq > $TMPQUEUE
-        rm -f $WORKINGQUEUE
+        mv $PERMQUEUE $TMPQUEUE
         touch $TMP/sbopkg_backup_queue.lck
         dialog --title "Done" --msgbox "The backup queue has been \
 loaded." 8 30
+    else
+        rm -f $PERMQUEUE
     fi
 fi
 }
@@ -885,19 +886,14 @@ save_backup_queue () {
 # This function saves the build queue and merges it with any current
 # $TMPQUEUE.
 TMPQUEUE=$TMP/sbopkg-tmp-queue
-WORKINGQUEUE=$TMP/sbopkg-working-queue
 PERMQUEUE=$TMP/sbopkg-savedqueue
 if [ -e $TMPQUEUE ]; then
-    rm -f $WORKINGQUEUE
-    cat $TMPQUEUE >> $WORKINGQUEUE
-    cat $PERMQUEUE >> $WORKINGQUEUE
-    sort $WORKINGQUEUE | uniq > $PERMQUEUE
-    rm -f $WORKINGQUEUE
-    dialog --title "Saving Queue" --msgbox "Since the queue was not \
-empty upon quitting sbopkg, it has been automatically saved to a \
-backup file.  If you do not want this to happen next time, please \
-be sure the queue is empty when quitting sbopkg and delete any \
-prior backup queue file in the queue submenu." 9 65
+    cp $TMPQUEUE $PERMQUEUE
+    dialog --title "Saving Temporary Backup Queue" --msgbox "Since \
+the queue was not empty upon quitting sbopkg, it has been \
+automatically saved to a temporary backup file.  If you do not want \
+this to happen next time, please be sure the build queue is empty \
+when quitting sbopkg." 9 65
 fi
 }
 
@@ -1938,11 +1934,10 @@ dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
 "Currently using the SlackBuilds.org $SLACKVER repository." \
 --cancel-label "Back" --menu \
 "\nChoose one of the following or press <Back> to go back.\n" \
-  15 60 5 \
+  15 60 4 \
 "View" "View the build queue" \
 "Load" "Load a saved build queue" \
 "Save" "Save a build queue" \
-"Delete" "Delete the automatic backup queue" \
 "Process" "Process the build queue" \
 2>$TMP/sbopkg_queue_menu_answer
 
