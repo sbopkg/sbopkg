@@ -890,10 +890,10 @@ PERMQUEUE=$TMP/sbopkg-savedqueue
 if [ -e $TMPQUEUE ]; then
     cp $TMPQUEUE $PERMQUEUE
     dialog --title "Saving Temporary Backup Queue" --msgbox "Since \
-the queue was not empty upon quitting sbopkg, it has been \
+the queue was not empty upon exiting sbopkg, it has been \
 automatically saved to a temporary backup file.  If you do not want \
-this to happen next time, please be sure the build queue is empty \
-when quitting sbopkg." 9 65
+this to happen next time, please be sure the build queue is cleared \
+before exiting sbopkg." 9 65
 fi
 }
 
@@ -966,6 +966,25 @@ queue has not been saved." 8 30
             dialog --title "Done" --msgbox "The build queue has been \
 saved." 8 30
         fi
+    fi
+fi
+}
+
+clear_build_queue () {
+# This function clears the build queue.
+TMPQUEUE=$TMP/sbopkg-tmp-queue
+if [ ! -e $TMPQUEUE ]; then
+    dialog --title "Empty Queue" --msgbox "The build \
+queue is empty." 8 30
+    continue
+else
+    dialog --title "Clear Build Queue?" --yesno "Do you want to \
+clear the build queue?  Press <Yes> to clear the build queue, or \
+press <No> to cancel." 9 65
+    if [ $? = 0 ]; then
+        rm -f $TMPQUEUE
+        dialog --title "Done" --msgbox "The build queue has been \
+cleared." 8 30
     fi
 fi
 }
@@ -1934,11 +1953,12 @@ dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
 "Currently using the SlackBuilds.org $SLACKVER repository." \
 --cancel-label "Back" --menu \
 "\nChoose one of the following or press <Back> to go back.\n" \
-  15 60 4 \
+  15 60 5 \
 "View" "View the build queue" \
+"Clear" "Clear the build queue" \
+"Process" "Process the build queue" \
 "Load" "Load a saved build queue" \
 "Save" "Save a build queue" \
-"Process" "Process the build queue" \
 2>$TMP/sbopkg_queue_menu_answer
 
 if [ $? != 0 ]; then
@@ -1953,6 +1973,15 @@ if [ "$Q" = "View" ]; then
     view_queue
 fi
 
+if [ "$Q" = "Clear" ]; then
+    clear_build_queue
+fi
+
+if [ "$Q" = "Process" ]; then
+    BUILDPKGS=1
+    process_queue
+fi
+
 if [ "$Q" = "Load" ]; then
     load_user_queue
 fi
@@ -1961,14 +1990,10 @@ if [ "$Q" = "Save" ]; then
     save_user_queue
 fi
 
-if [ "$Q" = "Delete" ]; then
-    delete_backup_queue
-fi
+#if [ "$Q" = "Delete" ]; then
+#    delete_backup_queue
+#fi
 
-if [ "$Q" = "Process" ]; then
-    BUILDPKGS=1
-    process_queue
-fi
 done
 }
 
