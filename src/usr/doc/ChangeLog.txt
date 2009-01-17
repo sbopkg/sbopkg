@@ -1,3 +1,54 @@
+Sat Jan 17 02:15:03 UTC 2009
+Sbopkg 0.25.0 released.  This is another version jump due to the
+number of fixes, enhancements, and new features:
+
+  * Fix issue where packages were sometimes incorrectly identified as
+    already being in the build queue when they were not; thanks to
+    SpacePlod for the bug report and thanks to Mauro Giachero for
+    further bug reporting and providing a patch to fix it.
+  * Add ability to pass build options/flavors/arguments to the
+    SlackBuild when using the dialog interface.
+  * Include ability to reverse or manually sort the items in the build
+    queue; thanks to Mauro Giachero for the patches to implement these
+    features.
+  * Move all the queue functions into a separate 'Manage Queue'
+    submenu off the main menu.
+  * Allow user to save (and load) the build queue between sessions by
+    specifing a file and location, so multiple saved queues can be
+    maintained.
+  * Automatically backup the current queue upon exiting and offer to
+    reload upon first entering the queue submenu.
+  * Provide a menu entry to clear the build queue.
+  * Merge in several patches from Mauro Giachero to display the SVN
+    version number; clean up use of cancel/back and ESC (ESC now takes
+    you back a step in most dialogs); improve the cleanup process; and
+    improve the new build flavors/options dialog.
+  * Apply several patches from slakmagik for various little fixes,
+    cleanups, and tweaks.
+  * Create a new 'Utilities' submenu off the main menu and move some
+    of the less-important items there in order to clean up the main
+    menu.  It was getting a bit bulky.  :-)
+  * Add ability to download a new sbopkg package when there is an
+    update.
+  * Include optional use of a ~/.sbopkg.conf, which will override
+    settings in the system /etc/sbopkg/sbopkg.conf file.
+  * When changing the Slackware version in the dialog interface, offer
+    the user the opportunity to save this change in the new
+    ~/.sbopkg.conf file.
+  * Improve build queue logging and error reporting; correctly remove
+    symlink to the source tarball when build fails.
+  * Bump default wget timeout from 10 to 15 seconds which prevents
+    some downloads from failing.
+  * Add update list fix for ksmoothdock; thanks to Wade Grant for the
+    bug report.
+  * Improve how the sources are downloaded and identified.
+  * Remove the 'read sbopkg README' from the main menu.
+  * Add a directory check for OUTPUT since that is now required.
+  * Add preliminary check to make sure command line options -b and -i
+    are not used together.
+  * Fix issue where certain packages in queue that end with a ++ (like
+    libsigc++) could not be added.
++--------------------------+
 Thu Jan 1 20:53:19 UTC 2009
 Sbopkg version 0.20.0 released.  This a version jump due to the
 numerous fixes, enhancements, and new features.
