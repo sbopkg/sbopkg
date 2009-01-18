@@ -2228,35 +2228,28 @@ while getopts ":b:cd:f:hi:lpq:rs:uv:" OPT; do
         v ) VERSION=1
             CUSTOMVER="$OPTARG"
             ;;
-        h|* )
-            echo
-            echo "$SCRIPT $SBOVER"
-            echo "Usage: $SCRIPT [OPTIONS] <packagename(s)>"
-            echo "Options are:"
-            echo "  -b package(s)   Build package(s)."
-            echo "  -c              Check for updates to installed \
-SlackBuilds.org packages."
-            echo "  -d localdir     Location of local copy of \
-SlackBuilds.org repository"
-            echo "  -f              Override default configuration file"
-            echo "                  with specified file."
-            echo "  -h              Display this help message."
-            echo "  -i package(s)   Build and install package(s)."
-            echo "  -l              Display the SlackBuilds.org \
-ChangeLog.txt and then quit."
-            echo "  -p              List installed SlackBuilds.org packages."
-            echo "  -q package(s)   Query for packages matching string."
-            echo "  -r              Rsync the SlackBuilds.org repository with"
-            echo "                  the local mirror and then quit."
-            echo "  -s package(s)   Search by specific package name and, \
-if found,"
-            echo "                  display package information."
-            echo "  -v version      Set the Slackware version for the"
-            echo "                  mirror (current choices are 11.0, 12.0, \
-12.1, and 12.2)"
-            echo
-            echo "Note: multiple arguments to -b, -i, -q, and -s must be \
-quoted (\"pkg1 pkg2\")"
+        h|* ) cat << EOF
+$SCRIPT $SBOVER
+Usage: $SCRIPT [OPTIONS] <packagename(s)>
+Options are:
+  -b package(s)   Build package(s).
+  -c              Check for updates to installed SlackBuilds.org packages.
+  -d localdir     Location of local copy of SlackBuilds.org repository
+  -f              Override default configuration file with specified file.
+  -h              Display this help message.
+  -i package(s)   Build and install package(s).
+  -l              Display the SlackBuilds.org ChangeLog.txt and then quit.
+  -p              List installed SlackBuilds.org packages.
+  -q package(s)   Query for packages matching string.
+  -r              Rsync the SlackBuilds.org repository with
+                  the local mirror and then quit.
+  -s package(s)   Search by specific package name and, if found,
+                  display package information.
+  -v version      Set the Slackware version for the
+                  mirror (current choices are 11.0, 12.0, 12.1, and 12.2)
+
+Note: multiple arguments to -b, -i, -q, and -s must be quoted ("pkg1 pkg2")
+EOF
             exit
             ;;
     esac
