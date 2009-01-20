@@ -807,6 +807,18 @@ view_perm_log () {
     fi
 }
 
+empty_queue () {
+    # This function tests whether the temporary build queue is empty.
+    TMPQUEUE=$TMP/sbopkg-tmp-queue
+    if [ ! -e $TMPQUEUE ]; then
+        dialog --title "Empty Queue" --msgbox \
+            "The build queue is empty." 8 30
+        return 0
+    else
+        return 1
+    fi
+  }
+
 sort_queue () {
     # This function sorts the build queue in $TMPQUEUE.  Thanks to Mauro
     # Giachero for this contribution (and the reverse sorting).
@@ -961,61 +973,51 @@ load_user_queue () {
 save_user_queue () {
     # This function saves the build queue to a location the user
     # specifies.
+    if empty_queue; then return; fi
     TMPQUEUE=$TMP/sbopkg-tmp-queue
-    if [ ! -e $TMPQUEUE ]; then
-        dialog --title "Empty Queue" --msgbox \
-            "The build queue is empty." 8 30
-        continue
-    else
-        dialog --title "Save Queue" --inputbox "$(crunch "Please enter the \
-            path and filename where you would like to save the queue (if no \
-            path is specified, your queue will be saved to $TMP):")" 10 50 \
-            2>/$TMP/sbopkg_user_queue
-        if [ $? = 0 ]; then
-            USERQUEUE="$(cat $TMP/sbopkg_user_queue)"
-            if [ ! "$USERQUEUE" = "" ]; then
-                if $(echo $USERQUEUE | grep -q \/); then
-                    USERQUEUE=$USERQUEUE
-                else
-                    USERQUEUE=$TMP/$USERQUEUE
-                fi
-                if [ -e $USERQUEUE ]; then
-                    dialog --title "Error" --yesno "$(crunch "Another file \
-                        with that name already exists.  Press <Yes> to \
-                        continue and overwrite the other file, or press <No> \
-                        to cancel.")" 10 50
-                    if [ $? != 0 ]; then
-                        dialog --title "Not saved" --msgbox \
-                            "The build queue has not been saved." 8 30
-                        continue
-                    fi
-                fi
-                rm -f $USERQUEUE
-                touch $USERQUEUE
-                sort $TMPQUEUE | uniq > $USERQUEUE
-                dialog --title "Done" --msgbox \
-                    "The build queue has been saved." 8 30
+    dialog --title "Save Queue" --inputbox "$(crunch "Please enter the \
+        path and filename where you would like to save the queue (if no \
+        path is specified, your queue will be saved to $TMP):")" 10 50 \
+        2>/$TMP/sbopkg_user_queue
+    if [ $? = 0 ]; then
+        USERQUEUE="$(cat $TMP/sbopkg_user_queue)"
+        if [ ! "$USERQUEUE" = "" ]; then
+            if $(echo $USERQUEUE | grep -q \/); then
+                USERQUEUE=$USERQUEUE
+            else
+                USERQUEUE=$TMP/$USERQUEUE
             fi
+            if [ -e $USERQUEUE ]; then
+                dialog --title "Error" --yesno "$(crunch "Another file \
+                    with that name already exists.  Press <Yes> to \
+                    continue and overwrite the other file, or press <No> \
+                    to cancel.")" 10 50
+                if [ $? != 0 ]; then
+                    dialog --title "Not saved" --msgbox \
+                        "The build queue has not been saved." 8 30
+                    continue
+                fi
+            fi
+            rm -f $USERQUEUE
+            touch $USERQUEUE
+            sort $TMPQUEUE | uniq > $USERQUEUE
+            dialog --title "Done" --msgbox \
+                "The build queue has been saved." 8 30
         fi
     fi
 }
 
 clear_build_queue () {
     # This function clears the build queue.
+    if empty_queue; then return; fi
     TMPQUEUE=$TMP/sbopkg-tmp-queue
-    if [ ! -e $TMPQUEUE ]; then
-        dialog --title "Empty Queue" --msgbox \
-            "The build queue is empty." 8 30
-        continue
-    else
-        dialog --title "Clear Build Queue?" --yesno "$(crunch "Do you want \
-            to clear the build queue?  Press <Yes> to clear the build queue, \
-            or press <No> to cancel.")" 9 65
-        if [ $? = 0 ]; then
-            rm -f $TMPQUEUE
-            dialog --title "Done" --msgbox \
-                "The build queue has been cleared." 8 30
-        fi
+    dialog --title "Clear Build Queue?" --yesno "$(crunch "Do you want \
+        to clear the build queue?  Press <Yes> to clear the build queue, \
+        or press <No> to cancel.")" 9 65
+    if [ $? = 0 ]; then
+        rm -f $TMPQUEUE
+        dialog --title "Done" --msgbox \
+            "The build queue has been cleared." 8 30
     fi
 }
 
@@ -1023,52 +1025,46 @@ view_queue () {
     # This function displays the contents of the build queue.
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     WORKINGQUEUE=$TMP/sbopkg-working-queue
+    if empty_queue; then return; fi
     while :; do
-        if [ ! -e $TMPQUEUE ]; then
-            dialog --title "Empty Queue" --msgbox \
-                "The build queue is empty." 8 30
-            break
-        else
-            dialog --title "Viewing Build Queue" --separate-output \
-                --extra-button --extra-label "Reverse" \
-                --help-button --help-label "Cancel" --cancel-label "Sort" \
-                --checklist "$(crunch "The following packages are currently \
-                in the build queue.  Please note that when the build queue \
-                is processed, the packages selected below will be built, and \
-                optionally installed, in the order listed from top to \
-                bottom.\n\nPlease select or unselect those packages you wish \
-                to keep in the build queue and then press <Ok> to continue \
-                or press <Cancel> to exit.")" 30 50 8 \
-                --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
-            CHOICE=$? # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
-            if [ $CHOICE = 0 ]; then
-                if [ ! -s $TMP/sbopkg-ans-queue ]; then
-                    rm -f $TMP/sbopkg-*-queue
-                    return 0
+        dialog --title "Viewing Build Queue" --separate-output \
+            --extra-button --extra-label "Reverse" \
+            --help-button --help-label "Cancel" --cancel-label "Sort" \
+            --checklist "$(crunch "The following packages are currently \
+            in the build queue.  Please note that when the build queue \
+            is processed, the packages selected below will be built, and \
+            optionally installed, in the order listed from top to \
+            bottom.\n\nPlease select or unselect those packages you wish \
+            to keep in the build queue and then press <Ok> to continue \
+            or press <Cancel> to exit.")" 30 50 8 \
+            --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
+        CHOICE=$? # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
+        if [ $CHOICE = 0 ]; then
+            rm -f $WORKINGQUEUE
+            cat $TMPQUEUE | while read PICK; do
+                TESTAPP=$(echo $PICK | cut -f1 -d " ")
+                if $(cat $TMP/sbopkg-ans-queue | grep -q "^$TESTAPP"); then
+                    echo $PICK | sed -e 's/OFF/ON/' >> $WORKINGQUEUE
                 else
-                    rm -f $WORKINGQUEUE
-                    for PICK in $(cat $TMP/sbopkg-ans-queue); do
-                        echo $(grep -m1 "^$PICK " $TMPQUEUE) >> \
-                        $WORKINGQUEUE
-                    done
-                    mv $WORKINGQUEUE $TMPQUEUE
-                    if [ "$BUILDPKGS" = 1 ]; then
-                        mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
-                    fi
-                    return 0
+                    echo $PICK | sed -e 's/ON/OFF/' >> $WORKINGQUEUE
                 fi
-            elif [ $CHOICE = 1 ]; then
-                sort_queue $TMPQUEUE
-                continue
-            elif [ $CHOICE = 3 ]; then
-                tac $TMPQUEUE >$TMP/sbopkg-reversed-queue
-                mv $TMP/sbopkg-reversed-queue $TMPQUEUE
-                continue
-            else # Cancel or ESC
-                rm -f $TMP/sbopkg-ans-queue
-                break
+            done
+            cp $WORKINGQUEUE $TMPQUEUE
+            if [ "$BUILDPKGS" = 1 ]; then
+                mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
             fi
-        fi
+            return 0
+        elif [ $CHOICE = 1 ]; then
+            sort_queue $TMPQUEUE
+            continue
+        elif [ $CHOICE = 3 ]; then
+            tac $TMPQUEUE >$TMP/sbopkg-reversed-queue
+            mv $TMP/sbopkg-reversed-queue $TMPQUEUE
+            continue
+         else # Cancel or ESC
+            rm -f $TMP/sbopkg-ans-queue
+            break
+         fi
     done
     continue
 }
@@ -1730,6 +1726,7 @@ process_queue () {
     QUITBUILD=""
     rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
     check_root
+    if empty_queue; then return; fi
     if [ $ROOT = "false" ]; then
         if [ "$DIAG" = 1 ]; then
             dialog --title "ERROR" --msgbox "$(crunch "You must run this \
