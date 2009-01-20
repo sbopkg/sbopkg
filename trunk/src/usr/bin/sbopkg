@@ -636,14 +636,15 @@ info_item () {
                 add_options $APP
             fi
             if [ "$U" = "Queue" ]; then
-                if $(cat $TMP/sbopkg-tmp-queue | grep -q "^$APP "); then
-                    dialog --title "ERROR" --msgbox \
-                    "$APP is already in the queue." 8 30
-                else
-                    echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
-                    dialog --title "Done" --msgbox \
-                        "$APP has been added to the build queue." 8 30
-                fi
+                add_item_to_queue $APP $RVERSION $RBUILD
+                #if $(cat $TMP/sbopkg-tmp-queue | grep -q "^$APP "); then
+                #    dialog --title "ERROR" --msgbox \
+                #    "$APP is already in the queue." 8 30
+                #else
+                #    echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
+                #    dialog --title "Done" --msgbox \
+                #        "$APP has been added to the build queue." 8 30
+                #fi
             fi
             if [ "$U" = "Build" ]; then
                 echo "$APP" > $TMP/sbopkg-start-queue
@@ -1034,18 +1035,23 @@ add_item_to_queue () {
     VERSION=$2
     BUILD=$3
     TMPQUEUE=$TMP/sbopkg-tmp-queue
-    if $(cat $TMP/sbopkg-tmp-queue | grep -q "^$APP "); then
+    if $(cat $TMPQUEUE | grep -q "^$APP "); then
         dialog --title "ERROR" --yesno "$(crunch "$APP is already in the \
             queue.  Do you want to replace it?  Press <Yes> to replace or \
             press <No> to skip.")" 10 30
             if [ $? = 0 ]; then
-                continue # need to add the replace code here
+                sed -i "s/^$APP .*$/$APP $VERSION-$BUILD ON/" $TMPQUEUE
             else
+                dialog --title "Skipped" --msgbox "$(crunch "$APP was \
+                    skipped.")" 8 30
                 return
             fi
     else
         echo "$APP $VERSION-$BUILD ON" >> $TMP/sbopkg-tmp-queue
     fi
+    # We need to add a test if this is being done via an update so the user
+    # does not get the following message after each individual app has been
+    # added but only at the end.
     dialog --title "Done" --msgbox "$APP has been added to the build queue." 8 30
 }
 
@@ -1239,19 +1245,20 @@ gen_search_package () {
                     cd $LOCALREPO/$SLACKVER
                     info_item
                 elif [ $CHOICE = 3 ]; then
-                    if [ ! -e $TMP/sbopkg-tmp-queue ]; then
-                        touch $TMP/sbopkg-tmp-queue
-                    fi
-                    if $(cat $TMP/sbopkg-tmp-queue | \
-                    grep -q "^$SRCHPKG "); then
-                        dialog --title "ERROR" --msgbox \
-                            "$SRCHPKG is already in the queue." 8 30
-                    else
-                        echo "$SRCHPKG $RVERSION-$RBUILD ON" >> \
-                        $TMP/sbopkg-tmp-queue
-                        dialog --title "Done" --msgbox \
-                            "$SRCHPKG has been added to the build queue." 8 30
-                    fi
+                    add_item_to_queue $SRCHPKG $RVERSION $RBUILD
+                    #if [ ! -e $TMP/sbopkg-tmp-queue ]; then
+                    #    touch $TMP/sbopkg-tmp-queue
+                    #fi
+                    #if $(cat $TMP/sbopkg-tmp-queue | \
+                    #grep -q "^$SRCHPKG "); then
+                    #    dialog --title "ERROR" --msgbox \
+                    #        "$SRCHPKG is already in the queue." 8 30
+                    #else
+                    #    echo "$SRCHPKG $RVERSION-$RBUILD ON" >> \
+                    #    $TMP/sbopkg-tmp-queue
+                    #    dialog --title "Done" --msgbox \
+                    #        "$SRCHPKG has been added to the build queue." 8 30
+                    #fi
                     continue
                 else
                     rm -f $TMP/sbopkg_search_results
