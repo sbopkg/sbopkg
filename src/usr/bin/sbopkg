@@ -43,6 +43,7 @@ BUILDPKGS=""
 INSTALLPKGS=""
 BUILDOPTIONS=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
+SBOPKG_RENAMES="${SBOPKG_RENAMES:-/etc/sbopkg/sbopkg-renames}"
 CWD="$(pwd)"
 SBOVER=svn_r$(cat ${0} | grep '$Id: ' | head -1 | \
 sed -e 's/^.*Id: sbopkg \([0-9.]*\) .*$/\1/')
@@ -247,6 +248,232 @@ get_sbo_packages () {
 }
 
 check_for_updates () {
+    # This checks for updates to installed SBo packages.  Thanks to Mauro
+    # Giachero for this much-improved update code and related functions!
+    local NEWSB NEWINFO NEWVER
+    local VERSION_EXPRESSION
+    local TEMPFILE
+    local STRING INDEX OLDNAME NAME VER ARCH BUILD
+
+    # Check to see if there are any updates to installed SBo pkgs.
+    check_if_repo_exists
+    UPDATELIST=$TMP/sbopkg_updatelist
+    rm -f $UPDATELIST
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "Check for updates?" --yesno "$(crunch "Would you \
+            like to check for updates?  This is an experimental feature and \
+            should not be used as a substitute for reading the SBo \
+            ChangeLog.txt.  If you proceed, it might take a few seconds to \
+            process, depending on the number of SlackBuilds.org packages \
+            you have installed.\n\nSelect YES to continue or NO to \
+            cancel.")" 19 50
+        if [ $? = 1 ]; then
+            continue
+        fi
+    else
+        while true; do
+            echo "Would you like to check for updates?  This is an"
+            echo "experimental feature and should not be used as a"
+            echo "substitute for reading the SBo ChangeLog.txt."
+            echo
+            echo "If you proceed, it might take a few moments to process."
+            echo "Press Y to continue or N to cancel."
+                read ANS
+                case $ANS in
+                    y* | Y* ) break
+                    ;;
+                    n* | N* ) exit 0
+                    ;;
+                    * ) echo "Unknown response."
+                    ;;
+                esac
+        done
+    fi
+    cd /var/log/packages
+    PKGS=$(ls *_SBo)
+    VERSION_FILE=$TMP/sbopkg-script-version
+    if [ -e "$PKGS" ]; then
+        echo "No SlackBuilds.org packages detected." >> $UPDATELIST
+    else
+        echo "Building list of potential updates..."
+        crunch_fmt "Listing installed SlackBuilds.org packages and flagging \
+            potential updates..." >> $UPDATELIST
+        echo >> $UPDATELIST
+        for CURPKG in $PKGS; do
+        # This next code is borrowed and modified from pkgtool
+            #echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//'
+            STRING=$(basename $CURPKG _SBo)
+            INDEX="$(echo $STRING | tr -d -c -)"
+            INDEX="$(expr length $INDEX + 1)"
+            OLDNAME=$(expr $INDEX - 3)
+            OLDNAME="$(echo $STRING | cut -f 1-$OLDNAME -d -)"
+            VER=$(expr $INDEX - 2)
+            VER="$(echo $STRING | cut -f $VER -d -)"
+            ARCH=$(expr $INDEX - 1)
+            ARCH="$(echo $STRING | cut -f $ARCH -d -)"
+            BUILD="$(echo $STRING | cut -f $INDEX -d -)"
+        # End pkgtool code
+
+            # Manage package renames
+            NAME=$(grep "^$OLDNAME=" $SBOPKG_RENAMES)
+            if [ -z $NAME ]; then
+                # No rename occoured
+                NAME=$OLDNAME
+            else
+                # The package got renamed
+                NAME=$(echo $NAME |cut -d= -f2)
+            fi
+
+            # Find the current SlackBuild
+            NEWSB=$(find $LOCALREPO/$SLACKVER -name "$NAME.SlackBuild")
+                if [ -z "$NEWSB" ]; then
+                    # Maybe we're running an old repository where the rename
+                    # didn't take place
+                    if [ $NAME != $OLDNAME ]; then
+                        NAME=$OLDNAME
+                        NEWSB=$(find $LOCALREPO/$SLACKVER -name "$NAME.SlackBuild")
+                    fi
+                fi
+
+            # Extract the new package version
+            NEWSB=$(find $LOCALREPO/$SLACKVER -name "$NAME.SlackBuild")
+            if [ ! -z "$NEWSB" ]; then
+                NEWARCH=$(egrep -m1 "^ARCH" $NEWSB | sed -e 's/[ #}\t].*$//;s/^.*[=-]//;s/\"//g')
+                NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+
+                # Step 1 - find the version expression
+                # This looks for the last istance of $OUTPUT.
+                # Note that part of the name can be returned by mistake, typically for
+                # cases such as
+                #    makepkg [...] $OUTPUT/$PRGNAM-something-$VERSION-$ARCH-$BUILD$TAG
+                # This is harmless, and the proper cleanup is performed in Step 4.
+                VERSION_EXPRESSION=$(tac $NEWSB |grep -m1 \$OUTPUT/ |cut -d\$ -f2- |cut -d- -f2- |rev |cut -d- -f3- |rev)
+                echo "echo $VERSION_EXPRESSION" >$VERSION_FILE
+
+                # Step 2 - find the used variables and their expressions recursively
+                # This fills the VERSION_FILE with the proper variables assignments
+                # in reversed order (first dependant, then dependencies)
+                updates__resolve_expression "$VERSION_EXPRESSION"
+
+                # Step 3 - reverse the file order
+                # Because dependencies must be first...
+                TEMPFILE=$(tempfile -d $TMP)
+                tac $VERSION_FILE >$TEMPFILE
+                mv $TEMPFILE $VERSION_FILE
+
+                # Step 4 - let's get the version number!
+                # Also, strip any residual program name token.
+                NEWVER=$(sh $VERSION_FILE |rev |cut -d- -f1 |rev)
+                rm -f $VERSION_FILE
+
+                # Step 5 - fixup braindead cases
+                # Sometimes the above doesn't work -- see cpan2tgz
+                # In that case, let's trust the .info file...
+                if [ -z "$NEWVER" ]; then
+                    NEWINFO=$(echo $NEWSB |rev |cut -d. -f2- |rev).info
+                    NEWVER=$(cat $NEWINFO |grep "^VERSION" |cut -d\" -f2)
+                fi
+
+                # Compare the old $VER and the new $NEWVER
+                VER_NUMERIC=$(echo $VER |tr -c "[:digit:]" " ")
+                NEWVER_NUMERIC=$(echo $NEWVER |tr -c "[:digit:]" " ")
+                # The version number must have the same number of digits
+                while [ $(echo $VER_NUMERIC |wc -w) -lt $(echo $NEWVER_NUMERIC |wc -w) ]; do
+                    VER_NUMERIC="$VER_NUMERIC 0"
+                done
+                while [ $(echo $VER_NUMERIC |wc -w) -gt $(echo $NEWVER_NUMERIC |wc -w) ]; do
+                    NEWVER_NUMERIC="$NEWVER_NUMERIC 0"
+                done
+                # The build number is just like the least significant version number
+                VER_NUMERIC="$VER_NUMERIC $(echo $BUILD |tr -c '[:digit:]' ' ')"
+                NEWVER_NUMERIC="$NEWVER_NUMERIC $(echo $NEWBUILD |tr -c '[:digit:]' ' ')"
+                UPDATED=$(updates__compare_versions $VER_NUMERIC $NEWVER_NUMERIC)
+
+                if [ $UPDATED -eq 1 ]; then
+                    echo $NAME: >> $UPDATELIST
+                    echo "  POTENTIAL UPDATE" >> $UPDATELIST
+                    echo "  Installed version: " $CURPKG >> $UPDATELIST
+                    echo "  Repo version: " $NAME-$NEWVER-$NEWARCH-${NEWBUILD}_SBo >> $UPDATELIST
+                    echo "$NAME $NEWVER-$NEWBUILD ON" >> $TMP/sbopkg-update-queue
+                elif [ $UPDATED -eq -1 ]; then
+                    if [ "$DEBUG" -ge "1" ]; then
+                        echo $NAME: >> $UPDATELIST
+                        echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
+                        echo "  Installed version: " $CURPKG >> $UPDATELIST
+                        echo "  Repo version: " $NAME-$NEWVER-$NEWARCH-${NEWBUILD}_SBo >> $UPDATELIST
+                    fi
+                else
+                    if [ "$DEBUG" -eq "2" ]; then
+                        echo $NAME: >> $UPDATELIST
+                        echo "  No update." >> $UPDATELIST
+                    fi
+                fi
+            else
+                if [ "$DEBUG" -ge "1" ]; then
+                    echo $NAME: >> $UPDATELIST
+                    echo "  Not in the repository." >> $UPDATELIST
+                fi
+            fi
+        done
+        echo >> $UPDATELIST
+        echo "Potential update list complete." >> $UPDATELIST
+    fi
+    if [ "$DIAG" = 1 ]; then
+        dialog --title "Viewing potential updates." --textbox $UPDATELIST 0 0
+    else
+        cat $UPDATELIST
+    fi
+    # Permanent log of the updatelist is saved when DEBUG is enabled.
+    if [ "$DEBUG" -ge "1" ]; then
+        cp $UPDATELIST $TMP/sbopkg-debug-updatelist
+    fi
+}
+
+function updates__resolve_expression() {
+    # Find the used variables and their expressions recursively
+    # Variables == any string made up by letters, digits and underscore
+    # This criteria may have false positives, which don't matter since
+    # these aren't assigned to in the SlackBuild.
+    # 1st parameter == expression (right hand side of FOO=BAR)
+    local EXPRESSION_VARIABLES=$(echo $1 |tr -c "[:alnum:]_" " ")
+    local VAR
+    local ASSIGNMENT
+    for VAR in $EXPRESSION_VARIABLES; do
+            ASSIGNMENT=$(tac $NEWSB |grep "^$VAR=")
+            if [ ! -z "$ASSIGNMENT" ] && ! grep -q "^$VAR=" $VERSION_FILE; then
+                echo "$ASSIGNMENT" >>$VERSION_FILE
+                updates__resolve_expression "$(echo $ASSIGNMENT |cut -d= -f2-)"
+            fi
+    done
+}
+
+function updates__compare_versions() {
+    # Compare numeric versions
+    # Takes 2N arguments, where N is the number of numbers (...)
+    # componing the version number.
+    # E.g. is the two packages are of version 1.2.3 build 7 and
+    # 1.2.50 build 4, the argument list is
+    # 1 2 3 7 1 2 50 4
+    # Prints -1 if the "left" package is newer (not an update), 0 if
+    # the version is unchanges, 1 if the "left" package is newer.
+    local COUNT=$(($# / 2))
+    local i RESULT=0
+    local left right
+    for ((i=1; i<=$COUNT; i++)); do
+        eval left=\$$i
+        eval right=\${$(($i + $COUNT))}
+        if [ $left -lt $right ]; then
+            RESULT=1
+            break
+        elif [ $left -gt $right ]; then
+            RESULT=-1
+            break
+        fi
+    done
+    echo $RESULT
+}
+
+check_for_updates_old () {
 # Check to see if there are any updates to installed SBo pkgs.   This
 # is is pretty ugly code and is not really 100% reliable due to the
 # many ways upstream tags software names, versions, etc.  Consider
@@ -409,8 +636,8 @@ potential updates..." >> $UPDATELIST
                     echo "  Debug3: " $VER >> $UPDATELIST
                     echo "  Debug4: " $TESTVER >> $UPDATELIST
                 fi
-	          #elif [[ $VERSION$NEWSRCVER < $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD < $BUILD ) ]]; then
-	          elif [[ $TESTVERSION$TESTNEWSRCVER < $TESTVER || ( $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD < $BUILD ) ]]; then
+                  #elif [[ $VERSION$NEWSRCVER < $VER || ( $VERSION$NEWSRCVER = $VER && $NEWBUILD < $BUILD ) ]]; then
+                  elif [[ $TESTVERSION$TESTNEWSRCVER < $TESTVER || ( $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD < $BUILD ) ]]; then
                 if [ "$DEBUG" -ge "1" ]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
@@ -424,8 +651,8 @@ potential updates..." >> $UPDATELIST
                         echo "  Debug4: " $TESTVER >> $UPDATELIST
                     fi
                 fi
-	          #elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
-	          elif [[ $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD = $BUILD ]]; then
+                  #elif [[ $VERSION$NEWSRCVER = $VER && $NEWBUILD = $BUILD ]]; then
+                  elif [[ $TESTVERSION$TESTNEWSRCVER = $TESTVER && $NEWBUILD = $BUILD ]]; then
                 #if [[ "$DEBUG" -ge "1" && "$FULL_DEBUG" = 1 ]]; then
                 if [ "$DEBUG" -eq "2" ]; then
                     echo $NAME: >> $UPDATELIST
