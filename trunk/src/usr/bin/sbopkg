@@ -811,8 +811,7 @@ empty_queue () {
     # This function tests whether the temporary build queue is empty.
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     if [ ! -e $TMPQUEUE ]; then
-        dialog --title "Empty Queue" --msgbox \
-            "The build queue is empty." 8 30
+        dialog --title "Empty Queue" --msgbox "The build queue is empty." 8 30
         return 0
     else
         return 1
@@ -1019,6 +1018,33 @@ clear_build_queue () {
         dialog --title "Done" --msgbox \
             "The build queue has been cleared." 8 30
     fi
+}
+
+add_item_to_queue () {
+    # This function takes $1 and puts in the TMPQUEUE.  If it is already in
+    # the queue, just replace it (so updated pkgs will get updated in the
+    # queue).  NOTE:  this is a work-in-progress; this function is not called
+    # yet.  The idea is that whenever an item is added to the queue, whether
+    # after the update run, or when an individual item is added from the
+    # info_item menu, or when a backup or user's queue is loaded, then each
+    # APP and VERSION+BUILD is sent to this function for processing.  Once
+    # this is working remove this NOTE from this comment.
+    $APP=$1
+    $VERBUILD=$2
+    TMPQUEUE=$TMP/sbopkg-tmp-queue
+    if $(cat $TMP/sbopkg-tmp-queue | grep -q "^$APP "); then
+        dialog --title "ERROR" --yesno "$(crunch "$APP is already in the \
+            queue.  Do you want to replace it?  Press <Yes> to replace or \
+            press <No> to skip.")" 10 30
+            if [ $? = 0 ]; then
+                continue # need to add the replace code here
+            else
+                return
+            fi
+    else
+        echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
+    fi
+    dialog --title "Done" --msgbox "$APP has been added to the build queue." 8 30
 }
 
 view_queue () {
