@@ -1021,16 +1021,18 @@ clear_build_queue () {
 }
 
 add_item_to_queue () {
-    # This function takes $1 and puts in the TMPQUEUE.  If it is already in
-    # the queue, just replace it (so updated pkgs will get updated in the
-    # queue).  NOTE:  this is a work-in-progress; this function is not called
-    # yet.  The idea is that whenever an item is added to the queue, whether
-    # after the update run, or when an individual item is added from the
-    # info_item menu, or when a backup or user's queue is loaded, then each
-    # APP and VERSION+BUILD is sent to this function for processing.  Once
-    # this is working remove this NOTE from this comment.
-    $APP=$1
-    $VERBUILD=$2
+    # This function takes three argument, APP, VERSION, and BUILD.  If
+    # APP is already in the queue, ask user if they want to replace it (so
+    # updated pkgs will get updated in the queue).  NOTE:  this is a
+    # work-in-progress; this function is not called yet.  The idea is that
+    # whenever an item is added to the queue, whether after the update run, or
+    # when an individual item is added from the info_item menu, or when a
+    # backup or user's queue is loaded, then each APP and VERSION-BUILD is
+    # sent to this function for processing.  Once this is working remove this
+    # NOTE from this comment.
+    APP=$1
+    VERSION=$2
+    BUILD=$3
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     if $(cat $TMP/sbopkg-tmp-queue | grep -q "^$APP "); then
         dialog --title "ERROR" --yesno "$(crunch "$APP is already in the \
@@ -1042,7 +1044,7 @@ add_item_to_queue () {
                 return
             fi
     else
-        echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
+        echo "$APP $VERSION-$BUILD ON" >> $TMP/sbopkg-tmp-queue
     fi
     dialog --title "Done" --msgbox "$APP has been added to the build queue." 8 30
 }
