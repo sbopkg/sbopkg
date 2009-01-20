@@ -2020,7 +2020,9 @@ process_queue () {
     QUITBUILD=""
     rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
     check_root
-    if empty_queue; then return; fi
+    if [ "$BUILDPKGS" = 1 ]; then
+        if empty_queue; then return; fi
+    fi
     if [ $ROOT = "false" ]; then
         if [ "$DIAG" = 1 ]; then
             dialog --title "ERROR" --msgbox "$(crunch "You must run this \
