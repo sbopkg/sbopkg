@@ -69,7 +69,7 @@ config_check () {
     else
         . $SBOPKG_CONF
         for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT KEEPLOG \
-            DEBUG RSYNCFLAGS WGETFLAGS; do
+            LOGFILE DEBUG RSYNCFLAGS WGETFLAGS; do
             if [ -z "${!VAR}" ]; then
                 MISSING+="$VAR "
             fi
@@ -882,7 +882,7 @@ info_item () {
                 install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
                 read -n 1 -p "Press any key to continue."
                 if [ "$KEEPLOG" = "YES" ]; then
-                    cat $SBOPKGINSTALLOUTPUT >> $TMP/sbopkg-build-log
+                    cat $SBOPKGINSTALLOUTPUT >> $LOGFILE
                 fi
                 rm -f $SBOPKGINSTALLOUTPUT
             fi
@@ -1006,17 +1006,17 @@ view_cache_dir () {
 view_perm_log () {
     # This function displays the contents of the permanent build log,
     # which is kept if KEEPLOG is set to YES in the config file.
-    if [ ! -e $TMP/sbopkg-build-log ]; then
+    if [ ! -e $LOGFILE ]; then
         dialog --title "ERROR" --msgbox "$(crunch "No permanent log \
             found.  Please make sure KEEPLOG is set to YES \
             in the configuration file.")" 10 30
         continue
     else
-        dialog --title "Displaying $TMP/sbopkg-build-log" \
-            --textbox $TMP/sbopkg-build-log 0 0
+        dialog --title "Displaying $LOGFILE" \
+            --textbox $LOGFILE 0 0
         dialog --title "Keep Log?" --yes-label "Keep" --no-label "Delete" \
             --yesno "$(crunch "Would you like to keep the permanent build \
-            log $TMP/sbopkg-build-log?")" 6 50
+            log $LOGFILE?")" 6 50
         if [ $? = 1 ]; then
             check_root
             if [ $ROOT = "false" ]; then
@@ -1024,7 +1024,7 @@ view_perm_log () {
                     "Sorry, only the root user can delete the build log." 8 30
                 continue
             else
-                rm -f $TMP/sbopkg-build-log
+                rm -f $LOGFILE
                 dialog --title "Done" --msgbox \
                     "The build log has been deleted." 8 30
                 continue
@@ -1367,7 +1367,8 @@ rsync_command () {
     # We do not use -z as this causes heavy CPU load on the server
     # and has very limited effect when most of the pull is .gz files.
     /usr/bin/rsync --archive --delete --no-owner --exclude="*.sbopkg" \
-    $RSYNCFLAGS $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
+        --exclude="/local/" $RSYNCFLAGS \
+        $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
     RSYNC_RETVAL=$?
     rm -f $TMP/sbopkg_rsync.lck
     if [ ! $RSYNC_RETVAL = 0 ]; then
@@ -2175,8 +2176,8 @@ process_queue () {
         fi
     fi
     if [ "$KEEPLOG" = "YES" ]; then
-        cat $SBOPKGOUTPUT >> $TMP/sbopkg-build-log
-        cat $SUMMARYLOG >> $TMP/sbopkg-build-log
+        cat $SBOPKGOUTPUT >> $LOGFILE
+        cat $SUMMARYLOG >> $LOGFILE
     fi
     BUILDPKGS=""
     INSTALLPKGS=""
