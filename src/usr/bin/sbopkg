@@ -1139,7 +1139,10 @@ load_backup_queue () {
             temporary backup queue into the build queue, or press <No> to \
             cancel.")" 11 65
         if [ $? = 0 ]; then
-            mv $PERMQUEUE $TMPQUEUE
+            cat $PERMQUEUE | while read PICK; do
+                add_item_to_queue $PICK
+            done
+            #mv $PERMQUEUE $TMPQUEUE
             touch $TMP/sbopkg_backup_queue.lck
             dialog --title "Done" --msgbox \
                 "The backup queue has been loaded." 8 30
@@ -1182,11 +1185,14 @@ load_user_queue () {
                 USERQUEUE=$TMP/$USERQUEUE
             fi
             if [ -e $USERQUEUE ]; then
-                rm -f $WORKINGQUEUE
-                cat $TMPQUEUE >> $WORKINGQUEUE
-                cat $USERQUEUE >> $WORKINGQUEUE
-                sort $WORKINGQUEUE | uniq > $TMPQUEUE
-                rm -f $WORKINGQUEUE
+                cat $USERQUEUE | while read PICK; do
+                    add_item_to_queue $PICK
+                done
+                #rm -f $WORKINGQUEUE
+                #cat $TMPQUEUE >> $WORKINGQUEUE
+                #cat $USERQUEUE >> $WORKINGQUEUE
+                #sort $WORKINGQUEUE | uniq > $TMPQUEUE
+                #rm -f $WORKINGQUEUE
                 dialog --title "Done" --msgbox \
                     "The saved queue has been loaded." 8 30
             else
