@@ -2,7 +2,12 @@ Tue Jan 20 04:10:53 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * Add in new update code by Mauro Giachero.
+  * Add in new update code by Mauro Giachero.  This greatly improves how the
+    updates are handled.  Please note there is a new file
+    /etc/sbopkg/sbopkg-renames that handes a few name changes.  If you upgrade
+    sbopkg with theh new package, then this file will be automatically
+    installed.  If not, you'll need to grab this file from the source tarball
+    and move it there manually.
   * Change how selecting/unselecting items in the build queue are handled.
     Now, when items are unselected, they remain in the queue but are turned
     "OFF."
