@@ -28,7 +28,17 @@ slackbuilds.org::slackbuilds.
 .B SLACKVER
 .br
 This option allows the user to set the default Slackware version in
-order to rsync with the matching SBo repository.
+order to rsync with the matching SBo repository.  The current options
+are 11.0, 12.0, 12.1, 12.2, and local.  The 'local' option allows
+someone to maintain a local repository in the style of the SBo
+repository and use sbopkg with it.  This local repository needs be
+maintained at the same directory level as the SBo repos.  For example,
+if $LOCALREPO (see below) is set to /home/sbo, then the Slackware 12.2
+SBo repo would be at /home/sbo/12.2 and the local repo would be at
+/home/sbo/local.  The directory structure inside /local also needs to
+be similar to the style of SBo, including catories, although they do
+not have to be the same categories as at SBo, like this example:
+/home/sbo/local/mystuff/myapp.
 
 The default value of SLACKVER is: 12.2.
 
