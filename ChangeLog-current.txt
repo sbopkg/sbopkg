@@ -10,5 +10,14 @@ enhancements:
     they want to replace items already in the queue or skip them.
   * Merge in a large whitespace/cleanup patch by slakmagik which greatly
     improves the readability of the code.
+  * Replace the 'Clear Queue' menu item with 'Delete Queue Items' which
+    provides the user the to delete individual items in the queue or clear the
+    entire build queue.
+  * Add in two patches from slakmagik, the first allows the user to have a
+    /local/ directory in the local SBo repository where the user can maintain
+    individual non-SBo SlackBuilds (in the SBo style, however) which will be
+    picked up by sbopkg, the second adds a new sbopkg.conf variable LOGFILE
+    where the user can decide the name and location of the permanent build
+    log, if used.
 +--------------------------+
 
