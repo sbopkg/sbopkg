@@ -20,7 +20,9 @@ The different configuration options are:
 This option allows the user to set the rsync mirror of the SBo
 repository that will be used by sbopkg.
 
-The default value of RSYNCMIRROR is: slackbuilds.org::slackbuilds.
+The default value of RSYNCMIRROR is:
+.br
+slackbuilds.org::slackbuilds.
 
 .TP 5
 .B SLACKVER
@@ -59,7 +61,9 @@ files are saved on a temporary basis.  TMP must be exported as it is
 also used by the SBo SlackBuilds.  Also note that the default value of
 TMP is therefore the same as in the SBo SlackBuild scripts.
 
-The default value of TMP is: export TMP=${TMP:-/tmp/SBo}.
+The default value of TMP is:
+.br
+export TMP=${TMP:-/tmp/SBo}.
 
 .TP 5
 .B OUTPUT
@@ -69,7 +73,9 @@ saved.  OUTPUT must be exported as it is also used by the SBo
 SlackBuilds.  Also note that the default value of OUTPUT is therefore
 the same as in the SBo SlackBuilds.
 
-The default value of OUTPUT is: export OUTPUT=${OUTPUT:-/tmp}.
+The default value of OUTPUT is:
+.br
+export OUTPUT=${OUTPUT:-/tmp}.
 
 .TP 5
 .B KEEPLOG
@@ -81,6 +87,14 @@ after exiting sbopkg.  If set to YES, this permanent log is saved at
 $TMP/sbopkg-build-log.
 
 The default value of KEEPLOG is: YES.
+
+.TP 5
+.B LOGFILE
+.br
+This option sets the location for the sbopkg permanent log if KEEPLOG
+is set to YES (see previous paragraph).
+
+The default value of LOGFILE is: $TMP/sbopkg-build-log.
 
 .TP 5
 .B DEBUG
@@ -127,7 +141,7 @@ these default options is not recommended.
 
 The default value of WGETFLAGS is:
 .br
-"--continue --progress-bar --timeout=10 --tries=5".
+"--continue --progress-bar --timeout=15 --tries=5".
 
 .SH FILES
 .TP 5
