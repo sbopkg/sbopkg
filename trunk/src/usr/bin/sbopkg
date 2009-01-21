@@ -250,6 +250,12 @@ get_sbo_packages () {
 check_for_updates () {
     # This checks for updates to installed SBo packages.  Thanks to Mauro
     # Giachero for this much-improved update code and related functions!
+    if [ "$SLACKVER" = "local" ]; then
+        dialog --title "ERROR" --msgbox \
+            "You cannot check for updates when using the /home/sbo/local \
+            repository." 8 40
+        return 0
+    fi
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
     local TEMPFILE
@@ -1422,7 +1428,7 @@ rsync_repo () {
     if [ "$SLACKVER" = "local" ]; then
         dialog --title "ERROR" --msgbox \
             "You cannot rsync when using the /home/sbo/local repository." \
-            8 30
+            8 40
         continue
     fi
     directory_checks
