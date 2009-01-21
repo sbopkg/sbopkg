@@ -1249,12 +1249,22 @@ save_user_queue () {
 
 delete_build_queue () {
     # This function deletes items in the build queue.
+    local TMPQUEUE REMOVEQUEUE WORKINGQUEUE
+    local CHOICE REMOVE REMOVED
+
     if empty_queue; then return; fi
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     REMOVEQUEUE=$TMP/sbopkg-remove-queue
     WORKINGQUEUE=$TMP/sbopkg-working-queue
     cat $TMPQUEUE | sed -e 's/[ON$|OFF$]//g' > $REMOVEQUEUE
     while :; do
+        # "dialog" segfaults when asked to display an empty menu.
+        # Work around this by showing an "empty" entry when there are
+        # no more items in the queue.
+        if [[ $(wc -w <$REMOVEQUEUE) -eq 0 ]]; then
+            echo '"" "The queue is empty."' >$REMOVEQUEUE
+        fi
+
         dialog --title "Delete Build Queue" --ok-label "Delete" \
             --extra-button --extra-label "Delete All" --help-button \
             --help-label "Done" --cancel-label "Cancel" \
@@ -1279,6 +1289,9 @@ delete_build_queue () {
                 sed -i "s/^$REMOVE .*$//" $TMPQUEUE
                 #cat $TMPQUEUE | grep -q "^$PICK " >> $WORKINGQUEUE
             done
+            if [[ $(wc -w <$TMPQUEUE) -eq 0 ]]; then
+                rm -f $TMPQUEUE
+            fi
             dialog --title "Done" --msgbox \
                 "The items have been removed from the build queue." 8 30
             #rm -f $REMOVEQUEUE
