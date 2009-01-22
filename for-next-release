@@ -31,3 +31,18 @@ that download failed, and not offer to delete the source since there is no
 source.  Along these lines, one user mentioned that when this happened, the
 item that failed the download was skipped when the user aborted the queue and
 reran it.  I could not reproduce this, but need to check it out.
+
+Maybe standardize all the "Done" type dialogs.  Perhaps create a simple
+function that displays "Done" (similar to the empty_queue function) and then
+call the function whenever a "Done" message is needed.  We could even set it
+so you can pass an argument, which would be specific text depending on what
+was 'Done', like:
+
+done_msg () {
+MSG=$1
+dialog --title "Done" --msgbox "stuff $MSG"
+}
+
+...
+
+done_msg "The cache has been cleared"
