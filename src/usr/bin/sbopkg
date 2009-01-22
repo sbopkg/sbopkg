@@ -479,6 +479,8 @@ function updates__compare_versions() {
     echo $RESULT
 }
 
+# FIXME CLEANUP This is old stuff, and should be deleted if the new version
+# works reliably.
 check_for_updates_old () {
 # Check to see if there are any updates to installed SBo pkgs.   This
 # is is pretty ugly code and is not really 100% reliable due to the
@@ -704,23 +706,26 @@ get_category_list () {
     fi
 }
 
-get_category_items_list () {
-    # This function makes and displays a list of all the package items in
-    # the selected category.
-    CATEGORY="$(cat $TMP/sbopkg_category_selection)"
-    cd $LOCALREPO/$SLACKVER/$CATEGORY
-    rm -f $TMP/sbopkg_category_items_list 2> /dev/null
-    DIR=( */ )
-    if [ -n "$DIR" ]; then
-        for i in ${DIR[*]%/}; do
-            j=$(echo $i | sed 's/-plus/+/')
-            DESC=$(grep -hZm1 ^$j ./$i/slack-desc* 2>/dev/null |
-                sed 's/^[^(]*( *\(.*\) *)[^)]*$/\1/')
-            echo "\"$i\" \"$DESC\"" >> $TMP/sbopkg_category_items_list
-        done
-    fi
-    cd $LOCALREPO/$SLACKVER
-}
+# FIXME CLEANUP This is old stuff, and should be deleted if the
+# search/browse unification works reliably.
+# NOTE removed -- was only used by browse_items, now removed.
+# get_category_items_list () {
+#     # This function makes and displays a list of all the package items in
+#     # the selected category.
+#     CATEGORY="$(cat $TMP/sbopkg_category_selection)"
+#     cd $LOCALREPO/$SLACKVER/$CATEGORY
+#     rm -f $TMP/sbopkg_category_items_list 2> /dev/null
+#     DIR=( */ )
+#     if [ -n "$DIR" ]; then
+#         for i in ${DIR[*]%/}; do
+#             j=$(echo $i | sed 's/-plus/+/')
+#             DESC=$(grep -hZm1 ^$j ./$i/slack-desc* 2>/dev/null |
+#                 sed 's/^[^(]*( *\(.*\) *)[^)]*$/\1/')
+#             echo "\"$i\" \"$DESC\"" >> $TMP/sbopkg_category_items_list
+#         done
+#     fi
+#     cd $LOCALREPO/$SLACKVER
+# }
 
 select_version () {
     # Create menu and list the SBo-supported versions of Slackware for
@@ -762,11 +767,17 @@ select_version () {
 }
 
 info_item () {
+    local APP CATEGORY SHORTPATH RVERSION RARCH RBUILD U
+    local CURAPP LONGAPP SHORTAPP
+    local STRING INDEX NAME VER BUILD KPACKAGE
+    local IPACKAGE KPACKAGE LPACKAGE
+    local CHOICE PARSED_SLACK_DESC SBOPKGINSTALLOUTPUT
+
     # This function shows the menu for each package where the user can see
     # certain information or build the package if he is root.
     APP="$(cat $TMP/sbopkg_item_selection)"
     CATEGORY="$(cat $TMP/sbopkg_category_selection)"
-    local SHORTPATH=$LOCALREPO/$SLACKVER/$CATEGORY/$APP
+    SHORTPATH=$LOCALREPO/$SLACKVER/$CATEGORY/$APP
     RVERSION=$(grep VERSION $SHORTPATH/$APP.info |
         cut -d= -f2 | sed s/\"//g)
     RARCH=$(egrep -m1 "^ARCH" $SHORTPATH/$APP.SlackBuild |
@@ -952,28 +963,32 @@ customize_item () {
     done
 }
 
-browse_items () {
-    # This function iterates through the list of software packages until
-    # one is chosen.
-    get_category_items_list
-    if [ -z "$T" ]; then
-        T="aaa"
-    fi
-    while [ 0 ]; do
-        dialog --default-item "$T" --cancel-label "Back" \
-            --title "Browsing the $CATEGORY category" --backtitle \
-            "Currently using the SlackBuilds.org $SLACKVER repository." \
-            --menu "$(crunch "Please select a software package or press \
-            <Back> to go back.")" \
-            20 70 14 --file $TMP/sbopkg_category_items_list \
-            2>$TMP/sbopkg_item_selection
-        if [ $? != 0 ]; then
-            break
-        fi
-        info_item
-        T="$(cat $TMP/sbopkg_item_selection)"
-    done
-}
+# FIXME CLEANUP This is old stuff, and should be deleted if the
+# search/browse unification works reliably.
+# NOTE removed -- was only used by browse_categories, that now uses the
+# search infrastructure instead.
+# browse_items () {
+#     # This function iterates through the list of software packages until
+#     # one is chosen.
+#     get_category_items_list
+#     if [ -z "$T" ]; then
+#         T="aaa"
+#     fi
+#     while [ 0 ]; do
+#         dialog --default-item "$T" --cancel-label "Back" \
+#             --title "Browsing the $CATEGORY category" --backtitle \
+#             "Currently using the SlackBuilds.org $SLACKVER repository." \
+#             --menu "$(crunch "Please select a software package or press \
+#             <Back> to go back.")" \
+#             20 70 14 --file $TMP/sbopkg_category_items_list \
+#             2>$TMP/sbopkg_item_selection
+#         if [ $? != 0 ]; then
+#             break
+#         fi
+#         info_item
+#         T="$(cat $TMP/sbopkg_item_selection)"
+#     done
+# }
 
 browse_categories () {
     # This function iterates through the category list until one is
@@ -988,12 +1003,14 @@ browse_categories () {
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --menu "Please select a category or press <Back> to go back." \
             20 70 14 --file $TMP/sbopkg_category_list \
-            2>$TMP/sbopkg_category_selection
+            2>$TMP/sbopkg_category_manual_selection
         if [ $? != 0 ]; then
             break
         fi
-        browse_items
-        S="$(cat $TMP/sbopkg_category_selection)"
+        S="$(cat $TMP/sbopkg_category_manual_selection)"
+        gen_search_package '*' $S
+#         browse_items
+#         S="$(cat $TMP/sbopkg_category_selection)"
     done
 }
 
@@ -1316,6 +1333,8 @@ delete_build_queue () {
 }
 
 add_item_to_queue () {
+    local APP VERSIONBUILD ONOFF TMPQUEUE
+
     # This function takes three arguments: APP, VERSIONBUILD, and ONOFF.  If
     # APP is already in the queue, ask user if they want to replace it (so
     # updated pkgs will get updated in the queue).  NOTE:  this is a
@@ -1510,20 +1529,37 @@ search_package () {
 gen_search_package () {
     # Search for package name glob generally using grep.  In dialog
     # interface, jump to selected package.
+    local PKG CATEGORY RESULTS
+    local NAME DESC CHOICE
+    local SRCHPICK SRCHCAT SRCHPKG
+    local SHORTPATH RVERSION RBUILD
+
     cd $LOCALREPO/$SLACKVER
     PKG=$1
-    RESULTS=$(find . -mindepth 2 -maxdepth 2 -type d -iname "*$PKG*" |
-        sed -e 's/.\///')
+    CATEGORY=${2:-\*}
+    RESULTS=$(find -mindepth 2 -maxdepth 2 -type d \
+        -iwholename "./$CATEGORY/*$PKG*" |
+        sed -e 's/.\///' |sort)
     if [ -n "$RESULTS" ]; then
         if [ "$DIAG" = 1 ]; then
             for i in $RESULTS; do
                 DESC=$(grep -hZm1 ^$(echo "$i" |
                     cut -d/ -f2) ./$i/slack-desc* | cut -d\( -f2- |
                     cut -d\) -f1)
-                echo "\"$i\" \"$DESC\"" >> $TMP/sbopkg_search_results
+                if [[ "$CATEGORY" = "*" ]]; then
+                    NAME=$i
+                else
+                    NAME=$(echo $i |cut -d/ -f2)
+                fi
+                echo "\"$NAME\" \"$DESC\"" >> $TMP/sbopkg_search_results
             done
             while [ -f $TMP/sbopkg_search_results ]; do
-                dialog --title "Matches for $PKG" --extra-button \
+                # The default item can be "". In that case, dialog defaults
+                # to the first item.
+                dialog --title "Matches for $PKG in $CATEGORY" \
+                    --backtitle "$(crunch "Currently using the \
+                    SlackBuilds.org $SLACKVER repository.")" \
+                    --default-item "$SRCHPICK" --extra-button \
                     --extra-label "Add to Queue" --menu "$(crunch "Please \
                     select an item you wish to view or press <Cancel> to \
                     exit.")" 20 70 14 --file \
@@ -1534,15 +1570,20 @@ gen_search_package () {
                     return 0
                 fi
                 SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
-                SRCHCAT=$(echo $SRCHPICK | sed -e 's/\/.*$//')
+                if [[ "$CATEGORY" = "*" ]]; then
+                    SRCHCAT=$(echo $SRCHPICK | sed -e 's/\/.*$//')
+                else
+                    SRCHCAT=$CATEGORY
+                fi
+                echo $SRCHCAT >$TMP/sbopkg_category_selection
                 SRCHPKG=$(echo $SRCHPICK | sed -e 's/^.*\///')
-                local SHORTPATH=$LOCALREPO/$SLACKVER/$SRCHCAT/$SRCHPKG
+                SHORTPATH=$LOCALREPO/$SLACKVER/$SRCHCAT/$SRCHPKG
                 RVERSION=$(grep VERSION $SHORTPATH/$SRCHPKG.info |
                     cut -d= -f2 | sed s/\"//g)
                 RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$SRCHPKG.SlackBuild |
                     sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
                 if [ $CHOICE = 0 ]; then
-                    echo $SRCHCAT > $TMP/sbopkg_category_selection
+                    #echo $SRCHCAT > $TMP/sbopkg_category_selection
                     echo $SRCHPKG > $TMP/sbopkg_item_selection
                     cd $LOCALREPO/$SLACKVER
                     info_item
