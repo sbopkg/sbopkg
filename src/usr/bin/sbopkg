@@ -95,49 +95,38 @@ config_check () {
     fi
 }
 
-directory_checks () {
-    # Check and make sure certain sbopkg-related directories exist.
-    # If not, create them.
-    if [ ! -d "$LOCALREPO/$SLACKVER" ]; then
+ck_dir() {
+    # This function displays the directory-creation message and then creates
+    # the missing directory.
+    if [ ! -d "$1" ]; then
         echo
-        echo "Creating local repository directory $LOCALREPO/$SLACKVER"
-        echo "for the rsync mirror."
+        crunch_fmt "$2"
         echo
-        read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
-        echo
+        read -n1 -sep "Press any key to continue or Ctrl-C to exit."
         # One of these days, I'll see about implementing a cleaner way of
         # exiting with a nice error message if the user does not have
         # sufficient permissions to create these directories.  For now,
         # the || exit 1 will suffice.
-        mkdir -p $LOCALREPO/$SLACKVER || exit 1
-    else
-        cd $LOCALREPO
+        mkdir -p $1 || exit 1
+        exit
     fi
-    if [ ! -d "$SRCDIR" ]; then
-        echo
-        crunch "Creating local cache directory $SRCDIR to keep \
-            downloaded sources."
-        echo
-        read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
-        echo
-        mkdir -p $SRCDIR || exit 1
-    fi
-    if [ ! -d "$TMP" ]; then
-        echo
-        echo "Creating local TMP directory $TMP."
-        echo
-        read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
-        echo
-        mkdir -p $TMP || exit 1
-    fi
-    if [ ! -d "$OUTPUT" ]; then
-        echo
-        echo "Creating local package output directory $OUTPUT."
-        echo
-        read -s -n 1 -p "Press any key to continue or Ctrl-C to exit."
-        echo
-        mkdir -p $OUTPUT || exit 1
-    fi
+}
+
+directory_checks () {
+    # Check and make sure certain sbopkg-related directories exist.
+    # If not, create them.
+    ck_dir "$LOCALREPO/$SLACKVER" \
+        "Creating local repository directory $LOCALREPO/$SLACKVER for the \
+            rsync mirror."
+    ck_dir "$SRCDIR" \
+        "Creating local cache directory $SRCDIR to keep downloaded sources."
+    ck_dir "$TMP" \
+        "Creating local TMP directory $TMP."
+    ck_dir "$OUTPUT" \
+        "Creating local package output directory $OUTPUT."
+
+    #cd $LOCALREPO
+
     # Let's catch Control-C and try to exit cleanly.  Please see the
     # comment to the control_c function, below.
     trap 'control_c' 2 14 15
@@ -1589,8 +1578,7 @@ gen_search_package () {
 show_readme () {
     # Show the package's text files.
     cd $LOCALREPO/$SLACKVER
-    ${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,\
-    $PKGNAME.info.build,slack-desc}
+    ${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info.build,slack-desc}
     rm -f $PKGPATH/$PKGNAME.info.build
     return 0
 }
@@ -1627,8 +1615,8 @@ remove_sources () {
         dialog --title "Displaying $APP sources" \
             --textbox $TMP/sbopkg_app_sources 0 0
         if has_root; then
-            dialog --title "Keep $APP sources?" --yes-label="Keep" \
-                --no-label="Delete" --yesno "$(crunch "Would you \
+            dialog --title "Keep $APP sources?" --yes-label "Keep" \
+                --no-label "Delete" --yesno "$(crunch "Would you \
                 like to keep the $APP sources in the cache directory \
                 $SRCDIR?.")" 8 40
             if [ $? = 1 ]; then
@@ -2445,6 +2433,7 @@ control_c () {
     # presses Control-C.  The $TMP/sbopkgpidlist file is the file to which
     # various PID's are written to as certain background processes etc.
     # are executed.
+    echo
     echo "Control-C detected.  Trying to exit cleanly...";
     if [ -e $TMP/sbopkgpidlist ]; then
         for pid in $(cat $TMP/sbopkgpidlist); do
