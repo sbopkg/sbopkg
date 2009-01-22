@@ -4,8 +4,8 @@ enhancements:
 
   * Add in new update code by Mauro Giachero.  This greatly improves how the
     updates are handled.  Please note there is a new file
-    /etc/sbopkg/sbopkg-renames that handes a few name changes.  If you upgrade
-    sbopkg with theh new package, then this file will be automatically
+    /etc/sbopkg/sbopkg-renames that handles a few name changes.  If you
+    upgrade sbopkg with the new package, then this file will be automatically
     installed.  If not, you'll need to grab this file from the source tarball
     and move it there manually.
   * Change how selecting/unselecting items in the build queue are handled.
@@ -14,15 +14,27 @@ enhancements:
   * Improve how packages are added to the queue.  The user is now prompted if
     they want to replace items already in the queue or skip them.
   * Merge in a large whitespace/cleanup patch by slakmagik which greatly
-    improves the readability of the code.
+    improves the readability of the code; thanks to slakmagik for the patch.
   * Replace the 'Clear Queue' menu item with 'Delete Queue Items' which
     provides the user the to delete individual items in the queue or clear the
     entire build queue.
-  * Add in two patches from slakmagik, the first allows the user to have a
-    /local/ directory in the local SBo repository where the user can maintain
-    individual non-SBo SlackBuilds (in the SBo style, however) which will be
-    picked up by sbopkg, the second adds a new sbopkg.conf variable LOGFILE
+  * Add in ability to have a /local directory in the local SBo repository tree
+    on a user's system that is in parallel with other SBo directories (i.e.
+    /home/sbo/local).  As long as this directory is maintained in an SBo style
+    (including user-defined categories), then sbopkg will pick them up and the
+    user can change their SLACKVER to 'local' and build/install packages from
+    there.  This might be useful in testing pre-submissions to SBo or for
+    maintaining other software not in SBo.  This was inspired by a similar
+    idea contributed by slakmagik.  Please see the sbopkg.conf(5) man page for
+    more information.
+  * Commit a patch from slakmagik that adds a new sbopkg.conf variable LOGFILE
     where the user can decide the name and location of the permanent build
-    log, if used.
+    log, if used; thanks to slakmagik for the patch.
+  * Fix issue where downloaded sources with spaces in their file names would
+    cause an MD5SUM failure; thanks to alkos333 for the bug report.
+  * Commit several other patches from slakmagik that improve the handling of
+    the search box upon search failures; tweak the precheck log a bit; improve
+    the checking of root privilegs, and improve the handling of the
+    directory-creation checks; thanks to slakmagik for these patches.
 +--------------------------+
 
