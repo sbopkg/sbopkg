@@ -133,20 +133,32 @@ directory_checks () {
 
 pid_check () {
     # Set and check for pid file.
+    local PIDFILE OTHERPID
+
     PIDFILE=$TMP/sbopkg.pid
     if [ -e $PIDFILE ]; then
-        echo
-        echo "Another instance of sbopkg appears to be running"
-        echo "with process id $(cat $PIDFILE).  Running more than"
-        echo "one instance of sbopkg is not recommended."
-        echo
-        echo "If this is incorrect, you can delete the lockfile"
-        echo "'${PIDFILE}' and restart.  Exiting now."
-        exit 1
-    else
-        cleanup
-        echo $$ > $PIDFILE
+        # When things go haywire and sbopkg crashes (this happens only on
+        # development versions, of course ;-)) the PIDFILE isn't deleted and
+        # triggers the error below on the following run.
+        # Perform a basic test to reduce the amount of false positives. Note
+        # that no check on the file name is performed, to avoid missing true
+        # positives in the (rare, but possible) cases where the user renames
+        # the sbopkg script.
+        OTHERPID=$(cat $PIDFILE)
+        if [[ -n $(ps h --pid $OTHERPID) ]]; then
+            echo
+            echo "Another instance of sbopkg appears to be running"
+            echo "with process id $OTHERPID.  Running more than"
+            echo "one instance of sbopkg is not recommended."
+            echo
+            echo "If this is incorrect, you can delete the lockfile"
+            echo "'${PIDFILE}' and restart.  Exiting now."
+            exit 1
+        fi
     fi
+
+    cleanup
+    echo $$ > $PIDFILE
 }
 
 has_root () {
