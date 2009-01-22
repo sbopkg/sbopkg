@@ -164,6 +164,7 @@ directory_checks () {
     ck_dir "$OUTPUT" \
         "Creating local package output directory $OUTPUT."
 
+    # FIXME: This can probably be removed, but leave as-is for a bit.
     #cd $LOCALREPO
 
     # Let's catch Control-C and try to exit cleanly.  Please see the
@@ -865,6 +866,8 @@ info_item () {
         else
             LPACKAGE="$APP (Installed: $KPACKAGE)"
         fi
+        # Am considering reverting this double menu code back to original
+        # prior to r353.
         if has_root; then
             dialog --default-item "$U" \
                 --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
@@ -939,6 +942,7 @@ info_item () {
             fi
             if [ "$U" = "Queue" ]; then
                 add_item_to_queue $APP $RVERSION-$RBUILD ON
+                # FIXME: This can be removed if add_item_to_queue is working
                 #if $(cat $TMP/sbopkg-tmp-queue | grep -q "^$APP "); then
                 #    dialog --title "ERROR" --msgbox \
                 #    "$APP is already in the queue." 8 30
@@ -1049,6 +1053,7 @@ browse_categories () {
         fi
         S="$(cat $TMP/sbopkg_category_manual_selection)"
         gen_search_package '*' $S
+        # FIXME: cleanup next two lines?
 #         browse_items
 #         S="$(cat $TMP/sbopkg_category_selection)"
     done
@@ -1083,6 +1088,7 @@ view_perm_log () {
     # This function displays the contents of the permanent build log,
     # which is kept if KEEPLOG is set to YES in the config file.
     if [ ! -e $LOGFILE ]; then
+        # FIXME: These next 4 lines can probably be removed soon.
         #dialog --title "ERROR" --msgbox "$(crunch "No permanent log \
         #    found.  Please make sure KEEPLOG is set to YES \
         #    in the configuration file.")" 10 30
@@ -1227,6 +1233,7 @@ load_backup_queue () {
             cat $PERMQUEUE | while read PICK; do
                 add_item_to_queue $PICK
             done
+            # FIXME: this next line can be removed soon.
             #mv $PERMQUEUE $TMPQUEUE
             touch $TMP/sbopkg_backup_queue.lck
             dialog --title "Done" --msgbox \
@@ -1273,6 +1280,7 @@ load_user_queue () {
                 cat $USERQUEUE | while read PICK; do
                     add_item_to_queue $PICK
                 done
+                # FIXME: these next 5 lines can be removed soon.
                 #rm -f $WORKINGQUEUE
                 #cat $TMPQUEUE >> $WORKINGQUEUE
                 #cat $USERQUEUE >> $WORKINGQUEUE
@@ -1641,6 +1649,8 @@ gen_search_package () {
                     info_item
                 elif [ $CHOICE = 3 ]; then
                     add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
+                    # FIXME: These next several lines can be removed if
+                    # add_item_to_queue is working.
                     #if [ ! -e $TMP/sbopkg-tmp-queue ]; then
                     #    touch $TMP/sbopkg-tmp-queue
                     #fi
@@ -2462,9 +2472,6 @@ queue_menu () {
             save_user_queue
         fi
 
-        #if [ "$Q" = "Delete" ]; then
-        #    delete_backup_queue
-        #fi
     done
 }
 
