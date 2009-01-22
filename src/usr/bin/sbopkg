@@ -1586,23 +1586,23 @@ get_source () {
     # Check to see if the source tarball exists in the local cache
     # directory.  If it does, make a symlink to the package directory in
     # the local mirror.  If it does not, download it and make the link.
-    if [ ! -e $PKGPATH/$SRCNAME ]; then
-        if [ -e $SRCDIR/$SRCNAME ]; then
-            ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
+    if [ ! -e $PKGPATH/"$SRCNAME" ]; then
+        if [ -e $SRCDIR/"$SRCNAME" ]; then
+            ln -s $SRCDIR/"$SRCNAME" $LOCALREPO/$SLACKVER/$PKGPATH/"$SRCNAME"
         else
             mkdir -p $SRCDIR/download
             cd $SRCDIR/download
             wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> \
                 $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
             wait
-            DOWNLOADFILE=$(ls *)
-            CORRECTED_DOWNLOADFILE=$(echo $DOWNLOADFILE | sed -e \
+            DOWNLOADFILE=$(ls)
+            CORR_DOWNLOADFILE=$(echo $DOWNLOADFILE | sed -e \
             's/\?e=.*$//') # for Virtualbox where wget adds a '?=' at end
-            mv $DOWNLOADFILE $CORRECTED_DOWNLOADFILE
-            mv $CORRECTED_DOWNLOADFILE $SRCDIR/
+            mv "$DOWNLOADFILE" "$CORR_DOWNLOADFILE"
+            mv "$CORR_DOWNLOADFILE" $SRCDIR/
             cd -
             rm -rf $SRCDIR/download
-            ln -s $SRCDIR/$SRCNAME $LOCALREPO/$SLACKVER/$PKGPATH/$SRCNAME
+            ln -s $SRCDIR/"$SRCNAME" $LOCALREPO/$SLACKVER/$PKGPATH/"$SRCNAME"
         fi
     fi
 }
@@ -1712,12 +1712,13 @@ build_package () {
     PKGNAME=${PKG##*/}
     SRCNAME=${DOWNLOAD##*/}
     SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
+    SRCNAME=$(echo $SRCNAME | sed -e 's/\%20/ /g') # Fix for spaces
     if [ "$PKG" = "django" ]; then
         SRCNAME="Django-$VERSION.tar.gz"
     fi
     get_source $PKG
     echo "Checking MD5SUM for "$SRCNAME"..."
-    MD5CHK=$(md5sum $SRCNAME | cut -d' ' -f1)
+    MD5CHK=$(md5sum "$SRCNAME" | cut -d' ' -f1)
     if [ "$MD5CHK" == $MD5SUM ]; then
         echo "OK"
     else
@@ -2050,7 +2051,7 @@ process_queue () {
     QUITBUILD=""
     rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
     check_root
-    if [ "$BUILDPKGS" = 1 ]; then
+    if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
         if empty_queue; then return; fi
     fi
     if [ $ROOT = "false" ]; then
