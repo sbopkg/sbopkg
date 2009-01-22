@@ -71,6 +71,7 @@ config_check () {
         exit 1
     else
         . $SBOPKG_CONF
+        KEEPLOG=$(echo "$KEEPLOG" | tr [[:lower:]] [[:upper:]])
         # Some configuration options are mandatory
         for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT KEEPLOG \
             LOGFILE DEBUG RSYNCFLAGS WGETFLAGS; do
@@ -1082,9 +1083,19 @@ view_perm_log () {
     # This function displays the contents of the permanent build log,
     # which is kept if KEEPLOG is set to YES in the config file.
     if [ ! -e $LOGFILE ]; then
-        dialog --title "ERROR" --msgbox "$(crunch "No permanent log \
-            found.  Please make sure KEEPLOG is set to YES \
-            in the configuration file.")" 10 30
+        #dialog --title "ERROR" --msgbox "$(crunch "No permanent log \
+        #    found.  Please make sure KEEPLOG is set to YES \
+        #    in the configuration file.")" 10 30
+        #continue
+        if ! [ "$KEEPLOG" = "YES" ]; then
+            VAR_NOTICE="$(crunch "\n\nTo use this feature, please make sure \
+            KEEPLOG is set to YES in the configuration file.")"
+            HEIGHT=10
+        else
+            HEIGHT=5
+        fi
+        dialog --title "NOTICE" --msgbox "$(crunch "No permanent log found. \
+        $VAR_NOTICE")" $HEIGHT 30
         continue
     else
         dialog --title "Displaying $LOGFILE" --textbox $LOGFILE 0 0
@@ -1346,6 +1357,8 @@ delete_build_queue () {
         if [ $CHOICE = 0 ]; then
             echo $REMOVED >> $WORKINGQUEUE
             sed -i "s/^$REMOVED .*$//" $REMOVEQUEUE
+            sed '/^$/d' $REMOVEQUEUE > $TMP/sbopkg-updated-queue
+            mv $TMP/sbopkg-updated-queue $REMOVEQUEUE
             continue
         elif [ $CHOICE = 1 ]; then
             rm -f $REMOVEQUEUE
@@ -1353,14 +1366,14 @@ delete_build_queue () {
         elif [ $CHOICE = 2 ]; then
             for REMOVE in $(cat $WORKINGQUEUE); do
                 sed -i "s/^$REMOVE .*$//" $TMPQUEUE
-                #cat $TMPQUEUE | grep -q "^$PICK " >> $WORKINGQUEUE
             done
+            sed '/^$/d' $TMPQUEUE > $TMP/sbopkg-updated-queue
+            mv $TMP/sbopkg-updated-queue $TMPQUEUE
             if [[ $(wc -w <$TMPQUEUE) -eq 0 ]]; then
                 rm -f $TMPQUEUE
             fi
             dialog --title "Done" --msgbox \
                 "The items have been removed from the build queue." 8 30
-            #rm -f $REMOVEQUEUE
             return 0
         elif [ $CHOICE = 3 ]; then
             rm -f $REMOVEQUEUE $TMPQUEUE
@@ -2518,7 +2531,7 @@ cleanup () {
         rm -f $TMP/sbopkgpidlist
         rm -rf $TMP/sbooutput
         rm -f $TMP/sbopkg-*-queue
-        rm -f $PIDFILE
+        rm -f $TMP/sbopkg.pid
     fi
     cd $CWD
 }
