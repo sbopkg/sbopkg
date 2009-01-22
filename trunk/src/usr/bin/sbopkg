@@ -62,12 +62,16 @@ crunch_fmt() {
 config_check () {
     # Check if config file is there and if so check that it has all
     # needed variables with any value, and set them.
+    local MISSING CANTCREATE
+    local VARNAME VARDIR VARVALUE
+
     if [ ! -e $SBOPKG_CONF ]; then
         echo "$SCRIPT: No $SBOPKG_CONF file was found."
         echo "Please create it and run $SCRIPT again." 1>&2
         exit 1
     else
         . $SBOPKG_CONF
+        # Some configuration options are mandatory
         for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT KEEPLOG \
             LOGFILE DEBUG RSYNCFLAGS WGETFLAGS; do
             if [ -z "${!VAR}" ]; then
@@ -75,19 +79,54 @@ config_check () {
             fi
         done
         if [ "$MISSING" ]; then
-                echo
-                echo "ERROR"
-                echo "$SCRIPT: Can't find a value for variable(s):"
-                echo "$MISSING"
-                echo
-                echo "If you have recently upgraded sbopkg there may be"
-                echo "new variables in the sbopkg.conf file.  Please"
-                echo "merge the sbopkg.conf.new file with your existing"
-                echo "sbopkg.conf file.  Please see the sbopkg.conf(5)"
-                echo "man page for more details."
-                echo
-                echo "Please correct this error and run $SCRIPT again."
-                exit 1
+            echo
+            echo "ERROR"
+            echo "$SCRIPT: Can't find a value for variable(s):"
+            echo "$MISSING"
+            echo
+            echo "If you have recently upgraded sbopkg there may be"
+            echo "new variables in the sbopkg.conf file.  Please"
+            echo "merge the sbopkg.conf.new file with your existing"
+            echo "sbopkg.conf file.  Please see the sbopkg.conf(5)"
+            echo "man page for more details."
+            echo
+            echo "Please correct this error and run $SCRIPT again."
+            exit 1
+        fi
+
+        # Verify that the files/folders specified exist or can be created
+        # This is done only if the user is root, since there's little a
+        # non-root user can do with these anyway.
+        if has_root; then
+            for VAR in SRCDIR/ TMP/ OUTPUT/ LOGFILE; do
+                eval VARVALUE=\$$VAR
+                VARNAME=${VARVALUE##*/}
+                if [[ -z "$VARNAME" ]]; then
+                    VARNAME="sbopkg-testfile"
+                fi
+                VARDIR=$(echo $VARVALUE |rev |cut -d/ -f2- |rev)
+                if [[ ! -e $VARDIR ]]; then
+                    mkdir -p $VARDIR || CANTCREATE+="$VARVALUE "
+                fi
+                if [[ -d $VARDIR ]]; then
+                    (touch $VARDIR/$VARNAME && rm -f $VARDIR/$VARNAME) \
+                        || CANTCREATE+="$VARVALUE "
+                fi
+            done
+        fi
+        if [ "$CANTCREATE" ]; then
+            echo
+            echo "ERROR"
+            echo "$SCRIPT: Can't create the file(s)/folder(s):"
+            echo "$CANTCREATE"
+            echo
+            echo "Make sure you have enough privileges to create and"
+            echo "access these, or change the problematic settings in"
+            echo "the sbopkg.conf file."
+            echo "See the sbopkg.conf(5) man page for more details."
+            echo
+            echo "Please correct this error and run $SCRIPT again."
+            exit 1
         fi
         if [ -e $HOME/.sbopkg.conf ]; then
             . $HOME/.sbopkg.conf
