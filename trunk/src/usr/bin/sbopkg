@@ -161,12 +161,12 @@ pid_check () {
     fi
 }
 
-check_root () {
+has_root () {
     # Check to see whether the user is root or not.
     if [ ! $(id -u) = "0" ]; then
-        ROOT="false"
+        return 1
     else
-        ROOT="true"
+        return 0
     fi
 }
 
@@ -814,21 +814,40 @@ info_item () {
         else
             LPACKAGE="$APP (Installed: $KPACKAGE)"
         fi
-        dialog --default-item "$U" --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
-            --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
-            --cancel-label "Main Menu" --menu \
-            "$(crunch "Please choose an item or press <Back> to go back or \
-            press <Main Menu> to return to the main menu.\n")" 18 60 10 \
-            "README" "View the README file" \
-            "Info" "View the .info file" \
-            "Slack-desc" "View the slack-desc file" \
-            "SlackBuild" "View the SlackBuild file" \
-            "Custom" "Customize the .info or SlackBuild" \
-            "Remove" "Remove $APP sources in cache" \
-            "Options" "Edit Build Options/Flavors" \
-            "Queue" "Add $APP to build queue" \
-            "Build" "Build a package for $APP" \
-            $JPACKAGE 2>$TMP/sbopkg_info_selection
+        if has_root; then
+            dialog --default-item "$U" \
+                --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
+                --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
+                --cancel-label "Main Menu" --menu \
+                "$(crunch "Please choose an item or press <Back> to go back \
+                or press <Main Menu> to return to the main menu.\n")" \
+                18 60 10 \
+                "README" "View the README file" \
+                "Info" "View the .info file" \
+                "Slack-desc" "View the slack-desc file" \
+                "SlackBuild" "View the SlackBuild file" \
+                "Custom" "Customize the .info or SlackBuild" \
+                "Remove" "Remove $APP sources in cache" \
+                "Options" "Edit Build Options/Flavors" \
+                "Queue" "Add $APP to build queue" \
+                "Build" "Build a package for $APP" \
+                $JPACKAGE 2>$TMP/sbopkg_info_selection
+        else
+            dialog --default-item "$U" \
+                --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
+                --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
+                --cancel-label "Main Menu" --menu \
+                "$(crunch "Please choose an item or press <Back> to go back \
+                or press <Main Menu> to return to the main menu.\n")" \
+                18 60 6 \
+                "README" "View the README file" \
+                "Info" "View the .info file" \
+                "Slack-desc" "View the slack-desc file" \
+                "SlackBuild" "View the SlackBuild file" \
+                "Custom" "Customize the .info or SlackBuild" \
+                "Options" "Edit Build Options/Flavors" \
+                2>$TMP/sbopkg_info_selection
+        fi
         CHOICE=$?
         if [ $CHOICE = 1 ]; then
             rm -f $TMP/sbopkg_*
@@ -984,16 +1003,11 @@ view_cache_dir () {
         ls -la $SRCDIR > $TMP/sbopkg_cache_dir
         dialog --title "Displaying $SRCDIR" \
             --textbox $TMP/sbopkg_cache_dir 0 0
-        dialog --title "Keep Cache?" --yes-label "Keep" --no-label "Delete" \
-            --yesno "$(crunch "Would you like to keep the files in the cache \
-            directory?")" 5 60
-        if [ $? = 1 ]; then
-            check_root
-            if [ $ROOT = "false" ]; then
-                dialog --title "ERROR" --msgbox "$(crunch "Sorry, only the \
-                    root user can clear the cache directory.")" 8 30
-                continue
-            else
+        if has_root; then
+            dialog --title "Keep Cache?" --yes-label "Keep" \
+                --no-label "Delete" --yesno "$(crunch "Would you like to \
+                keep the files in the cache directory?")" 5 60
+            if [ $? = 1 ]; then
                 rm -f $SRCDIR/*
                 dialog --title "Done" --msgbox \
                     "The cache directory has been cleared." 8 30
@@ -1017,18 +1031,12 @@ view_perm_log () {
             in the configuration file.")" 10 30
         continue
     else
-        dialog --title "Displaying $LOGFILE" \
-            --textbox $LOGFILE 0 0
-        dialog --title "Keep Log?" --yes-label "Keep" --no-label "Delete" \
-            --yesno "$(crunch "Would you like to keep the permanent build \
-            log $LOGFILE?")" 6 50
-        if [ $? = 1 ]; then
-            check_root
-            if [ $ROOT = "false" ]; then
-                dialog --title "ERROR" --msgbox \
-                    "Sorry, only the root user can delete the build log." 8 30
-                continue
-            else
+        dialog --title "Displaying $LOGFILE" --textbox $LOGFILE 0 0
+        if has_root; then
+            dialog --title "Keep Log?" --yes-label "Keep" \
+                --no-label "Delete" --yesno "$(crunch "Would you like to \
+                keep the permanent build log $LOGFILE?")" 6 50
+            if [ $? = 1 ]; then
                 rm -f $LOGFILE
                 dialog --title "Done" --msgbox \
                     "The build log has been deleted." 8 30
@@ -1044,7 +1052,12 @@ empty_queue () {
     # This function tests whether the temporary build queue is empty.
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     if [ ! -e $TMPQUEUE ]; then
-        dialog --title "Empty Queue" --msgbox "The build queue is empty." 8 30
+        if [ "$DIAG" = 1 ]; then
+            dialog --title "Empty Queue" --msgbox \
+                "The build queue is empty." 8 30
+        else
+            echo "The build queue is empty."
+        fi
         return 0
     else
         return 1
@@ -1613,16 +1626,12 @@ remove_sources () {
         ls -la $SRCDIR | grep $APP > $TMP/sbopkg_app_sources
         dialog --title "Displaying $APP sources" \
             --textbox $TMP/sbopkg_app_sources 0 0
-        dialog --title "Keep $APP sources?" --yesno "$(crunch "Would you \
-            like to keep the $APP sources in the cache directory $SRCDIR? \
-            Select YES to keep or NO to delete.")" 8 40
-        if [ $? = 1 ]; then
-            check_root
-            if [ $ROOT = "false" ]; then
-                dialog --title "ERROR" --msgbox "$(crunch "Sorry, only the \
-                    root user can delete the sources in the cache \
-                    directory.")" 8 30
-            else
+        if has_root; then
+            dialog --title "Keep $APP sources?" --yes-label="Keep" \
+                --no-label="Delete" --yesno "$(crunch "Would you \
+                like to keep the $APP sources in the cache directory \
+                $SRCDIR?.")" 8 40
+            if [ $? = 1 ]; then
                 for i in $(cat $TMP/sbopkg_app_sources); do
                     rm -f $SRCDIR/$i
                 done
@@ -2050,21 +2059,15 @@ process_queue () {
     SUMMARYLOG=$TMP/sbopkg_summary
     QUITBUILD=""
     rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
-    check_root
     if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
         if empty_queue; then return; fi
     fi
-    if [ $ROOT = "false" ]; then
+    if ! has_root; then
         if [ "$DIAG" = 1 ]; then
             dialog --title "ERROR" --msgbox "$(crunch "You must run this \
                 script as the root user in order to build packages.")" 8 30
             rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
             continue
-        else
-            crunch_fmt "You must run this script as the root user in order \
-                to build packages."
-            cleanup
-            exit 0
         fi
     fi
     if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
@@ -2666,10 +2669,17 @@ directory_checks
 pid_check
 
 if [ -n "$BUILD" ]; then
-    for PKGBUILD in $BUILD; do
-        echo $PKGBUILD >> $TMP/sbopkg-start-queue
-    done
-    process_queue
+    if has_root; then
+        for PKGBUILD in $BUILD; do
+            echo $PKGBUILD >> $TMP/sbopkg-start-queue
+        done
+        process_queue
+    else
+        crunch_fmt "You must run this script as the root user in order \
+            to build packages."
+        cleanup
+        exit 0
+    fi
 fi
 
 if [ -n "$CHK_UPDATES" ]; then
