@@ -1565,7 +1565,7 @@ gen_search_package () {
     else
         if [ "$DIAG" = 1 ]; then
             dialog --title "ERROR" --msgbox "No match for $PKG found" 8 30
-            continue
+            main_search
         else
             echo "$SCRIPT: No match for $PKG found." 1>&2
             continue
@@ -2460,6 +2460,20 @@ control_c () {
     fi
 }
 
+main_search() {
+    check_if_repo_exists
+    dialog --inputbox \
+        "Enter the name of a package you would like to search for:" \
+        9 40 2>/$TMP/sbopkg_search_request
+    if [ $? != 0 ]; then
+        continue
+    fi
+    SRCH="$(cat $TMP/sbopkg_search_request)"
+    if [ ! "$SRCH" = "" ]; then
+        gen_search_package $SRCH
+    fi
+}
+
 main_menu () {
     # This is the main dialog menu.
     if [ -z "$R" ]; then
@@ -2530,17 +2544,7 @@ main_menu () {
         fi
 
         if [ "$R" = "Search" ]; then
-            check_if_repo_exists
-            dialog --inputbox \
-                "Enter the name of a package you would like to search for:" \
-                9 40 2>/$TMP/sbopkg_search_request
-            if [ $? != 0 ]; then
-                continue
-            fi
-            SRCH="$(cat $TMP/sbopkg_search_request)"
-            if [ ! "$SRCH" = "" ]; then
-                gen_search_package $SRCH
-            fi
+            main_search
         fi
 
         if [ "$R" = "Queue" ]; then
