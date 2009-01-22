@@ -2118,9 +2118,7 @@ process_queue () {
             fi
             use_options $CHKBUILD
             echo $PKGNAME >> $FINALQUEUE
-            echo "$PKGNAME Found" >> $PRECHECKLOG
-            echo "Name: $PKGNAME" >> $PRECHECKLOG
-            echo "Version: $VERSION" >> $PRECHECKLOG
+            echo "Found $PKGNAME $VERSION" >> $PRECHECKLOG
             if [ "$BUILDOPTIONS" = "" ]; then
                 echo "Options: None" >> $PRECHECKLOG
             else
