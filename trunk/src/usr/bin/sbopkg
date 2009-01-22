@@ -1760,8 +1760,12 @@ build_package () {
     . $PKG.info.build
     PKGNAME=${PKG##*/}
     SRCNAME=${DOWNLOAD##*/}
-    SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
-    SRCNAME=$(echo $SRCNAME | sed -e 's/\%20/ /g') # Fix for spaces
+    # Replace URL hex sequences (like %20 for ' ' and %2B for '+')
+    SRCNAME=$(echo "echo $SRCNAME" \
+        |sed "s/%\(..\)/\$(printf \"\\\\x\\1\")/g" |bash)
+    # FIXME CLEANUP This is old stuff, and should be deleted
+    # SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
+    # SRCNAME=$(echo $SRCNAME | sed -e 's/\%20/ /g') # Fix for spaces
     if [ "$PKG" = "django" ]; then
         SRCNAME="Django-$VERSION.tar.gz"
     fi
