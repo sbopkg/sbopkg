@@ -250,17 +250,17 @@ get_sbo_packages () {
 check_for_updates () {
     # This checks for updates to installed SBo packages.  Thanks to Mauro
     # Giachero for this much-improved update code and related functions!
+    local NEWSB NEWINFO NEWVER
+    local VERSION_EXPRESSION
+    local TEMPFILE
+    local STRING INDEX OLDNAME NAME VER ARCH BUILD
+
     if [ "$SLACKVER" = "local" ]; then
         dialog --title "ERROR" --msgbox \
             "You cannot check for updates when using the /home/sbo/local \
             repository." 8 40
         return 0
     fi
-    local NEWSB NEWINFO NEWVER
-    local VERSION_EXPRESSION
-    local TEMPFILE
-    local STRING INDEX OLDNAME NAME VER ARCH BUILD
-
     # Check to see if there are any updates to installed SBo pkgs.
     check_if_repo_exists
     UPDATELIST=$TMP/sbopkg_updatelist
@@ -272,8 +272,8 @@ check_for_updates () {
             ChangeLog.txt.  If you proceed, it might take a few seconds to \
             process, depending on the number of SlackBuilds.org packages \
             you have installed.\n\nSelect YES to continue or NO to \
-            cancel.")" 19 50
-        if [ $? = 1 ]; then
+            cancel.")" 13 50
+        if [ $? != 0 ]; then
             continue
         fi
     else
