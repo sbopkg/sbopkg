@@ -1390,7 +1390,7 @@ view_queue () {
             rm -f $WORKINGQUEUE
             cat $TMPQUEUE | while read PICK; do
                 TESTAPP=$(echo $PICK | cut -f1 -d " ")
-                if $(cat $TMP/sbopkg-ans-queue | grep -q "^$TESTAPP\$"); then
+                if $(cat $TMP/sbopkg-ans-queue | grep -qx "$TESTAPP"); then
                     echo $PICK | sed -e 's/OFF/ON/' >> $WORKINGQUEUE
                 else
                     echo $PICK | sed -e 's/ON/OFF/' >> $WORKINGQUEUE
