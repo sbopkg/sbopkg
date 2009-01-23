@@ -1568,8 +1568,8 @@ gen_search_package () {
         if [ "$DIAG" = 1 ]; then
             for i in $RESULTS; do
                 DESC=$(grep -hZm1 ^$(echo "$i" |
-                    cut -d/ -f2) ./$i/slack-desc* | cut -d\( -f2- |
-                    cut -d\) -f1)
+                    cut -d/ -f2) ./$i/slack-desc* |
+                    sed 's/^[^(]*( *\(.*[^ ]\) *)[^)]*$/\1/')
                 if [[ "$CATEGORY" = "*" ]]; then
                     NAME=$i
                 else
