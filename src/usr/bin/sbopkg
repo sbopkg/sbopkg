@@ -115,7 +115,8 @@ ck_dir() {
 
     # Try to create a file in the specified folder
     if [[ $ERROR -eq 0 ]]; then
-        (touch $1/sbopkg-testfile && rm -f $1/sbopkg-testfile) || ERROR=2
+        (touch $1/sbopkg-testfile 2>/dev/null && rm -f $1/sbopkg-testfile \
+        2>/dev/null) || ERROR=2
     fi
 
     case $ERROR in
@@ -305,8 +306,8 @@ check_for_updates () {
         echo "No SlackBuilds.org packages detected." >> $UPDATELIST
     else
         crunch_fmt "Building list of potential updates.  This may take a \
-            few moments depending on how many SlackBuilds.org packages you \
-            have installed..."
+            few moments depending on how many SlackBuilds.org packages are \
+            installed..."
         crunch_fmt "Listing installed SlackBuilds.org packages and flagging \
             potential updates..." >> $UPDATELIST
         echo >> $UPDATELIST
@@ -830,42 +831,23 @@ info_item () {
         else
             LPACKAGE="$APP (Installed: $KPACKAGE)"
         fi
-        # Am considering reverting this double menu code back to original
-        # prior to r353.
-        if has_root; then
-            dialog --default-item "$U" \
-                --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
-                --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
-                --cancel-label "Main Menu" --menu \
-                "$(crunch "Please choose an item or press <Back> to go back \
-                or press <Main Menu> to return to the main menu.\n")" \
-                18 60 10 \
-                "README" "View the README file" \
-                "Info" "View the .info file" \
-                "Slack-desc" "View the slack-desc file" \
-                "SlackBuild" "View the SlackBuild file" \
-                "Custom" "Customize the .info or SlackBuild" \
-                "Remove" "Remove $APP sources in cache" \
-                "Options" "Edit Build Options/Flavors" \
-                "Queue" "Add $APP to build queue" \
-                "Build" "Build a package for $APP" \
-                $JPACKAGE 2>$TMP/sbopkg_info_selection
-        else
-            dialog --default-item "$U" \
-                --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
-                --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
-                --cancel-label "Main Menu" --menu \
-                "$(crunch "Please choose an item or press <Back> to go back \
-                or press <Main Menu> to return to the main menu.\n")" \
-                18 60 6 \
-                "README" "View the README file" \
-                "Info" "View the .info file" \
-                "Slack-desc" "View the slack-desc file" \
-                "SlackBuild" "View the SlackBuild file" \
-                "Custom" "Customize the .info or SlackBuild" \
-                "Options" "Edit Build Options/Flavors" \
-                2>$TMP/sbopkg_info_selection
-        fi
+        dialog --default-item "$U" \
+            --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
+            --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
+            --cancel-label "Main Menu" --menu \
+            "$(crunch "Please choose an item or press <Back> to go back \
+            or press <Main Menu> to return to the main menu.\n")" \
+            18 60 10 \
+            "README" "View the README file" \
+            "Info" "View the .info file" \
+            "Slack-desc" "View the slack-desc file" \
+            "SlackBuild" "View the SlackBuild file" \
+            "Custom" "Customize the .info or SlackBuild" \
+            "Remove" "Remove $APP sources in cache" \
+            "Options" "Edit Build Options/Flavors" \
+            "Queue" "Add $APP to build queue" \
+            "Build" "Build a package for $APP" \
+            $JPACKAGE 2>$TMP/sbopkg_info_selection
         CHOICE=$?
         if [ $CHOICE = 1 ]; then
             rm -f $TMP/sbopkg_*
