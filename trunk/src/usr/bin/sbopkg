@@ -1925,33 +1925,29 @@ pick_slackbuild () {
         SLACKBUILD="original"
     else
         if [ "$DIAG" = 1 ]; then
-            while [ 0 ]; do
-                dialog --title "Choose $PKG SlackBuild" --menu \
-                    "$(crunch "A local SlackBuild for $PKG was found in \
-                    addition to the original SlackBuild.  Which one would \
-                    you like to use?")" 10 60 2 \
-                    "Original" "Use the original SlackBuild" \
-                    "Local" "Use the local SlackBuild" 2> \
-                    $TMP/sbopkg_bld_selection
-                if [ $? = 1 ]; then
-                    # Need this to get back to $APP info menu
-                    SLACKBUILD="cancel"
-                    rm -f $PKGPATH/$PKGNAME*.build
-                    QUITBUILD=1
-                    return 0
-                fi
-                B="$(cat $TMP/sbopkg_bld_selection)"
-                if [ "$B" = "Original" ]; then
-                    SLACKBUILD="original"
-                    break
-                fi
-                if [ "$B" = "Local" ]; then
-                    SLACKBUILD="local"
-                    break
-                fi
-            done
+            dialog --title "Choose $PKG SlackBuild" --menu \
+                "$(crunch "A local SlackBuild for $PKG was found in \
+                addition to the original SlackBuild.  Which one would \
+                you like to use?")" 10 60 2 \
+                "Local" "Use the local SlackBuild" \
+                "Original" "Use the original SlackBuild" 2> \
+                $TMP/sbopkg_bld_selection
+            if [ $? != 0 ]; then
+                # Need this to get back to $APP info menu
+                SLACKBUILD="cancel"
+                rm -f $PKGPATH/$PKGNAME*.build
+                QUITBUILD=1
+                return 0
+            fi
+            B="$(cat $TMP/sbopkg_bld_selection)"
+            if [ "$B" = "Original" ]; then
+                SLACKBUILD="original"
+            fi
+            if [ "$B" = "Local" ]; then
+                SLACKBUILD="local"
+            fi
         else
-            while true; do
+            while :; do
                 crunch_fmt "A local SlackBuild for $PKGNAME was found in \
                     addition to the original SlackBuild."
                 echo "Which one would you like to use?"
@@ -2023,30 +2019,27 @@ pick_info () {
         DOTINFO="original"
     else
         if [ "$DIAG" = 1 ]; then
-            while [ 0 ]; do
-                dialog --title "Choose $PKG .info file" --menu \
-                    "$(crunch "A local .info file for $PKG was found in \
-                    addition to the original .info file. Which one would you \
-                    like to use?")" 10 60 2 \
-                    "Original" "Use the original .info" \
-                    "Local" "Use the local .info" 2>$TMP/sbopkg_info_selection
-                if [ $? != 0 ]; then
-                    rm -f $PKGPATH/$PKGNAME*.build
-                    QUITBUILD=1
-                    return 0
-                fi
-                I="$(cat $TMP/sbopkg_info_selection)"
-                if [ "$I" = "Original" ]; then
-                    DOTINFO="original"
-                    break
-                fi
-                if [ "$I" = "Local" ]; then
-                    DOTINFO="local"
-                    break
-                fi
-            done
+            dialog --title "Choose $PKG .info file" --menu \
+                "$(crunch "A local .info file for $PKG was found in \
+                addition to the original .info file. Which one would you \
+                like to use?")" 10 60 2 \
+                "Local" "Use the local .info" \
+                "Original" "Use the original .info" \
+                2>$TMP/sbopkg_info_selection
+            if [ $? != 0 ]; then
+                rm -f $PKGPATH/$PKGNAME*.build
+                QUITBUILD=1
+                return 0
+            fi
+            I="$(cat $TMP/sbopkg_info_selection)"
+            if [ "$I" = "Original" ]; then
+                DOTINFO="original"
+            fi
+            if [ "$I" = "Local" ]; then
+                DOTINFO="local"
+            fi
         else
-            while true; do
+            while :; do
                 crunch_fmt "A local .info file for $PKG was found in \
                     addition to the original .info file."
                 echo "Which one would you like to use?"
