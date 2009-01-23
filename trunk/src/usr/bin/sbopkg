@@ -2392,6 +2392,9 @@ check_for_latest () {
 
 queue_menu () {
     # Separate menu for queue functions.
+    if [ ! -e $TMP/sbopkg_backup_queue.lck ]; then
+        load_backup_queue
+    fi
     if [ -z "$Q" ]; then
         Q="View"
     fi
@@ -2544,13 +2547,36 @@ main_search() {
     fi
 }
 
+main_updates () {
+    local APP VERSIONBUILD ONOFF
+
+    rm -f $TMP/sbopkg-update-queue
+    check_for_updates
+    if [ -e $TMP/sbopkg-update-queue ]; then
+        dialog --title "Add Updates to Queue?" --yesno \
+            "$(crunch "Would you like to add the flagged updates to \
+            the build queue?")" 8 35
+        if [ $? = 0 ]; then
+            cat $TMP/sbopkg-update-queue | while read PICK; do
+                APP=$(echo $PICK | cut -f1 -d " ")
+                VERSIONBUILD=$(echo $PICK | cut -f2 -d " ")
+                ONOFF=$(echo $PICK | cut -f3 -d " ")
+                add_item_to_queue $APP $VERSIONBUILD $ONOFF
+            done
+            rm -f $TMP/sbopkg-update-queue
+            dialog --title "Done" --msgbox "$(crunch "The flagged \
+                updates have been added to the build queue.")" 8 30
+        fi
+    fi
+}
+
 main_menu () {
     # This is the main dialog menu.
     if [ -z "$R" ]; then
         R="Rsync"
     fi
-    while [ 0 ]; do
-        dialog --default-item "$R" --title \
+    while :; do
+        dialog --cancel-label "Exit" --default-item "$R" --title \
             "SlackBuilds.org Package Browser (sbopkg version $SBOVER)" \
             --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
@@ -2567,73 +2593,25 @@ main_menu () {
             "Utilities" "Go to the utilities menu" \
             "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
-        if [ $? != 0 ]; then
-            save_backup_queue
-            clear
-            cleanup
-            exit 0
-        fi
-
         R="$(cat $TMP/sbopkg_main_menu_answer)"
 
-        if [ "$R" = "Rsync" ]; then
-            rsync_repo
-        fi
-
-        if [ "$R" = "ChangeLog" ]; then
-            show_changelog
-        fi
-
-        if [ "$R" = "Packages" ]; then
-            get_sbo_packages
-        fi
-
-        if [ "$R" = "Updates" ]; then
-            rm -f $TMP/sbopkg-update-queue
-            check_for_updates
-            if [ -e $TMP/sbopkg-update-queue ]; then
-                dialog --title "Add Updates to Queue?" --yesno \
-                    "$(crunch "Would you like to add the flagged updates to \
-                    the build queue?")" 8 35
-                if [ $? = 0 ]; then
-                    cat $TMP/sbopkg-update-queue | while read PICK; do
-                        APP=$(echo $PICK | cut -f1 -d " ")
-                        VERSIONBUILD=$(echo $PICK | cut -f2 -d " ")
-                        ONOFF=$(echo $PICK | cut -f3 -d " ")
-                        add_item_to_queue $APP $VERSIONBUILD $ONOFF
-                    done
-                    rm -f $TMP/sbopkg-update-queue
-                    dialog --title "Done" --msgbox "$(crunch "The flagged \
-                        updates have been added to the build queue.")" 8 30
-                fi
-            fi
-        fi
-
-        if [ "$R" = "Browse" ]; then
-            browse_categories
-        fi
-
-        if [ "$R" = "Search" ]; then
-            main_search
-        fi
-
-        if [ "$R" = "Queue" ]; then
-            if [ ! -e $TMP/sbopkg_backup_queue.lck ]; then
-                load_backup_queue
-            fi
-            queue_menu
-        fi
-
-        if [ "$R" = "Utilities" ]; then
-            utilities_menu
-        fi
-
-        if [ "$R" = "Exit" ]; then
-            save_backup_queue
-            clear
-            cleanup
-            exit 0
-        fi
+        case "$R" in
+            "Rsync")     rsync_repo ;;
+            "ChangeLog") show_changelog ;;
+            "Packages")  get_sbo_packages ;;
+            "Updates")   main_updates ;;
+            "Browse")    browse_categories ;;
+            "Search")    main_search ;;
+            "Utilities") utilities_menu ;;
+            "Queue")     queue_menu ;;
+            *)           # "Exit", or an empty string if Exit, instead of Ok,
+                         # was pressed
+                         save_backup_queue
+                         clear
+                         cleanup
+                         exit 0
+                         ;;
+        esac
     done
 }
 
