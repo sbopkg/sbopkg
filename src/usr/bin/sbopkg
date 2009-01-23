@@ -1001,6 +1001,16 @@ customize_item () {
 browse_categories () {
     # This function iterates through the category list until one is
     # chosen.
+    if [ -z "$(ls -A $LOCALREPO/$SLACKVER 2>/dev/null)" ]; then
+    # The following is another way to test
+    #if [ $(ls -lA $LOCALREPO/$SLACKVER | wc -l) -eq 0 ]; then
+        if [ "$DIAG" = 1 ]; then
+            dialog --title "ERROR" --msgbox "$(crunch "Repository seems to \
+                be empty. Please make sure your repository directory is set \
+                correctly and that you have done an rsync first.")" 10 30
+            continue
+        fi
+    fi
     get_category_list
     if [ -z "$S" ]; then
         S="Academic"
