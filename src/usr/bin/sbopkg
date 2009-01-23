@@ -306,43 +306,15 @@ check_for_updates () {
     check_if_repo_exists
     UPDATELIST=$TMP/sbopkg_updatelist
     rm -f $UPDATELIST
-    if [ "$DIAG" = 1 ]; then
-        dialog --title "Check for updates?" --yesno "$(crunch "Would you \
-            like to check for updates?  This is an experimental feature and \
-            should not be used as a substitute for reading the SBo \
-            ChangeLog.txt.  If you proceed, it might take a few seconds to \
-            process, depending on the number of SlackBuilds.org packages \
-            you have installed.\n\nSelect YES to continue or NO to \
-            cancel.")" 13 50
-        if [ $? != 0 ]; then
-            continue
-        fi
-    else
-        while true; do
-            echo "Would you like to check for updates?  This is an"
-            echo "experimental feature and should not be used as a"
-            echo "substitute for reading the SBo ChangeLog.txt."
-            echo
-            echo "If you proceed, it might take a few moments to process."
-            echo "Press Y to continue or N to cancel."
-                read ANS
-                case $ANS in
-                    y* | Y* ) break
-                    ;;
-                    n* | N* ) exit 0
-                    ;;
-                    * ) echo "Unknown response."
-                    ;;
-                esac
-        done
-    fi
     cd /var/log/packages
     PKGS=$(ls *_SBo)
     VERSION_FILE=$TMP/sbopkg-script-version
     if [ -e "$PKGS" ]; then
         echo "No SlackBuilds.org packages detected." >> $UPDATELIST
     else
-        echo "Building list of potential updates..."
+        crunch_fmt "Building list of potential updates.  This may take a \
+            few moments depending on how many SlackBuilds.org packages you \
+            have installed..."
         crunch_fmt "Listing installed SlackBuilds.org packages and flagging \
             potential updates..." >> $UPDATELIST
         echo >> $UPDATELIST
@@ -1692,7 +1664,8 @@ gen_search_package () {
 show_readme () {
     # Show the package's text files.
     cd $LOCALREPO/$SLACKVER
-    ${PAGER:-more} $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info.build,slack-desc}
+    ${PAGER:-more} \
+        $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info.build,slack-desc}
     rm -f $PKGPATH/$PKGNAME.info.build
     return 0
 }
