@@ -31,10 +31,13 @@ enhancements:
     where the user can decide the name and location of the permanent build
     log, if used; thanks to slakmagik for the patch.
   * Fix issue where downloaded sources with spaces in their file names would
-    cause an MD5SUM failure; thanks to alkos333 for the bug report.
+    cause an MD5SUM failure; thanks to alkos333 for the bug report, and thanks
+    to Mauro Giachero for improving my initial bug fix implementation.
   * Commit several other patches from slakmagik that improve the handling of
     the search box upon search failures; tweak the precheck log a bit; improve
     the checking of root privilegs, and improve the handling of the
     directory-creation checks; thanks to slakmagik for these patches.
+  * Lots of other internal 'under the hood' improvements to the repository
+    browsing, directory check functionality, and build queue.
 +--------------------------+
 
