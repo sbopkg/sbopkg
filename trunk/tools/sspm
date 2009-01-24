@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: sspm,v 1.5 2009-01-24 00:45:41-05 j Exp j $
+# $Id$
 # Written by slakmagik <jsun freeshell org> (usual symbols in spaces)
 # Released under the WTFPL
 
@@ -9,7 +9,7 @@ script=${0##*/}
 # this needs to be where the checked out svn directory is. The 'sbopkg' part
 # is 'sbopkg-read-only' if doing a default checkout and is the only thing that
 # is likely to need changing.
-repo="/home/chess/test/sbopkg"
+repo="/home/slackbuilds/sbopkg"
 remote_repo="http://sbopkg.googlecode.com/svn/trunk/"
 export OUTPUT="${OUTPUT:-/tmp}"
 
@@ -52,7 +52,7 @@ if [[ $sync == yes ]]; then
             ( echo "$script: checkout failed" 1>&2; exit 1 )
     else
         printf "$script: $repo is not writable.\n" 1>&2
-        printf "Change your privileges or the value of the \"repo\" "
+        printf "Change your privileges or the value of the \"repo\" " 1>&2
         printf "variable.\n" 1>&2
         exit 1
     fi
@@ -68,17 +68,17 @@ if [[ $build == yes || $inst == yes ]]; then
     if [ -r $svn_script ]; then
         export VERSION="svn$(grep -m1 '$Id.*$' $svn_script |
             sed 's/.* sbopkg \([^ ]*\).*/\1/')"
+        # I use this for testing patches made against the svn repo
+        #export VERSION=$(date "+%Y%m%d_%H%M")
     else
         echo "$script: unable to find $svn_script." 1>&2
         echo "Please check your repository." 1>&2
         exit 1
     fi
-    # I use this for testing patches made against the svn repo
-    #export VERSION=$(date "+%Y%m%d_%H%M")
 
     if [[ $OUTPUT =~ "$repo/(sbopkg-$VERSION|root-tools)" ]]; then
-        printf "$script: the OUTPUT variable is set to a path that will be "
-        printf "removed.\n" 1>&2
+        printf "$script: the OUTPUT variable is set to a path that will " 1>&2
+        printf "be removed.\n" 1>&2
         printf "Please alter the value of the variable.\n" 1>&2
         exit 1
     fi
