@@ -96,6 +96,11 @@ config_check () {
         if [ -e $HOME/.sbopkg.conf ]; then
             . $HOME/.sbopkg.conf
         fi
+        if [[ "$DEBUG" -ne "0" && "$DEBUG" -ne "1" && "$DEBUG" -ne "2" ]]; then
+            echo "The \$DEBUG variable must be set to 0, 1, or 2."
+            echo $DEBUG
+            exit 0
+        fi
     fi
 }
 
