@@ -110,7 +110,7 @@ ck_dir() {
         crunch_fmt "$2"
         echo
         read -n1 -sep "Press any key to continue or Ctrl-C to exit."
-        mkdir -p $1 || ERROR=1
+        mkdir -p $1 2>/dev/null && echo "Directory created." || ERROR=1
     fi
 
     # Try to create a file in the specified folder
@@ -120,15 +120,15 @@ ck_dir() {
     fi
 
     case $ERROR in
-        1)  crunch_fmt "\\n\\nWARNING:\
+        1)  crunch_fmt "\\nWARNING:\
                 \\n$SCRIPT: Unable to create $1.\
                 \\n\\nMake sure you have enough privileges to create that\
                 directory, or specify a different location in sbopkg.conf.\
                 \\nSee the sbopkg.conf(5) man page for more details.\
-                \\n\\nPRess ENTER to continue anyway, CTRL-C to abort."
+                \\n\\nPress ENTER to continue anyway, CTRL-C to abort."
             read JUNK
             ;;
-        2)  crunch_fmt "\\n\\nWARNING:\
+        2)  crunch_fmt "\\nWARNING:\
                 \\n$SCRIPT: Unable to create files in $1.\
                 \\n\\nMake sure you have enough privileges to write in\
                 that directory, or specify a different location in\
