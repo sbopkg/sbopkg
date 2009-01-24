@@ -1969,8 +1969,10 @@ pick_slackbuild () {
     fi
     if [ "$SLACKBUILD" = "original" ]; then
         cp $PKGPATH/$PKG.SlackBuild $PKGPATH/$PKG.SlackBuild.build
+        echo "Using original Slackbuild" >> $TMP/sbopkg-tmp-prechecklog
     elif [ "$SLACKBUILD" = "local" ]; then
         cp $PKGPATH/$PKG.SlackBuild.sbopkg $PKGPATH/$PKG.SlackBuild.build
+        echo "Using local Slackbuild" >> $TMP/sbopkg-tmp-prechecklog
     fi
 }
 
@@ -2063,8 +2065,10 @@ pick_info () {
     fi
     if [ "$DOTINFO" = "original" ]; then
         cp $PKGPATH/$PKG.info $PKGPATH/$PKG.info.build
+        echo "Using original .info file" >> $TMP/sbopkg-tmp-prechecklog
     elif [ "$DOTINFO" = "local" ]; then
         cp $PKGPATH/$PKG.info.sbopkg $PKGPATH/$PKG.info.build
+        echo "Using local .info file" >> $TMP/sbopkg-tmp-prechecklog
     fi
     . $PKGPATH/$PKG.info.build
     PKGNAME=${PKG##*/}
@@ -2166,11 +2170,11 @@ process_queue () {
         echo >> $PRECHECKLOG
         if [ "$DIAG" = 1 ]; then
             dialog --title "Pre-Check" --msgbox "$(crunch "Checking for \
-                valid package names and processing local .info and \
-                .SlackBuild edits.")" 8 30
+                valid package names, optional arguments, and processing \
+                local .info and .SlackBuild edits.")" 8 40
         else
-            echo "Checking for valid package names and processing"
-            echo "local .info and .SlackBuild edits..."
+            echo "Checking for valid package names, optional arguments,"
+            echo "and processing local .info and .SlackBuild edits."
             echo
         fi
         for CHKBUILD in $(cat $STARTQUEUE); do
@@ -2192,6 +2196,8 @@ process_queue () {
             else
                 echo "Options: $BUILDOPTIONS" >> $PRECHECKLOG
             fi
+            cat $TMP/sbopkg-tmp-prechecklog >> $PRECHECKLOG
+            rm -f $TMP/sbopkg-tmp-prechecklog
             echo >> $PRECHECKLOG
         done
         echo "******************************************" >> $PRECHECKLOG
