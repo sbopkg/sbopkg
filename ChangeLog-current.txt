@@ -2,7 +2,7 @@ Tue Jan 20 04:10:53 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * Add in new update code by Mauro Giachero.  This greatly improves how the
+  * Add in new update code by Mauro Giachero.  This /greatly/ improves how the
     updates are handled.  Please note there is a new file
     /etc/sbopkg/sbopkg-renames that handles a few name changes.  If you
     upgrade sbopkg with the new package, then this file will be automatically
@@ -10,14 +10,15 @@ enhancements:
     and move it there manually.
   * Change how selecting/unselecting items in the build queue are handled.
     Now, when items are unselected, they remain in the queue but are turned
-    "OFF."
+    "OFF" and when the queue is processed, only those packages turned "ON"
+    will be built or installed.
   * Improve how packages are added to the queue.  The user is now prompted if
     they want to replace items already in the queue or skip them.
   * Merge in a large whitespace/cleanup patch by slakmagik which greatly
     improves the readability of the code; thanks to slakmagik for the patch.
   * Replace the 'Clear Queue' menu item with 'Delete Queue Items' which
-    provides the user the to delete individual items in the queue or clear the
-    entire build queue.
+    provides the user the ability to delete individual items in the queue or
+    clear the entire build queue.
   * Add in ability to have a /local directory in the local SBo repository tree
     on a user's system that is in parallel with other SBo directories (i.e.
     /home/sbo/local).  As long as this directory is maintained in an SBo style
