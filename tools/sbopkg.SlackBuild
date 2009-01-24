@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: sbopkg.SlackBuild 114 2008-03-23 18:42:55Z chess $
+# $Id$
 
 # Slackware build script for Sbopkg
 
