@@ -207,10 +207,14 @@ has_root () {
 check_write () {
     # Check to see whether the user has write permissions on the
     # directory.
+    # FIXME: testing change to this function; if working ok, grep for
+    # check_write and remove commented out code.
     if [ ! -w $1  ]; then
-        WRITE="false"
+        #WRITE="false"
+        return 1
     else
-        WRITE="true"
+        #WRITE="true"
+        return 0
     fi
 }
 
@@ -1490,8 +1494,9 @@ rsync_repo () {
         continue
     fi
     directory_checks
-    check_write $LOCALREPO/$SLACKVER/
-    if [ "$WRITE" = "false" ]; then
+    if ! check_write $LOCALREPO/$SLACKVER/; then
+    #check_write $LOCALREPO/$SLACKVER/
+    #if [ "$WRITE" = "false" ]; then
         if [ "$DIAG" = 1 ]; then
             dialog --title "ERROR" --msgbox \
                 "You do not have write permissions on the target directory." \
@@ -1876,8 +1881,9 @@ edit_local_slackbuild () {
     # This function allows the user to create and edit a local copy of the
     # SlackBuild.
     local SHORTPATH=$LOCALREPO/$SLACKVER/$CATEGORY/$APP
-    check_write $SHORTPATH
-    if [ "$WRITE" = "false" ]; then
+    if ! check_write $SHORTPATH; then
+    #check_write $SHORTPATH
+    #if [ "$WRITE" = "false" ]; then
         dialog --title "ERROR" --msgbox "You do not have write \
             permissions on the target directory." 8 30
         continue
@@ -1891,8 +1897,9 @@ edit_local_slackbuild () {
 delete_local_slackbuild () {
     # This function allows the user to delete the local SlackBuild.
     local SHORTPATH=$LOCALREPO/$SLACKVER/$CATEGORY/$APP
-    check_write $SHORTPATH
-    if [ "$WRITE" = "false" ]; then
+    if ! check_write $SHORTPATH; then
+    #check_write $SHORTPATH
+    #if [ "$WRITE" = "false" ]; then
         dialog --title "ERROR" --msgbox \
             "You do not have write permissions on the target directory." 8 30
         continue
@@ -1970,8 +1977,9 @@ pick_slackbuild () {
 edit_local_info () {
     # This function allows the user to create and edit a local copy of the
     # .info file.
-    check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
-    if [ "$WRITE" = "false" ]; then
+    if ! check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP; then
+    #check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
+    #if [ "$WRITE" = "false" ]; then
         dialog --title "ERROR" --msgbox "You do not have write \
             permissions on the target directory." 8 30
         continue
@@ -1985,8 +1993,9 @@ edit_local_info () {
 
 delete_local_info () {
     # This function allows the user to delete the local .info file.
-    check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
-    if [ "$WRITE" = "false" ]; then
+    if ! check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP; then
+    #check_write $LOCALREPO/$SLACKVER/$CATEGORY/$APP
+    #if [ "$WRITE" = "false" ]; then
         dialog --title "ERROR" --msgbox \
             "You do not have write permissions on the target directory." 8 30
         continue
@@ -2472,8 +2481,9 @@ utilities_menu () {
 
 cleanup () {
     # Clean up cruft and remove temporary files.
-    check_write $TMP
-    if [ $WRITE = "false" ]; then
+    if ! check_write $TMP; then
+    #check_write $TMP
+    #if [ $WRITE = "false" ]; then
         echo
         echo "ERROR"
         echo "Sbopkg attempted to clean out leftover files in \$TMP,"
