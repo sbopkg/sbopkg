@@ -750,7 +750,7 @@ select_version () {
             --menu "$(crunch "You are currently using sbopkg to browse a \
             local copy of SBo for Slackware version $SLACKVER.  If you would \
             like to change it, please select another version below or press \
-            <Back> to go back.")" 15 50 5 \
+            <Back> to go back.")" 16 50 5 \
             "12.2" "Slackware version 12.2" \
             "12.1" "Slackware version 12.1" \
             "12.0" "Slackware version 12.0" \
@@ -1010,7 +1010,7 @@ browse_categories () {
             --title "Choose a category" --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --menu "Please select a category or press <Back> to go back." \
-            20 70 14 --file $TMP/sbopkg_category_list \
+            22 70 14 --file $TMP/sbopkg_category_list \
             2>$TMP/sbopkg_category_manual_selection
         if [ $? != 0 ]; then
             break
@@ -1585,9 +1585,11 @@ gen_search_package () {
                     --backtitle "$(crunch "Currently using the \
                     SlackBuilds.org $SLACKVER repository.")" \
                     --default-item "$SRCHPICK" --extra-button \
+                    --cancel-label "Back" \
                     --extra-label "Add to Queue" --menu "$(crunch "Please \
-                    select an item you wish to view or press <Cancel> to \
-                    exit.")" 20 70 14 --file \
+                    select an item you wish to view, press <Add to Queue> \
+                    to add it to the build queue, or press <Back> to \
+                    go back.")" 22 70 14 --file \
                     $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
                 CHOICE=$?
                 if [ $CHOICE = 1 ]; then
@@ -2409,8 +2411,8 @@ queue_menu () {
             "\nChoose one of the following or press <Back> to go back.\n" \
             15 60 5 \
             "View" "View the build queue" \
-            "Delete" "Delete items from the build queue" \
             "Process" "Process the build queue" \
+            "Delete" "Delete items from the build queue" \
             "Load" "Load a saved build queue" \
             "Save" "Save a build queue" \
             2>$TMP/sbopkg_queue_menu_answer
@@ -2427,13 +2429,13 @@ queue_menu () {
             view_queue
         fi
 
-        if [ "$Q" = "Delete" ]; then
-            delete_build_queue
-        fi
-
         if [ "$Q" = "Process" ]; then
             BUILDPKGS=1
             process_queue
+        fi
+
+        if [ "$Q" = "Delete" ]; then
+            delete_build_queue
         fi
 
         if [ "$Q" = "Load" ]; then
@@ -2451,7 +2453,7 @@ utilities_menu () {
     # Separate menu for various utilities.
     if [ -z "$G" ] ; then G="Cache" ; fi
     while [ 0 ]; do
-    dialog --default-item "$G" --title "Utilities" --backtitle \
+    dialog --default-item "$G" --title "Utilities Menu" --backtitle \
         "Currently using the SlackBuilds.org $SLACKVER repository." \
         --cancel-label "Back" --menu \
         "\nChoose one of the following or press <Back> to go back.\n" \
@@ -2586,7 +2588,7 @@ main_menu () {
             --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --menu \
-            "\nChoose one of the following or press <Cancel> to exit.\n" \
+            "\nChoose one of the following or press <Exit> to exit.\n" \
             17 69 9 \
             "Rsync" "Rsync with SlackBuilds.org" \
             "ChangeLog" "View the SlackBuilds.org ChangeLog" \
