@@ -98,7 +98,7 @@ if [[ $build == yes || $inst == yes ]]; then
             tar --exclude='*.svn*' --exclude='*.rej' \
                 -czvf $repo/root-tools/sbopkg-$VERSION.tar.gz sbopkg-$VERSION
             cd $repo/root-tools
-            ./sbopkg.SlackBuild
+            sh sbopkg.SlackBuild
             cd $repo
             rm -rf root-tools
             rm -rf sbopkg-$VERSION
