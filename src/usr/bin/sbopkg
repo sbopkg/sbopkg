@@ -1733,7 +1733,7 @@ add_options () {
         script itself.\n\nIf you would like to set \
         or edit these variables for the $1 SlackBuild, please enter that \
         information below, or press <Clear Options> to clear the options.")" \
-        0 0 $CUROPTIONS 2>/$TMP/sbopkg_add_options
+        0 0 "$CUROPTIONS" 2>/$TMP/sbopkg_add_options
     CHOICE=$?
     CUSTOMOPTS="$(cat $TMP/sbopkg_add_options)"
     if [ $CHOICE = 1 ] || [ $CHOICE = 0 -a "$CUSTOMOPTS" = "" ]; then
