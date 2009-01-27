@@ -30,9 +30,9 @@
 #  Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat D. Kadirov,
 #  The-spiki, David Somero, LukenShiro, Drew Ames, nille, acidchild, mancha,
 #  macavity, Zordrak, João Felipe Santos, cotterochan, necropresto, Pierre
-#  Cazenave, Mauro Giachero, The-Croupier, Wade Grant, TSquaredF and alkos333.
-#  This script would not be where it is without the help of these folks.  If I
-#  left anyone out, I apologize.  Thank you!
+#  Cazenave, Mauro Giachero, The-Croupier, Wade Grant, TSquaredF, and
+#  alkos333.  This script would not be where it is without the help of these
+#  folks.  If I left anyone out, I apologize.  Thank you!
 #
 #set -x
 
@@ -747,15 +747,6 @@ info_item () {
             fi
             if [ "$U" = "Queue" ]; then
                 add_item_to_queue $APP $RVERSION-$RBUILD ON
-                # FIXME: This can be removed if add_item_to_queue is working
-                #if $(cat $TMP/sbopkg-tmp-queue | grep -q "^$APP "); then
-                #    dialog --title "ERROR" --msgbox \
-                #    "$APP is already in the queue." 8 30
-                #else
-                #    echo "$APP $RVERSION-$RBUILD ON" >> $TMP/sbopkg-tmp-queue
-                #    dialog --title "Done" --msgbox \
-                #        "$APP has been added to the build queue." 8 30
-                #fi
             fi
             if [ "$U" = "Build" ]; then
                 echo "$APP" > $TMP/sbopkg-start-queue
@@ -1065,12 +1056,6 @@ load_user_queue () {
                 cat $USERQUEUE | while read PICK; do
                     add_item_to_queue $PICK
                 done
-                # FIXME: these next 5 lines can be removed soon.
-                #rm -f $WORKINGQUEUE
-                #cat $TMPQUEUE >> $WORKINGQUEUE
-                #cat $USERQUEUE >> $WORKINGQUEUE
-                #sort $WORKINGQUEUE | uniq > $TMPQUEUE
-                #rm -f $WORKINGQUEUE
                 dialog --title "Done" --msgbox \
                     "The saved queue has been loaded." 8 30
             else
@@ -1185,12 +1170,7 @@ add_item_to_queue () {
 
     # This function takes three arguments: APP, VERSIONBUILD, and ONOFF.  If
     # APP is already in the queue, ask user if they want to replace it (so
-    # updated pkgs will get updated in the queue).  NOTE:  this is a
-    # work-in-progress.  The idea is that whenever an item is added to the
-    # queue, whether after the update run, or when an individual item is added
-    # from the info_item menu, or when a backup or user's queue is loaded,
-    # then each APP, VERSIONBUILD, and ONOFF is sent to this function for
-    # processing.  Once this is working remove this NOTE from this comment.
+    # updated pkgs will get updated in the queue).
     APP=$1
     VERSIONBUILD=$2
     ONOFF=$3
@@ -1444,21 +1424,6 @@ gen_search_package () {
                     fi
                 elif [ $CHOICE = 3 ]; then
                     add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
-                    # FIXME: These next several lines can be removed if
-                    # add_item_to_queue is working.
-                    #if [ ! -e $TMP/sbopkg-tmp-queue ]; then
-                    #    touch $TMP/sbopkg-tmp-queue
-                    #fi
-                    #if $(cat $TMP/sbopkg-tmp-queue | \
-                    #grep -q "^$SRCHPKG "); then
-                    #    dialog --title "ERROR" --msgbox \
-                    #        "$SRCHPKG is already in the queue." 8 30
-                    #else
-                    #    echo "$SRCHPKG $RVERSION-$RBUILD ON" >> \
-                    #    $TMP/sbopkg-tmp-queue
-                    #    dialog --title "Done" --msgbox \
-                    #        "$SRCHPKG has been added to the build queue." 8 30
-                    #fi
                     continue
                 else
                     rm -f $TMP/sbopkg_search_results
@@ -1649,9 +1614,6 @@ build_package () {
     # Replace URL hex sequences (like %20 for ' ' and %2B for '+')
     SRCNAME=$(echo "echo $SRCNAME" \
         |sed "s/%\(..\)/\$(printf \"\\\\x\\1\")/g" |bash)
-    # FIXME CLEANUP This is old stuff, and should be deleted
-    # SRCNAME=$(echo $SRCNAME | sed -e 's/\%2B/\+/g') # TiMidity fix for '+'
-    # SRCNAME=$(echo $SRCNAME | sed -e 's/\%20/ /g') # Fix for spaces
     if [ "$PKG" = "django" ]; then
         SRCNAME="Django-$VERSION.tar.gz"
     fi
