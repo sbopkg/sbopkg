@@ -1382,7 +1382,7 @@ add_item_to_queue () {
     ONOFF=$3
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     if $(cat $TMPQUEUE | grep -q "^$APP "); then
-        dialog --title "ERROR" --yesno "$(crunch "$APP is already in the \
+        dialog --title "WARNING" --yesno "$(crunch "$APP is already in the \
             queue.  Do you want to replace it?  Press <Yes> to replace or \
             press <No> to skip.")" 10 50
             if [ $? = 0 ]; then
@@ -2021,6 +2021,8 @@ pick_slackbuild () {
         cp $PKGPATH/$PKG.SlackBuild.sbopkg $PKGPATH/$PKG.SlackBuild.build
         echo "Using local Slackbuild" >> $TMP/sbopkg_tmp_prechecklog
     fi
+    BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$PKG.SlackBuild.build |
+        sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 }
 
 edit_local_info () {
@@ -2238,7 +2240,7 @@ process_queue () {
             fi
             use_options $CHKBUILD
             echo $PKGNAME >> $FINALQUEUE
-            echo "Found $PKGNAME $VERSION" >> $PRECHECKLOG
+            echo "Found $PKGNAME $VERSION-$BUILD" >> $PRECHECKLOG
             if [ "$BUILDOPTIONS" = "" ]; then
                 echo "Options: None" >> $PRECHECKLOG
             else
