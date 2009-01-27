@@ -858,8 +858,16 @@ info_item () {
             $JPACKAGE 2>$TMP/sbopkg_info_selection
         CHOICE=$?
         if [ $CHOICE = 1 ]; then
-            rm -f $TMP/sbopkg_*
-            break
+            #FIXME: see if we can avoid segfault when returning to main menu
+            #rm -f $TMP/sbopkg_*
+            #break
+            rm -f $TMP/sbopkg_category_manual_selection
+            rm -f $TMP/sbopkg_category_selection
+            rm -f $TMP/sbopkg_info_selection
+            rm -f $TMP/sbopkg_item_selection
+            rm -f $TMP/sbopkg_search_*
+            touch $TMP/sbopkg_return_main_menu
+            return 0
         elif [ $CHOICE = 3 ]; then
             return 0
         elif [ $CHOICE = 0 ]; then
@@ -1017,6 +1025,9 @@ browse_categories () {
         fi
         S="$(cat $TMP/sbopkg_category_manual_selection)"
         gen_search_package '*' $S
+        if [ -e $TMP/sbopkg_return_main_menu ]; then
+            return 0
+        fi
         # FIXME: cleanup next two lines?
 #         browse_items
 #         S="$(cat $TMP/sbopkg_category_selection)"
@@ -1613,6 +1624,9 @@ gen_search_package () {
                     echo $SRCHPKG > $TMP/sbopkg_item_selection
                     cd $LOCALREPO/$SLACKVER
                     info_item
+                    if [ -e $TMP/sbopkg_return_main_menu ]; then
+                        return 0
+                    fi
                 elif [ $CHOICE = 3 ]; then
                     add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
                     # FIXME: These next several lines can be removed if
@@ -2669,7 +2683,8 @@ main_menu () {
             "ChangeLog")  show_changelog ;;
             "Packages")   get_sbo_packages ;;
             "Updates")    main_updates ;;
-            "Browse")     browse_categories ;;
+            "Browse")     browse_categories
+                          rm -f $TMP/sbopkg_return_main_menu ;;
             "Search")     main_search ;;
             "Utilities")  utilities_menu ;;
             "Queue")      queue_menu ;;
