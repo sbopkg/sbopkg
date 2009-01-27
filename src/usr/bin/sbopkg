@@ -584,27 +584,6 @@ get_category_list () {
     fi
 }
 
-# FIXME CLEANUP This is old stuff, and should be deleted if the
-# search/browse unification works reliably.
-# NOTE removed -- was only used by browse_items, now removed.
-# get_category_items_list () {
-#     # This function makes and displays a list of all the package items in
-#     # the selected category.
-#     CATEGORY="$(cat $TMP/sbopkg_category_selection)"
-#     cd $LOCALREPO/$SLACKVER/$CATEGORY
-#     rm -f $TMP/sbopkg_category_items_list 2> /dev/null
-#     DIR=( */ )
-#     if [ -n "$DIR" ]; then
-#         for i in ${DIR[*]%/}; do
-#             j=$(echo $i | sed 's/-plus/+/')
-#             DESC=$(grep -hZm1 ^$j ./$i/slack-desc* 2>/dev/null |
-#                 sed 's/^[^(]*( *\(.*\) *)[^)]*$/\1/')
-#             echo "\"$i\" \"$DESC\"" >> $TMP/sbopkg_category_items_list
-#         done
-#     fi
-#     cd $LOCALREPO/$SLACKVER
-# }
-
 select_version () {
     # Create menu and list the SBo-supported versions of Slackware for
     # user to choose from.
@@ -832,33 +811,6 @@ customize_item () {
     fi
     done
 }
-
-# FIXME CLEANUP This is old stuff, and should be deleted if the
-# search/browse unification works reliably.
-# NOTE removed -- was only used by browse_categories, that now uses the
-# search infrastructure instead.
-# browse_items () {
-#     # This function iterates through the list of software packages until
-#     # one is chosen.
-#     get_category_items_list
-#     if [ -z "$T" ]; then
-#         T="aaa"
-#     fi
-#     while [ 0 ]; do
-#         dialog --default-item "$T" --cancel-label "Back" \
-#             --title "Browsing the $CATEGORY category" --backtitle \
-#             "Currently using the SlackBuilds.org $SLACKVER repository." \
-#             --menu "$(crunch "Please select a software package or press \
-#             <Back> to go back.")" \
-#             20 70 14 --file $TMP/sbopkg_category_items_list \
-#             2>$TMP/sbopkg_item_selection
-#         if [ $? != 0 ]; then
-#             break
-#         fi
-#         info_item
-#         T="$(cat $TMP/sbopkg_item_selection)"
-#     done
-# }
 
 browse_categories () {
     # This function iterates through the category list until one is
