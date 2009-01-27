@@ -2432,7 +2432,7 @@ queue_menu () {
     if [ -z "$Q" ]; then
         Q="View"
     fi
-    while [ 0 ]; do
+    while :; do
         dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --cancel-label "Back" --menu \
@@ -2445,78 +2445,110 @@ queue_menu () {
             "Save" "Save a build queue" \
             2>$TMP/sbopkg_queue_menu_answer
 
-        if [ $? != 0 ]; then
-            Q=""
-            rm -f $TMP/sbopkg_queue_menu_answer
-            return
-        fi
+        #FIXME: remove commented code below if all ok.
+        #if [ $? != 0 ]; then
+        #    Q=""
+        #    rm -f $TMP/sbopkg_queue_menu_answer
+        #    return
+        #fi
 
         Q="$(cat $TMP/sbopkg_queue_menu_answer)"
 
-        if [ "$Q" = "View" ]; then
-            view_queue
-        fi
+        #if [ "$Q" = "View" ]; then
+        #    view_queue
+        #fi
 
-        if [ "$Q" = "Process" ]; then
-            BUILDPKGS=1
-            process_queue
-        fi
+        #if [ "$Q" = "Process" ]; then
+        #    BUILDPKGS=1
+        #    process_queue
+        #fi
 
-        if [ "$Q" = "Delete" ]; then
-            delete_build_queue
-        fi
+        #if [ "$Q" = "Delete" ]; then
+        #    delete_build_queue
+        #fi
 
-        if [ "$Q" = "Load" ]; then
-            load_user_queue
-        fi
+        #if [ "$Q" = "Load" ]; then
+        #    load_user_queue
+        #fi
 
-        if [ "$Q" = "Save" ]; then
-            save_user_queue
-        fi
+        #if [ "$Q" = "Save" ]; then
+        #    save_user_queue
+        #fi
+        
+        case "$Q" in
+            "View")       view_queue ;;
+            "Process")    BUILDPKGS=1
+                          process_queue ;;
+            "Delete")     delete_build_queue ;;
+            "Load")       load_user_queue ;;
+            "Save")       save_user_queue ;;
+            *)            # "Exit", or an empty string if Exit, instead of Ok,
+                          # was pressed
+                          Q=""
+                          rm -f $TMP/sbopkg_queue_menu_answer
+                          return
+                          ;;
+        esac
 
     done
 }
 
 utilities_menu () {
     # Separate menu for various utilities.
-    if [ -z "$G" ] ; then G="Cache" ; fi
-    while [ 0 ]; do
-    dialog --default-item "$G" --title "Utilities Menu" --backtitle \
-        "Currently using the SlackBuilds.org $SLACKVER repository." \
-        --cancel-label "Back" --menu \
-        "\nChoose one of the following or press <Back> to go back.\n" \
-        15 69 5 \
-        "Cache" "View the contents of the cache directory" \
-        "Log" "View the permanent build log" \
-        "Version" "Select Slackware version (currently: $SLACKVER)" \
-        "Latest" "Check for an update to sbopkg"  \
-        2>$TMP/sbopkg_utilities_menu_answer
-
-    if [ $? != 0 ]; then
-        G=""
-        rm -f $TMP/sbopkg_utilities_menu_answer
-        return
+    if [ -z "$G" ];
+        then G="Cache"
     fi
+    while :; do
+        dialog --default-item "$G" --title "Utilities Menu" --backtitle \
+            "Currently using the SlackBuilds.org $SLACKVER repository." \
+            --cancel-label "Back" --menu \
+            "\nChoose one of the following or press <Back> to go back.\n" \
+            15 69 5 \
+            "Cache" "View the contents of the cache directory" \
+            "Log" "View the permanent build log" \
+            "Version" "Select Slackware version (currently: $SLACKVER)" \
+            "Latest" "Check for an update to sbopkg"  \
+            2>$TMP/sbopkg_utilities_menu_answer
 
-    G="$(cat $TMP/sbopkg_utilities_menu_answer)"
+        #FIXME: remove commented code below if all ok.
+        #if [ $? != 0 ]; then
+        #    G=""
+        #    rm -f $TMP/sbopkg_utilities_menu_answer
+        #    return
+        #fi
 
-    if [ "$G" = "Cache" ]; then
-        view_cache_dir
-    fi
+        G="$(cat $TMP/sbopkg_utilities_menu_answer)"
 
-    if [ "$G" = "Log" ]; then
-        view_perm_log
-    fi
+        #if [ "$G" = "Cache" ]; then
+        #    view_cache_dir
+        #fi
 
-    if [ "$G" = "Version" ]; then
-        select_version
-    fi
+        #if [ "$G" = "Log" ]; then
+        #    view_perm_log
+        #fi
 
-    if [ "$G" = "Latest" ]; then
-        check_for_latest
-    fi
+        #if [ "$G" = "Version" ]; then
+        #    select_version
+        #fi
 
+        #if [ "$G" = "Latest" ]; then
+        #    check_for_latest
+        #fi
+
+        case "$G" in
+            "Cache")      view_cache_dir ;;
+            "Log")        view_perm_log ;;
+            "Version")    select_version ;;
+            "Latest")     check_for_latest ;;
+            *)            # "Exit", or an empty string if Exit, instead of Ok,
+                          # was pressed
+                          G=""
+                          rm -f $TMP/sbopkg_utilities_menu_answer
+                          return
+                          ;;
+        esac
     done
+
 }
 
 cleanup () {
@@ -2633,21 +2665,21 @@ main_menu () {
         R="$(cat $TMP/sbopkg_main_menu_answer)"
 
         case "$R" in
-            "Rsync")     rsync_repo ;;
-            "ChangeLog") show_changelog ;;
-            "Packages")  get_sbo_packages ;;
-            "Updates")   main_updates ;;
-            "Browse")    browse_categories ;;
-            "Search")    main_search ;;
-            "Utilities") utilities_menu ;;
-            "Queue")     queue_menu ;;
-            *)           # "Exit", or an empty string if Exit, instead of Ok,
-                         # was pressed
-                         save_backup_queue
-                         clear
-                         cleanup
-                         exit 0
-                         ;;
+            "Rsync")      rsync_repo ;;
+            "ChangeLog")  show_changelog ;;
+            "Packages")   get_sbo_packages ;;
+            "Updates")    main_updates ;;
+            "Browse")     browse_categories ;;
+            "Search")     main_search ;;
+            "Utilities")  utilities_menu ;;
+            "Queue")      queue_menu ;;
+            *)            # "Exit", or an empty string if Exit, instead of Ok,
+                          # was pressed
+                          save_backup_queue
+                          clear
+                          cleanup
+                          exit 0
+                          ;;
         esac
     done
 }
