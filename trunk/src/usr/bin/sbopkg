@@ -1197,8 +1197,7 @@ load_backup_queue () {
             cat $PERMQUEUE | while read PICK; do
                 add_item_to_queue $PICK
             done
-            # FIXME: this next line can be removed soon.
-            #mv $PERMQUEUE $TMPQUEUE
+            rm $PERMQUEUE
             touch $TMP/sbopkg_backup_queue.lck
             dialog --title "Done" --msgbox \
                 "The backup queue has been loaded." 8 30
@@ -1669,6 +1668,7 @@ get_source () {
     # Check to see if the source tarball exists in the local cache
     # directory.  If it does, make a symlink to the package directory in
     # the local mirror.  If it does not, download it and make the link.
+    SUMMARYLOG=$TMP/sbopkg_summary
     if [ ! -e $PKGPATH/"$SRCNAME" ]; then
         if [ -e $SRCDIR/"$SRCNAME" ]; then
             ln -s $SRCDIR/"$SRCNAME" $LOCALREPO/$SLACKVER/$PKGPATH/"$SRCNAME"
@@ -1678,6 +1678,33 @@ get_source () {
             wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> \
                 $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
             wait
+            if [ -z "$(ls -A . 2>/dev/null)" ]; then
+                echo "$PKG:" >> $SUMMARYLOG
+                echo "Download failed." >> $SUMMARYLOG
+                echo >> $SUMMARYLOG
+                rm -f $PKG.info.build
+                rm -f $PKG.SlackBuild.build
+                cd $LOCALREPO/$SLACKVER
+                if [ "$BUILDPKGS" = 1 ]; then
+                    echo
+                    echo "Would you like to continue processing the rest of the"
+                    echo "build queue or would you like to abort?  If this failed"
+                    echo "package is a dependency of another package in the queue"
+                    echo "then it may not make sense to continue."
+                    echo
+                    echo "Press (Y)es to continue or (N)o to abort."
+                    read ANS
+                    case $ANS in
+                        y* | Y* ) continue
+                        ;;
+                        n* | N* ) rm -f $TMP/sbopkg_build.lck && break
+                        ;;
+                        * ) echo "Unknown response."
+                        ;;
+                    esac
+                fi
+                return 0
+            fi
             DOWNLOADFILE=$(ls)
             CORR_DOWNLOADFILE=$(echo $DOWNLOADFILE | sed -e \
             's/\?e=.*$//') # for Virtualbox where wget adds a '?=' at end
@@ -1975,10 +2002,10 @@ pick_slackbuild () {
     fi
     if [ "$SLACKBUILD" = "original" ]; then
         cp $PKGPATH/$PKG.SlackBuild $PKGPATH/$PKG.SlackBuild.build
-        echo "Using original Slackbuild" >> $TMP/sbopkg-tmp-prechecklog
+        echo "Using original Slackbuild" >> $TMP/sbopkg_tmp_prechecklog
     elif [ "$SLACKBUILD" = "local" ]; then
         cp $PKGPATH/$PKG.SlackBuild.sbopkg $PKGPATH/$PKG.SlackBuild.build
-        echo "Using local Slackbuild" >> $TMP/sbopkg-tmp-prechecklog
+        echo "Using local Slackbuild" >> $TMP/sbopkg_tmp_prechecklog
     fi
 }
 
@@ -2071,10 +2098,10 @@ pick_info () {
     fi
     if [ "$DOTINFO" = "original" ]; then
         cp $PKGPATH/$PKG.info $PKGPATH/$PKG.info.build
-        echo "Using original .info file" >> $TMP/sbopkg-tmp-prechecklog
+        echo "Using original .info file" >> $TMP/sbopkg_tmp_prechecklog
     elif [ "$DOTINFO" = "local" ]; then
         cp $PKGPATH/$PKG.info.sbopkg $PKGPATH/$PKG.info.build
-        echo "Using local .info file" >> $TMP/sbopkg-tmp-prechecklog
+        echo "Using local .info file" >> $TMP/sbopkg_tmp_prechecklog
     fi
     . $PKGPATH/$PKG.info.build
     PKGNAME=${PKG##*/}
@@ -2134,6 +2161,7 @@ process_queue () {
     SUMMARYLOG=$TMP/sbopkg_summary
     QUITBUILD=""
     rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
+    rm -f $TMP/sbopkg_tmp_prechecklog
     if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
         if empty_queue; then return; fi
     fi
@@ -2202,8 +2230,8 @@ process_queue () {
             else
                 echo "Options: $BUILDOPTIONS" >> $PRECHECKLOG
             fi
-            cat $TMP/sbopkg-tmp-prechecklog >> $PRECHECKLOG
-            rm -f $TMP/sbopkg-tmp-prechecklog
+            cat $TMP/sbopkg_tmp_prechecklog >> $PRECHECKLOG
+            rm -f $TMP/sbopkg_tmp_prechecklog
             echo >> $PRECHECKLOG
         done
         echo "******************************************" >> $PRECHECKLOG
