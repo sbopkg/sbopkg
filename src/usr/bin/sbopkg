@@ -1388,7 +1388,7 @@ delete_build_queue () {
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     REMOVEQUEUE=$TMP/sbopkg-remove-queue
     WORKINGQUEUE=$TMP/sbopkg-working-queue
-    cat $TMPQUEUE | sed -e 's/[ON$|OFF$]//g' > $REMOVEQUEUE
+    cat $TMPQUEUE | sed -e 's/ ON$//g;s/ OFF$//g' > $REMOVEQUEUE
     while :; do
         # "dialog" segfaults when asked to display an empty menu.
         # Work around this by showing an "empty" entry when there are
@@ -1418,18 +1418,21 @@ delete_build_queue () {
             rm -f $REMOVEQUEUE
             return 0
         elif [ $CHOICE = 2 ]; then
+            if [ ! -e $WORKINGQUEUE ]; then
+                rm -f $REMOVEQUEUE
+                break
+            fi
             for REMOVE in $(cat $WORKINGQUEUE); do
                 sed -i "/^$REMOVE .*$/d" $TMPQUEUE
             done
-            mv $TMP/sbopkg-updated-queue $TMPQUEUE
+            # I _think_ the next can go
+            #mv $TMP/sbopkg-updated-queue $TMPQUEUE
             if [[ ! -s $TMPQUEUE ]]; then
                 rm -f $TMPQUEUE
             fi
-            if [ -e $WORKINGQUEUE ]; then
-                dialog --title "Done" --msgbox \
-                    "The items have been removed from the build queue." 8 30
-                return 0
-            fi
+            dialog --title "Done" --msgbox \
+                "The items have been removed from the build queue." 8 30
+            return 0
         elif [ $CHOICE = 3 ]; then
             rm -f $REMOVEQUEUE $TMPQUEUE
             dialog --title "Done" --msgbox \
