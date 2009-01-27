@@ -1317,7 +1317,7 @@ load_user_queue () {
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     WORKINGQUEUE=$TMP/sbopkg-working-queue
     dialog --title "Load Saved Queue" --inputbox "$(crunch "Please enter the \
-        path  and filename to a saved build queue (if no path is specified, \
+        path and filename to a saved build queue (if no path is specified, \
         then your queue will be saved to $TMP):")" \
         10 50 2>$TMP/sbopkg-user-queue
     if [ $? = 0 ]; then
@@ -1345,6 +1345,7 @@ load_user_queue () {
                     "No saved queue was found." 8 30
             fi
         fi
+    rm -f $TMP/sbopkg-user-queue
     fi
 }
 
@@ -1456,7 +1457,7 @@ add_item_to_queue () {
     VERSIONBUILD=$2
     ONOFF=$3
     TMPQUEUE=$TMP/sbopkg-tmp-queue
-    if $(cat $TMPQUEUE | grep -q "^$APP "); then
+    if $(cat $TMPQUEUE 2>/dev/null | grep -q "^$APP "); then
         dialog --title "WARNING" --yesno "$(crunch "$APP is already in the \
             queue.  Do you want to replace it?  Press <Yes> to replace or \
             press <No> to skip.")" 10 50
@@ -1470,11 +1471,12 @@ add_item_to_queue () {
     else
         echo "$APP $VERSIONBUILD $ONOFF" >> $TMP/sbopkg-tmp-queue
     fi
-    # Do we need to add a test if this is being done via an update so the user
-    # does not get the following message after each individual app has been
-    # added but only at the end?  Or, maybe leave as is, so users get feedback
-    # on each update that is added to the queue.
-    dialog --title "Done" --msgbox "$APP has been added to the build queue." 8 40
+    # Only display this if we are not loading a queue; otherwise getting this
+    # after each app was added to the queue may get annoying.
+    if [ ! -e $TMP/sbopkg-user-queue ]; then
+        dialog --title "Done" --msgbox "$(crunch "$APP has been added to \
+            the build queue.")" 8 40
+    fi
 }
 
 view_queue () {
@@ -2392,7 +2394,7 @@ process_queue () {
     if [ "$DIAG" = 1 ]; then
         read -n 1 -p "Press any key to continue."
     fi
-    if [ -e $TMP/sbopkg-tmp-queue ]; then
+    if [[ "$BUILDPKGS" = 1 && -e $TMP/sbopkg-tmp-queue ]]; then
         dialog --title "Clear Queue?" --yes-label "Keep" --no-label \
             "Clear" --yesno "$(crunch "Would you like to keep the build \
             queue or would you like to clear it?")" 8 35
@@ -2403,6 +2405,7 @@ process_queue () {
         fi
     fi
     if [ "$KEEPLOG" = "YES" ]; then
+        cat $PRECHECKLOG >> $LOGFILE
         cat $SBOPKGOUTPUT >> $LOGFILE
         cat $SUMMARYLOG >> $LOGFILE
     fi
