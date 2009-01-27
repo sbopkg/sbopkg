@@ -33,8 +33,8 @@ item that failed the download was skipped when the user aborted the queue and
 reran it.  I could not reproduce this, but need to check it out.  SHOULD BE
 DONE.
 
-Do ask user if they want to keep or clear queue when doing a single build
-(i.e. where BUILDPKGS != 1).
+Do not ask user if they want to keep or clear queue when doing a single build
+(i.e. where BUILDPKGS != 1).  DONE.
 
 Would it be helpful to have a way to run a queue through the update function?
 Suppose you have a saved queue with several deps and a final pkg, and some of those

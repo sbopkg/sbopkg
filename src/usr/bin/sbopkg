@@ -1302,12 +1302,7 @@ save_backup_queue () {
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     PERMQUEUE=$TMP/sbopkg-savedqueue
     if [ -e $TMPQUEUE ]; then
-        cp $TMPQUEUE $PERMQUEUE
-        dialog --title "Saving Temporary Backup Queue" --msgbox \
-            "$(crunch "Since the queue was not empty upon exiting sbopkg, \
-            it has been automatically saved to a temporary backup file.  If \
-            you do not want this to happen next time, please be sure the \
-            build queue is cleared before exiting sbopkg.")" 9 65
+        mv $TMPQUEUE $PERMQUEUE
     fi
 }
 
@@ -1430,9 +1425,11 @@ delete_build_queue () {
             if [[ ! -s $TMPQUEUE ]]; then
                 rm -f $TMPQUEUE
             fi
-            dialog --title "Done" --msgbox \
-                "The items have been removed from the build queue." 8 30
-            return 0
+            if [ -e $WORKINGQUEUE ]; then
+                dialog --title "Done" --msgbox \
+                    "The items have been removed from the build queue." 8 30
+                return 0
+            fi
         elif [ $CHOICE = 3 ]; then
             rm -f $REMOVEQUEUE $TMPQUEUE
             dialog --title "Done" --msgbox \
@@ -1473,7 +1470,7 @@ add_item_to_queue () {
     fi
     # Only display this if we are not loading a queue; otherwise getting this
     # after each app was added to the queue may get annoying.
-    if [ ! -e $TMP/sbopkg-user-queue ]; then
+    if [[ ! -e $TMP/sbopkg-user-queue && ! -e $TMP/sbopkg-savedqueue ]]; then
         dialog --title "Done" --msgbox "$(crunch "$APP has been added to \
             the build queue.")" 8 40
     fi
