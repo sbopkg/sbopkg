@@ -2239,35 +2239,7 @@ queue_menu () {
             "Save" "Save a build queue" \
             2>$TMP/sbopkg_queue_menu_answer
 
-        #FIXME: remove commented code below if all ok.
-        #if [ $? != 0 ]; then
-        #    Q=""
-        #    rm -f $TMP/sbopkg_queue_menu_answer
-        #    return
-        #fi
-
         Q="$(cat $TMP/sbopkg_queue_menu_answer)"
-
-        #if [ "$Q" = "View" ]; then
-        #    view_queue
-        #fi
-
-        #if [ "$Q" = "Process" ]; then
-        #    BUILDPKGS=1
-        #    process_queue
-        #fi
-
-        #if [ "$Q" = "Delete" ]; then
-        #    delete_build_queue
-        #fi
-
-        #if [ "$Q" = "Load" ]; then
-        #    load_user_queue
-        #fi
-
-        #if [ "$Q" = "Save" ]; then
-        #    save_user_queue
-        #fi
 
         case "$Q" in
             "View")       view_queue ;;
@@ -2283,7 +2255,6 @@ queue_menu () {
                           return
                           ;;
         esac
-
     done
 }
 
@@ -2304,30 +2275,7 @@ utilities_menu () {
             "Latest" "Check for an update to sbopkg"  \
             2>$TMP/sbopkg_utilities_menu_answer
 
-        #FIXME: remove commented code below if all ok.
-        #if [ $? != 0 ]; then
-        #    G=""
-        #    rm -f $TMP/sbopkg_utilities_menu_answer
-        #    return
-        #fi
-
         G="$(cat $TMP/sbopkg_utilities_menu_answer)"
-
-        #if [ "$G" = "Cache" ]; then
-        #    view_cache_dir
-        #fi
-
-        #if [ "$G" = "Log" ]; then
-        #    view_perm_log
-        #fi
-
-        #if [ "$G" = "Version" ]; then
-        #    select_version
-        #fi
-
-        #if [ "$G" = "Latest" ]; then
-        #    check_for_latest
-        #fi
 
         case "$G" in
             "Cache")      view_cache_dir ;;
@@ -2342,7 +2290,6 @@ utilities_menu () {
                           ;;
         esac
     done
-
 }
 
 cleanup () {
