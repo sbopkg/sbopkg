@@ -19,6 +19,10 @@ enhancements:
     helpful if a user has saved a queue with lots of dependencies that are
     then updated through the rsync process.  The updates can be added to the
     queue, replacing the old versions.
+  * Add in a nice progress gauge when running the update list rather than the
+    warning message.  Thanks to alkos333 for the idea and initial
+    implementation, and thanks to Mauro Giachero for working on the CLI
+    version!
   * Merge in a large whitespace/cleanup patch by slakmagik which greatly
     improves the readability of the code; thanks to slakmagik for the patch.
   * Replace the 'Clear Queue' menu item with 'Delete Queue Items' which
@@ -46,6 +50,8 @@ enhancements:
   * Fix issue where a failed download would still go through an md5sum check;
     now it informs the user of the failed download and asks if the user wishes
     to continue with the build queue or abort.
+  * Eliminate some redundanr or annoying messages to the user, such as when
+    the backup queue is saved.
   * Lots of other internal 'under the hood' improvements to the repository
     browsing, directory check functionality, build queue, and just general
     overall code cleanup.
