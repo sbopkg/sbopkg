@@ -2617,7 +2617,7 @@ main_menu () {
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --menu \
             "\nChoose one of the following or press <Exit> to exit.\n" \
-            17 69 9 \
+            17 69 8 \
             "Rsync" "Rsync with SlackBuilds.org" \
             "ChangeLog" "View the SlackBuilds.org ChangeLog" \
             "Packages" "List installed SBo packages" \
@@ -2626,7 +2626,9 @@ main_menu () {
             "Search" "Search the local SlackBuilds.org repository" \
             "Queue" "Manage the build queue" \
             "Utilities" "Go to the utilities menu" \
-            "Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
+            2>$TMP/sbopkg_main_menu_answer
+            #FIXME: remove next line if we like it this way
+            #"Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
         R="$(cat $TMP/sbopkg_main_menu_answer)"
 
