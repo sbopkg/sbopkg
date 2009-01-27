@@ -1412,24 +1412,21 @@ delete_build_queue () {
             changes.\n\nYou can also press <Delete All> to immediately \
             clear the queue.  This cannot be undone.")" 25 60 8 \
             --file $REMOVEQUEUE 2>$TMP/sbopkg-ans-queue
-        CHOICE=$? # 0 = Delete, 1 = Cancel, 2=Done, 3 = Delete All
+        CHOICE=$? # 0 = Delete, 1 = Cancel, 2 = Done, 3 = Delete All
         REMOVED=$(cat $TMP/sbopkg-ans-queue)
         if [ $CHOICE = 0 ]; then
             echo $REMOVED >> $WORKINGQUEUE
-            sed -i "s/^$REMOVED .*$//" $REMOVEQUEUE
-            sed '/^$/d' $REMOVEQUEUE > $TMP/sbopkg-updated-queue
-            mv $TMP/sbopkg-updated-queue $REMOVEQUEUE
+            sed -i "/^$REMOVED .*$/d" $REMOVEQUEUE
             continue
         elif [ $CHOICE = 1 ]; then
             rm -f $REMOVEQUEUE
             return 0
         elif [ $CHOICE = 2 ]; then
             for REMOVE in $(cat $WORKINGQUEUE); do
-                sed -i "s/^$REMOVE .*$//" $TMPQUEUE
+                sed -i "/^$REMOVE .*$/d" $TMPQUEUE
             done
-            sed '/^$/d' $TMPQUEUE > $TMP/sbopkg-updated-queue
             mv $TMP/sbopkg-updated-queue $TMPQUEUE
-            if [[ $(wc -w <$TMPQUEUE) -eq 0 ]]; then
+            if [[ ! -s $TMPQUEUE ]]; then
                 rm -f $TMPQUEUE
             fi
             dialog --title "Done" --msgbox \
