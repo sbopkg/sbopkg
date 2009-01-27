@@ -3,17 +3,22 @@ Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
   * Add in new update code by Mauro Giachero.  This /greatly/ improves how the
-    updates are handled.  Please note there is a new file
+    updates are handled and virtually eliminates the need for specific
+    application quirks.  Please note there is a new file
     /etc/sbopkg/sbopkg-renames that handles a few name changes.  If you
     upgrade sbopkg with the new package, then this file will be automatically
     installed.  If not, you'll need to grab this file from the source tarball
-    and move it there manually.
+    and move it there manually.  Many thanks to Mauro for the hard work in
+    finally getting the update code done right.  :-)
   * Change how selecting/unselecting items in the build queue are handled.
     Now, when items are unselected, they remain in the queue but are turned
     "OFF" and when the queue is processed, only those packages turned "ON"
     will be built or installed.
   * Improve how packages are added to the queue.  The user is now prompted if
-    they want to replace items already in the queue or skip them.
+    they want to replace items already in the queue or skip them.  This may be
+    helpful if a user has saved a queue with lots of dependencies that are
+    then updated through the rsync process.  The updates can be added to the
+    queue, replacing the old versions.
   * Merge in a large whitespace/cleanup patch by slakmagik which greatly
     improves the readability of the code; thanks to slakmagik for the patch.
   * Replace the 'Clear Queue' menu item with 'Delete Queue Items' which
@@ -38,7 +43,11 @@ enhancements:
     the search box upon search failures; tweak the precheck log a bit; improve
     the checking of root privilegs, and improve the handling of the
     directory-creation checks; thanks to slakmagik for these patches.
+  * Fix issue where a failed download would still go through an md5sum check;
+    now it informs the user of the failed download and asks if the user wishes
+    to continue with the build queue or abort.
   * Lots of other internal 'under the hood' improvements to the repository
-    browsing, directory check functionality, and build queue.
+    browsing, directory check functionality, build queue, and just general
+    overall code cleanup.
 +--------------------------+
 
