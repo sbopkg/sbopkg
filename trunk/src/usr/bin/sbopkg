@@ -30,9 +30,9 @@
 #  Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat D. Kadirov,
 #  The-spiki, David Somero, LukenShiro, Drew Ames, nille, acidchild, mancha,
 #  macavity, Zordrak, João Felipe Santos, cotterochan, necropresto, Pierre
-#  Cazenave, Mauro Giachero, The-Croupier, Wade Grant, and TSquaredF.  This
-#  script would not be where it is without the help of these folks.  If I left
-#  anyone out, I apologize.  Thank you!
+#  Cazenave, Mauro Giachero, The-Croupier, Wade Grant, TSquaredF and alkos333.
+#  This script would not be where it is without the help of these folks.  If I
+#  left anyone out, I apologize.  Thank you!
 #
 #set -x
 
@@ -289,13 +289,84 @@ get_sbo_packages () {
     fi
 }
 
+function progressbar_cli () {
+    # This is a simple progressbar for CLI operations.
+    # The code shows a bar filling like this:
+    #      0%[    ]
+    #     25%[=   ]
+    #     50%[==  ]
+    #     75%[=== ]
+    #    100%[====]
+    # This is meant to be an "almost drop-in" replacement for
+    # "dialog --gauge". The percentage data is read from stdin and the bar
+    # fills a screen line.
+    #
+    # If available, "tput" (part of ncurses) is used to determine the screen
+    # width and to hide the cursor.
+    local PROGRESS SCREENPROGRESS i
+    local SCREENWIDTH BARWIDTH
+    local BAR SPACES
+    local HAS_NCURSES=false
+
+    [[ -x /usr/bin/tput ]] && HAS_NCURSES=true
+
+    # Initial messages
+    if [[ -n "$1" ]]; then
+        echo "[ $1 ]"
+    fi
+    if [[ -n "$2" ]]; then
+        crunch_fmt "$2"
+    fi
+
+    # Initialize the bar
+    # Screen size
+    if $HAS_NCURSES; then
+        tput civis # Hide cursor
+        SCREENWIDTH=$(tput cols)
+    else
+        SCREENWIDTH=80
+    fi
+    BARWIDTH=$(($SCREENWIDTH - 7))
+
+    while read PROGRESS; do
+        # Show the percentage
+        printf "\r%3s%%[" $PROGRESS
+
+        # Draw the bar
+        SCREENPROGRESS=$(($BARWIDTH * $PROGRESS / 100))
+        printf -vBAR "%${SCREENPROGRESS}s" ""
+        printf -vSPACES "%$(($BARWIDTH - $SCREENPROGRESS))s" ""
+        printf "%s%s]" "${BAR// /=}" "${SPACES// / }"
+    done
+
+    # Cleanup
+    echo
+    if $HAS_NCURSES; then
+        tput cnorm # Restore cursor
+    fi
+}
+
+function progressbar () {
+    # This is a simple progressbar gateway, which automatically chooses
+    # between the "dialog" and the "cli" bars.
+    if [[ $DIAG -eq 1 ]]; then
+        local MESSAGE=$(crunch "$2")
+        local MESSAGELINES=$(echo "$MESSAGE" |fmt -66 |wc -l)
+        dialog --title "$1" --gauge "$MESSAGE" $(($MESSAGELINES + 5)) 70 0
+    else
+        progressbar_cli "$1" "$2"
+    fi
+}
+
 check_for_updates () {
     # This checks for updates to installed SBo packages.  Thanks to Mauro
     # Giachero for this much-improved update code and related functions!
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
-    local TEMPFILE
+    local TEMPFILE UPDATELIST VERSION_FILE
     local STRING INDEX OLDNAME NAME VER ARCH BUILD
+    local VER_NUMERIC NEWVER_NUMERIC UPDATED
+    local PKGS NUMPKGS PROGRESSCOUNTER=0
 
     if [ "$SLACKVER" = "local" ]; then
         dialog --title "ERROR" --msgbox \
@@ -309,17 +380,20 @@ check_for_updates () {
     rm -f $UPDATELIST
     cd /var/log/packages
     PKGS=$(ls *_SBo)
+    NUMPKGS=$(echo $PKGS |wc -w)
     VERSION_FILE=$TMP/sbopkg-script-version
     if [ -e "$PKGS" ]; then
         echo "No SlackBuilds.org packages detected." >> $UPDATELIST
     else
-        crunch_fmt "Building list of potential updates.  This may take a \
-            few moments depending on how many SlackBuilds.org packages are \
-            installed..."
         crunch_fmt "Listing installed SlackBuilds.org packages and flagging \
             potential updates..." >> $UPDATELIST
         echo >> $UPDATELIST
+        { # Grouping for the progressbar
         for CURPKG in $PKGS; do
+            # Progress indicator, for the progressbar
+            echo $(($PROGRESSCOUNTER * 100 / $NUMPKGS))
+            (( PROGRESSCOUNTER += 1 ))
+
         # This next code is borrowed and modified from pkgtool
             #echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//'
             STRING=$(basename $CURPKG _SBo)
@@ -435,6 +509,10 @@ check_for_updates () {
                 fi
             fi
         done
+        echo 100 # To complete the progressbar
+        } | progressbar "Building list of potential updates" "This may take\
+            a few moments depending on how many SlackBuilds.org packages are\
+            installed..."
         echo >> $UPDATELIST
         echo "Potential update list complete." >> $UPDATELIST
     fi
