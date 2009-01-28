@@ -64,6 +64,11 @@ config_check () {
     # needed variables with any value, and set them.
     local MISSING VAR
 
+    if [ ! -e /etc/sbopkg/sbopkg-renames ]; then
+        echo "$SCRIPT: No /etc/sbopkg/sbopkg-renames was found."
+        echo "Please correct this error and run $SCRIPT again." 1>&2
+        exit 1
+    fi
     if [[ ! -e $SBOPKG_CONF  && ! -e $HOME/.sbopkg.conf ]]; then
         echo "$SCRIPT: No $SBOPKG_CONF or ~/.sbopkg.conf file were found."
         echo "Please create at least one of them and run $SCRIPT again." 1>&2
