@@ -64,12 +64,14 @@ config_check () {
     # needed variables with any value, and set them.
     local MISSING VAR
 
-    if [ ! -e $SBOPKG_CONF ]; then
-        echo "$SCRIPT: No $SBOPKG_CONF file was found."
-        echo "Please create it and run $SCRIPT again." 1>&2
+    if [[ ! -e $SBOPKG_CONF  && ! -e $HOME/.sbopkg.conf ]]; then
+        echo "$SCRIPT: No $SBOPKG_CONF or ~/.sbopkg.conf file were found."
+        echo "Please create at least one of them and run $SCRIPT again." 1>&2
         exit 1
     else
-        . $SBOPKG_CONF
+        [[ -e $SBOPKG_CONF       ]] && . $SBOPKG_CONF
+        [[ -e $HOME/.sbopkg.conf ]] && . $HOME/.sbopkg.conf
+
         KEEPLOG=$(echo "$KEEPLOG" | tr [[:lower:]] [[:upper:]])
         # Some configuration options are mandatory
         for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT KEEPLOG \
@@ -92,9 +94,6 @@ config_check () {
             echo
             echo "Please correct this error and run $SCRIPT again."
             exit 1
-        fi
-        if [ -e $HOME/.sbopkg.conf ]; then
-            . $HOME/.sbopkg.conf
         fi
         if [[ "$DEBUG" -ne "0" && "$DEBUG" -ne "1" && "$DEBUG" -ne "2" ]]; then
             echo "The \$DEBUG variable must be set to 0, 1, or 2."
