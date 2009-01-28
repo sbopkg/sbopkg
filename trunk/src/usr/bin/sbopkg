@@ -727,7 +727,7 @@ info_item () {
             if [ "$U" = "Slack-desc" ]; then
                 PARSED_SLACK_DESC=$(
                     mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
-                    sed -n "/^$APP: /s///p" $SHORTPATH/slack-desc > \
+                sed -n "/^$APP: /s///p" $SHORTPATH/slack-desc > \
                     $PARSED_SLACK_DESC
                 dialog --title "Viewing Slack-desc" \
                     --textbox $PARSED_SLACK_DESC 0 0
@@ -807,8 +807,6 @@ browse_categories () {
     # This function iterates through the category list until one is
     # chosen.
     if [ -z "$(ls -A $LOCALREPO/$SLACKVER 2>/dev/null)" ]; then
-    # The following is another way to test
-    #if [ $(ls -lA $LOCALREPO/$SLACKVER | wc -l) -eq 0 ]; then
         if [ "$DIAG" = 1 ]; then
             dialog --title "ERROR" --msgbox "$(crunch "Repository seems to \
                 be empty. Please make sure your repository directory is set \
@@ -835,9 +833,6 @@ browse_categories () {
         if [ -e $TMP/sbopkg_return_main_menu ]; then
             return 0
         fi
-        # FIXME: cleanup next two lines?
-#         browse_items
-#         S="$(cat $TMP/sbopkg_category_selection)"
     done
 }
 
@@ -870,11 +865,6 @@ view_perm_log () {
     # This function displays the contents of the permanent build log,
     # which is kept if KEEPLOG is set to YES in the config file.
     if [ ! -e $LOGFILE ]; then
-        # FIXME: These next 4 lines can probably be removed soon.
-        #dialog --title "ERROR" --msgbox "$(crunch "No permanent log \
-        #    found.  Please make sure KEEPLOG is set to YES \
-        #    in the configuration file.")" 10 30
-        #continue
         if ! [ "$KEEPLOG" = "YES" ]; then
             VAR_NOTICE="$(crunch "\n\nTo use this feature, please make sure \
             KEEPLOG is set to YES in the configuration file.")"
@@ -1151,8 +1141,6 @@ delete_build_queue () {
             for REMOVE in $(cat $WORKINGQUEUE); do
                 sed -i "/^$REMOVE .*$/d" $TMPQUEUE
             done
-            # I _think_ the next can go
-            #mv $TMP/sbopkg-updated-queue $TMPQUEUE
             if [[ ! -s $TMPQUEUE ]]; then
                 rm -f $TMPQUEUE
             fi
@@ -1417,7 +1405,6 @@ gen_search_package () {
                 RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$SRCHPKG.SlackBuild |
                     sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
                 if [ $CHOICE = 0 ]; then
-                    #echo $SRCHCAT > $TMP/sbopkg_category_selection
                     echo $SRCHPKG > $TMP/sbopkg_item_selection
                     cd $LOCALREPO/$SLACKVER
                     info_item
