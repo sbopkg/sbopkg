@@ -1016,11 +1016,12 @@ load_backup_queue () {
             temporary backup queue into the build queue, or press <No> to \
             cancel.")" 11 65
         if [ $? = 0 ]; then
+            touch $TMP/sbopkg_backup_queue.lck
             cat $PERMQUEUE | while read PICK; do
                 add_item_to_queue $PICK
             done
+            rm -f $TMP/sbopkg_backup_queue.lck
             rm $PERMQUEUE
-            touch $TMP/sbopkg_backup_queue.lck
             dialog --title "Done" --msgbox \
                 "The backup queue has been loaded." 8 30
         else
@@ -1057,9 +1058,11 @@ load_user_queue () {
                 USERQUEUE=$TMP/$USERQUEUE
             fi
             if [ -e $USERQUEUE ]; then
+                touch $TMP/sbopkg_user_queue.lck
                 cat $USERQUEUE | while read PICK; do
                     add_item_to_queue $PICK
                 done
+                rm -f $TMP/sbopkg_user_queue.lck
                 dialog --title "Done" --msgbox \
                     "The saved queue has been loaded." 8 30
             else
@@ -1195,7 +1198,8 @@ add_item_to_queue () {
     fi
     # Only display this if we are not loading a queue; otherwise getting this
     # after each app was added to the queue may get annoying.
-    if [[ ! -e $TMP/sbopkg-user-queue && ! -e $TMP/sbopkg-savedqueue ]]; then
+    if [[ ! -e $TMP/sbopkg_user_queue.lck && \
+        ! -e $TMP/sbopkg_backup_queue.lck ]]; then
         dialog --title "Done" --msgbox "$(crunch "$APP has been added to \
             the build queue.")" 8 40
     fi
@@ -2228,7 +2232,7 @@ check_for_latest () {
 
 queue_menu () {
     # Separate menu for queue functions.
-    if [ ! -e $TMP/sbopkg_backup_queue.lck ]; then
+    if [ -e $TMP/sbopkg-savedqueue ]; then
         load_backup_queue
     fi
     if [ -z "$Q" ]; then
