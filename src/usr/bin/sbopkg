@@ -1623,8 +1623,12 @@ build_package () {
         echo "OK"
     else
         echo "MD5SUM check failed."
+        echo "Expected: $MD5SUM"
+        echo "Found:    $MD5CHK"
         echo "$PKG:" >> $SUMMARYLOG
         echo "MD5SUM check failed." >> $SUMMARYLOG
+        echo "Expected: $MD5SUM" >> $SUMMARYLOG
+        echo "Found:    $MD5CHK" >> $SUMMARYLOG
         echo >> $SUMMARYLOG
         checksum_fail $SRCNAME
         rm $SRCNAME
