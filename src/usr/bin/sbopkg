@@ -638,7 +638,8 @@ info_item () {
     RVERSION=$(grep VERSION $SHORTPATH/$APP.info |
         cut -d= -f2 | sed s/\"//g)
     RARCH=$(egrep -m1 "^ARCH" $SHORTPATH/$APP.SlackBuild |
-        sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+        sed -e "s/\([^\t #]*\)[\t #].*/\1/;s/[^=]*=//;s/\${[^-]*-\(.*\)}/\1/;\
+s/\$.*/unknown/")
     RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$APP.SlackBuild |
         sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
     U="README"
