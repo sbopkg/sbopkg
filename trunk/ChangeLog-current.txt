@@ -1,68 +1,7 @@
-Thu Jan 29 14:41:00 UTC 2009
-Sbopkg 0.26.0 released.  This version contains the following fixes and
+Thu Jan 29 14:45:45 UTC 2009
+Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * Add in new update code by Mauro Giachero.  This /greatly/ improves how the
-    updates are handled and virtually eliminates the need for specific
-    application quirks.  Please note there is a new file
-    /etc/sbopkg/sbopkg-renames that handles a few name changes.  If you
-    upgrade sbopkg with the new package, then this file will be automatically
-    installed.  If not, you'll need to grab this file from the source tarball
-    and move it there manually.  Many thanks to Mauro for the hard work in
-    finally getting the update code done right.  :-)
-  * Change how selecting/unselecting items in the build queue are handled.
-    Now, when items are unselected, they remain in the queue but are turned
-    "OFF" and when the queue is processed, only those packages turned "ON"
-    will be built or installed.
-  * Improve how packages are added to the queue.  The user is now prompted if
-    they want to replace items already in the queue or skip them.  This may be
-    helpful if a user has saved a queue with lots of dependencies that are
-    then updated through the rsync process.  The updates can be added to the
-    queue, replacing the old versions.
-  * Add in a nice progress gauge when running the update list rather than the
-    warning message.  Thanks to alkos333 for the idea and initial
-    implementation, and thanks to Mauro Giachero for working on the CLI
-    version.
-  * Merge in a large whitespace/cleanup patch by slakmagik which greatly
-    improves the readability of the code; thanks to slakmagik for the patch.
-  * Replace the 'Clear Queue' menu item with 'Delete Queue Items' which
-    provides the user the ability to delete individual items in the queue or
-    clear the entire build queue.
-  * Add in ability to have a /local directory in the local SBo repository tree
-    on a user's system that is in parallel with other SBo directories (i.e.
-    /home/sbo/local).  As long as this directory is maintained in an SBo style
-    (including user-defined categories), then sbopkg will pick them up and the
-    user can change their SLACKVER to 'local' and build/install packages from
-    there.  This might be useful in testing pre-submissions to SBo or for
-    maintaining other software not in SBo.  This was inspired by a similar
-    idea contributed by slakmagik.  Please see the sbopkg.conf(5) man page for
-    more information.
-  * Commit a patch from slakmagik that adds a new sbopkg.conf variable LOGFILE
-    where the user can decide the name and location of the permanent build
-    log, if used; thanks to slakmagik for the patch.
-  * Improve the configuration file handling so that sbopkg now runs even with
-    a missing or deficient system-wide configuration file, as long as the
-    user's ~/.sbopkg.conf file is present and fills the gaps.
-  * Fix issue where downloaded sources with spaces in their file names would
-    cause an MD5SUM failure; thanks to alkos333 for the bug report, and thanks
-    to Mauro Giachero for improving my initial bug fix implementation.
-  * Commit several other patches from slakmagik that improve the handling of
-    the search box upon search failures; tweak the precheck log a bit; improve
-    the checking of root privilegs, and improve the handling of the
-    directory-creation checks; thanks to slakmagik for these patches.
-  * Fix issue where a failed download would still go through an md5sum check;
-    now it informs the user of the failed download and asks if the user wishes
-    to continue with the build queue or abort.
-  * Eliminate some redundant or annoying messages to the user, such as when
-    the backup queue is saved.
-  * Add 'sspm' utility script by slakmagik which makes mirroring the sbopkg
-    SVN repository and making a package from the local SVN mirror very easy;
-    this script is located in the /tools directory in the sbopkg SVN
-    repository; thanks to slakmagik for the script.
-  * Fix issue where ARCH would sometimes not get picked up in info_item menu
-    (notably for OpenOffice.org); thanks to artourter for the bug report, and
-    thanks to Mauro for the fix.
-  * Lots of other internal 'under the hood' improvements to the repository
-    browsing, directory check functionality, build queue, and just general
-    overall code cleanup.
+  * 
 +--------------------------+
+

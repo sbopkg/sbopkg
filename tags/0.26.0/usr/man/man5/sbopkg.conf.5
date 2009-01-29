@@ -1,0 +1,190 @@
+.TH SBOPKG.CONF 5 "January 2009" sbopkg-0.26.0 ""
+.SH NAME
+.B sbopkg.conf
+\- Configuration file for sbopkg
+
+.SH DESCRIPTION
+
+The sbopkg.conf file contains configuration settings for
+.B sbopkg
+(8), a tool for interacting with the SlackBuilds.org ("SBo")
+repository, a collection of third-party SlackBuild scripts to build
+Slackware packages.  A sample file is provided at
+/etc/sbopkg/sbopkg.conf.new.
+
+The different configuration options are:
+
+.TP 5
+.B RSYNCMIRROR
+.br
+This option allows the user to set the rsync mirror of the SBo
+repository that will be used by sbopkg.
+
+The default value of RSYNCMIRROR is:
+.br
+slackbuilds.org::slackbuilds.
+
+.TP 5
+.B SLACKVER
+.br
+This option allows the user to set the default Slackware version in
+order to rsync with the matching SBo repository.  The current options
+are 11.0, 12.0, 12.1, 12.2, and local.  The 'local' option allows
+the user to maintain a local repository in the style of the SBo
+repository and use sbopkg with it.  This local repository needs be
+maintained at the same directory level as the SBo repos.  For example,
+if $LOCALREPO (see below) is set to /home/sbo, then the Slackware 12.2
+SBo repo would be at /home/sbo/12.2 and the local repo would be at
+/home/sbo/local.  The directory structure inside /local also needs to
+be similar to the style of SBo, including catories, although they do
+not have to be the same categories as at SBo, like this example:
+/home/sbo/local/mystuff/myapp.
+
+The default value of SLACKVER is: 12.2.
+
+.TP 5
+.B LOCALREPO
+.br
+This option allows the user to set the location of the local rsync
+mirror of the SBo repository.  Currently, the size of a local copy of
+the SBo repository is less than 50MB.
+
+The default value of LOCALREPO is:
+.br
+export LOCALREPO=${LOCALREPO:-/home/sbo}.
+
+.TP 5
+.B SRCDIR
+.br
+This option contains the location of the cache directory where
+source downloads will be saved.
+
+The default value of SRCDIR is:
+.br
+export SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
+
+.TP 5
+.B TMP
+.br
+This option sets the default directory where certain working
+files are saved on a temporary basis.  TMP must be exported as it is
+also used by the SBo SlackBuilds.  Also note that the default value of
+TMP is therefore the same as in the SBo SlackBuild scripts.
+
+The default value of TMP is:
+.br
+export TMP=${TMP:-/tmp/SBo}.
+
+.TP 5
+.B OUTPUT
+.br
+This option sets the default directory where compiled packages are
+saved.  OUTPUT must be exported as it is also used by the SBo
+SlackBuilds.  Also note that the default value of OUTPUT is therefore
+the same as in the SBo SlackBuilds.
+
+The default value of OUTPUT is:
+.br
+export OUTPUT=${OUTPUT:-/tmp}.
+
+.TP 5
+.B KEEPLOG
+.br
+This option should be set to YES or NO.  This option allows the user
+to choose whether to keep a permanent log of packages that are built
+with sbopkg in order to go back and review the build, and any errors,
+after exiting sbopkg.  If set to YES, this permanent log is saved at
+$TMP/sbopkg-build-log.
+
+The default value of KEEPLOG is: YES.
+
+.TP 5
+.B LOGFILE
+.br
+This option sets the location for the sbopkg permanent log if KEEPLOG
+is set to YES (see previous paragraph).
+
+The default value of LOGFILE is: $TMP/sbopkg-build-log.
+
+.TP 5
+.B DEBUG
+.br
+This option should be set to 0, 1, or 2.  DEBUG sets the default
+debugging level for the update list feature of sbopkg.  When DEBUG is
+set to 0, then only potential updated packages are listed.  This was
+the default output prior to the DEBUG variable.  When DEBUG is set to
+1, then potential updates plus packages not in the repo and packages
+that are newer than the repo are listed.  Changing DEBUG to 1 may be
+helpful if it appears the updatelist might be missing an update.  When
+DEBUG is set to 2 (the highest level), then, in addition to the output
+at level 1, the update list displays each SBo package that is
+installed, even if there is no update, and also prints out extra
+debugging information useful in fixing bugs.  Level 2 really should
+only be used when sending in an update list bug report.
+
+The default value of DEBUG is: 0.
+
+.TP 5
+.B RSYNCFLAGS
+.br
+Rsync is used by sbopkg to mirror the SlackBuilds.org repository.
+This option allows the user to manually tweak the rsync flags
+(options) that are used by sbopkg.  Users are cautioned against making
+any changes to the default values since new flags may or may not work.
+Note:  the rsync command in sbopkg already uses the --archive,
+--delete, --no-owner, and --exclude flags, so there is no need to add
+them to the RSYNCFLAGS option.  Changing these default options is not
+recommended.
+
+The default value of RSYNCFLAGS is: "--timeout=10 --verbose".
+
+.TP 5
+.B WGETFLAGS
+.br
+Wget is used by sbopkg to download the source files for package
+building.  This option allows the user to manually tweak the wget
+flags (options) that are used by sbopkg.  Users are cautioned against
+making any changes to the default values since new flags may or may
+not work.  Note:  the wget command in sbopkg already uses the -O flag,
+so there is no need to add that to the WGETFLAGS option.  Changing
+these default options is not recommended.
+
+The default value of WGETFLAGS is:
+.br
+"--continue --progress-bar --timeout=15 --tries=5".
+
+.SH FILES
+.TP 5
+.B /etc/sbopkg/sbopkg.conf
+
+.SH OVERRIDING ENVIRONMENTAL VARIABLES
+It is possible to set or override environmental variables and pass
+them to the SlackBuild scripts when they are built from within sbopkg.
+This is already demonstrated in the following line in the sbopkg.conf
+file:
+
+export TMP=${TMP:-/tmp/SBo}
+
+This sets $TMP to /tmp/SBo for sbopkg purposes (i.e. where sbopkg logs
+are kept) and also for building SBo packages within sbopkg (which is
+current default for SBo SlackBuilds already).  Since this variable is
+exported, it could be changed for both sbopkg and for building SBo
+packages within sbopkg.  For example, changing this line so it reads:
+
+export TMP=${TMP:-/home/sbo/tmp}
+
+would then set $TMP to /home/sbo/tmp for sbopkg and for building SBo
+packages.  OUTPUT can also be changed to save compiled packages in a
+location other than the default of /tmp.
+
+You can also export variables in sbopkg.conf that are not used by
+sbopkg at all.
+
+As you can probably see, by making a few changes to these variables,
+you could have a completely separated sandbox for SBo purposes -- the
+repo at /home/sbo, the $TMP directory at /home/sbo/tmp, the source
+cache directory at /home/sbo/cache, and the $OUTPUT directory where
+compiled packages are saved at /home/sbo/packages.
+
+.SH "SEE ALSO"
+.BR sbopkg (8)
