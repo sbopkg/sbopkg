@@ -1,7 +1,0 @@
-Thu Jan 29 14:45:45 UTC 2009
-Sbopkg 0.XX.X released.  This version contains the following fixes and
-enhancements:
-
-  * 
-+--------------------------+
-
