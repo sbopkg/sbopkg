@@ -1,5 +1,5 @@
-Tue Jan 20 04:10:53 UTC 2009
-Sbopkg 0.XX.X released.  This version contains the following fixes and
+Thu Jan 29 14:41:00 UTC 2009
+Sbopkg 0.26.0 released.  This version contains the following fixes and
 enhancements:
 
   * Add in new update code by Mauro Giachero.  This /greatly/ improves how the
@@ -59,8 +59,10 @@ enhancements:
     SVN repository and making a package from the local SVN mirror very easy;
     this script is located in the /tools directory in the sbopkg SVN
     repository; thanks to slakmagik for the script.
+  * Fix issue where ARCH would sometimes not get picked up in info_item menu
+    (notably for OpenOffice.org); thanks to artourter for the bug report, and
+    thanks to Mauro for the fix.
   * Lots of other internal 'under the hood' improvements to the repository
     browsing, directory check functionality, build queue, and just general
     overall code cleanup.
 +--------------------------+
-
