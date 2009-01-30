@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id$
+# $Id: sbopkg 425 2009-01-30 04:34:45Z chess.griffin $
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2009 Chess Griffin <chess@chessgriffin.com>
@@ -45,8 +45,7 @@ BUILDOPTIONS=""
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 SBOPKG_RENAMES="${SBOPKG_RENAMES:-/etc/sbopkg/sbopkg-renames}"
 CWD="$(pwd)"
-SBOVER=svn_r$(cat ${0} | grep '$Id: ' | head -1 | \
-sed -e 's/^.*Id: sbopkg \([0-9.]*\) .*$/\1/')
+SBOVER=0.26.1
 
 crunch() {
     # The inspiration for this and the next function comes from the crunch()
