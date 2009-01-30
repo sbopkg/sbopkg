@@ -683,13 +683,22 @@ s/\$.*/unknown/")
         else
             LPACKAGE="$APP (Installed: $KPACKAGE)"
         fi
+        if has_root; then
+            ROOT_OPTS=(
+                "Build" "Build a package for $APP"
+                $JPACKAGE
+            )
+            HEIGHT=10
+        else
+            HEIGHT=8
+        fi
         dialog --default-item "$U" \
             --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
             --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
             --cancel-label "Main Menu" --menu \
             "$(crunch "Please choose an item or press <Back> to go back \
             or press <Main Menu> to return to the main menu.\n")" \
-            18 60 10 \
+            18 60 $HEIGHT \
             "README" "View the README file" \
             "Info" "View the .info file" \
             "Slack-desc" "View the slack-desc file" \
@@ -698,74 +707,70 @@ s/\$.*/unknown/")
             "Remove" "Remove $APP sources in cache" \
             "Options" "Edit Build Options/Flavors" \
             "Queue" "Add $APP to build queue" \
-            "Build" "Build a package for $APP" \
-            $JPACKAGE 2>$TMP/sbopkg_info_selection
-        CHOICE=$?
-        if [ $CHOICE = 1 ]; then
-            #FIXME: see if we can avoid segfault when returning to main menu
-            #rm -f $TMP/sbopkg_*
-            #break
-            rm -f $TMP/sbopkg_category_manual_selection
-            rm -f $TMP/sbopkg_category_selection
-            rm -f $TMP/sbopkg_info_selection
-            rm -f $TMP/sbopkg_item_selection
-            rm -f $TMP/sbopkg_search_*
-            touch $TMP/sbopkg_return_main_menu
-            return 0
-        elif [ $CHOICE = 3 ]; then
-            return 0
-        elif [ $CHOICE = 0 ]; then
-            U="$(cat $TMP/sbopkg_info_selection)"
-            CATEGORY="$(cat $TMP/sbopkg_category_selection)"
-            if [ "$U" = "README" ]; then
-                dialog --title "Viewing README" \
-                    --textbox $SHORTPATH/README 0 0
-            fi
-            if [ "$U" = "Info" ]; then
-                dialog --title "Viewing .info" \
-                    --textbox $SHORTPATH/$APP.info 0 0
-            fi
-            if [ "$U" = "Slack-desc" ]; then
-                PARSED_SLACK_DESC=$(
-                    mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
-                sed -n "/^$APP: /s///p" $SHORTPATH/slack-desc > \
-                    $PARSED_SLACK_DESC
-                dialog --title "Viewing Slack-desc" \
-                    --textbox $PARSED_SLACK_DESC 0 0
-            fi
-            if [ "$U" = "SlackBuild" ]; then
-                dialog --title "Viewing SlackBuild" \
-                    --textbox $SHORTPATH/$APP.SlackBuild 0 0
-            fi
-            if [ "$U" = "Custom" ]; then
-                customize_item
-            fi
-            if [ "$U" = "Remove" ]; then
-                remove_sources $APP
-            fi
-            if [ "$U" = "Options" ]; then
-                add_options $APP
-            fi
-            if [ "$U" = "Queue" ]; then
-                add_item_to_queue $APP $RVERSION-$RBUILD ON
-            fi
-            if [ "$U" = "Build" ]; then
-                echo "$APP" > $TMP/sbopkg-start-queue
-                process_queue
-            fi
-            if [ "$U" = "Install" ]; then
-                SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
-                install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
-                read -n 1 -p "Press any key to continue."
-                if [ "$KEEPLOG" = "YES" ]; then
-                    cat $SBOPKGINSTALLOUTPUT >> $LOGFILE
-                fi
-                rm -f $SBOPKGINSTALLOUTPUT
-            fi
-        else # ESC
-            rm -f $TMP/sbopkg_*
-            break
-        fi
+            "${ROOT_OPTS[@]}" \
+            2>$TMP/sbopkg_info_selection
+        case $? in
+            1)
+                #FIXME: see if we can avoid segfault when returning to main
+                # menu
+                #rm -f $TMP/sbopkg_*
+                #break
+                rm -f $TMP/sbopkg_category_manual_selection
+                rm -f $TMP/sbopkg_category_selection
+                rm -f $TMP/sbopkg_info_selection
+                rm -f $TMP/sbopkg_item_selection
+                rm -f $TMP/sbopkg_search_*
+                touch $TMP/sbopkg_return_main_menu
+                return 0
+                ;;
+            3) return 0 ;;
+            0)
+                U="$(cat $TMP/sbopkg_info_selection)"
+                CATEGORY="$(cat $TMP/sbopkg_category_selection)"
+                case $U in
+                    README)
+                        dialog --title "Viewing README" \
+                            --textbox $SHORTPATH/README 0 0
+                        ;;
+                    Info)
+                        dialog --title "Viewing .info" \
+                            --textbox $SHORTPATH/$APP.info 0 0
+                        ;;
+                    Slack-desc)
+                        PARSED_SLACK_DESC=$(
+                            mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
+                        sed -n "/^$APP: /s///p" $SHORTPATH/slack-desc > \
+                            $PARSED_SLACK_DESC
+                        dialog --title "Viewing Slack-desc" \
+                            --textbox $PARSED_SLACK_DESC 0 0
+                        ;;
+                    SlackBuild)
+                        dialog --title "Viewing SlackBuild" \
+                            --textbox $SHORTPATH/$APP.SlackBuild 0 0
+                        ;;
+                    Custom) customize_item ;;
+                    Remove) remove_sources $APP ;;
+                    Options) add_options $APP ;;
+                    Queue) add_item_to_queue $APP $RVERSION-$RBUILD ON ;;
+                    Build)
+                        echo "$APP" > $TMP/sbopkg-start-queue
+                        process_queue ;;
+                        Install)
+                        SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
+                        install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
+                        read -n 1 -p "Press any key to continue."
+                        if [ "$KEEPLOG" = "YES" ]; then
+                            cat $SBOPKGINSTALLOUTPUT >> $LOGFILE
+                        fi
+                        rm -f $SBOPKGINSTALLOUTPUT
+                        ;;
+                esac
+                ;;
+            *) #ESC
+                rm -f $TMP/sbopkg_*
+                break
+                ;;
+        esac
     done
 }
 
@@ -782,21 +787,14 @@ customize_item () {
         "Edit Info" "Create and edit a local copy of the .info file" \
         "Delete Info" "Delete the local copy of the .info file" \
         2>$TMP/sbopkg_custom_selection
-    CCHOICE=$?
-    if [ $CCHOICE = 0 ]; then
+    if [ $? = 0 ]; then
         V="$(cat $TMP/sbopkg_custom_selection)"
-        if [ "$V" = "Edit SlackBuild" ]; then
-            edit_local_slackbuild $APP
-        fi
-        if [ "$V" = "Delete SlackBuild" ]; then
-            delete_local_slackbuild $APP
-        fi
-        if [ "$V" = "Edit Info" ]; then
-            edit_local_info $APP
-        fi
-        if [ "$V" = "Delete Info" ]; then
-            delete_local_info $APP
-        fi
+        case $V in
+            "Edit SlackBuild") edit_local_slackbuild $APP ;;
+            "Delete SlackBuild") delete_local_slackbuild $APP ;;
+            "Edit Info") edit_local_info $APP ;;
+            "Delete Info") delete_local_info $APP ;;
+        esac
     else # Cancel or ESC
         rm -f $TMP/sbopkg_custom_selection
         break
@@ -1127,33 +1125,38 @@ delete_build_queue () {
             --file $REMOVEQUEUE 2>$TMP/sbopkg-ans-queue
         CHOICE=$? # 0 = Delete, 1 = Cancel, 2 = Done, 3 = Delete All
         REMOVED=$(cat $TMP/sbopkg-ans-queue)
-        if [ $CHOICE = 0 ]; then
-            echo $REMOVED >> $WORKINGQUEUE
-            sed -i "/^$REMOVED .*$/d" $REMOVEQUEUE
-            continue
-        elif [ $CHOICE = 1 ]; then
-            rm -f $REMOVEQUEUE
-            return 0
-        elif [ $CHOICE = 2 ]; then
-            if [ ! -e $WORKINGQUEUE ]; then
+        case $CHOICE in
+            0)
+                echo $REMOVED >> $WORKINGQUEUE
+                sed -i "/^$REMOVED .*$/d" $REMOVEQUEUE
+                continue
+                ;;
+            1)
                 rm -f $REMOVEQUEUE
-                break
-            fi
-            for REMOVE in $(cat $WORKINGQUEUE); do
-                sed -i "/^$REMOVE .*$/d" $TMPQUEUE
-            done
-            if [[ ! -s $TMPQUEUE ]]; then
-                rm -f $TMPQUEUE
-            fi
-            dialog --title "Done" --msgbox \
-                "The items have been removed from the build queue." 8 30
-            return 0
-        elif [ $CHOICE = 3 ]; then
-            rm -f $REMOVEQUEUE $TMPQUEUE
-            dialog --title "Done" --msgbox \
-                "The build queue has been cleared." 8 30
-            return 0
-        fi
+                return 0
+                ;;
+            2)
+                if [ ! -e $WORKINGQUEUE ]; then
+                    rm -f $REMOVEQUEUE
+                    break
+                fi
+                for REMOVE in $(cat $WORKINGQUEUE); do
+                    sed -i "/^$REMOVE .*$/d" $TMPQUEUE
+                done
+                if [[ ! -s $TMPQUEUE ]]; then
+                    rm -f $TMPQUEUE
+                fi
+                dialog --title "Done" --msgbox \
+                    "The items have been removed from the build queue." 8 30
+                return 0
+                ;;
+            3)
+                rm -f $REMOVEQUEUE $TMPQUEUE
+                dialog --title "Done" --msgbox \
+                    "The build queue has been cleared." 8 30
+                return 0
+                ;;
+        esac
     done
 }
 
@@ -1207,33 +1210,37 @@ view_queue () {
             to keep in the build queue and then press <Ok> to continue \
             or press <Cancel> to exit.")" 30 50 8 \
             --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
-        CHOICE=$? # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
-        if [ $CHOICE = 0 ]; then
-            rm -f $WORKINGQUEUE
-            cat $TMPQUEUE | while read PICK; do
-                TESTAPP=$(echo $PICK | cut -f1 -d " ")
-                if $(cat $TMP/sbopkg-ans-queue | grep -qx "$TESTAPP"); then
-                    echo $PICK | sed -e 's/OFF/ON/' >> $WORKINGQUEUE
-                else
-                    echo $PICK | sed -e 's/ON/OFF/' >> $WORKINGQUEUE
+        case $? in # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
+            0)
+                rm -f $WORKINGQUEUE
+                cat $TMPQUEUE | while read PICK; do
+                    TESTAPP=$(echo $PICK | cut -f1 -d " ")
+                    if $(cat $TMP/sbopkg-ans-queue | grep -qx "$TESTAPP"); then
+                        echo $PICK | sed -e 's/OFF/ON/' >> $WORKINGQUEUE
+                    else
+                        echo $PICK | sed -e 's/ON/OFF/' >> $WORKINGQUEUE
+                    fi
+                done
+                mv $WORKINGQUEUE $TMPQUEUE
+                if [ "$BUILDPKGS" = 1 ]; then
+                    mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
                 fi
-            done
-            mv $WORKINGQUEUE $TMPQUEUE
-            if [ "$BUILDPKGS" = 1 ]; then
-                mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
-            fi
-            return 0
-        elif [ $CHOICE = 1 ]; then
-            sort_queue $TMPQUEUE
-            continue
-        elif [ $CHOICE = 3 ]; then
-            tac $TMPQUEUE >$TMP/sbopkg-reversed-queue
-            mv $TMP/sbopkg-reversed-queue $TMPQUEUE
-            continue
-        else # Cancel or ESC
-            rm -f $TMP/sbopkg-ans-queue
-            break
-        fi
+                return 0
+                ;;
+            1)
+                sort_queue $TMPQUEUE
+                continue
+                ;;
+            3)
+                tac $TMPQUEUE >$TMP/sbopkg-reversed-queue
+                mv $TMP/sbopkg-reversed-queue $TMPQUEUE
+                continue
+                ;;
+            *) # Cancel or ESC
+                rm -f $TMP/sbopkg-ans-queue
+                break
+                ;;
+        esac
     done
     rm -f $WORKINGQUEUE
     continue
@@ -1246,10 +1253,7 @@ rsync_command () {
     /usr/bin/rsync --archive --delete --no-owner --exclude="*.sbopkg" \
         --exclude="/local/" $RSYNCFLAGS \
         $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
-    RSYNC_RETVAL=$?
-    rm -f $TMP/sbopkg_rsync.lck
-    if [ ! $RSYNC_RETVAL = 0 ]; then
-        case $RSYNC_RETVAL in
+    case $? in
         35)
             echo
             echo "The connection to $RSYNCMIRROR timed out."
@@ -1273,18 +1277,19 @@ rsync_command () {
             echo "Please check your settings and try again later."
             echo
             ;;
+        0)
+            echo
+            echo "Rsync with SlackBuilds.org complete."
+            echo
+            ;;
         *)
             echo
             echo "Rsync with SlackBuilds.org failed."
             echo "Please try again."
             echo
             ;;
-        esac
-    else
-        echo
-        echo "Rsync with SlackBuilds.org complete."
-        echo
-    fi
+    esac
+    rm -f $TMP/sbopkg_rsync.lck
 }
 
 rsync_repo () {
@@ -1558,6 +1563,17 @@ add_options () {
 install_package () {
     # Install the package.
     INSTPKG=$1
+    OWNER=$(stat -c %U $OUTPUT/$INSTPKG)
+    GROUP=$(stat -c %G $OUTPUT/$INSTPKG)
+    if ! has_root; then
+        crunch_fmt "Only the root user may install packages."
+        return 0
+    fi
+    if [[ ! "$OWNER" == "root" && ! "$GROUP" == "root" ]]; then
+        crunch_fmt "The file is not set with root:root permissions. \
+            Installation will not continue."
+        return 0
+    fi
     if [ "$INSTALLPKGS" = "1" ]; then
         upgradepkg --reinstall --install-new $OUTPUT/*
     else
@@ -1755,8 +1771,7 @@ pick_slackbuild () {
             B="$(cat $TMP/sbopkg_bld_selection)"
             if [ "$B" = "Original" ]; then
                 SLACKBUILD="original"
-            fi
-            if [ "$B" = "Local" ]; then
+            elif [ "$B" = "Local" ]; then
                 SLACKBUILD="local"
             fi
         else
@@ -1849,8 +1864,7 @@ pick_info () {
             I="$(cat $TMP/sbopkg_info_selection)"
             if [ "$I" = "Original" ]; then
                 DOTINFO="original"
-            fi
-            if [ "$I" = "Local" ]; then
+            elif [ "$I" = "Local" ]; then
                 DOTINFO="local"
             fi
         else
@@ -1960,13 +1974,10 @@ process_queue () {
             --no-label "Build and Install" --yesno \
             "$(crunch  "Would you like to build the package(s) only, or \
             build and install the package(s)?  (Press ESC to exit).")" 8 50
-        V=$?
-        if [ $V = 255 ]; then
-            return 0
-        fi
-        if [ $V = 1 ]; then
-            INSTALLPKGS=1
-        fi
+        case $? in
+            255) return ;;
+            1) INSTALLPKGS=1 ;;
+        esac
     fi
     touch $SUMMARYLOG
     echo >> $SUMMARYLOG
@@ -2152,8 +2163,7 @@ check_for_latest () {
                 you like to download the new sbopkg \
                 package:\n\n$NEWSBOPKG\n\nThe new sbopkg package will saved \
                 to your OUTPUT directory: $OUTPUT")" 13 50
-            W=$?
-            if [ $W = 1 ]; then
+            if [ $? = 1 ]; then
                 return 0
             fi
         fi
@@ -2213,16 +2223,24 @@ queue_menu () {
         Q="View"
     fi
     while :; do
+        if has_root; then
+            ROOT_OPTS=(
+                "Process" "Process the build queue"
+            )
+            HEIGHT=5
+        else
+            HEIGHT=4
+        fi
         dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --cancel-label "Back" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
-            15 60 5 \
+            15 60 $HEIGHT \
             "View" "View the build queue" \
-            "Process" "Process the build queue" \
             "Delete" "Delete items from the build queue" \
             "Load" "Load a saved build queue" \
             "Save" "Save a build queue" \
+            "${ROOT_OPTS[@]}" \
             2>$TMP/sbopkg_queue_menu_answer
 
         Q="$(cat $TMP/sbopkg_queue_menu_answer)"
