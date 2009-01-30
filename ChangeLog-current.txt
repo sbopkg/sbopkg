@@ -9,5 +9,10 @@ enhancements:
     with root:root permissions.  Thanks to Phillip Warner for the report and
     suggestions.
   * Modify SLACKVER in sbopkg.conf so it can be passed at runtime to sbopkg.
+    Thanks to TSquaredF for the suggestion.
+  * Quiet down the number of messages displayed when updated items are added
+    to the queue; thanks to Phillip Warner for the suggestion.
+  * Fix issue where sometimes duplicate items would appear in the search
+    results dialog; thanks to Phillip Warner for the suggestion.
 +--------------------------+
 
