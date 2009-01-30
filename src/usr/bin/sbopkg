@@ -1187,7 +1187,8 @@ add_item_to_queue () {
     # Only display this if we are not loading a queue; otherwise getting this
     # after each app was added to the queue may get annoying.
     if [[ ! -e $TMP/sbopkg_user_queue.lck && \
-        ! -e $TMP/sbopkg_backup_queue.lck ]]; then
+        ! -e $TMP/sbopkg_backup_queue.lck && \
+        ! -e $TMP/sbopkg-update-queue ]]; then
         dialog --title "Done" --msgbox "$(crunch "$APP has been added to \
             the build queue.")" 8 40
     fi
@@ -2414,7 +2415,9 @@ main_menu () {
             "Updates")    main_updates ;;
             "Browse")     browse_categories
                           rm -f $TMP/sbopkg_return_main_menu ;;
-            "Search")     main_search ;;
+            "Search")     main_search
+                          rm -f $TMP/sbopkg_search_*
+                          rm -f $TMP/sbopkg_return_main_menu ;;
             "Utilities")  utilities_menu ;;
             "Queue")      queue_menu ;;
             *)            # "Exit", or an empty string if Exit, instead of Ok,
