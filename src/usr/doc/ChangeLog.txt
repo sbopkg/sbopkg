@@ -1,3 +1,21 @@
+Fri Jan 30 04:21:44 UTC 2009
+Sbopkg 0.26.1 released.  This version contains the following fixes and
+enhancements:
+
+  * Implement some security fixes, namely, customize the output of some of the
+    menus so only things that can be done as root (i.e. build, install,
+    process the queue) are seen by the root user; also add a check to make
+    sure only root can install packages and that packages are correctly set
+    with root:root permissions.  Thanks to Phillip Warner for the report and
+    suggestions.
+  * Modify SLACKVER in sbopkg.conf so it can be passed at runtime to sbopkg.
+    Thanks to TSquaredF for the suggestion.
+  * Quiet down the number of messages displayed when updated items are added
+    to the queue; thanks to Phillip Warner for the suggestion.
+  * Fix issue where sometimes duplicate items would appear in the search
+    results dialog; thanks to Phillip Warner for the suggestion.
++--------------------------+
+
 Thu Jan 29 14:41:00 UTC 2009
 Sbopkg 0.26.0 released.  This version contains the following fixes and
 enhancements:
