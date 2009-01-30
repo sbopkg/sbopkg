@@ -16,3 +16,534 @@ enhancements:
     results dialog; thanks to Phillip Warner for the suggestion.
 +--------------------------+
 
+Thu Jan 29 14:41:00 UTC 2009
+Sbopkg 0.26.0 released.  This version contains the following fixes and
+enhancements:
+
+  * Add in new update code by Mauro Giachero.  This /greatly/ improves how the
+    updates are handled and virtually eliminates the need for specific
+    application quirks.  Please note there is a new file
+    /etc/sbopkg/sbopkg-renames that handles a few name changes.  If you
+    upgrade sbopkg with the new package, then this file will be automatically
+    installed.  If not, you'll need to grab this file from the source tarball
+    and move it there manually.  Many thanks to Mauro for the hard work in
+    finally getting the update code done right.  :-)
+  * Change how selecting/unselecting items in the build queue are handled.
+    Now, when items are unselected, they remain in the queue but are turned
+    "OFF" and when the queue is processed, only those packages turned "ON"
+    will be built or installed.
+  * Improve how packages are added to the queue.  The user is now prompted if
+    they want to replace items already in the queue or skip them.  This may be
+    helpful if a user has saved a queue with lots of dependencies that are
+    then updated through the rsync process.  The updates can be added to the
+    queue, replacing the old versions.
+  * Add in a nice progress gauge when running the update list rather than the
+    warning message.  Thanks to alkos333 for the idea and initial
+    implementation, and thanks to Mauro Giachero for working on the CLI
+    version.
+  * Merge in a large whitespace/cleanup patch by slakmagik which greatly
+    improves the readability of the code; thanks to slakmagik for the patch.
+  * Replace the 'Clear Queue' menu item with 'Delete Queue Items' which
+    provides the user the ability to delete individual items in the queue or
+    clear the entire build queue.
+  * Add in ability to have a /local directory in the local SBo repository tree
+    on a user's system that is in parallel with other SBo directories (i.e.
+    /home/sbo/local).  As long as this directory is maintained in an SBo style
+    (including user-defined categories), then sbopkg will pick them up and the
+    user can change their SLACKVER to 'local' and build/install packages from
+    there.  This might be useful in testing pre-submissions to SBo or for
+    maintaining other software not in SBo.  This was inspired by a similar
+    idea contributed by slakmagik.  Please see the sbopkg.conf(5) man page for
+    more information.
+  * Commit a patch from slakmagik that adds a new sbopkg.conf variable LOGFILE
+    where the user can decide the name and location of the permanent build
+    log, if used; thanks to slakmagik for the patch.
+  * Improve the configuration file handling so that sbopkg now runs even with
+    a missing or deficient system-wide configuration file, as long as the
+    user's ~/.sbopkg.conf file is present and fills the gaps.
+  * Fix issue where downloaded sources with spaces in their file names would
+    cause an MD5SUM failure; thanks to alkos333 for the bug report, and thanks
+    to Mauro Giachero for improving my initial bug fix implementation.
+  * Commit several other patches from slakmagik that improve the handling of
+    the search box upon search failures; tweak the precheck log a bit; improve
+    the checking of root privilegs, and improve the handling of the
+    directory-creation checks; thanks to slakmagik for these patches.
+  * Fix issue where a failed download would still go through an md5sum check;
+    now it informs the user of the failed download and asks if the user wishes
+    to continue with the build queue or abort.
+  * Eliminate some redundant or annoying messages to the user, such as when
+    the backup queue is saved.
+  * Add 'sspm' utility script by slakmagik which makes mirroring the sbopkg
+    SVN repository and making a package from the local SVN mirror very easy;
+    this script is located in the /tools directory in the sbopkg SVN
+    repository; thanks to slakmagik for the script.
+  * Fix issue where ARCH would sometimes not get picked up in info_item menu
+    (notably for OpenOffice.org); thanks to artourter for the bug report, and
+    thanks to Mauro for the fix.
+  * Lots of other internal 'under the hood' improvements to the repository
+    browsing, directory check functionality, build queue, and just general
+    overall code cleanup.
++--------------------------+
+Sat Jan 17 02:15:03 UTC 2009
+Sbopkg 0.25.0 released.  This is another version jump due to the
+number of fixes, enhancements, and new features:
+
+  * Fix issue where packages were sometimes incorrectly identified as
+    already being in the build queue when they were not; thanks to
+    SpacePlod for the bug report and thanks to Mauro Giachero for
+    further bug reporting and providing a patch to fix it.
+  * Add ability to pass build options/flavors/arguments to the
+    SlackBuild when using the dialog interface.
+  * Include ability to reverse or manually sort the items in the build
+    queue; thanks to Mauro Giachero for the patches to implement these
+    features.
+  * Move all the queue functions into a separate 'Manage Queue'
+    submenu off the main menu.
+  * Allow user to save (and load) the build queue between sessions by
+    specifing a file and location, so multiple saved queues can be
+    maintained.
+  * Automatically backup the current queue upon exiting and offer to
+    reload upon first entering the queue submenu.
+  * Provide a menu entry to clear the build queue.
+  * Merge in several patches from Mauro Giachero to display the SVN
+    version number; clean up use of cancel/back and ESC (ESC now takes
+    you back a step in most dialogs); improve the cleanup process; and
+    improve the new build flavors/options dialog.
+  * Apply several patches from slakmagik for various little fixes,
+    cleanups, and tweaks.
+  * Create a new 'Utilities' submenu off the main menu and move some
+    of the less-important items there in order to clean up the main
+    menu.  It was getting a bit bulky.  :-)
+  * Add ability to download a new sbopkg package when there is an
+    update.
+  * Include optional use of a ~/.sbopkg.conf, which will override
+    settings in the system /etc/sbopkg/sbopkg.conf file.
+  * When changing the Slackware version in the dialog interface, offer
+    the user the opportunity to save this change in the new
+    ~/.sbopkg.conf file.
+  * Improve build queue logging and error reporting; correctly remove
+    symlink to the source tarball when build fails.
+  * Bump default wget timeout from 10 to 15 seconds which prevents
+    some downloads from failing.
+  * Add update list fix for ksmoothdock; thanks to Wade Grant for the
+    bug report.
+  * Improve how the sources are downloaded and identified.
+  * Remove the 'read sbopkg README' from the main menu.
+  * Add a directory check for OUTPUT since that is now required.
+  * Add preliminary check to make sure command line options -b and -i
+    are not used together.
+  * Fix issue where certain packages in queue that end with a ++ (like
+    libsigc++) could not be added.
++--------------------------+
+Thu Jan 1 20:53:19 UTC 2009
+Sbopkg version 0.20.0 released.  This a version jump due to the
+numerous fixes, enhancements, and new features.
+
+New features:
+
+  * There is a new -i command line switch that allows the user to
+    build and install packages in a manner similar to the current -b
+    switch for building only.  As with the -b switch, the user can
+    build and install more than one package by listing them in quotes.
+    And, by carefully listing dependencies in the right order, it
+    might be possible to build and install dependencies and the final,
+    target package in one go, like this:
+
+    # sbopkg -i "imlib2 giblib feh"
+
+    In this case, imlib2 must be built and installed before giblib,
+    both of which need to be built and installed before feh.  Given
+    the nature of building dependencies, this may not always work, but
+    it still may be helpful and useful in many cases.
+  * Coupled with the new -i switch, there is a new 'build queue' in
+    the dialog interface.  The user can add packages to the queue and
+    then, when ready, can process the queue in the order the packages
+    are listed.  The user can choose to build only or build and
+    install the packages in the queue.  Again, by listing dependencies
+    in the right order, it may be possible to build dependencies and
+    the final, target package in one go like the feh example above.
+  * After checking for updates, the user is offered the opportunity to
+    add those flagged updates to the build queue automatically.
+  * When building packages individually outside of the build queue,
+    the user is offered the opportunity to build or build and install
+    the package.
+  * There is a new -u command line switch, and a corresponding new
+    dialog menu selection, that allows the user to check if there is
+    an update to sbopkg itself.
+  * A new DEBUG variable is introduced to the sbopkg.conf file that
+    allow for easier debugging and update list bug reporting.  See the
+    sbopkg.conf man page for more detail.
+
+Bug Fixes:
+
+  * Fix issues with the "Installed/Not Installed" text at the top of
+    info item menu screen.  Thanks to Erik Hanson and Mauro Giachero
+    for assistance with this issue.
+  * Improve the wording and button labeling of several dialogs; thanks
+    to Erik Hanson for a patch to implement several of these
+    improvements and thanks to The-Croupier for suggestions on
+    another.
+  * Clean up the customization menu.
+  * Fix issue with typhoon_2001 not building correctly; thanks to
+    cotterochan for the bug report.
+  * Fix django download issue due to their weird tarball naming
+    scheme; thanks to David Somero for the bug report.
+  * Fix mplayer update issue; thanks to all the folks that reported
+    this one.  Clearly, mlayer is a popular app.  :-)
+  * Fix acroread update issue; thanks to Erik Hanson for the bug
+    report.
+  * Fix build queue failure issue found in 0.20.0rc1 due to not
+    recovering from control-c cleanly; thanks to Mauro Giachero for
+    the bug report.
+  * Fix issue found in 0.20.0rc1 where packages could be added to
+    queue more than once which caused some funky behavior; thanks to
+    Mauro Giachero for the bug report.
+  * Fix issue found in 0.20.0rc1 where customized SlackBuilds were not
+    being used in the build process; thanks to Mauro Giachero for the
+    bug report.
+  * Fix issue found in 0.20.0rc1 where the queue processing would
+    continue even after removing all packages from the queue; thanks
+    to Mauro Giachero for the bug report.
+
+Changes to sbopkg.conf:
+
+As a result of some of these new features, users are advised of three
+changes to the sbopkg.conf file.  Users can either manually update
+their existing sbopkg.conf file or use the sbopkg.conf.new file that
+is installed when you upgrade sbopkg.
+
+sbopkg.conf change 1: OUTPUT is now required.  This was commented out
+in prior versions of sbopkg.conf.  The default setting of OUTPUT is:
+
+export OUTPUT=${OUTPUT:-/tmp}
+
+this is the same default setting in SBo SlackBuild scripts themselves.
+
+sbopkg.conf change 2: TERMBUILD is deprecated.  All building and
+installing switches now out of dialog and occurs in a terminal in all
+cases.  Having the build take place inside the dialog interface caused
+some issues and made it difficult to implement some of the new
+features.  So, it went.  As a result, you can delete TERMBUILD from
+your sbopkg.conf file.
+
+sbopkg.conf change 3: As mentioned above, DEBUG is a new required
+variable in the sbopkg.conf file.  The default setting is DEBUG=0.
++--------------------------+
+Thu Dec 11 02:45:58 UTC 2008
+Congrats to Patrick and the team on the new release of Slackware
+12.2.
+
+Sbopkg version 0.15.0 released.  This version contains the following
+fixes and enhancements:
+
+  * Slackware 12.2 is now the default Slackware version selected when
+    using sbopkg.
+  * Fix an issue where sometimes a built package was incorrectly
+    listed in the software info item menu, i.e. mplayer-codecs-all
+    instead of mplayer.  Thanks to necropresto for the bug report.
+  * Add --no-owner to default rsync flags to avoid having the local
+    SBo repo tagged with owner 1016 permissions.  Thanks to Pierre
+    Cazenave for the bug report and Erik Hanson for the suggested
+    solution.
++--------------------------+
+Thu Dec 4 09:35:09 UTC 2008
+Sbopkg version 0.14.1 released.  This is a minor bug-fix release:
+
+  * Fix issue where certain package names were showing up incorrectly
+    in the 'install' option - i.e. mplayer instead of
+    mplayer-codecs-all.  Thanks to necropresto for the bug report.
+  * A few little cleanups and cruft-removal.
++--------------------------+
+Sun Nov 16 17:15:49 UTC 2008
+Sbopkg version 0.14.0 released.  This version contains the following
+fixes and enhancements:
+
+  * Various fixes related to the SlackBuilds.org update changing
+    certain 'xx' to '++', such as TiMidity++, libsigc++, and libxml++.
+  * The info item menus now display the repo's software version in the
+    menu title, and also display whether the package has been
+    installed at the top of the screen.  This is a really nice
+    improvement.  Thanks to Erik Hanson for the patch.
+  * Improve the Control-C trapping.
+  * Fix the issue where simply pressing 'Enter' in the search box
+    would result in all packages in the repo being listed as search
+    results.  Now, it just returns to the main menu.
+  * Fix xerces-c issue in the update list.  Thanks to João Felipe
+    Santos for the bug report.
+  * Lots of other little cleanups and cruft-removal.
+  * Also, the sbopkg package itself now has a tag at the end, in
+    keeping with typical Slackware package convention.
+
+In addition, a new home page (http://www.sbopkg.org) has been set up.
+Many thanks to the guys at cardinal.lizella.net, and their colocation
+provider, Cyberlink International (http://cyberlinkint.com) for the
+hosting.
++--------------------------+
+Tue Oct 28 14:06:56 UTC 2008
+Sbopkg version 0.13.1 released.  This is primarily a bug-fix release:
+
+  * A fix for OpenOffice.org not being picked up correctly on the
+    updatelist feature.  Thanks to Erik Hanson for the bug report.
+  * A fix for a couple issues that appeared with the changes to the
+    rsync and wget flags in version 0.13.0.  Thanks to Ken Roberts and
+    Jorge Gaton for the bug reports.  To remedy this problem, I have
+    removed TIMEOUT from sbopkg.conf and instead added two optional
+    variables, RSYNCFLAGS and WGETFLAGS.  These options have been
+    populated with some of the flags that were previously in the
+    sbopkg script itself.  This means that folks can manually tweak
+    the flags used by rsync and wget, although in most cases the
+    defaults should be left alone.  This also means that for those who
+    are upgrading sbopkg from a previous version will again need to
+    manually update their sbopkg.conf from the sbopkg.conf.new that is
+    installed and merge the changes.  Sorry about these changes to the
+    configuration file, but hopefully they are for the better since
+    these changes fix the problems mentioned previously and also give
+    the users a bit more control over the flags used, if desired.
++--------------------------+
+Sat Oct 25 12:38:34 UTC 2008
+Sbopkg version 0.13.0 released.  This version contains the following
+fixes and enhancements:
+
+  * New code has been added to allow the user to cleanly abort the
+    source download by pressing Control-C; thanks to Zordak for the
+    suggestion.
+  * Add in several improvements to the rsync and wget stages, whereby
+    better error messages are detected and displayed, -z is removed
+    from rsync, and other general cleanups; thanks to macavity for the
+    suggestions and patches.
+  * Add in -O option to wget to allow for cases where downloaded
+    source name is different than expected (such as virtualbox-ose);
+    thanks to acidchild for the bug report.
+  * Add in new sbopkg.conf variable TIMEOUT to allow the user to
+    manually set the timeout value for rsync and wget; thanks to
+    macavity for the suggestion.  NOTE:  this will require users
+    upgrading from previous versions to either merge the new
+    sbopkg.conf into their existing file, or manually add a TIMEOUT=10
+    (default is 10 seconds) to their existing sbopkg.conf file.
+  * Add in several updatelist fixes; thanks to Erik Hanson for the bug
+    reports.
+  * Add in fix where searching for category names would create
+    problems; thanks to nille for the bug report.
+  * Add in some new code in an initial attempt to fix the 'decimal'
+    problem in bash, in which comparing package versions (like 3.9
+    versus 3.11) would result in incorrect updatelist results.  This
+    code should fix some updatelist errors reported by Erik Hanson,
+    samac, and João Felipe Santos.  This new code needs testing, so
+    please check the updatelist and then consider running it with the
+    debug feature enabled and check the results the again.  See the
+    UPDATELIST-DEBUGGING document for details on how to enable
+    debugging.
+  * Fix size of several dialog boxes for a better UI; thanks to Erik
+    Hanson for the bug report.
+  * Several error-checking and graceful exit cleanups and fixes.
++--------------------------+
+Tue Oct 7 14:05:36 UTC 2008
+Sbopkg version 0.12.0 released.  This version contains the following
+fixes and enhancements:
+
+  * New code that better catches MD5SUM failures and offers the
+    opportunity to delete the corrupted source.
+  * New menu entry that allows a user to manually delete the saved
+    sources for any particular software in the SBo repository.  Thanks
+    to Drew Ames for the bug reports and suggestions that led to both
+    of these two fixes and additions.
+  * Add in ability to edit the *.info file in a similar manner to
+    editing the SlackBuild.  With this addition, a user can now
+    manually update the .info and SlackBuild from within sbopkg and
+    build and install an updated package before it hits the repo.  If
+    you use vi/vim as your EDITOR and want an easy way to insert the
+    MD5SUM of a new source tarball, try ":r! md5sum
+    /path/to/new/source".  Then clean up the inserted information into
+    a proper .info file layout.  Thanks to nille for prodding me to
+    get this done.
+  * Move the editing functions into a submenu to better organize the
+    'info item' menu for each software selection.  Thanks to nille for
+    the suggestion.
+  * Several error-checking and graceful exit cleanups and fixes.
++--------------------------+
+Tue Sep 16 22:41:34 UTC 2008
+Sbopkg version 0.11.2 released.  This version contains the following
+fixes and enhancements:
+
+  * The pid file is now properly removed when using sbopkg from the
+    cli; many thanks to LukenShiro for the bug report and help with
+    testing.
+  * Checks for the various sbopkg-related directories and files are
+    improved.
+  * A couple of updatelist fixes; thanks to LukenShiro for the bug
+    reports.
++--------------------------+
+Fri Sep 12 12:32:07 EST 2008
+Sbopkg version 0.11.1 released.  This is a minor bug fix for version
+0.11.0.
++--------------------------+
+Fri Sep 12 09:51:39 EST 2008
+Sbopkg version 0.11.0 released.  This version contains the following
+fixes and enhancements:
+
+  * After many, _many_ requests, sbopkg now adds preliminary support
+    to install a package by calling upgradepkg --reinstall
+    --install-new.  Currently, this new feature is only available in
+    the dialog interface (the cli version will include this feature
+    shortly).  If sbopkg finds a package for the selected application
+    in the OUTPUT directory, then a new menu item will automagically
+    appear allowing the user to install the package.  Thanks very much
+    to Erik Hanson for the initial code to get this working.  Please
+    do test this functionality and let me know if there are any
+    issues.
+  * Much improved menu navigation -- the 'Return to Main Menu' feature
+    that appeared in the last release is now moved down as a button
+    next to "Ok" and "Back."  Additionally, several of "Cancel"
+    buttons are renamed "Back." I think these changes greatly improve
+    things from a user interface perspective.  Thanks to Erik Hanson
+    for the suggestions.
+  * There is a new option in sbopkg.conf "TERMBUILD" that allows a
+    user to optionally have the package building process step outside
+    of dialog and process in a regular terminal.  Thanks to Erik
+    Hanson for the suggestion and patch to make this work.
+  * Create a pid file when sbopkg is first run and check for its
+    existence to prevent multiple instances of sbopkg from running.
+    Thanks to David Somero for the suggestion.
+  * Add in several bugfixes for the update list.  Thanks to Erik
+    Hanson and The-spiki for the bug reports.
++--------------------------+
+Tue Aug 26 23:53:13 EST 2008
+Sbopkg version 0.10.0 released.  This version contains the following
+fixes and enhancements:
+
+  * Committed a patch from that fixes ubuntulooks update bug, removes
+    ARCH from the update comparison code to prevent false positive
+    when different arches are used, and fixes libsigc++ and TiMidity++
+    update bugs; thanks to Bert Babington for the patch.
+  * Modified the sbopkg.conf file to allow easier/more correct
+    exporting of variables; thanks to Ken Roberts for the patch and
+    helpful dialog on the issue.  Please note that the default sbopkg
+    TMP has moved from /tmp to /tmp/SBo, so be sure to move your
+    permanent build log and package debugging list, if any, to the new
+    location.
+  * Renamed sbopkg.conf.sample to sbopkg.conf.new and incorporate a
+    doinst.sh script per general Slackware convention; thanks to Ken
+    Roberts for the suggestion, patch, and doinst.sh script.  This
+    sbopkg.conf.new is the new 'sample' configuration file.  As such,
+    please back up your old sbopkg.conf and then consider merging any
+    changes you made to your old sbopkg.conf and then renaming the
+    sbopkg.conf.new to sbopkg.conf.
+  * Add a "Return to Main Menu' function in the package information
+    menu; thanks to Murat D. Kadirov for the suggestion.
+  * Include fixes for several other packages in the update code.
+  * Fixed some typos; thanks to samac for the report.
+  * Add a feature to view the sbopkg README from the main menu.
+  * Lots and lots of little fixes, tweaks, and cleanups throughout the
+    script.  The error checking and other similar low-level plumbing
+    issues are generally improved.
+  * Several changes/edits to the man pages and other documentation.
++--------------------------+
+Wed Aug 13 23:06:07 EST 2008
+Sbopkg version 0.0.9 released.  This version contains the following
+fixes and enhancements:
+
+  * Several bug fixes in the update list to prevent false positives.
+    Thanks to ktabic and Antoine for the bug reports.
+  * Fixed some things so that a user can now correctly set a different
+    TMP, SRCDIR, OUTPUT etc. in sbopkg.conf, which means that
+    someone can completely segregate sbopkg and it's related
+    SBo-building and package dumping directories, for example,
+    /sbo/tmp, /sbo/cache, /sbo/packages etc.  See the sbopkg.conf(5)
+    man page for details.  Thanks to Ken Roberts for the bug report.
+  * New features include the ability to clear the cache directory from
+    within the dialog interface and to display all installed SBo
+    packages in the dialog and cli.
+  * The search results page has been improved and the user can now
+    jump directly to a package's information menu from the search
+    results page.  Thanks to Erik Hanson for the diffs, suggestions,
+    whitespace cleanups, and bug fixes.
+  * Menu navigation has been greatly improved so that sbopkg remembers
+    where you are when navigating up and down through the menus.
+    Again, big thanks to Erik Hanson for this improvement.
++--------------------------+
+Sun Aug 3 21:02:27 EST 2008
+Sbopkg version 0.0.8 released.  The major addition to this version is
+the ability to search for and display potential updates to SBo
+packages installed on the user's system.  There are also verious other
+bug-fixes and code cleanups.  Big thanks to Erik Hanson for his
+suggestions and help with the new update code.
++--------------------------+
+Fri May 16 22:20:52 EST 2008
+Sbopkg version 0.0.7 released.  This version contains the following
+fixes and enhancements:
+
+  * Sbopkg now properly creates the /home/sbo/12.1 directory if it
+    doesn't exist (or equivalent as set in sbopkg.conf).  Note the
+    user still has to manually create the 'root' directory where the
+    SBo mirror will be held -- i.e. /home/sbo in this example.
+  * Category list menu has been tweaked to include the two new SBo
+    categories in the full view.
+  * Some old commented out cruft has been removed.
++--------------------------+
+Fri May 2 20:35:09 EST 2008
+Congratulations to Patrick and the Slackware team on the release of
+Slackware 12.1.
+
+Sbopkg version 0.0.6.1 released.  The only change is to set the
+default SBo repository to 12.1 and update the man pages etc. to
+reference Slackware 12.1.  Otherwise, there are no substantive changes
+over 0.0.6.
++--------------------------+
+Sun Apr 13 10:24:27 EST 2008
+Sbopkg version 0.0.6 released.  This version contains the following
+fixes and enhancements:
+
+  * Ability to rsync with and browse SBo repos for different Slackware
+    versions (currently 11.0 and 12.0, and will be updated when 12.1
+    is out).
+  * Improved search functionality for cli.  The -s switch is the same
+    as before, and will display the README, *.info etc. for a
+    particular package name.  New, however, is -q, which will search
+    for packages by string and return a list of possible matches.
+    This is now the search used in the dialog interface as well.
+  * Various other cleanups and bugfixes.
+
+Also, the sbopkg Google Groups list has been created:
+
+http://groups.google.com/group/sbopkg-discuss
++--------------------------+
+Wed Apr 2 14:29:36 EST 2008
+Sbopkg version 0.0.5 released.  This version contains the following
+fixes and enhancements:
+
+  * Users can now copy and edit the SlackBuild within the dialog
+    interface, keeping both the original and edited SlackBuild.
+  * Build packages using original or edited SlackBuild.
+  * Fixes to the permanent build log so it actually works from dialog
+    or cli. ;-)
+  * Ability to view/delete the permanent build log within dialog
+    interface.
+  * Basic search functionality built in to the dialog interface (shows
+    what category a piece of software is in);
+  * Better viewing of the README, .info, slack-desc, and SlackBuild
+    from cli.
+  * Various other cleanups.
++--------------------------+
+Sat Mar 29 12:26:00 EST 2008
+Sbopkg version 0.0.4 released.
++--------------------------+
+Fri Mar 28 00:18:23 EST 2008
+Sbopkg version 0.0.3 released.  This version contains the following
+fixes and enhancements:
+
+  * More than one application can be searched at a time in the cli.
+  * Build process window remains in state correctly, as does the rsync
+    window.
+  * Source tarballs are saved in a separate SRCDIR directory and
+    symlinked to the build directory.
+  * Can browse this SRCDIR cache directory within the dialog
+    interface.
+  * Thanks to slackmagik for several of these excellent suggestions
+    and contributions.
++--------------------------+
+Wed Mar 26 12:00:00 EDT 2008
+Sbopkg version 0.0.2 released.
++--------------------------+
+Mon Mar 24 10:22:44 EDT 2008
+Sbopkg version 0.0.1 released.
++--------------------------+
