@@ -1,3 +1,11 @@
+Fri Jan 30 23:03:49 UTC 2009
+Sbopkg 0.26.2 released.  This version contains the following fixes and
+enhancements:
+
+  * Fix regression where packages could not be installed in certain
+    instances.  Thanks to artourter for the bug report.
++--------------------------+
+
 Fri Jan 30 04:21:44 UTC 2009
 Sbopkg 0.26.1 released.  This version contains the following fixes and
 enhancements:
