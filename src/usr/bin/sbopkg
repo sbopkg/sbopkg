@@ -1697,7 +1697,7 @@ build_package () {
         echo "Built package: $NEWPACKAGE" >> $SUMMARYLOG
         echo "Built package: $NEWPACKAGE"
         if [ "$INSTALLPKGS" = "1" ]; then
-            install_package $SRCNAME
+            install_package $NEWPACKAGE
             echo "Done installing/upgrading package for $PKG."
             echo "Installed package: $NEWPACKAGE" >> $SUMMARYLOG
         fi
