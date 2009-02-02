@@ -465,7 +465,7 @@ check_for_updates () {
                 # In that case, let's trust the .info file...
                 if [ -z "$NEWVER" ]; then
                     NEWINFO=$(echo $NEWSB |rev |cut -d. -f2- |rev).info
-                    NEWVER=$(cat $NEWINFO |grep "^VERSION" |cut -d\" -f2)
+                    NEWVER=$(grep "^VERSION" $NEWINFO |cut -d\" -f2)
                 fi
 
                 # Compare the old $VER and the new $NEWVER
@@ -927,7 +927,7 @@ sort_queue () {
             --menu "$(crunch "Use the <Up/Down> buttons to sort the queue \
             items, press <OK> when done, or press <Cancel> to abort \
             changes.")" 30 50 14 \
-            $(cat -n $TMPSORTQUEUE |rev |cut -d" " -f3 |rev) \
+            $(nl $TMPSORTQUEUE |rev |cut -d" " -f3 |rev) \
             2>$TMP/sbopkg-ans-sort
         CHOICE=$?
         SELECTED=$(cat $TMP/sbopkg-ans-sort)
@@ -1002,9 +1002,10 @@ load_backup_queue () {
             cancel.")" 11 65
         if [ $? = 0 ]; then
             touch $TMP/sbopkg_backup_queue.lck
-            cat $PERMQUEUE | while read PICK; do
+            # Reading from $PERMQUEUE...
+            while read PICK; do
                 add_item_to_queue $PICK
-            done
+            done < $PERMQUEUE
             rm -f $TMP/sbopkg_backup_queue.lck
             rm $PERMQUEUE
             dialog --title "Done" --msgbox \
@@ -1103,7 +1104,7 @@ delete_build_queue () {
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     REMOVEQUEUE=$TMP/sbopkg-remove-queue
     WORKINGQUEUE=$TMP/sbopkg-working-queue
-    cat $TMPQUEUE | sed -e 's/ ON$//g;s/ OFF$//g' > $REMOVEQUEUE
+    sed -e 's/ ON$//g;s/ OFF$//g' $TMPQUEUE > $REMOVEQUEUE
     while :; do
         # "dialog" segfaults when asked to display an empty menu.
         # Work around this by showing an "empty" entry when there are
@@ -1170,7 +1171,7 @@ add_item_to_queue () {
     VERSIONBUILD=$2
     ONOFF=$3
     TMPQUEUE=$TMP/sbopkg-tmp-queue
-    if $(cat $TMPQUEUE 2>/dev/null | grep -q "^$APP "); then
+    if grep -q "^$APP " $TMPQUEUE 2>/dev/null; then
         dialog --title "WARNING" --yesno "$(crunch "$APP is already in the \
             queue.  Do you want to replace it?  Press <Yes> to replace or \
             press <No> to skip.")" 10 50
@@ -1214,14 +1215,15 @@ view_queue () {
         case $? in # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
             0)
                 rm -f $WORKINGQUEUE
-                cat $TMPQUEUE | while read PICK; do
+                # Reading from $TMPQUEUE...
+                while read PICK; do
                     TESTAPP=$(echo $PICK | cut -f1 -d " ")
-                    if $(cat $TMP/sbopkg-ans-queue | grep -qx "$TESTAPP"); then
+                    if grep -qx "$TESTAPP" $TMP/sbopkg-ans-queue; then
                         echo $PICK | sed -e 's/OFF/ON/' >> $WORKINGQUEUE
                     else
                         echo $PICK | sed -e 's/ON/OFF/' >> $WORKINGQUEUE
                     fi
-                done
+                done < $TMPQUEUE
                 mv $WORKINGQUEUE $TMPQUEUE
                 if [ "$BUILDPKGS" = 1 ]; then
                     mv $TMP/sbopkg-ans-queue $TMP/sbopkg-start-queue
@@ -2368,12 +2370,13 @@ main_updates () {
             "$(crunch "Would you like to add the flagged updates to \
             the build queue?")" 8 35
         if [ $? = 0 ]; then
-            cat $TMP/sbopkg-update-queue | while read PICK; do
+            # Reading from $TMP/sbopkg-update-queue...
+            while read PICK; do
                 APP=$(echo $PICK | cut -f1 -d " ")
                 VERSIONBUILD=$(echo $PICK | cut -f2 -d " ")
                 ONOFF=$(echo $PICK | cut -f3 -d " ")
                 add_item_to_queue $APP $VERSIONBUILD $ONOFF
-            done
+            done < $TMP/sbopkg-update-queue
             rm -f $TMP/sbopkg-update-queue
             dialog --title "Done" --msgbox "$(crunch "The flagged \
                 updates have been added to the build queue.")" 8 30
