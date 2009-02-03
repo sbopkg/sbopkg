@@ -79,7 +79,7 @@ config_check () {
 
         KEEPLOG=$(echo "$KEEPLOG" | tr [[:lower:]] [[:upper:]])
         # Some configuration options are mandatory
-        for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT SQDIR \
+        for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT QUEUEDIR \
             KEEPLOG LOGFILE DEBUG RSYNCFLAGS WGETFLAGS; do
             if [ -z "${!VAR}" ]; then
                 MISSING+="$VAR "
@@ -163,8 +163,8 @@ directory_checks () {
         "Creating local TMP directory $TMP."
     ck_dir "$OUTPUT" \
         "Creating local package output directory $OUTPUT."
-    ck_dir "$SQDIR" \
-        "Creating queues directory $SQDIR."
+    ck_dir "$QUEUEDIR" \
+        "Creating queues directory $QUEUEDIR."
     ck_dir "$LOGDIR" \
         "Creating log directory $LOGDIR."
 
@@ -1079,15 +1079,15 @@ load_user_queue () {
     local QFS=$TMP/sbopkg-queue-files-selection
     local QFM=$TMP/sbopkg-queue-files-menu
 
-    if [ -z "$(ls -A $SQDIR 2>/dev/null)" ]; then
+    if [ -z "$(ls -A $QUEUEDIR 2>/dev/null)" ]; then
         if [ "$DIAG" = 1 ]; then
             dialog --title "ERROR" --msgbox "$(crunch "The queue directory \
-                $SQDIR is empty.")" 8 30
+                $QUEUEDIR is empty.")" 8 30
             continue
         fi
     fi
     while :; do
-        find $SQDIR -type f -printf "\"%P\" \"\"\n" | sort > $QFM
+        find $QUEUEDIR -type f -printf "\"%P\" \"\"\n" | sort > $QFM
         dialog --cancel-label "Cancel" --title "$TITLE" \
             --default-item "${USERQUEUE##*/}" --menu \
             "$(crunch "Please choose the queue you would like to load and \
@@ -1096,7 +1096,7 @@ load_user_queue () {
         if [ $? != 0 ]; then
             break
         fi
-        USERQUEUE=$SQDIR/$(cat $QFS)
+        USERQUEUE=$QUEUEDIR/$(cat $QFS)
         if [ -e $USERQUEUE ]; then
             touch $TMP/sbopkg_user_queue.lck
             # Reading from $USERQUEUE...
@@ -1130,7 +1130,7 @@ save_user_queue () {
         if [ "$(cat $TMP/sbopkg-user-queue)" = "" ]; then
             return 0
         fi
-        USERQUEUE="$SQDIR/$(cat $TMP/sbopkg-user-queue)"
+        USERQUEUE="$QUEUEDIR/$(cat $TMP/sbopkg-user-queue)"
         if [ ! "$USERQUEUE" = "" ]; then
             if [ -e $USERQUEUE ]; then
                 dialog --title "Error" --yesno "$(crunch "Another file \

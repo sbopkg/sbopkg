@@ -2,6 +2,9 @@ Sat Jan 31 02:04:46 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * 
+  * Commit a patch that adds a new sbopkg.conf configuration variable, SQDIR,
+  where users can define where saved queues are stored; also, when the user
+  wants to load a saved queue, show a list of available saved queues; thanks
+  to slakmagik for the patch.
 +--------------------------+
 
