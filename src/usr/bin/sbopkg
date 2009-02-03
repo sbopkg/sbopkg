@@ -79,8 +79,8 @@ config_check () {
 
         KEEPLOG=$(echo "$KEEPLOG" | tr [[:lower:]] [[:upper:]])
         # Some configuration options are mandatory
-        for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT KEEPLOG \
-            LOGFILE DEBUG RSYNCFLAGS WGETFLAGS; do
+        for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT SQDIR \
+            KEEPLOG LOGFILE DEBUG RSYNCFLAGS WGETFLAGS; do
             if [ -z "${!VAR}" ]; then
                 MISSING+="$VAR "
             fi
@@ -163,6 +163,8 @@ directory_checks () {
         "Creating local TMP directory $TMP."
     ck_dir "$OUTPUT" \
         "Creating local package output directory $OUTPUT."
+    ck_dir "$SQDIR" \
+        "Creating queues directory $SQDIR."
     ck_dir "$LOGDIR" \
         "Creating log directory $LOGDIR."
 
@@ -623,6 +625,47 @@ select_version () {
     rm -f $TMP/sbopkg_version_selection
 }
 
+app_files_chooser() {
+    # This function takes a single argument (the directory whose files are to
+    # be listed) and $F can be used in the calling function to access the
+    # selected filename.
+
+    local D=$1
+    local TITLE="${D##*/} files"
+    local AFS=$TMP/app_files_selection
+    local AFSP=$TMP/app_files_selection_parsed
+    local AFM=$TMP/app_files_menu
+    local PLAIN
+
+    while :; do
+        find $D -type f -printf "\"%P\" \"\"\n" | sort > $AFM
+        dialog --ok-label "View" --cancel-label "Back" --title "$TITLE" \
+            --default-item "$F" --menu \
+            "Please choose the file you would like to view or press <Back> \
+                to go back." 15 45 7 --file $AFM 2>$AFS
+        if [ $? != 0 ]; then
+            rm -f $AFS $AFSP $AFM
+            return
+        fi
+        F=$(cat $AFS)
+        cd $D
+        unset PLAIN
+        case $F in
+            slack-desc) sed -n "/^$APP: */s///p" slack-desc > $AFSP ;;
+            *tar.gz|*tar.bz2) tar tvf $F > $AFSP ;;
+            *gz) zcat $F > $AFSP ;;
+            *bz2) bzcat $F > $AFSP ;;
+            *) PLAIN=yes ;;
+        esac
+        if [[ "$PLAIN" == yes ]]; then
+            dialog --exit-label "OK" --title "$F" --textbox "$F" 0 0
+        else
+            dialog --exit-label "OK" --title "Parsed contents of $F" \
+                --textbox "$AFSP" 0 0
+        fi
+    done
+}
+
 info_item () {
     local APP CATEGORY SHORTPATH RVERSION RARCH RBUILD U
     local CURAPP LONGAPP SHORTAPP
@@ -688,9 +731,9 @@ s/\$.*/unknown/")
                 "Build" "Build a package for $APP"
                 $JPACKAGE
             )
-            HEIGHT=10
+            HEIGHT=11
         else
-            HEIGHT=8
+            HEIGHT=9
         fi
         dialog --default-item "$U" \
             --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
@@ -703,6 +746,7 @@ s/\$.*/unknown/")
             "Info" "View the .info file" \
             "Slack-desc" "View the slack-desc file" \
             "SlackBuild" "View the SlackBuild file" \
+            "More Files" "Choose any file to display" \
             "Custom" "Customize the .info or SlackBuild" \
             "Remove" "Remove $APP sources in cache" \
             "Options" "Edit Build Options/Flavors" \
@@ -739,7 +783,7 @@ s/\$.*/unknown/")
                     Slack-desc)
                         PARSED_SLACK_DESC=$(
                             mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
-                        sed -n "/^$APP: /s///p" $SHORTPATH/slack-desc > \
+                        sed -n "/^$APP: */s///p" $SHORTPATH/slack-desc > \
                             $PARSED_SLACK_DESC
                         dialog --title "Viewing Slack-desc" \
                             --textbox $PARSED_SLACK_DESC 0 0
@@ -748,6 +792,7 @@ s/\$.*/unknown/")
                         dialog --title "Viewing SlackBuild" \
                             --textbox $SHORTPATH/$APP.SlackBuild 0 0
                         ;;
+                    "More Files") app_files_chooser $SHORTPATH ;;
                     Custom) customize_item ;;
                     Remove) remove_sources $APP ;;
                     Options) add_options $APP ;;
@@ -1031,52 +1076,62 @@ load_user_queue () {
     # with any current $TMPQUEUE.
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     WORKINGQUEUE=$TMP/sbopkg-working-queue
-    dialog --title "Load Saved Queue" --inputbox "$(crunch "Please enter the \
-        path and filename to a saved build queue (if no path is specified, \
-        then your queue will be saved to $TMP):")" \
-        10 50 2>$TMP/sbopkg-user-queue
-    if [ $? = 0 ]; then
-        USERQUEUE="$(cat $TMP/sbopkg-user-queue)"
-        if [ ! "$USERQUEUE" = "" ]; then
-            if $(echo $USERQUEUE | grep -q \/); then
-                USERQUEUE=$USERQUEUE
-            else
-                USERQUEUE=$TMP/$USERQUEUE
-            fi
-            if [ -e $USERQUEUE ]; then
-                touch $TMP/sbopkg_user_queue.lck
-                cat $USERQUEUE | while read PICK; do
-                    add_item_to_queue $PICK
-                done
-                rm -f $TMP/sbopkg_user_queue.lck
-                dialog --title "Done" --msgbox \
-                    "The saved queue has been loaded." 8 30
-            else
-                dialog --title "Error" --msgbox \
-                    "No saved queue was found." 8 30
-            fi
+    local QFS=$TMP/sbopkg-queue-files-selection
+    local QFM=$TMP/sbopkg-queue-files-menu
+
+    if [ -z "$(ls -A $SQDIR 2>/dev/null)" ]; then
+        if [ "$DIAG" = 1 ]; then
+            dialog --title "ERROR" --msgbox "$(crunch "The queue directory \
+                $SQDIR is empty.")" 8 30
+            continue
         fi
-    rm -f $TMP/sbopkg-user-queue
     fi
+    while :; do
+        find $SQDIR -type f -printf "\"%P\" \"\"\n" | sort > $QFM
+        dialog --cancel-label "Cancel" --title "$TITLE" \
+            --default-item "${USERQUEUE##*/}" --menu \
+            "$(crunch "Please choose the queue you would like to load and \
+            select <Ok> or press <Cancel> to exit.")" \
+            20 40 8 --file $QFM 2>$QFS
+        if [ $? != 0 ]; then
+            break
+        fi
+        USERQUEUE=$SQDIR/$(cat $QFS)
+        if [ -e $USERQUEUE ]; then
+            touch $TMP/sbopkg_user_queue.lck
+            # Reading from $USERQUEUE...
+            while read PICK; do
+                add_item_to_queue $PICK
+            done < $USERQUEUE
+            rm -f $TMP/sbopkg_user_queue.lck
+            # FIXME: remove if ok without
+            #dialog --title "Done" --msgbox \
+            #    "The saved queue has been loaded." 8 30
+            rm -f $QFS $QFM
+            return 0
+        else
+            dialog --title "Error" --msgbox \
+                "No saved queue was found." 8 30
+        fi
+    done
+    rm -f $TMP/sbopkg-user-queue
 }
 
 save_user_queue () {
     # This function saves the build queue to a location the user
     # specifies.
+    rm -f $TMP/sbopkg-user-queue
     if empty_queue; then return; fi
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     dialog --title "Save Queue" --inputbox "$(crunch "Please enter the \
-        path and filename where you would like to save the queue (if no \
-        path is specified, your queue will be saved to $TMP):")" 10 50 \
+        filename you wish to save your queue as:")" 10 50 \
         2>$TMP/sbopkg-user-queue
     if [ $? = 0 ]; then
-        USERQUEUE="$(cat $TMP/sbopkg-user-queue)"
+        if [ "$(cat $TMP/sbopkg-user-queue)" = "" ]; then
+            return 0
+        fi
+        USERQUEUE="$SQDIR/$(cat $TMP/sbopkg-user-queue)"
         if [ ! "$USERQUEUE" = "" ]; then
-            if $(echo $USERQUEUE | grep -q \/); then
-                USERQUEUE=$USERQUEUE
-            else
-                USERQUEUE=$TMP/$USERQUEUE
-            fi
             if [ -e $USERQUEUE ]; then
                 dialog --title "Error" --yesno "$(crunch "Another file \
                     with that name already exists.  Press <Yes> to \
@@ -1088,9 +1143,9 @@ save_user_queue () {
                     continue
                 fi
             fi
-            cp $TMPQUEUE $USERQUEUE
-            dialog --title "Done" --msgbox \
-                "The build queue has been saved." 8 30
+            cp $TMPQUEUE $USERQUEUE ||
+            dialog --title "ERROR" --msgbox \
+                "Problem saving build queue." 8 30
         fi
     fi
 }
@@ -1367,8 +1422,7 @@ gen_search_package () {
     PKG=$1
     CATEGORY=${2:-\*}
     RESULTS=$(find -mindepth 2 -maxdepth 2 -type d \
-        -iwholename "./$CATEGORY/*$PKG*" |
-        sed -e 's/.\///' |sort)
+        -iwholename "./$CATEGORY/*$PKG*" -printf "%P\n" |sort)
     if [ -n "$RESULTS" ]; then
         if [ "$DIAG" = 1 ]; then
             for i in $RESULTS; do

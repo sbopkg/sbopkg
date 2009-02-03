@@ -13,6 +13,7 @@ LOCALREPO=${LOCALREPO:-/home/sbo}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 export TMP=${TMP:-/tmp/SBo}
 export OUTPUT=${OUTPUT:-/tmp}
+SQDIR=$TMP/queues
 KEEPLOG=YES
 LOGFILE=$TMP/sbopkg-build-log
 DEBUG=0
