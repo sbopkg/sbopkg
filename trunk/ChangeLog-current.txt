@@ -1,4 +1,4 @@
-Sat Jan 31 02:04:46 UTC 2009
+Thu Feb  5 16:45:07 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -6,5 +6,15 @@ enhancements:
     QUEUEDIR, where users can define where saved queues are stored; also, when
     the user wants to load a saved queue, show a list of available saved
     queues; thanks to slakmagik for the patch.
+  * Add ability to search for keywords in the README files using regular
+    expressions; thanks to slakmagik for the original patch and implementation
+    and thanks to both slakmagik and Mauro for cleaning it up and addressing
+    minor issues before the commit.
+  * Commit a cleanup/misc patch from slakmagik that removes some useless code
+    and fixes some style issues; thanks to slakmagik for the patch.
+  * Allow user to interrupt/abort the update progressbar by pressing ESC;
+    thanks to Mauro for the feature.
+  * Assorted menu navigation fixes, and document -p switch in sbopkg(8) man
+    page; thanks to Mauro for these improvements.
 +--------------------------+
 
