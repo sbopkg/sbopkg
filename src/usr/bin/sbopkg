@@ -326,7 +326,7 @@ function progressbar_cli () {
     else
         SCREENWIDTH=80
     fi
-    BARWIDTH=$(($SCREENWIDTH - 7))
+    BARWIDTH=$(($SCREENWIDTH - 8))
 
     while read PROGRESS; do
         # Show the percentage
@@ -358,12 +358,29 @@ function progressbar () {
     fi
 }
 
+function read_nonblock () {
+    # This is a simple non-blocking read function reading a single
+    # character (if available) from stdin and putting it in $1.
+    local STTY_STATUS=$(stty --save)
+    stty -icanon time 0 min 0 -echo
+    read $1
+    stty $STTY_STATUS
+}
+
+function progressbar_interrupted () {
+    # This function checks whether the user pressed ESC
+    local ESC="" KEY
+
+    read_nonblock KEY
+    [[ "$KEY" = "$ESC" ]]
+}
+
 check_for_updates () {
     # This checks for updates to installed SBo packages.  Thanks to Mauro
     # Giachero for this much-improved update code and related functions!
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
-    local TEMPFILE UPDATELIST VERSION_FILE
+    local TEMPFILE UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
     local STRING INDEX OLDNAME NAME VER ARCH BUILD
     local VER_NUMERIC NEWVER_NUMERIC UPDATED
     local PKGS NUMPKGS PROGRESSCOUNTER=0
@@ -382,6 +399,7 @@ check_for_updates () {
     PKGS=$(ls *_SBo)
     NUMPKGS=$(echo $PKGS |wc -w)
     VERSION_FILE=$TMP/sbopkg-script-version
+    PROGRESSBAR_INTERRUPTED=$TMP/sbopkg_progressbar-interrupted
     if [ -e "$PKGS" ]; then
         echo "No SlackBuilds.org packages detected." >> $UPDATELIST
     else
@@ -389,10 +407,11 @@ check_for_updates () {
             potential updates..." >> $UPDATELIST
         echo >> $UPDATELIST
         { # Grouping for the progressbar
+        echo 0 # Progressbar begin
+
         for CURPKG in $PKGS; do
-            # Progress indicator, for the progressbar
-            echo $(($PROGRESSCOUNTER * 100 / $NUMPKGS))
-            (( PROGRESSCOUNTER += 1 ))
+            # Bail out if the user pressed ESC
+            progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
 
         # This next code is borrowed and modified from pkgtool
             #echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//'
@@ -508,22 +527,29 @@ check_for_updates () {
                     echo "  Not in the repository." >> $UPDATELIST
                 fi
             fi
+
+            # Progress indicator, for the progressbar
+            (( PROGRESSCOUNTER += 1 ))
+            echo $(($PROGRESSCOUNTER * 100 / $NUMPKGS))
         done
-        echo 100 # To complete the progressbar
         } | progressbar "Building list of potential updates" "This may take\
             a few moments depending on how many SlackBuilds.org packages are\
             installed..."
         echo >> $UPDATELIST
         echo "Potential update list complete." >> $UPDATELIST
     fi
-    if [ "$DIAG" = 1 ]; then
-        dialog --title "Viewing potential updates." --textbox $UPDATELIST 0 0
+    if [[ ! -f $PROGRESSBAR_INTERRUPTED ]]; then
+        if [ "$DIAG" = 1 ]; then
+            dialog --title "Viewing potential updates." --textbox $UPDATELIST 0 0
+        else
+            cat $UPDATELIST
+        fi
+        # Permanent log of the updatelist is saved when DEBUG is enabled.
+        if [ "$DEBUG" -ge "1" ]; then
+            cp $UPDATELIST $TMP/sbopkg-debug-updatelist
+        fi
     else
-        cat $UPDATELIST
-    fi
-    # Permanent log of the updatelist is saved when DEBUG is enabled.
-    if [ "$DEBUG" -ge "1" ]; then
-        cp $UPDATELIST $TMP/sbopkg-debug-updatelist
+        rm -f $PROGRESSBAR_INTERRUPTED
     fi
 }
 
