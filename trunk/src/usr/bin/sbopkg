@@ -1463,14 +1463,21 @@ gen_search_package () {
                     SlackBuilds.org $SLACKVER repository.")" \
                     --default-item "$SRCHPICK" --extra-button \
                     --cancel-label "Back" \
+                    --help-button --help-label "Main Menu" \
                     --extra-label "Add to Queue" --menu "$(crunch "Please \
                     select an item you wish to view, press <Add to Queue> \
                     to add it to the build queue, or press <Back> to \
                     go back.")" 22 70 14 --file \
                     $TMP/sbopkg_search_results 2>$TMP/sbopkg_search_choice
                 CHOICE=$?
-                if [ $CHOICE = 1 ]; then
+                if [[ $CHOICE = 1 || $CHOICE = 255 || $CHOICE = -1 ]]; then
+                    # Back or ESC
                     rm -f $TMP/sbopkg_search_results
+                    return 0
+                elif [[ $CHOICE = 2 ]]; then
+                    # Main Menu
+                    rm -f $TMP/sbopkg_search_results
+                    touch $TMP/sbopkg_return_main_menu
                     return 0
                 fi
                 SRCHPICK="$(cat $TMP/sbopkg_search_choice)"
@@ -1486,19 +1493,16 @@ gen_search_package () {
                     cut -d= -f2 | sed s/\"//g)
                 RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$SRCHPKG.SlackBuild |
                     sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
-                if [ $CHOICE = 0 ]; then
+                if [[ $CHOICE = 0 ]]; then
                     echo $SRCHPKG > $TMP/sbopkg_item_selection
                     cd $LOCALREPO/$SLACKVER
                     info_item
                     if [ -e $TMP/sbopkg_return_main_menu ]; then
                         return 0
                     fi
-                elif [ $CHOICE = 3 ]; then
+                else # $CHOICE = 3
                     add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
                     continue
-                else
-                    rm -f $TMP/sbopkg_search_results
-                    return 0
                 fi
             done
             continue
@@ -1569,6 +1573,7 @@ string_search() {
             0)
                 echo $SRCHPKG > $TMP/sbopkg_item_selection
                 info_item
+                [[ -e $TMP/sbopkg_return_main_menu ]] && return 0
                 ;;
             3)
                 SHORTPATH=$REPO/$SRCHCAT/$SRCHPKG
@@ -2117,7 +2122,7 @@ process_queue () {
             "$(crunch  "Would you like to build the package(s) only, or \
             build and install the package(s)?  (Press ESC to exit).")" 8 50
         case $? in
-            255) return ;;
+            255|-1) return ;;
             1) INSTALLPKGS=1 ;;
         esac
     fi
@@ -2531,6 +2536,8 @@ main_search() {
         elif [[ $STRING == yes ]]; then
             string_search "$SEARCH_TERM"
         fi
+
+        [[ -e $TMP/sbopkg_return_main_menu ]] && return 0
     done
 }
 
