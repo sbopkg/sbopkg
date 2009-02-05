@@ -38,15 +38,12 @@
 
 # Variables
 SCRIPT=${0##*/}
-DIAG=""
-BUILDPKGS=""
-INSTALLPKGS=""
-BUILDOPTIONS=""
+unset DIAG BUILDPKGS INSTALLPKGS BUILDOPTIONS
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 SBOPKG_RENAMES="${SBOPKG_RENAMES:-/etc/sbopkg/sbopkg-renames}"
 CWD="$(pwd)"
 SBOVER=svn_r$(cat ${0} | grep '$Id: ' | head -1 | \
-sed -e 's/^.*Id: sbopkg \([0-9.]*\) .*$/\1/')
+    sed -e 's/^.*Id: sbopkg \([0-9.]*\) .*$/\1/')
 
 crunch() {
     # The inspiration for this and the next function comes from the crunch()
@@ -65,12 +62,12 @@ config_check () {
     local MISSING VAR
 
     if [ ! -e /etc/sbopkg/sbopkg-renames ]; then
-        echo "$SCRIPT: No /etc/sbopkg/sbopkg-renames was found."
+        echo "$SCRIPT: No /etc/sbopkg/sbopkg-renames was found." 1>&2
         echo "Please correct this error and run $SCRIPT again." 1>&2
         exit 1
     fi
     if [[ ! -e $SBOPKG_CONF  && ! -e $HOME/.sbopkg.conf ]]; then
-        echo "$SCRIPT: No $SBOPKG_CONF or ~/.sbopkg.conf file were found."
+        echo "$SCRIPT: No $SBOPKG_CONF or ~/.sbopkg.conf file were found." 1>&2
         echo "Please create at least one of them and run $SCRIPT again." 1>&2
         exit 1
     else
@@ -250,11 +247,12 @@ show_changelog () {
     # Show the SlackBuilds.org changelog.
     check_if_repo_exists
     cd $LOCALREPO/$SLACKVER
-    if [ ! -e ./ChangeLog.txt ]; then
+    if [ ! -r ./ChangeLog.txt ]; then
         if [ "$DIAG" = 1 ]; then
-            dialog --title "ERROR" --msgbox "$(crunch "No ChangeLog.txt \
-                found.  Please make sure your repository directory is set \
-                correctly and that you have done an rsync first.")" 10 30
+            dialog --title "ERROR" --msgbox "$(crunch "ChangeLog.txt not \
+                found or not readable.  Please make sure your repository \
+                directory is set correctly and that you have done an rsync \
+                first.")" 10 30
             continue
         else
             echo
@@ -263,7 +261,7 @@ show_changelog () {
             echo "repository directory is set correctly and that"
             echo "you have done an rsync first.  Exiting."
             cleanup
-            exit 0
+            exit 1
         fi
     else
         if [ "$DIAG" = 1 ]; then
@@ -589,7 +587,7 @@ get_category_list () {
 select_version () {
     # Create menu and list the SBo-supported versions of Slackware for
     # user to choose from.
-    while [ 0 ]; do
+    while :; do
         dialog --cancel-label "Back" --title \
             "Choose a Slackware version" \
             --menu "$(crunch "You are currently using sbopkg to browse a \
@@ -685,10 +683,9 @@ info_item () {
 s/\$.*/unknown/")
     RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$APP.SlackBuild |
         sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
-    U="README"
-    while [ 0 ]; do
+    while :; do
         CURAPP=$(ls /var/log/packages/*SBo* 2>/dev/null | grep $APP)
-        KPACKAGE=""
+        unset KPACKAGE
         for i in $CURAPP; do
             LONGAPP=$(echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//')
             SHORTAPP=$(echo $LONGAPP | sed -e 's/^.*\///g')
@@ -714,10 +711,10 @@ s/\$.*/unknown/")
                 head -n 1)
                 )"
         else
-            IPACKAGE=""
+            unset IPACKAGE
         fi
         if [ "$IPACKAGE" = "" ]; then
-            JPACKAGE=""
+            unset JPACKAGE
         else
             JPACKAGE="Install $IPACKAGE"
         fi
@@ -822,8 +819,7 @@ s/\$.*/unknown/")
 customize_item () {
     # This function shows the menu for customizing the SlackBuild
     # and .info file.
-    V="Edit"
-    while [ 0 ]; do
+    while :; do
     dialog --default-item "$V" --title "$APP Customization" \
         --cancel-label "Back" --menu \
         "Please choose an item or press <Back> to go back.\n" 15 75 4 \
@@ -859,10 +855,7 @@ browse_categories () {
         fi
     fi
     get_category_list
-    if [ -z "$S" ]; then
-        S="Academic"
-    fi
-    while [ 0 ]; do
+    while :; do
         dialog --default-item "$S" --cancel-label "Back" \
             --title "Choose a category" --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
@@ -960,7 +953,7 @@ sort_queue () {
     local CHOICE
     local SELECTED
     local PKGSCOUNT=$(cat $TMPQUEUE |wc -l)
-    local DEFAULTITEM=1
+    local DEFAULTITEM
     local TMPSORTQUEUE=$TMP/sbopkg-tmp-sort-queue
     cp $TMPQUEUE $TMPSORTQUEUE
     while :; do
@@ -968,7 +961,7 @@ sort_queue () {
             --extra-button --extra-label "Down" \
             --cancel-label "OK" \
             --help-button --help-label "Cancel" \
-            --default-item $DEFAULTITEM \
+            --default-item "$DEFAULTITEM" \
             --menu "$(crunch "Use the <Up/Down> buttons to sort the queue \
             items, press <OK> when done, or press <Cancel> to abort \
             changes.")" 30 50 14 \
@@ -1264,7 +1257,7 @@ view_queue () {
             is processed, the packages selected below will be built, and \
             optionally installed, in the order listed from top to \
             bottom.\n\nPlease select or unselect those packages you wish \
-            to keep in the build queue and then press <Ok> to continue \
+            to keep in the build queue and then press <OK> to continue \
             or press <Cancel> to exit.")" 30 50 8 \
             --file $TMPQUEUE 2>$TMP/sbopkg-ans-queue
         case $? in # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
@@ -1308,7 +1301,7 @@ rsync_command () {
     # This function holds the rsync command.
     # We do not use -z as this causes heavy CPU load on the server
     # and has very limited effect when most of the pull is .gz files.
-    /usr/bin/rsync --archive --delete --no-owner --exclude="*.sbopkg" \
+    rsync --archive --delete --no-owner --exclude="*.sbopkg" \
         --exclude="/local/" $RSYNCFLAGS \
         $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
     case $? in
@@ -1393,7 +1386,7 @@ search_package () {
     cd $LOCALREPO/$SLACKVER
     PKG=$1
     PKGPATH=$(find -type d -mindepth 2 -name $PKG)
-    if [ ! $(find -type d -mindepth 2 -name "$PKG") ]; then
+    if [[ -z $PKGPATH ]]; then
         if [ "$BUILDPKGS" = 1 ]; then
             echo "ERROR: Package \"$PKG\" not found" >> $PRECHECKLOG
             echo "ERROR: Package \"$PKG\" not found - skipped" >> $SUMMARYLOG
@@ -1662,7 +1655,7 @@ add_options () {
     OPTIONPKG=$1
     OPTIONFILE=$LOCALREPO/$SLACKVER/$CATEGORY/$APP/options.sbopkg
     if [ ! -e $OPTIONFILE ]; then
-        CUROPTIONS=""
+        unset CUROPTIONS
     else
         CUROPTIONS=$(cat $OPTIONFILE)
     fi
@@ -1726,8 +1719,7 @@ checksum_fail () {
 }
 
 build_package () {
-    MD5CHK=""
-    MD5SUM=""
+    unset MD5CHK MD5SUM
     # Start fetching and building the package.
     echo ; echo "Building $PKG"
     OLDOUTPUT=$OUTPUT
@@ -1873,7 +1865,7 @@ pick_slackbuild () {
     # This function checks to see if there is a locally-edited
     # SlackBuild (which has the *.sbopkg" suffix) and then asks the
     # user which one he wants to use to build a package.
-    SLACKBUILD=""
+    unset SLACKBUILD
     if [ ! -e $PKGPATH/$PKGNAME.SlackBuild.sbopkg ]; then
         SLACKBUILD="original"
     else
@@ -1968,7 +1960,7 @@ pick_info () {
     # This function checks to see if there is a locally-edited
     # .info file (which has the *.sbopkg" suffix) and then asks the
     # user which one he wants to use to build a package.
-    DOTINFO=""
+    unset DOTINFO
     if [ ! -e $PKGPATH/$PKG.info.sbopkg ]; then
         DOTINFO="original"
     else
@@ -2028,7 +2020,7 @@ use_options () {
     OPTAPP=$1
     # Ask if user wants to use options.sbopkg if found
     if [ ! -e $PKGPATH/options.sbopkg ]; then
-        BUILDOPTIONS=""
+        unset BUILDOPTIONS
     else
         TMPOPTIONS=$(cat $PKGPATH/options.sbopkg)
         if [ "$DIAG" = 1 ]; then
@@ -2039,10 +2031,10 @@ use_options () {
             if [ $? = 0 ]; then
                 BUILDOPTIONS=$TMPOPTIONS
             else
-                BUILDOPTIONS=""
+                unset BUILDOPTIONS
             fi
         else
-            while true; do
+            while :; do
                 echo "Custom options for the $OPTAPP SlackBuild"
                 echo "script were found:"
                 echo
@@ -2056,7 +2048,7 @@ use_options () {
                 case $ANS in
                     y* | Y* ) BUILDOPTIONS=$TMPOPTIONS
                     ;;
-                    n* | N* ) BUILDOPTIONS=""
+                    n* | N* ) unset BUILDOPTIONS
                     ;;
                     * ) echo "Unknown response."
                     ;;
@@ -2076,7 +2068,7 @@ process_queue () {
     FINALQUEUE=$TMP/sbopkg-final-queue
     PRECHECKLOG=$TMP/sbopkg_precheck_log
     SUMMARYLOG=$TMP/sbopkg_summary
-    QUITBUILD=""
+    unset QUITBUILD
     rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
     rm -f $TMP/sbopkg_tmp_prechecklog
     if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
@@ -2126,7 +2118,7 @@ process_queue () {
             echo
         fi
         for CHKBUILD in $(cat $STARTQUEUE); do
-            PKG=""
+            unset PKG
             search_package $CHKBUILD
             pick_info $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
@@ -2153,14 +2145,14 @@ process_queue () {
             dialog --title "Pre-Check Log" --textbox $PRECHECKLOG 0 0
             dialog --title "Begin?" --yes-label "Ok" --no-label "Cancel" \
                 --yesno "$(crunch "The build queue is ready to process.  \
-                Press <Ok> to continue or <Cancel> to return to the main \
+                Press <OK> to continue or <Cancel> to return to the main \
                 menu.")" 8 40
             if [ $? != 0 ]; then
                 rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
                 continue
             fi
         else
-            while true; do
+            while :; do
                 cat $PRECHECKLOG
                 echo
                 echo "Pre-check complete."
@@ -2199,7 +2191,7 @@ process_queue () {
     rm -f $TMP/sbopkg_build.lck
     touch $TMP/sbopkg_build.lck
     for PKGBUILD in $(cat $FINALQUEUE); do
-            search_package $PKGBUILD
+        search_package $PKGBUILD
         if [ -e $TMP/sbopkg_build.lck ]; then
             build_package $PKGBUILD 2>&1 | tee $SBOPKGTMPOUTPUT
             cat $SBOPKGTMPOUTPUT >> $SBOPKGOUTPUT
@@ -2230,8 +2222,7 @@ process_queue () {
         cat $SBOPKGOUTPUT >> $LOGFILE
         cat $SUMMARYLOG >> $LOGFILE
     fi
-    BUILDPKGS=""
-    INSTALLPKGS=""
+    unset BUILDPKGS INSTALLPKGS
     rm -f $SBOPKGOUTPUT $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
 }
 
@@ -2243,7 +2234,7 @@ check_for_latest () {
     ORIGSCR=http://www.sbopkg.org/version.php
     CVRS=$SBOVER
     NVRS=$(wget -T 10 -q -O - ${ORIGSCR})
-    SBOPKGUP=""
+    unset SBOPKGUP
     NEWPKG=http://www.sbopkg.org/pkg.php
     NEWSBOPKG=$(wget -T 10 -q -O - ${NEWPKG})
     NEWDLPKG=http://sbopkg.googlecode.com/files/$NEWSBOPKG
@@ -2261,7 +2252,7 @@ check_for_latest () {
         else
             SBOPKGUP=1
             if [ "$DIAG" = 1 ]; then
-                MSG="$(crunch "Different versions reported.  Press <Ok> to \
+                MSG="$(crunch "Different versions reported.  Press <OK> to \
                     continue.")"
             else
                 MSG="$(crunch "Different versions reported.  Press (Y)es to \
@@ -2343,9 +2334,6 @@ queue_menu () {
     if [ -e $TMP/sbopkg-savedqueue ]; then
         load_backup_queue
     fi
-    if [ -z "$Q" ]; then
-        Q="View"
-    fi
     while :; do
         if has_root; then
             ROOT_OPTS=(
@@ -2378,7 +2366,7 @@ queue_menu () {
             "Save")       save_user_queue ;;
             *)            # "Exit", or an empty string if Exit, instead of Ok,
                           # was pressed
-                          Q=""
+                          unset Q
                           rm -f $TMP/sbopkg_queue_menu_answer
                           return
                           ;;
@@ -2388,9 +2376,6 @@ queue_menu () {
 
 utilities_menu () {
     # Separate menu for various utilities.
-    if [ -z "$G" ];
-        then G="Cache"
-    fi
     while :; do
         dialog --default-item "$G" --title "Utilities Menu" --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
@@ -2412,7 +2397,7 @@ utilities_menu () {
             "Latest")     check_for_latest ;;
             *)            # "Exit", or an empty string if Exit, instead of Ok,
                           # was pressed
-                          G=""
+                          unset G
                           rm -f $TMP/sbopkg_utilities_menu_answer
                           return
                           ;;
@@ -2549,9 +2534,6 @@ main_updates () {
 
 main_menu () {
     # This is the main dialog menu.
-    if [ -z "$R" ]; then
-        R="Rsync"
-    fi
     while :; do
         dialog --cancel-label "Exit" --default-item "$R" --title \
             "SlackBuilds.org Package Browser (sbopkg version $SBOVER)" \
@@ -2590,8 +2572,7 @@ main_menu () {
                           # was pressed
                           save_backup_queue
                           clear
-                          cleanup
-                          exit 0
+                          return
                           ;;
         esac
     done
