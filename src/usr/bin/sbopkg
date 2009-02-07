@@ -823,7 +823,7 @@ s/\$.*/unknown/")
                     Build)
                         echo "$APP" > $TMP/sbopkg-start-queue
                         process_queue ;;
-                        Install)
+                    Install)
                         SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
                         install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
                         read -n 1 -p "Press any key to continue."
@@ -2249,8 +2249,8 @@ process_queue () {
         fi
     fi
     if [ "$KEEPLOG" = "YES" ]; then
-        cat $PRECHECKLOG >> $LOGFILE
-        cat $SBOPKGOUTPUT >> $LOGFILE
+        [[ -f $PRECHECKLOG  ]] && cat $PRECHECKLOG >> $LOGFILE
+        [[ -f $SBOPKGOUTPUT ]] && cat $SBOPKGOUTPUT >> $LOGFILE
         cat $SUMMARYLOG >> $LOGFILE
     fi
     unset BUILDPKGS INSTALLPKGS
