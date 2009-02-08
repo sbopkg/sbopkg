@@ -1,4 +1,4 @@
-Thu Feb  5 16:45:07 UTC 2009
+Sun Feb  8 20:25:29 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -16,5 +16,11 @@ enhancements:
     thanks to Mauro for the feature.
   * Assorted menu navigation fixes, and document -p switch in sbopkg(8) man
     page; thanks to Mauro for these improvements.
+  * Add ability to view a diff of an edited .info or SlackBuild file before
+    choosing which one to use; thanks to Phillip Warner for the suggestion and
+    thanks to Mauro Giachero for helping debug/improve my original
+    implemenation.
+  * Add ability to view more files in each application's folder, i.e.
+    doinst.sh, or *.desktop files; thanks to Phillip Warner for the suggestion
+    and thanks to slakmagik for the patch implementing this feature.
 +--------------------------+
-

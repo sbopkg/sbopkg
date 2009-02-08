@@ -1882,63 +1882,11 @@ delete_local_slackbuild () {
 }
 
 pick_slackbuild () {
-    # This function checks to see if there is a locally-edited
-    # SlackBuild (which has the *.sbopkg" suffix) and then asks the
-    # user which one he wants to use to build a package.
-    unset SLACKBUILD
-    if [ ! -e $PKGPATH/$PKGNAME.SlackBuild.sbopkg ]; then
-        SLACKBUILD="original"
-    else
-        if [ "$DIAG" = 1 ]; then
-            dialog --title "Choose $PKG SlackBuild" --menu \
-                "$(crunch "A local SlackBuild for $PKG was found in \
-                addition to the original SlackBuild.  Which one would \
-                you like to use?")" 10 60 2 \
-                "Local" "Use the local SlackBuild" \
-                "Original" "Use the original SlackBuild" 2> \
-                $TMP/sbopkg_bld_selection
-            if [ $? != 0 ]; then
-                # Need this to get back to $APP info menu
-                SLACKBUILD="cancel"
-                rm -f $PKGPATH/$PKGNAME*.build
-                QUITBUILD=1
-                return 0
-            fi
-            B="$(cat $TMP/sbopkg_bld_selection)"
-            if [ "$B" = "Original" ]; then
-                SLACKBUILD="original"
-            elif [ "$B" = "Local" ]; then
-                SLACKBUILD="local"
-            fi
-        else
-            while :; do
-                crunch_fmt "A local SlackBuild for $PKGNAME was found in \
-                    addition to the original SlackBuild."
-                echo "Which one would you like to use?"
-                crunch_fmt "Please enter 'O' for original, 'L' for local, \
-                    or 'C' to cancel."
-                read ANS
-                case $ANS in
-                    o* | O* ) SLACKBUILD="original" ; break
-                    ;;
-                    l* | L* ) SLACKBUILD="local" ; break
-                    ;;
-                    c* | C* ) SLACKBUILD="cancel" ; cleanup; exit 0
-                    ;;
-                    * ) echo "Unknown response."
-                    ;;
-                esac
-            done
-            echo
-        fi
-    fi
-    if [ "$SLACKBUILD" = "original" ]; then
-        cp $PKGPATH/$PKG.SlackBuild $PKGPATH/$PKG.SlackBuild.build
-        echo "Using original Slackbuild" >> $TMP/sbopkg_tmp_prechecklog
-    elif [ "$SLACKBUILD" = "local" ]; then
-        cp $PKGPATH/$PKG.SlackBuild.sbopkg $PKGPATH/$PKG.SlackBuild.build
-        echo "Using local Slackbuild" >> $TMP/sbopkg_tmp_prechecklog
-    fi
+    # This function acts as a wrapper around pick_file for the SlackBuild
+    local PKG
+
+    PKG=$1
+    pick_file SlackBuild $PKG
     BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$PKG.SlackBuild.build |
         sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 }
@@ -1977,47 +1925,75 @@ delete_local_info () {
 }
 
 pick_info () {
-    # This function checks to see if there is a locally-edited
-    # .info file (which has the *.sbopkg" suffix) and then asks the
+    # This function acts as a wrapper around pick_file for the .info file
+    local PKG
+
+    PKG=$1
+    pick_file info $PKG
+    . $PKGPATH/$PKG.info.build
+    PKGNAME=${PKG##*/}
+}
+
+pick_file () {
+    # This function checks to see if there is a locally-edited .info or
+    # SlackBuild file (which has the *.sbopkg" suffix) and then asks the
     # user which one he wants to use to build a package.
-    unset DOTINFO
-    if [ ! -e $PKGPATH/$PKG.info.sbopkg ]; then
-        DOTINFO="original"
-    else
-        if [ "$DIAG" = 1 ]; then
-            dialog --title "Choose $PKG .info file" --menu \
-                "$(crunch "A local .info file for $PKG was found in \
-                addition to the original .info file. Which one would you \
-                like to use?")" 10 60 2 \
-                "Local" "Use the local .info" \
-                "Original" "Use the original .info" \
-                2>$TMP/sbopkg_info_selection
-            if [ $? != 0 ]; then
-                rm -f $PKGPATH/$PKGNAME*.build
-                QUITBUILD=1
-                return 0
-            fi
-            I="$(cat $TMP/sbopkg_info_selection)"
-            if [ "$I" = "Original" ]; then
-                DOTINFO="original"
-            elif [ "$I" = "Local" ]; then
-                DOTINFO="local"
-            fi
+    local FILE PKG PICKFILE ANS
+
+    rm -f $TMP/sbopkg_file_selection
+    FILE=$1
+    PKG=$2
+    PICKFILE="original"
+    diff -u $PKGPATH/$PKG.FILE $PKGPATH/$PKG.$FILE.sbopkg > $TMP/sbopkg_diff
+    if [[ -e $PKGPATH/$PKG.$FILE.sbopkg && -s $TMP/sbopkg_diff ]]; then
+        if [ "$DIAG" = "1" ]; then
+            while :; do
+                dialog --title "Choose $PKG $FILE file" --menu \
+                    "$(crunch "A local $FILE file for $PKG was found in \
+                    addition to the original file. Which one \
+                    would you like to use?")" 10 60 4 \
+                    "Local" "Use the local $FILE" \
+                    "Original" "Use the original $FILE" \
+                    "Diff" "View a diff of the two" \
+                    2>$TMP/sbopkg_file_selection
+
+                ANS="$(cat $TMP/sbopkg_file_selection)"
+
+                case "$ANS" in
+                    "Local")    PICKFILE="local"
+                                break ;;
+                    "Original") PICKFILE="original"
+                                break ;;
+                    "Diff")     dialog --title "Viewing diff of $FILE file" \
+                                    --textbox $TMP/sbopkg_diff 0 0
+                                ;;
+                    *)          unset ANS
+                                rm -f $PKGPATH/$PKG*.build
+                                rm -f $TMP/sbopkg_diff
+                                QUITBUILD=1
+                                return 0
+                                ;;
+                esac
+            done
         else
             while :; do
-                crunch_fmt "A local .info file for $PKG was found in \
-                    addition to the original .info file."
+                crunch_fmt "A local $FILE file for $PKG was found in \
+                    addition to the original $FILE file."
                 echo "Which one would you like to use?"
                 crunch_fmt "Please enter 'O' for original, 'L' for local, \
-                    or 'C' to cancel."
+                    'D' to view a diff of the two, or 'C' to cancel."
                 read ANS
                 case $ANS in
-                    o* | O* ) DOTINFO="original" ; break
+                    o* | O* ) PICKFILE="original" ; break
                     ;;
-                    l* | L* ) DOTINFO="local" ; break
+                    l* | L* ) PICKFILE="local" ; break
                     ;;
-                    c* | C* ) DOTINFO="cancel" ; cleanup; exit 0
-                    ;;
+                    d* | D* ) ${PAGER:-more} $TMP/sbopkg_diff
+                              ;;
+                    c* | C* ) rm -f $PKGPATH/$PKG*.build
+                              cleanup
+                              exit 0
+                              ;;
                     * ) echo "Unknown response."
                     ;;
                 esac
@@ -2025,15 +2001,14 @@ pick_info () {
             echo
         fi
     fi
-    if [ "$DOTINFO" = "original" ]; then
-        cp $PKGPATH/$PKG.info $PKGPATH/$PKG.info.build
-        echo "Using original .info file" >> $TMP/sbopkg_tmp_prechecklog
-    elif [ "$DOTINFO" = "local" ]; then
-        cp $PKGPATH/$PKG.info.sbopkg $PKGPATH/$PKG.info.build
-        echo "Using local .info file" >> $TMP/sbopkg_tmp_prechecklog
+    rm -f $TMP/sbopkg_diff
+    if [ "$PICKFILE" = "original" ]; then
+        cp $PKGPATH/$PKG.$FILE $PKGPATH/$PKG.$FILE.build
+        echo "Using original $FILE file" >> $TMP/sbopkg_tmp_prechecklog
+    elif [ "$PICKFILE" = "local" ]; then
+        cp $PKGPATH/$PKG.$FILE.sbopkg $PKGPATH/$PKG.$FILE.build
+        echo "Using local $FILE file" >> $TMP/sbopkg_tmp_prechecklog
     fi
-    . $PKGPATH/$PKG.info.build
-    PKGNAME=${PKG##*/}
 }
 
 use_options () {
@@ -2142,10 +2117,12 @@ process_queue () {
             search_package $CHKBUILD
             pick_info $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
+                rm -f $PKGPATH/$PKG*.build
                 return 0
             fi
-            pick_slackbuild
+            pick_slackbuild $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
+                rm -f $PKGPATH/$PKG*.build
                 return 0
             fi
             use_options $CHKBUILD
@@ -2168,6 +2145,7 @@ process_queue () {
                 Press <OK> to continue or <Cancel> to return to the main \
                 menu.")" 8 40
             if [ $? != 0 ]; then
+                rm -f $PKGPATH/$PKG*.build
                 rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
                 continue
             fi
@@ -2185,7 +2163,9 @@ process_queue () {
                 case $ANS in
                     y* | Y* ) break
                     ;;
-                    n* | N* ) cleanup; exit 0
+                    n* | N* ) rm -f $PKGPATH/$PKG*.build
+                              cleanup
+                              exit 0
                     ;;
                     * ) echo "Unknown response."
                     ;;
@@ -2198,10 +2178,12 @@ process_queue () {
             search_package $CHKBUILD
             pick_info $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
+                rm -f $PKGPATH/$PKG*.build
                 return 0
             fi
-            pick_slackbuild
+            pick_slackbuild $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
+                rm -f $PKGPATH/$PKG*.build
                 return 0
             fi
             use_options $CHKBUILD
