@@ -165,9 +165,6 @@ directory_checks () {
     ck_dir "$LOGDIR" \
         "Creating log directory $LOGDIR."
 
-    # FIXME: This can probably be removed, but leave as-is for a bit.
-    #cd $LOCALREPO
-
     # Let's catch Control-C and try to exit cleanly.  Please see the
     # comment to the control_c function, below.
     trap 'control_c' 2 14 15
@@ -777,12 +774,7 @@ s/\$.*/unknown/")
             "${ROOT_OPTS[@]}" \
             2>$TMP/sbopkg_info_selection
         case $? in
-            1)
-                #FIXME: see if we can avoid segfault when returning to main
-                # menu
-                #rm -f $TMP/sbopkg_*
-                #break
-                rm -f $TMP/sbopkg_category_manual_selection
+            1) rm -f $TMP/sbopkg_category_manual_selection
                 rm -f $TMP/sbopkg_category_selection
                 rm -f $TMP/sbopkg_info_selection
                 rm -f $TMP/sbopkg_item_selection
@@ -1123,9 +1115,6 @@ load_user_queue () {
                 add_item_to_queue $PICK
             done < $USERQUEUE
             rm -f $TMP/sbopkg_user_queue.lck
-            # FIXME: remove if ok without
-            #dialog --title "Done" --msgbox \
-            #    "The saved queue has been loaded." 8 30
             rm -f $QFS $QFM
             return 0
         else
@@ -2584,8 +2573,6 @@ main_menu () {
             "Queue" "Manage the build queue" \
             "Utilities" "Go to the utilities menu" \
             2>$TMP/sbopkg_main_menu_answer
-            #FIXME: remove next line if we like it this way
-            #"Exit" "Exit sbopkg" 2>$TMP/sbopkg_main_menu_answer
 
         R="$(cat $TMP/sbopkg_main_menu_answer)"
 
