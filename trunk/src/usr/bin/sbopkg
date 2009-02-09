@@ -1940,7 +1940,7 @@ pick_file () {
     # user which one he wants to use to build a package.
     local FILE PKG PICKFILE ANS
 
-    rm -f $TMP/sbopkg_file_selection
+    rm -f $TMP/sbopkg_file_selection $TMP/sbopkg_diff
     FILE=$1
     PKG=$2
     if (( ${#PKGPATH[*]} > 1 )); then
@@ -1958,8 +1958,10 @@ pick_file () {
         done
     fi
     PICKFILE="original"
-    diff -u $PKGPATH/$PKG.$FILE $PKGPATH/$PKG.$FILE.sbopkg > $TMP/sbopkg_diff
-    if [[ -e $PKGPATH/$PKG.$FILE.sbopkg && -s $TMP/sbopkg_diff ]]; then
+    if [[ -f $PKGPATH/$PKG.$FILE.sbopkg ]]; then
+        diff -u $PKGPATH/$PKG.$FILE{,.sbopkg} > $TMP/sbopkg_diff
+    fi
+    if [[ -s $TMP/sbopkg_diff ]]; then
         if [ "$DIAG" = "1" ]; then
             while :; do
                 dialog --title "Choose $PKG $FILE file" --menu \
@@ -2005,6 +2007,7 @@ pick_file () {
                     d* | D* ) ${PAGER:-more} $TMP/sbopkg_diff
                               ;;
                     c* | C* ) rm -f $PKGPATH/$PKG*.build
+                              rm -f $TMP/sbopkg_diff
                               cleanup
                               exit 0
                               ;;
