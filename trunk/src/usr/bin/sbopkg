@@ -1399,9 +1399,9 @@ search_package () {
     # populate various variables with data about the package for
     # displaying information and building.
     cd $LOCALREPO/$SLACKVER
-    PKG=$1
-    PKGPATH=$(find -type d -mindepth 2 -name $PKG)
-    if [[ -z $PKGPATH ]]; then
+    PKG="$1"
+    PKGPATH=( $(find -type d -mindepth 2 -name "$PKG") )
+    if [ -z $PKGPATH ]; then
         if [ "$BUILDPKGS" = 1 ]; then
             echo "ERROR: Package \"$PKG\" not found" >> $PRECHECKLOG
             echo "ERROR: Package \"$PKG\" not found - skipped" >> $SUMMARYLOG
@@ -1943,6 +1943,20 @@ pick_file () {
     rm -f $TMP/sbopkg_file_selection
     FILE=$1
     PKG=$2
+    if (( ${#PKGPATH[*]} > 1 )); then
+        select ITEM in ${PKGPATH[*]#*/} Quit; do
+            if [[ $ITEM == Quit ]]; then
+                exit
+            fi
+            PKGPATH=$ITEM
+            if [[ -z $ITEM ]]; then
+                echo "$SCRIPT: invalid choice."
+                continue
+            else
+                break
+            fi
+        done
+    fi
     PICKFILE="original"
     diff -u $PKGPATH/$PKG.$FILE $PKGPATH/$PKG.$FILE.sbopkg > $TMP/sbopkg_diff
     if [[ -e $PKGPATH/$PKG.$FILE.sbopkg && -s $TMP/sbopkg_diff ]]; then
@@ -2714,10 +2728,10 @@ fi
 
 if [ -n "$SEARCH" ]; then
     check_if_repo_exists
-    for PKGSEARCH in $SEARCH; do
+    for PKGSEARCH in "$SEARCH"; do
         echo "Searching for $PKGSEARCH"
-        search_package $PKGSEARCH
-        pick_info $PKGSEARCH
+        search_package "$PKGSEARCH"
+        pick_info "$PKGSEARCH"
         show_readme
     done
 fi
