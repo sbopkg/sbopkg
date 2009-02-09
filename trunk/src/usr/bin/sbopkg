@@ -1944,7 +1944,7 @@ pick_file () {
     FILE=$1
     PKG=$2
     PICKFILE="original"
-    diff -u $PKGPATH/$PKG.FILE $PKGPATH/$PKG.$FILE.sbopkg > $TMP/sbopkg_diff
+    diff -u $PKGPATH/$PKG.$FILE $PKGPATH/$PKG.$FILE.sbopkg > $TMP/sbopkg_diff
     if [[ -e $PKGPATH/$PKG.$FILE.sbopkg && -s $TMP/sbopkg_diff ]]; then
         if [ "$DIAG" = "1" ]; then
             while :; do
