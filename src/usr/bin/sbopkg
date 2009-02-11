@@ -1887,6 +1887,7 @@ pick_slackbuild () {
 
     PKG=$1
     pick_file SlackBuild $PKG
+    [[ "$QUITBUILD" = 1 ]] && return
     BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$PKG.SlackBuild.build |
         sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 }
@@ -1930,6 +1931,7 @@ pick_info () {
 
     PKG=$1
     pick_file info $PKG
+    [[ "$QUITBUILD" = 1 ]] && return
     . $PKGPATH/$PKG.info.build
     PKGNAME=${PKG##*/}
 }
@@ -1967,7 +1969,7 @@ pick_file () {
                 dialog --title "Choose $PKG $FILE file" --menu \
                     "$(crunch "A local $FILE file for $PKG was found in \
                     addition to the original file. Which one \
-                    would you like to use?")" 10 60 4 \
+                    would you like to use?")" 12 60 3 \
                     "Local" "Use the local $FILE" \
                     "Original" "Use the original $FILE" \
                     "Diff" "View a diff of the two" \
