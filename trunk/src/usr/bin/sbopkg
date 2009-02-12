@@ -647,44 +647,53 @@ select_version () {
 }
 
 app_files_chooser() {
+    # List the files of a directory, and view the selected ones.
     # This function takes a single argument (the directory whose files are to
-    # be listed) and $F can be used in the calling function to access the
-    # selected filename.
+    # be listed).
 
     local D=$1
-    local TITLE="${D##*/} files"
     local AFS=$TMP/app_files_selection
-    local AFSP=$TMP/app_files_selection_parsed
     local AFM=$TMP/app_files_menu
-    local PLAIN
+    local TITLE="${D##*/} files" F
 
     while :; do
         find $D -type f -printf "\"%P\" \"\"\n" | sort > $AFM
         dialog --ok-label "View" --cancel-label "Back" --title "$TITLE" \
-            --default-item "$F" --menu \
-            "Please choose the file you would like to view or press <Back> \
-                to go back." 15 45 7 --file $AFM 2>$AFS
+            --default-item "$F" --menu "$(crunch "Please choose the \
+            file you would like to view or press <Back> to go back.")"\
+            15 45 7 --file $AFM 2>$AFS
         if [ $? != 0 ]; then
-            rm -f $AFS $AFSP $AFM
+            rm -f $AFS $AFM
             return
         fi
         F=$(cat $AFS)
-        cd $D
-        unset PLAIN
-        case $F in
-            slack-desc) sed -n "/^$APP: */s///p" slack-desc > $AFSP ;;
-            *tar.gz|*tar.bz2) tar tvf $F > $AFSP ;;
-            *gz) zcat $F > $AFSP ;;
-            *bz2) bzcat $F > $AFSP ;;
-            *) PLAIN=yes ;;
-        esac
-        if [[ "$PLAIN" == yes ]]; then
-            dialog --exit-label "OK" --title "$F" --textbox "$F" 0 0
-        else
-            dialog --exit-label "OK" --title "Parsed contents of $F" \
-                --textbox "$AFSP" 0 0
-        fi
+
+        view_app_file $D "$F"
     done
+}
+
+view_app_file () {
+    # Decode and view the file $2 in the directory $1
+    local DIR="$1"
+    local FILE="$2"
+    local PLAIN
+    local AFSP=$TMP/app_files_selection_parsed
+
+    cd $DIR
+    case $FILE in
+        slack-desc) sed -n "/^${DIR##*/}: */s///p" slack-desc > $AFSP ;;
+        *tar.gz|*tar.bz2|*tgz) tar tvf $F > $AFSP ;;
+        *gz) zcat $F > $AFSP ;;
+        *bz2) bzcat $F > $AFSP ;;
+        *) PLAIN=yes ;;
+    esac
+    if [[ "$PLAIN" == yes ]]; then
+        dialog --exit-label "OK" --title "$FILE" --textbox "$FILE" 0 0
+    else
+        dialog --exit-label "OK" --title "Parsed contents of $FILE" \
+            --textbox "$AFSP" 0 0
+    fi
+    rm -f $AFSP
 }
 
 info_item () {
@@ -751,7 +760,7 @@ s/\$.*/unknown/")
                 "Build" "Build a package for $APP"
                 $JPACKAGE
             )
-            HEIGHT=11
+            HEIGHT=10
         else
             HEIGHT=9
         fi
@@ -764,7 +773,6 @@ s/\$.*/unknown/")
             18 60 $HEIGHT \
             "README" "View the README file" \
             "Info" "View the .info file" \
-            "Slack-desc" "View the slack-desc file" \
             "SlackBuild" "View the SlackBuild file" \
             "More Files" "Choose any file to display" \
             "Custom" "Customize the .info or SlackBuild" \
@@ -774,7 +782,7 @@ s/\$.*/unknown/")
             "${ROOT_OPTS[@]}" \
             2>$TMP/sbopkg_info_selection
         case $? in
-            1) rm -f $TMP/sbopkg_category_manual_selection
+            1)  rm -f $TMP/sbopkg_category_manual_selection
                 rm -f $TMP/sbopkg_category_selection
                 rm -f $TMP/sbopkg_info_selection
                 rm -f $TMP/sbopkg_item_selection
@@ -788,24 +796,13 @@ s/\$.*/unknown/")
                 CATEGORY="$(cat $TMP/sbopkg_category_selection)"
                 case $U in
                     README)
-                        dialog --title "Viewing README" \
-                            --textbox $SHORTPATH/README 0 0
+                        view_app_file $SHORTPATH README
                         ;;
                     Info)
-                        dialog --title "Viewing .info" \
-                            --textbox $SHORTPATH/$APP.info 0 0
-                        ;;
-                    Slack-desc)
-                        PARSED_SLACK_DESC=$(
-                            mktemp $TMP/sbopkg_parsed_slack_desc.XXXXXX)
-                        sed -n "/^$APP: */s///p" $SHORTPATH/slack-desc > \
-                            $PARSED_SLACK_DESC
-                        dialog --title "Viewing Slack-desc" \
-                            --textbox $PARSED_SLACK_DESC 0 0
+                        view_app_file $SHORTPATH $APP.info
                         ;;
                     SlackBuild)
-                        dialog --title "Viewing SlackBuild" \
-                            --textbox $SHORTPATH/$APP.SlackBuild 0 0
+                        view_app_file $SHORTPATH $APP.SlackBuild
                         ;;
                     "More Files") app_files_chooser $SHORTPATH ;;
                     Custom) customize_item ;;
