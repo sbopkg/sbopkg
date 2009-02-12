@@ -1704,9 +1704,24 @@ install_package () {
         return 0
     fi
     if [[ ! "$OWNER" == "root" && ! "$GROUP" == "root" ]]; then
-        crunch_fmt "The file is not set with root:root permissions. \
-            Installation will not continue."
-        return 0
+        crunch_fmt "WARNING:  The file $INSTPKG is not set with root:root \
+            permissions!  Do you want to proceed?  Here is the \
+            output of ls -l:"
+        echo
+        ls -l $OUTPUT/$INSTPKG
+        echo
+        echo "Press (Y)es to proceed or (N)o to abort."
+        read ANS
+        case $ANS in
+            y* | Y* ) echo "Proceeding..."
+            ;;
+            n* | N* ) echo "Aborting..."
+                      return 0
+            ;;
+            * ) echo "Unknown response."
+                break
+            ;;
+        esac
     fi
     if [ "$INSTALLPKGS" = "1" ]; then
         upgradepkg --reinstall --install-new $OUTPUT/*
