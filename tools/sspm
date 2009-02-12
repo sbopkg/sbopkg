@@ -63,13 +63,9 @@ fi
 # old package. But, as the doctor said to the guy who complained that it hurt
 # when he did that, don't DO that.
 if [[ $build == yes || $inst == yes ]]; then
-    # this is for testing unaltered svn versions
     svn_script="$repo/src/usr/bin/sbopkg"
     if [ -r $svn_script ]; then
-        export VERSION="svn$(grep -m1 '$Id.*$' $svn_script |
-            sed 's/.* sbopkg \([^ ]*\).*/\1/')"
-        # I use this for testing patches made against the svn repo
-        #export VERSION=$(date "+%Y%m%d_%H%M")
+        export VERSION=svn$(svnversion $repo)
     else
         echo "$script: unable to find $svn_script." 1>&2
         echo "Please check your repository." 1>&2

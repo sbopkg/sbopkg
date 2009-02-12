@@ -23,4 +23,7 @@ enhancements:
   * Add ability to view more files in each application's folder, i.e.
     doinst.sh, or *.desktop files; thanks to Phillip Warner for the suggestion
     and thanks to slakmagik for the patch implementing this feature.
+  * Rework the check for root:root permissions when installing packages; now,
+    it will display the output of ls -l <packagename> and ask the user they
+    wish to install or abort, rather than only aborting.
 +--------------------------+
