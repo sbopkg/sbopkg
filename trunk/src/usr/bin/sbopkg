@@ -652,9 +652,10 @@ app_files_chooser() {
     # be listed).
 
     local D=$1
+    local F
     local AFS=$TMP/app_files_selection
     local AFM=$TMP/app_files_menu
-    local TITLE="${D##*/} files" F
+    local TITLE="${D##*/} files"
 
     while :; do
         find $D -type f -printf "\"%P\" \"\"\n" | sort > $AFM
@@ -682,9 +683,9 @@ view_app_file () {
     cd $DIR
     case $FILE in
         slack-desc) sed -n "/^${DIR##*/}: */s///p" slack-desc > $AFSP ;;
-        *tar.gz|*tar.bz2|*tgz) tar tvf $F > $AFSP ;;
-        *gz) zcat $F > $AFSP ;;
-        *bz2) bzcat $F > $AFSP ;;
+        *tar.gz|*tar.bz2|*tgz) tar tvf $FILE > $AFSP ;;
+        *gz) zcat $FILE > $AFSP ;;
+        *bz2) bzcat $FILE > $AFSP ;;
         *) PLAIN=yes ;;
     esac
     if [[ "$PLAIN" == yes ]]; then
