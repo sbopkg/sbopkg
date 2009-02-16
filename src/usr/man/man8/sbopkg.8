@@ -118,6 +118,20 @@ Still, when when it works, it can be helpful.
 Display the SBo ChangeLog.txt and quit.
 
 .TP 5
+.B -o
+List the currently installed cached source files which are deemed as
+obsolete, and optionally delete them.
+
+Source files are obsolete when no SBo script references it any more,
+which is something that can happen after rsync-ing the local
+repository.
+
+Please note that only the currently active repository is
+used to identify the obsoleted sources, so if you build packages with
+different repositories (e.g. for different Slackware versions) the
+source files only used in the "other" repository will be listed.
+
+.TP 5
 .B -p
 List installed SlackBuilds.org packages.
 
