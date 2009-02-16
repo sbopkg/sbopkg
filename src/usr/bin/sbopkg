@@ -2758,27 +2758,17 @@ main_menu () {
 # END OF FUNCTIONS.  What comes below is the actual start of the
 # script when it is first run.
 
-# If there are no command line options then we will use the dialog
-# version of sbopkg.
-
-if [ $# -eq 0 ]; then
-    DIAG=1
-    config_check
-    directory_checks
-    pid_check
-    main_menu
-    cleanup
-    exit 0
-fi
-
+DIAG=1
 # This is the command line options and help.
 while getopts ":b:cd:f:hi:lopq:rs:uv:" OPT; do
     case $OPT in
         b ) BFLAG=1
             BUILDPKGS=1
             BUILD="$OPTARG"
+            unset DIAG
             ;;
         c ) CHK_UPDATES=1
+            unset DIAG
             ;;
         d ) LOCALREPO="$OPTARG"
             ;;
@@ -2788,20 +2778,28 @@ while getopts ":b:cd:f:hi:lopq:rs:uv:" OPT; do
             BUILDPKGS=1
             INSTALLPKGS=1
             BUILD="$OPTARG"
+            unset DIAG
             ;;
         l ) CHANGELOG=1
+            unset DIAG
             ;;
         o ) OBSOLETESRC=1
+            unset DIAG
             ;;
         p ) GETPKGS=1
+            unset DIAG
             ;;
         q ) GENSEARCH="$OPTARG"
+            unset DIAG
             ;;
         r ) RSYNC=1
+            unset DIAG
             ;;
         s ) SEARCH="$OPTARG"
+            unset DIAG
             ;;
         u ) UPDATE=1
+            unset DIAG
             ;;
         v ) VERSION=1
             CUSTOMVER="$OPTARG"
@@ -2836,11 +2834,15 @@ done
 
 # End of option parsing.
 shift $(($OPTIND - 1))
+if [[ $# -gt 0 ]]; then
+    echo "Error: unknown token \"$@\"" >&2
+    exit 0
+fi
 
 if [[ "$BFLAG" = 1 && "$BUILD" = "i" || "$IFLAG" = 1 && \
     "$BUILD" = "b" ]]; then
-    echo "Error:  The -b and -i options cannot be used together."
-    echo "Please use one or the other.  Exiting."
+    echo "Error:  The -b and -i options cannot be used together." >&2
+    echo "Please use one or the other.  Exiting." >&2
     exit 0
 fi
 
@@ -2858,65 +2860,72 @@ directory_checks
 # Check for another instance
 pid_check
 
-if [ -n "$BUILD" ]; then
-    if has_root; then
-        for PKGBUILD in $BUILD; do
-            echo $PKGBUILD >> $TMP/sbopkg-start-queue
-        done
-        process_queue
-    else
-        crunch_fmt "You must run this script as the root user in order \
-            to build packages."
-        cleanup
-        exit 0
+if [[ "$DIAG" ]]; then
+    main_menu
+    cleanup
+else
+    if [ -n "$BUILD" ]; then
+        if has_root; then
+            for PKGBUILD in $BUILD; do
+                echo $PKGBUILD >> $TMP/sbopkg-start-queue
+            done
+            process_queue
+        else
+            crunch_fmt "You must run this script as the root user in order \
+                to build packages." >&2
+            cleanup
+            exit 0
+        fi
     fi
+
+    if [ -n "$CHK_UPDATES" ]; then
+        check_for_updates
+    fi
+
+    if [ -n "$CHANGELOG" ]; then
+        show_changelog
+    fi
+
+    if [ -n "$OBSOLETESRC" ]; then
+        remove_obsoleted_sources
+    fi
+
+    if [ -n "$GETPKGS" ]; then
+        get_sbo_packages
+    fi
+
+    if [ -n "$RSYNC" ]; then
+        echo "Rsyncing with Slackbuilds.org repository into \
+$LOCALREPO/$SLACKVER."
+        rsync_repo
+        echo "Finished rsync."
+    fi
+
+    if [ -n "$SEARCH" ]; then
+        check_if_repo_exists
+        for PKGSEARCH in "$SEARCH"; do
+            echo "Searching for $PKGSEARCH"
+            search_package "$PKGSEARCH"
+            pick_info "$PKGSEARCH"
+            show_readme
+        done
+    fi
+
+    if [ -n "$UPDATE" ]; then
+        check_for_latest
+    fi
+
+    if [ -n "$GENSEARCH" ]; then
+        check_if_repo_exists
+        for PKGSEARCH in $GENSEARCH; do
+            echo "Searching for $PKGSEARCH"
+            gen_search_package $PKGSEARCH
+        done
+    fi
+
+    cleanup
+    echo
+    echo "All done."
 fi
 
-if [ -n "$CHK_UPDATES" ]; then
-    check_for_updates
-fi
-
-if [ -n "$CHANGELOG" ]; then
-    show_changelog
-fi
-
-if [ -n "$OBSOLETESRC" ]; then
-    remove_obsoleted_sources
-fi
-
-if [ -n "$GETPKGS" ]; then
-    get_sbo_packages
-fi
-
-if [ -n "$RSYNC" ]; then
-    echo "Rsyncing with Slackbuilds.org repository into $LOCALREPO/$SLACKVER."
-    rsync_repo
-    echo "Finished rsync."
-fi
-
-if [ -n "$SEARCH" ]; then
-    check_if_repo_exists
-    for PKGSEARCH in "$SEARCH"; do
-        echo "Searching for $PKGSEARCH"
-        search_package "$PKGSEARCH"
-        pick_info "$PKGSEARCH"
-        show_readme
-    done
-fi
-
-if [ -n "$UPDATE" ]; then
-    check_for_latest
-fi
-
-if [ -n "$GENSEARCH" ]; then
-    check_if_repo_exists
-    for PKGSEARCH in $GENSEARCH; do
-        echo "Searching for $PKGSEARCH"
-        gen_search_package $PKGSEARCH
-    done
-fi
-
-cleanup
-echo
-echo "All done."
 exit 0
