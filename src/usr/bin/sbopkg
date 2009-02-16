@@ -45,6 +45,28 @@ CWD="$(pwd)"
 SBOVER=svn_r$(cat ${0} | grep '$Id: ' | head -1 | \
     sed -e 's/^.*Id: sbopkg \([0-9.]*\) .*$/\1/')
 
+dialog_rxvt_workaround() {
+    # Dialog and rxvt-based terminals have some problems -- the user often
+    # has to resize the terminal window to force a redraw, without which
+    # the dialogs are not drawn on the screen.
+    # This function enables a workaround, consisting on a background task
+    # sending SIGWINCH to any new dialog istance.
+    # Despite being probably harmless on xterm-based terminals, this function
+    # should really be called only on problematic terminals.
+    DIALOG_RXVT_WORKAROUND_SBOPKG_PID=$$
+    (   # The background task runs in a separate shell
+        olddialogs=
+        while [[ $(ps h --pid $DIALOG_RXVT_WORKAROUND_SBOPKG_PID) ]]; do
+            dialogs=$(ps h |grep "[0-9]. dialog" |grep -o "^[ 0-9]*")
+            if [[ "$dialogs" != "$olddialogs" ]]; then
+                [[ "$dialogs" ]] && kill -WINCH $dialogs
+                olddialogs="$dialogs"
+            fi
+            sleep 0.1
+        done
+    ) &
+}
+
 crunch() {
     # The inspiration for this and the next function comes from the crunch()
     # in installpkg. Both take one argument - the first reduces runs of spaces
@@ -2861,6 +2883,7 @@ directory_checks
 pid_check
 
 if [[ "$DIAG" ]]; then
+    [[ "$TERM" = "rxvt" ]] && dialog_rxvt_workaround
     main_menu
     cleanup
 else

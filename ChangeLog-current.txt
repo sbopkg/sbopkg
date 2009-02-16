@@ -29,4 +29,6 @@ enhancements:
   * Allow the usage of the -d, -f and -v command-line options in dialog mode,
     and spit an error message when the command line contains unrecognized
     tokens.
+  * Implement a workaround so that the dialog interface now works with
+    rxvt-based terminals. Thanks to Phillip Warner for raising the issue.
 +--------------------------+
