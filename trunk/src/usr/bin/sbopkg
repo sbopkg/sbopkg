@@ -537,7 +537,7 @@ check_for_updates () {
     fi
     if [[ ! -f $PROGRESSBAR_INTERRUPTED ]]; then
         if [ "$DIAG" = 1 ]; then
-            dialog --title "Viewing potential updates." --textbox $UPDATELIST 0 0
+            dialog --title "Viewing potential updates" --textbox $UPDATELIST 0 0
         else
             cat $UPDATELIST
         fi
@@ -807,7 +807,7 @@ s/\$.*/unknown/")
                         ;;
                     "More Files") app_files_chooser $SHORTPATH ;;
                     Custom) customize_item ;;
-                    Remove) remove_sources $APP ;;
+                    Remove) remove_sources_for_app $SHORTPATH/$APP.info ;;
                     Options) add_options $APP ;;
                     Queue) add_item_to_queue $APP $RVERSION-$RBUILD ON ;;
                     Build)
@@ -891,27 +891,9 @@ browse_categories () {
 
 view_cache_dir () {
     # This function displays the contents of $SRCDIR.
-    if [ "$(ls -A $SRCDIR 2>/dev/null)" ]; then
-        ls -la $SRCDIR > $TMP/sbopkg_cache_dir
-        dialog --title "Displaying $SRCDIR" \
-            --textbox $TMP/sbopkg_cache_dir 0 0
-        if has_root; then
-            dialog --title "Keep Cache?" --yes-label "Keep" \
-                --no-label "Delete" --yesno "$(crunch "Would you like to \
-                keep the files in the cache directory?")" 5 60
-            if [ $? = 1 ]; then
-                rm -f $SRCDIR/*
-                dialog --title "Done" --msgbox \
-                    "The cache directory has been cleared." 8 30
-                continue
-            fi
-        else
-            continue
-        fi
-    else
-        dialog --title "ERROR" --msgbox \
-            "It appears the cache directory is empty." 8 30
-    fi
+    ls -A $SRCDIR | sed "s/^\(.*\)$/\"\\1\"/g" \
+        > $TMP/sbopkg_app_sources
+    remove_sources "" OFF
 }
 
 view_perm_log () {
@@ -1588,84 +1570,303 @@ show_readme () {
     return 0
 }
 
+get_source_names () {
+    # Echo the source names for an app, given the info file.
+    # Usage: get_source_names [--all] info_file
+    #   --all   try to find all source files (i.e. also the obsolete ones)
+    local SRCNAME INFO ALL CWD
+    # Don't pollute the environment with the .info content...
+    local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
+
+    if [[ "$1" = "--all" ]]; then
+        ALL=yes
+        shift
+    fi
+    INFO="$1"
+
+    . $INFO
+    SRCNAME=${DOWNLOAD##*/}
+    # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with
+    # their corresponding characters.
+    # This is done replacing '%' with '\x' and passing the string to printf.
+    if [[ $SRCNAME =~ % ]]; then
+        SRCNAME=$(printf ${SRCNAME//\%/\\x})
+    fi
+    # The above doesn't work when the download link doesn't reference the
+    # file name explicitly. If this is the case, all we can do is guessing...
+    if [[ ! "$SRCNAME" ]]; then
+        # If the source has a name resembling $PRGNAM-$VERSION.tar.gz,
+        # catch it.
+        CWD=$(pwd)
+        cd $SRCDIR
+        SRCNAME=$(find . -iname $PRGNAM\*$VERSION.\* |head -n 1)
+        cd "$CWD"
+        if [[ ! "$SRCNAME" ]]; then
+            # We do our best with the tools we have...
+            SRCNAME=$PRGNAM-$VERSION.tar.gz
+        fi
+    fi
+
+    # If the user asked for "all" sources, let's try to find similar names
+    if [[ "$ALL" ]]; then
+        # The following is based on the idea that the source name contains
+        # the version number. The expression below takes the parts before
+        # and after the version number, and replaces the version number with
+        # a regular expression matching and digit and any character present
+        # in the known version number (this is to match odd version numbers
+        # containing letters, like "svn1234", but makes it less likely to
+        # match different packages with similar names, like virtualbox-kernel
+        # and virtualbox-kernel-addons)
+        SRCNAME=${SRCNAME%%$VERSION*}[0-9$VERSION]\*${SRCNAME##*$VERSION}
+    fi
+
+    ls -A $SRCDIR |grep "^${SRCNAME##*/}"
+}
+
 get_source () {
     # Check to see if the source tarball exists in the local cache
     # directory.  If it does, make a symlink to the package directory in
     # the local mirror.  If it does not, download it and make the link.
-    SUMMARYLOG=$TMP/sbopkg_summary
-    if [ ! -e $PKGPATH/"$SRCNAME" ]; then
-        if [ -e $SRCDIR/"$SRCNAME" ]; then
-            ln -s $SRCDIR/"$SRCNAME" $LOCALREPO/$SLACKVER/$PKGPATH/"$SRCNAME"
+    #
+    # Parameters:
+    # $1 = info file
+    #
+    # Return values:
+    # 0 = all ok
+    # 1 = failed, continue queue processing
+    # 2 = failed, stop queue processing
+    local INFO="$1"
+    local SUMMARYLOG=$TMP/sbopkg_summary
+    local DLDIR=$TMP/download
+    local SRCNAME DL FAILURE ANS MD5CHK
+    # Don't pollute the environment with the .info content...
+    local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
+
+    SRCNAME=$(get_source_names "$INFO")
+    if [[ (-z "$SRCNAME") || (! -f "$SRCDIR/$SRCNAME") ]]; then
+        . "$INFO"
+        mkdir -p $DLDIR
+        cd $DLDIR
+        wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> \
+            $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
+        wait
+        # Source file name correction for Virtualbox, where wget adds a '?='
+        # at the end
+        DL=$(ls -A . 2>/dev/null)
+        SRCNAME=$(sed -e  's/\?e=.*$//' <<<"$DL")
+        if [[ "$SRCNAME" ]]; then
+            mv "$DL" "$SRCDIR/$SRCNAME"
         else
-            mkdir -p $SRCDIR/download
-            cd $SRCDIR/download
-            wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> \
-                $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
-            wait
-            if [ -z "$(ls -A . 2>/dev/null)" ]; then
+            FAILURE=download
+            echo "$PKG:" >> $SUMMARYLOG
+            echo "Download failed." >> $SUMMARYLOG
+            echo >> $SUMMARYLOG
+        fi
+        cd $SRCDIR
+        rm -rf $DLDIR
+        # Check MD5SUM
+        if [[ ! "$FAILURE" ]]; then
+            echo "Checking MD5SUM for \"$SRCNAME\"..."
+            MD5CHK=$(md5sum "$SRCNAME" | cut -d' ' -f1)
+            if [ "$MD5CHK" == $MD5SUM ]; then
+                echo "OK"
+            else
                 echo "$PKG:" >> $SUMMARYLOG
-                echo "Download failed." >> $SUMMARYLOG
-                echo >> $SUMMARYLOG
-                rm -f $PKG.info.build
-                rm -f $PKG.SlackBuild.build
-                cd $LOCALREPO/$SLACKVER
-                if [ "$BUILDPKGS" = 1 ]; then
-                    echo
-                    echo "Would you like to continue processing the rest of the"
-                    echo "build queue or would you like to abort?  If this failed"
-                    echo "package is a dependency of another package in the queue"
-                    echo "then it may not make sense to continue."
-                    echo
-                    echo "Press (Y)es to continue or (N)o to abort."
+                echo "MD5SUM check failed." |tee -a $SUMMARYLOG
+                echo "Expected: $MD5SUM"    |tee -a $SUMMARYLOG
+                echo "Found:    $MD5CHK"    |tee -a $SUMMARYLOG
+                # Ask the user what to do with the bad source
+                while :; do
+                    cat <<EOF
+
+What do you want to do with the downloaded $PKG source:
+$SRCNAME in $SRCDIR?
+
+You can choose among the following options:
+ - (Y)es, delete the source and abort build.
+ - (N)o, keep the source and continue.
+Your choice?
+EOF
                     read ANS
                     case $ANS in
-                        y* | Y* ) continue
-                        ;;
-                        n* | N* ) rm -f $TMP/sbopkg_build.lck && break
-                        ;;
+                        y* | Y* )
+                            rm -f "$SRCDIR/$SRCNAME"
+                            echo "Source deleted."
+                            FAILURE=md5sum
+                            break
+                            ;;
+                        n* | N* )
+                            MD5SUM=$(tr / _ <<<"$MD5CHK")
+                            echo "Keeping the source and continuing." |
+                                tee -a $SUMMARYLOG
+                            break
+                            ;;
                         * ) echo "Unknown response."
-                        ;;
+                            ;;
                     esac
-                fi
-                return 0
+                done
             fi
-            DOWNLOADFILE=$(ls)
-            CORR_DOWNLOADFILE=$(echo $DOWNLOADFILE | sed -e \
-            's/\?e=.*$//') # for Virtualbox where wget adds a '?=' at end
-            mv "$DOWNLOADFILE" "$CORR_DOWNLOADFILE"
-            mv "$CORR_DOWNLOADFILE" $SRCDIR/
-            cd -
-            rm -rf $SRCDIR/download
-            ln -s $SRCDIR/"$SRCNAME" $LOCALREPO/$SLACKVER/$PKGPATH/"$SRCNAME"
         fi
     fi
+
+    cd $LOCALREPO/$SLACKVER/$PKGPATH
+    rm -f "$SRCNAME"
+
+    if [[ "$FAILURE" ]]; then
+        rm -f $PKG.info.build
+        rm -f $PKG.SlackBuild.build
+        if [[ "$BUILDPKGS" = 1 ]]; then
+            while :; do
+                echo
+                echo "Would you like to continue processing the rest of the"
+                echo "build queue or would you like to abort?  If this failed"
+                echo "package is a dependency of another package in the queue"
+                echo "then it may not make sense to continue."
+                echo
+                echo "Press (Y)es to continue or (N)o to abort."
+                read ANS
+                case $ANS in
+                    y* | Y* ) return 1
+                    ;;
+                    n* | N* ) rm -f $TMP/sbopkg_build.lck && return 2
+                    ;;
+                    * ) echo "Unknown response."
+                    ;;
+                esac
+            done
+        fi
+        return 2
+    else
+        ln -s "$SRCDIR/$SRCNAME" "$SRCNAME"
+    fi
+    return 0
+}
+
+remove_sources_for_app () {
+    # Remove all sources from $SRCDIR for a particular application
+    # $1 is the app's INFO file
+    local INFO="$1"
+    local APP
+
+    APP=${INFO##*/}
+    APP=${APP%%.*}
+    get_source_names --all "$INFO" | sed "s/^\(.*\)$/\"\\1\"/g" \
+        > $TMP/sbopkg_app_sources
+    remove_sources "$APP" OFF
+}
+
+remove_obsoleted_sources () {
+    # Remove all obsoleted sources
+    local FIND_RESULT=$TMP/sbopkg_obsolete_find
+    local SOURCES=$TMP/sbopkg_app_sources
+    local INFO APP_CURRSRC REGEX
+    local PROGRESS=0 NUMINFO
+
+    { # Grouping for progressbar
+    echo 0 # Progressbar begin
+
+    find $LOCALREPO/$SLACKVER -name \*.info >$FIND_RESULT
+    NUMINFO=$(wc -l <$FIND_RESULT)
+    ls -A $SRCDIR >$SOURCES
+
+    # Reading from $FIND_RESULT...
+    while read INFO; do
+        APP_CURRSRC=$(get_source_names "$INFO")
+        if [[ "$APP_CURRSRC" ]]; then
+            REGEX="/^$APP_CURRSRC$/d;$REGEX"
+        fi
+
+        # Progress indicator, for the progressbar
+        (( PROGRESS += 1 ))
+        echo $(($PROGRESS * 100 / $NUMINFO))
+    done <$FIND_RESULT
+    sed -i "$REGEX" $SOURCES
+    } |progressbar "Searching obsolete sources" \
+        "This may take a while, so please be patient..."
+
+    # Quote file names
+    sed -i "s/^\(.*\)$/\"\\1\"/" $SOURCES
+
+    remove_sources "obsolete" ON
 }
 
 remove_sources () {
-    # Remove sources from $SRCDIR for a particular $APP
-    if $(echo $(ls -la $SRCDIR) | grep -q "$APP"); then
-        ls -la $SRCDIR | grep $APP > $TMP/sbopkg_app_sources
-        dialog --title "Displaying $APP sources" \
-            --textbox $TMP/sbopkg_app_sources 0 0
-        if has_root; then
-            dialog --title "Keep $APP sources?" --yes-label "Keep" \
-                --no-label "Delete" --yesno "$(crunch "Would you \
-                like to keep the $APP sources in the cache directory \
-                $SRCDIR?.")" 8 40
-            if [ $? = 1 ]; then
-                for i in $(cat $TMP/sbopkg_app_sources); do
-                    rm -f $SRCDIR/$i
-                done
-                dialog --title "Done" --msgbox \
-                    "The $APP sources have been cleared." 8 30
+    # Remove all sources specified in $TMP/sbopkg_app_sources from $SRCDIR.
+    # The source names _must_ be quoted.
+    # $1 is the application name (used for display purposes only)
+    # $2 is either "ON" or "OFF", and is used as the default checklist status
+    local APP="$1"
+    local ONOFF="$2"
+    local SRC USER_OPTS DELETE ANS ROOT_OPTS DLGWIDTH
+
+    cd $SRCDIR
+    if [[ -s $TMP/sbopkg_app_sources ]]; then
+        sed "s/^\(.*\)$/\\1 \"\" $ONOFF/g" <$TMP/sbopkg_app_sources |
+            sort >$TMP/sbopkg_app_sources_checklist
+        if [[ "$DIAG" ]]; then
+            if has_root; then
+                ROOT_OPTS='--no-cancel --extra-button'
+            else
+                ROOT_OPTS='--no-ok'
+            fi
+            # Compute a reasonable dialog width
+            DLGWIDTH=$(wc -L <$TMP/sbopkg_app_sources_checklist)
+            (( DLGWIDTH += 3 ))
+            if [[ $DLGWIDTH -lt 50 ]]; then
+                DLGWIDTH=50
+            fi
+            dialog --title "$(crunch "Displaying $APP sources")" \
+                --ok-label "Keep all" --extra-label "Delete selected" \
+                --cancel-label "OK" \
+                $ROOT_OPTS \
+                --separate-output --checklist "$(crunch "Would you like to \
+                keep the $APP sources in the cache directory $SRCDIR?")"\
+                20 $DLGWIDTH 12 --file $TMP/sbopkg_app_sources_checklist \
+                2>$TMP/sbopkg_app_sources_deleting
+            if [[ $? = 3 ]]; then
+                DELETE=1
             fi
         else
-            continue
+            # Unquote file names
+            tr -d \" <$TMP/sbopkg_app_sources \
+                >$TMP/sbopkg_app_sources_deleting
+            echo -e "[ Displaying $APP sources ]\n" | \
+                cat - $TMP/sbopkg_app_sources_deleting |${PAGER:-more}
+            has_root && while :; do
+                echo
+                echo "Do you want to delete these source files?"
+                echo "Press (Y)es to delete or (N)o to keep them."
+                read ANS
+                case $ANS in
+                    n* | N* ) break ;;
+                    y* | Y* ) DELETE=1 ; break ;;
+                    * ) echo "Unknown response." ;;
+                esac
+            done
+        fi
+        if [[ "$DELETE" && -s $TMP/sbopkg_app_sources_deleting ]]; then
+            # Reading from $TMP/sbopkg_app_sources_deleting...
+            while read SRC; do
+                rm -f $SRCDIR/"$SRC"
+            done <$TMP/sbopkg_app_sources_deleting
+            if [[ "$DIAG" ]]; then
+                dialog --title "Done" --msgbox \
+                    "$(crunch "The selected $APP sources have been \
+                    cleared.")" 8 30
+            else
+                echo "$(crunch "The $APP sources have been cleared.")"
+            fi
         fi
     else
-        dialog --title "ERROR" --msgbox "$(crunch "It appears there are no \
-            $APP sources in the cache directory.")" 8 30
+        if [[ "$DIAG" ]]; then
+            dialog --title "ERROR" --msgbox "$(crunch "It appears there are \
+                no $APP sources in the cache directory.")" 8 30
+        else
+            echo "$(crunch "It appears there are no $APP sources in \
+                the cache directory.")"
+        fi
     fi
+    rm -f $TMP/sbopkg_app_sources{,_deleting,_checklist}
 }
 
 add_options () {
@@ -1732,25 +1933,6 @@ install_package () {
     fi
 }
 
-checksum_fail () {
-    # Offer to remove source if MD5SUM check fails.
-    RMSRC=$1
-    echo
-    echo "Would you like to delete the downloaded $PKG source: "
-    echo "$RMSRC in $SRCDIR?"
-    echo
-    echo "Press (Y)es to delete or (N)o to continue."
-    read ANS
-    case $ANS in
-        y* | Y* ) rm -f $SRCDIR/$RMSRC ; echo "Source deleted."
-        ;;
-        n* | N* ) return
-        ;;
-        * ) echo "Unknown response."
-        ;;
-    esac
-}
-
 build_package () {
     unset MD5CHK MD5SUM
     # Start fetching and building the package.
@@ -1765,52 +1947,12 @@ build_package () {
     cd $LOCALREPO/$SLACKVER/$PKGPATH
     . $PKG.info.build
     PKGNAME=${PKG##*/}
-    SRCNAME=${DOWNLOAD##*/}
-    # Replace URL hex sequences (like %20 for ' ' and %2B for '+')
-    SRCNAME=$(echo "echo $SRCNAME" \
-        |sed "s/%\(..\)/\$(printf \"\\\\x\\1\")/g" |bash)
-    if [ "$PKG" = "django" ]; then
-        SRCNAME="Django-$VERSION.tar.gz"
-    fi
-    get_source $PKG
-    echo "Checking MD5SUM for "$SRCNAME"..."
-    MD5CHK=$(md5sum "$SRCNAME" | cut -d' ' -f1)
-    if [ "$MD5CHK" == $MD5SUM ]; then
-        echo "OK"
-    else
-        echo "MD5SUM check failed."
-        echo "Expected: $MD5SUM"
-        echo "Found:    $MD5CHK"
-        echo "$PKG:" >> $SUMMARYLOG
-        echo "MD5SUM check failed." >> $SUMMARYLOG
-        echo "Expected: $MD5SUM" >> $SUMMARYLOG
-        echo "Found:    $MD5CHK" >> $SUMMARYLOG
-        echo >> $SUMMARYLOG
-        checksum_fail $SRCNAME
-        rm $SRCNAME
-        rm -f $PKG.info.build
-        rm -f $PKG.SlackBuild.build
-        cd $LOCALREPO/$SLACKVER
-        if [ "$BUILDPKGS" = 1 ]; then
-            echo
-            echo "Would you like to continue processing the rest of the"
-            echo "build queue or would you like to abort?  If this failed"
-            echo "package is a dependency of another package in the queue"
-            echo "then it may not make sense to continue."
-            echo
-            echo "Press (Y)es to continue or (N)o to abort."
-            read ANS
-            case $ANS in
-                y* | Y* ) continue
-                ;;
-                n* | N* ) rm -f $TMP/sbopkg_build.lck && return
-                ;;
-                * ) echo "Unknown response."
-                ;;
-            esac
-        fi
-        continue
-    fi
+    get_source $PKG.info.build
+    case $? in
+        0) ;;
+        1) return 0 ;;
+        *) return 1 ;;
+    esac
     echo "Building Slackware package for $PKG..."
     export $BUILDOPTIONS
     sh $PKG.SlackBuild.build
@@ -1852,8 +1994,7 @@ build_package () {
         mv $OUTPUT/* $OLDOUTPUT/
         echo >> $SUMMARYLOG
     fi
-    cd - >/dev/null
-    rm $SRCNAME
+    cd $LOCALREPO/$SLACKVER/$PKGPATH
     rm -f $PKG.info.build
     rm -f $PKG.SlackBuild.build
     OUTPUT=$OLDOUTPUT
@@ -2227,7 +2368,7 @@ process_queue () {
     for PKGBUILD in $(cat $FINALQUEUE); do
         search_package $PKGBUILD
         if [ -e $TMP/sbopkg_build.lck ]; then
-            build_package $PKGBUILD 2>&1 | tee $SBOPKGTMPOUTPUT
+            build_package $PKGBUILD 2>&1 |tee $SBOPKGTMPOUTPUT || break
             cat $SBOPKGTMPOUTPUT >> $SBOPKGOUTPUT
         else
             echo "$PKG:" >> $SUMMARYLOG
@@ -2420,6 +2561,7 @@ utilities_menu () {
             "Log" "View the permanent build log" \
             "Version" "Select Slackware version (currently: $SLACKVER)" \
             "Latest" "Check for an update to sbopkg"  \
+            "Obsolete" "View the obsoleted cached sources"  \
             2>$TMP/sbopkg_utilities_menu_answer
 
         G="$(cat $TMP/sbopkg_utilities_menu_answer)"
@@ -2429,6 +2571,7 @@ utilities_menu () {
             "Log")        view_perm_log ;;
             "Version")    select_version ;;
             "Latest")     check_for_latest ;;
+            "Obsolete")   remove_obsoleted_sources ;;
             *)            # "Exit", or an empty string if Exit, instead of Ok,
                           # was pressed
                           unset G
@@ -2629,7 +2772,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:f:hi:lpq:rs:uv:" OPT; do
+while getopts ":b:cd:f:hi:lopq:rs:uv:" OPT; do
     case $OPT in
         b ) BFLAG=1
             BUILDPKGS=1
@@ -2647,6 +2790,8 @@ while getopts ":b:cd:f:hi:lpq:rs:uv:" OPT; do
             BUILD="$OPTARG"
             ;;
         l ) CHANGELOG=1
+            ;;
+        o ) OBSOLETESRC=1
             ;;
         p ) GETPKGS=1
             ;;
@@ -2672,6 +2817,7 @@ Options are:
   -h              Display this help message.
   -i package(s)   Build and install package(s).
   -l              Display the SlackBuilds.org ChangeLog.txt and then quit.
+  -o              Display the obsoleted source files and prompt for deletion.
   -p              List installed SlackBuilds.org packages.
   -q package(s)   Query for packages matching string.
   -r              Rsync the SlackBuilds.org repository with
@@ -2732,6 +2878,10 @@ fi
 
 if [ -n "$CHANGELOG" ]; then
     show_changelog
+fi
+
+if [ -n "$OBSOLETESRC" ]; then
+    remove_obsoleted_sources
 fi
 
 if [ -n "$GETPKGS" ]; then
