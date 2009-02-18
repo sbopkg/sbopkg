@@ -2116,6 +2116,9 @@ pick_file () {
     # This function checks to see if there is a locally-edited .info or
     # SlackBuild file (which has the *.sbopkg" suffix) and then asks the
     # user which one he wants to use to build a package.
+    # The user can also choose to view a diff of the two before choosing
+    # between them.
+    # DIFF defines the diff program used and DIFFOPTS the diff options.
     local FILE PKG PICKFILE ANS
 
     rm -f $TMP/sbopkg_file_selection $TMP/sbopkg_diff
@@ -2137,7 +2140,8 @@ pick_file () {
     fi
     PICKFILE="original"
     if [[ -f $PKGPATH/$PKG.$FILE.sbopkg ]]; then
-        diff -u $PKGPATH/$PKG.$FILE{,.sbopkg} > $TMP/sbopkg_diff
+        ${DIFF:-diff} ${DIFFOPTS:--u} $PKGPATH/$PKG.$FILE{,.sbopkg} \
+            > $TMP/sbopkg_diff
     fi
     if [[ -s $TMP/sbopkg_diff ]]; then
         if [ "$DIAG" = "1" ]; then
@@ -2171,6 +2175,7 @@ pick_file () {
             done
         else
             while :; do
+                echo
                 crunch_fmt "A local $FILE file for $PKG was found in \
                     addition to the original $FILE file."
                 echo "Which one would you like to use?"
@@ -2193,7 +2198,6 @@ pick_file () {
                     ;;
                 esac
             done
-            echo
         fi
     fi
     rm -f $TMP/sbopkg_diff
