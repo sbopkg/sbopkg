@@ -1041,7 +1041,7 @@ delete_backup_queue () {
                 "The backup queue has been deleted." 8 30
         fi
     else
-        dialog --title "Error" --msgbox "No backup queue was found." 8 30
+        dialog --title "ERROR" --msgbox "No backup queue was found." 8 30
     fi
 }
 
@@ -1178,15 +1178,15 @@ delete_build_queue () {
             echo '"" "The queue is empty."' >$REMOVEQUEUE
         fi
 
+            --extra-button --extra-label "Clear" --help-button \
         dialog --title "Delete Build Queue" --ok-label "Delete" \
-            --extra-button --extra-label "Delete All" --help-button \
             --help-label "Done" --cancel-label "Cancel" \
             --menu "$(crunch "The following packages are currently in \
             the build queue.  You can remove individual items from the build \
             queue by highlighting them and pressing <Delete>.  Press <Done> \
             when you are finished and the individual deletions will be \
             committed.  Otherwise, press <Cancel> at any time to abort your \
-            changes.\n\nYou can also press <Delete All> to immediately \
+            changes.\n\nYou can also press <Clear> to immediately \
             clear the queue.  This cannot be undone.")" 25 60 8 \
             --file $REMOVEQUEUE 2>$TMP/sbopkg-ans-queue
         CHOICE=$? # 0 = Delete, 1 = Cancel, 2 = Done, 3 = Delete All
@@ -1264,11 +1264,12 @@ view_queue () {
     # This function displays the contents of the build queue.
     TMPQUEUE=$TMP/sbopkg-tmp-queue
     WORKINGQUEUE=$TMP/sbopkg-working-queue
+
     if empty_queue; then return; fi
     while :; do
         dialog --title "Viewing Build Queue" --separate-output \
             --extra-button --extra-label "Reverse" \
-            --help-button --help-label "Cancel" --cancel-label "Sort" \
+            --help-button --help-label "Back" --cancel-label "Sort" \
             --checklist "$(crunch "The following packages are currently \
             in the build queue.  Please note that when the build queue \
             is processed, the packages selected below will be built, and \
@@ -1403,7 +1404,7 @@ search_package () {
     cd $LOCALREPO/$SLACKVER
     PKG="$1"
     PKGPATH=( $(find -type d -mindepth 2 -name "$PKG") )
-    if [ -z $PKGPATH ]; then
+    if [[ -z $PKGPATH ]]; then
         if [ "$BUILDPKGS" = 1 ]; then
             echo "ERROR: Package \"$PKG\" not found" >> $PRECHECKLOG
             echo "ERROR: Package \"$PKG\" not found - skipped" >> $SUMMARYLOG
@@ -2149,7 +2150,7 @@ pick_file () {
                 dialog --title "Choose $PKG $FILE file" --menu \
                     "$(crunch "A local $FILE file for $PKG was found in \
                     addition to the original file. Which one \
-                    would you like to use?")" 12 60 3 \
+                    would you like to use?")" 10 60 4 \
                     "Local" "Use the local $FILE" \
                     "Original" "Use the original $FILE" \
                     "Diff" "View a diff of the two" \
