@@ -1,4 +1,4 @@
-Sun Feb  8 20:25:29 UTC 2009
+Thu Feb 19 21:47:06 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -32,4 +32,12 @@ enhancements:
   * Implement a workaround so that the dialog interface now works with
     rxvt-based terminals. Thanks to Phillip Warner for raising the issue and
     thanks to Mauro Giachero for working on the implementation.
+  * Include a French translation of the two sbopkg man pages.  For now, these
+    man pages will be included in the /doc directory until I have time to
+    figure out whether they can be automatically installed in place of the
+    English ones depending on a locale setting.  In any event, I would like to
+    extend my thanks to Marie-Claude Collilieux for providing this first
+    translation for sbopkg.  I am sure folks will appreciate the work she put
+    into it.  If anyone else wants to follow her lead and provide some other
+    translations, I would be happy to include them.  Thanks Marie-Claude!
 +--------------------------+
