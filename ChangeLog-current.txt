@@ -8,14 +8,14 @@ enhancements:
     queues; thanks to slakmagik for the patch.
   * Add ability to search for keywords in the README files using regular
     expressions; thanks to slakmagik for the original patch and implementation
-    and thanks to both slakmagik and Mauro for cleaning it up and addressing
-    minor issues before the commit.
+    and thanks to both slakmagik and Mauro Giachero for cleaning it up and
+    addressing minor issues before the commit.
   * Commit a cleanup/misc patch from slakmagik that removes some useless code
     and fixes some style issues; thanks to slakmagik for the patch.
   * Allow user to interrupt/abort the update progressbar by pressing ESC;
-    thanks to Mauro for the feature.
+    thanks to Mauro Giachero for the feature.
   * Assorted menu navigation fixes, and document -p switch in sbopkg(8) man
-    page; thanks to Mauro for these improvements.
+    page; thanks to Mauro Giachero for these improvements.
   * Add ability to view a diff of an edited .info or SlackBuild file before
     choosing which one to use; thanks to Phillip Warner for the suggestion and
     thanks to Mauro Giachero for helping debug/improve my original
@@ -24,11 +24,12 @@ enhancements:
     doinst.sh, or *.desktop files; thanks to Phillip Warner for the suggestion
     and thanks to slakmagik for the patch implementing this feature.
   * Rework the check for root:root permissions when installing packages; now,
-    it will display the output of ls -l <packagename> and ask the user they
-    wish to install or abort, rather than only aborting.
+    it will display the output of ls -l <packagename> and ask if the user
+    wishes to install or abort, rather than only aborting.
   * Allow the usage of the -d, -f and -v command-line options in dialog mode,
     and spit an error message when the command line contains unrecognized
     tokens.
   * Implement a workaround so that the dialog interface now works with
-    rxvt-based terminals. Thanks to Phillip Warner for raising the issue.
+    rxvt-based terminals. Thanks to Phillip Warner for raising the issue and
+    thanks to Mauro Giachero for working on the implementation.
 +--------------------------+

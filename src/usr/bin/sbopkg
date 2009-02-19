@@ -2302,15 +2302,6 @@ process_queue () {
         echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $PRECHECKLOG
         echo "Using SlackBuilds.org $SLACKVER repository" >> $PRECHECKLOG
         echo >> $PRECHECKLOG
-        if [ "$DIAG" = 1 ]; then
-            dialog --title "Pre-Check" --msgbox "$(crunch "Checking for \
-                valid package names, optional arguments, and processing \
-                local .info and .SlackBuild edits.")" 8 40
-        else
-            echo "Checking for valid package names, optional arguments,"
-            echo "and processing local .info and .SlackBuild edits."
-            echo
-        fi
         for CHKBUILD in $(cat $STARTQUEUE); do
             unset PKG
             search_package $CHKBUILD
@@ -2338,11 +2329,8 @@ process_queue () {
         done
         echo "******************************************" >> $PRECHECKLOG
         if [ "$DIAG" = 1 ]; then
-            dialog --title "Pre-Check Log" --textbox $PRECHECKLOG 0 0
-            dialog --title "Begin?" --yes-label "Ok" --no-label "Cancel" \
-                --yesno "$(crunch "The build queue is ready to process.  \
-                Press <OK> to continue or <Cancel> to return to the main \
-                menu.")" 8 40
+            dialog --title "Pre-Check Log" --yes-label "Continue" \
+                --no-label "Back" --yesno "$(cat $PRECHECKLOG)" 0 0
             if [ $? != 0 ]; then
                 rm -f $PKGPATH/$PKG*.build
                 rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
@@ -2538,7 +2526,7 @@ queue_menu () {
     while :; do
         if has_root; then
             ROOT_OPTS=(
-                "Process" "Process the build queue"
+                "Process" "Process the current build queue"
             )
             HEIGHT=5
         else
