@@ -1177,9 +1177,8 @@ delete_build_queue () {
         if [[ $(wc -w <$REMOVEQUEUE) -eq 0 ]]; then
             echo '"" "The queue is empty."' >$REMOVEQUEUE
         fi
-
-            --extra-button --extra-label "Clear" --help-button \
         dialog --title "Delete Build Queue" --ok-label "Delete" \
+            --extra-button --extra-label "Clear" --help-button \
             --help-label "Done" --cancel-label "Cancel" \
             --menu "$(crunch "The following packages are currently in \
             the build queue.  You can remove individual items from the build \
