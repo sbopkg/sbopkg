@@ -50,7 +50,7 @@ cp -a usr/man/* $PKG/usr/man
 )
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
-cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION
+(cd usr/doc && cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION)
 cp -a $CWD/sbopkg.SlackBuild $PKG/usr/doc/$PRGNAM-$VERSION
 
 mkdir -p $PKG/install
