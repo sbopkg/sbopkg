@@ -1127,6 +1127,84 @@ load_user_queue () {
     done
 }
 
+delete_user_queue() {
+    # this function deletes queues
+    queue_dir_lister "Delete Queue" "$(crunch "Select the queue(s) you \
+        wish to delete and choose <OK> or choose <Back> to \
+        leave this menu.")"
+
+    for ((i=0; i<${#USERQUEUE[*]}; i++)); do
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//\"/}
+        if ! rm -f $FILE 2>/dev/null; then
+            dialog --title "ERROR" --msgbox \
+                "You do not have permission to remove $FILE" 0 0
+            return 1
+        fi
+    done
+}
+
+validate_queue_name() {
+    # Validate the queue name stored in the file $1.
+    # Shows an error message and returns nonzero in case of invalid queue
+    # name.
+    local QF="$1"
+
+    if grep -q [^[:alnum:]_-] $QF; then
+        # this doesn't prevent the user from putting
+        # 'dumb"filename' in the directory manually, but helps
+        # prevent breaking sbopkg from sbopkg - and I could allow
+        # more characters, but these should be enough
+        dialog --title "ERROR" --msgbox "$(crunch "Sorry, \
+            but this interface supports filenames containing \
+            only alphanumeric characters, dashes, and \
+            underscores.")" 0 0
+        return 1
+    fi
+    return 0
+}
+
+rename_user_queue() {
+    # this function renames queues
+    local QRN=$TMP/sbopkg-queue-rename
+
+    queue_dir_lister "Rename Queue" "$(crunch "Select the queue(s) you \
+        wish to rename and choose <OK> or choose <Back> to \
+        leave this menu.")"
+
+    # I have to assign to this because I shrink the array later
+    COUNTER=${#USERQUEUE[*]}
+    for ((i=0; i<$COUNTER; i++)); do
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//\"/}
+        if [ -w "${FILE%/*}" ]; then
+            # This loops so the user can be brought back to the inputbox on a
+            # failure (continue) or back to the dir lister on success (break)
+            while :; do
+                dialog --title "Rename Queue" \
+                    --inputbox "Enter the new filename for ${USERQUEUE[$i]}" \
+                    0 0 2>$QRN
+                if [[ $? = 0 ]]; then
+                    if ! validate_queue_name $QRN; then
+                        continue
+                    elif [ -e "$QUEUEDIR/$(cat $QRN)" ]; then
+                        dialog --title "ERROR" --msgbox "$(crunch "File \
+                            exists. Please choose another name.")" 0 0
+                        continue
+                    else
+                        mv "$FILE" "$QUEUEDIR/$(cat $QRN)"
+                        break
+                    fi
+                fi
+            done
+            # I've already forgotten why this is here, but it was important
+            unset USERQUEUE[$i]
+        else
+            dialog --title "ERROR" --msgbox \
+                "You do not have permission to rename $USERQUEUE" 0 0
+            return 1
+        fi
+    done
+}
+
 save_user_queue () {
     # This function saves the build queue to the filename the user specifies.
     # If --end is specified as first parameter, assume that the user is
@@ -1160,28 +1238,33 @@ save_user_queue () {
         fi
     fi
 
-    dialog --title "Save Queue" --inputbox "$MSG" 10 50 $DEFAULT \
-        2>$TMP/sbopkg-user-queue
-    if [[ $? == 0 ]]; then
-        if [[ ! -s $TMP/sbopkg-user-queue ]]; then
-            return 0
-        fi
-        USERQUEUE="$QUEUEDIR/$(cat $TMP/sbopkg-user-queue)"
-        if [ -e "$USERQUEUE" ]; then
-            dialog --title "ERROR" --yesno "$(crunch "Another file \
-                with that name already exists.  Press <Yes> to \
-                continue and overwrite the other file, or press <No> \
-                to cancel.")" 10 50
-            if [[ $? != 0 ]]; then
-                dialog --title "Not saved" --msgbox \
-                    "The build queue has not been saved." 8 30
-                rm $TMPQUEUE
+    while :; do
+        dialog --title "Save Queue" --inputbox "$MSG" 10 50 $DEFAULT \
+            2>$TMP/sbopkg-user-queue
+        if [[ $? == 0 ]]; then
+            if [[ ! -s $TMP/sbopkg-user-queue ]]; then
+                break
+            fi
+            USERQUEUE="$QUEUEDIR/$(cat $TMP/sbopkg-user-queue)"
+            DEFAULT="$USERQUEUE"
+            if ! validate_queue_name $TMP/sbopkg-user-queue; then
                 continue
             fi
+            if [ -e "$USERQUEUE" ]; then
+                dialog --title "ERROR" --yesno "$(crunch "Another file \
+                    with that name already exists.  Press <Yes> to \
+                    continue and overwrite the other file, or press <No> \
+                    to cancel.")" 10 50
+                if [[ $? != 0 ]]; then
+                    continue
+                fi
+            fi
+            cp $TMPQUEUE $USERQUEUE ||
+                dialog --title "ERROR" --msgbox "Problem saving build queue."\
+                    8 30
         fi
-        cp $TMPQUEUE $USERQUEUE ||
-            dialog --title "ERROR" --msgbox "Problem saving build queue." 8 30
-    fi
+        break
+    done
 }
 
 edit_build_queue () {
@@ -2548,37 +2631,41 @@ queue_menu () {
             ROOT_OPTS=(
                 "Process" "Process the current build queue"
             )
-            HEIGHT=5
+            HEIGHT=7
         else
-            HEIGHT=4
+            HEIGHT=6
         fi
         dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --cancel-label "Back" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
             15 60 $HEIGHT \
-            "View" "View the build queue" \
+            "View" "View the current build queue" \
             "Load" "Load a saved build queue" \
-            "Edit" "Edit the current build queue" \
             "Save" "Save the current build queue" \
+            "Edit" "Edit the current build queue" \
+            "Rename" "Rename a saved build queue" \
+            "Delete" "Delete a saved build queue" \
             "${ROOT_OPTS[@]}" \
             2>$TMP/sbopkg_queue_menu_answer
 
         Q="$(cat $TMP/sbopkg_queue_menu_answer)"
 
         case "$Q" in
+            "View")     view_queue ;;
+            "Load")     load_user_queue ;;
+            "Save")     save_user_queue ;;
             "Edit")     edit_build_queue ;;
-            "View")       view_queue ;;
-            "Process")    BUILDPKGS=1
-                          process_queue ;;
-            "Load")       load_user_queue ;;
-            "Save")       save_user_queue ;;
-            *)            # "Exit", or an empty string if Exit, instead of Ok,
-                          # was pressed
-                          unset Q
-                          rm -f $TMP/sbopkg_queue_menu_answer
-                          return
-                          ;;
+            "Rename")   rename_user_queue ;;
+            "Delete")   delete_user_queue ;;
+            "Process")  BUILDPKGS=1
+                        process_queue ;;
+            *)          # "Exit", or an empty string if Exit, instead of Ok,
+                        # was pressed
+                        unset Q
+                        rm -f $TMP/sbopkg_queue_menu_answer
+                        return
+                        ;;
         esac
     done
 }
