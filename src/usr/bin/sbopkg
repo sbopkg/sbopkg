@@ -1074,47 +1074,57 @@ load_backup_queue () {
     fi
 }
 
-load_user_queue () {
-    # This function loads a user's specified saved queue and merges it
-    # with any current $TMPQUEUE.
-    TMPQUEUE=$TMP/sbopkg-tmp-queue
-    WORKINGQUEUE=$TMP/sbopkg-working-queue
+queue_dir_lister() {
+    # This function produces a checklist from the contents of the QUEUEDIR and
+    # takes two arguments - the title and the text of the widget - and makes
+    # the selected item(s) from the listing available as USERQUEUE
     local QFS=$TMP/sbopkg-queue-files-selection
     local QFM=$TMP/sbopkg-queue-files-menu
 
-    if [ -z "$(ls -A $QUEUEDIR 2>/dev/null)" ]; then
+    if [[ -z $(ls -A $QUEUEDIR 2>/dev/null) ]]; then
         if [ "$DIAG" = 1 ]; then
             dialog --title "ERROR" --msgbox "$(crunch "The queue directory \
                 $QUEUEDIR is empty.")" 8 30
             continue
         fi
     fi
-    while :; do
-        find $QUEUEDIR -type f -printf "\"%P\" \"\"\n" | sort > $QFM
-        dialog --cancel-label "Cancel" --title "$TITLE" \
-            --default-item "${USERQUEUE##*/}" --menu \
-            "$(crunch "Please choose the queue you would like to load and \
-            select <Ok> or press <Cancel> to exit.")" \
-            20 40 8 --file $QFM 2>$QFS
-        if [ $? != 0 ]; then
-            break
-        fi
-        USERQUEUE=$QUEUEDIR/$(cat $QFS)
-        if [ -e $USERQUEUE ]; then
+    find $QUEUEDIR -type f -printf "\"%P\" \"\" off\n" | sort > $QFM
+    # The --default item doesn't work on deletions and renames (because the
+    # variable expands to a no-longer existing file) but you can't give it an
+    # index argument, unfortunately
+    dialog --title "$1" --default-item "${USERQUEUE##*/}" \
+        --cancel-label "Back" --checklist "$2" 20 40 8 --file $QFM 2>$QFS
+    if [[ $? != 0 ]]; then
+        # unset this so there's no left over junk and the loop from the
+        # calling functions doesn't kick in when this returns to them
+        unset USERQUEUE
+        return
+    fi
+    USERQUEUE=( $(cat $QFS) )
+}
+
+load_user_queue () {
+    # This function loads a user's specified saved queue and merges it
+    queue_dir_lister "Load Queue" "$(crunch "Select the queue(s) you \
+        wish to load and choose <OK> or choose <Back> to \
+        leave this menu.")"
+
+    for ((i=0; i<${#USERQUEUE[*]}; i++)); do
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//\"/}
+        if [ -r $FILE ]; then
+            # this inhibits add_item_to_queue's msgbox for each added app
             touch $TMP/sbopkg_user_queue.lck
-            # Reading from $USERQUEUE...
+            # Reading from $FILE...
             while read PICK; do
                 add_item_to_queue $PICK
-            done < $USERQUEUE
+            done < $FILE
             rm -f $TMP/sbopkg_user_queue.lck
-            rm -f $QFS $QFM
-            return 0
         else
-            dialog --title "Error" --msgbox \
-                "No saved queue was found." 8 30
+            dialog --title "ERROR" --msgbox \
+                "$FILE is not readable or does not exist" 0 0
+            return 1
         fi
     done
-    rm -f $TMP/sbopkg-user-queue
 }
 
 save_user_queue () {
