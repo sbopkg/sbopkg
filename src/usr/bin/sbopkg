@@ -1332,26 +1332,25 @@ edit_build_queue () {
 }
 
 add_item_to_queue () {
-    local APP VERSIONBUILD ONOFF TMPQUEUE
-
     # This function takes three arguments: APP, VERSIONBUILD, and ONOFF.  If
-    # APP is already in the queue, ask user if they want to replace it (so
-    # updated pkgs will get updated in the queue).
-    APP=$1
-    VERSIONBUILD=$2
-    ONOFF=$3
-    TMPQUEUE=$TMP/sbopkg-tmp-queue
-    if grep -q "^$APP " $TMPQUEUE 2>/dev/null; then
-        dialog --title "WARNING" --yesno "$(crunch "$APP is already in the \
-            queue.  Do you want to replace it?  Press <Yes> to replace or \
-            press <No> to skip.")" 10 50
-            if [ $? = 0 ]; then
-                sed -i "s/^$APP .*$/$APP $VERSIONBUILD $ONOFF/" $TMPQUEUE
-            else
-                dialog --title "Skipped" --msgbox "$(crunch "$APP was \
-                    skipped.")" 8 40
-                return
-            fi
+    # APP is already in the queue and is of a different version, ask user if
+    # they want to replace it (so updated pkgs will get updated in the queue).
+    local APP=$1
+    local VERSIONBUILD=$2
+    local ONOFF=$3
+    local TMPQUEUE=$TMP/sbopkg-tmp-queue
+    local OLDVER="$(awk '/^'$APP'/{ print $2 }' $TMPQUEUE 2>/dev/null)"
+
+    if grep "^$APP " $TMPQUEUE 2>/dev/null | grep -qv "$VERSIONBUILD"; then
+        dialog --title "WARNING" --yesno "$(crunch "$APP $OLDVER is \
+            already in the queue.  Do you want to replace it with $APP \
+            $VERSIONBUILD?  Press <Yes> to replace or press <No> to \
+            skip.")" 10 50
+        if [ $? = 0 ]; then
+            sed -i "s/^$APP .*$/$APP $VERSIONBUILD $ONOFF/" $TMPQUEUE
+        fi
+    elif grep -q "^$APP " $TMPQUEUE 2>/dev/null; then
+        : # it's the same app and version so toss it
     else
         echo "$APP $VERSIONBUILD $ONOFF" >> $TMP/sbopkg-tmp-queue
     fi
