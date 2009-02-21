@@ -1174,15 +1174,14 @@ save_user_queue () {
     fi
 }
 
-delete_build_queue () {
+edit_build_queue () {
     # This function deletes items in the build queue.
-    local TMPQUEUE REMOVEQUEUE WORKINGQUEUE
+    local TMPQUEUE=$TMP/sbopkg-tmp-queue
+    local REMOVEQUEUE=$TMP/sbopkg-remove-queue
+    local WORKINGQUEUE=$TMP/sbopkg-working-queue
     local CHOICE REMOVE REMOVED
 
     if empty_queue; then return; fi
-    TMPQUEUE=$TMP/sbopkg-tmp-queue
-    REMOVEQUEUE=$TMP/sbopkg-remove-queue
-    WORKINGQUEUE=$TMP/sbopkg-working-queue
     sed -e 's/ ON$//g;s/ OFF$//g' $TMPQUEUE > $REMOVEQUEUE
     while :; do
         # "dialog" segfaults when asked to display an empty menu.
@@ -1191,7 +1190,7 @@ delete_build_queue () {
         if [[ $(wc -w <$REMOVEQUEUE) -eq 0 ]]; then
             echo '"" "The queue is empty."' >$REMOVEQUEUE
         fi
-        dialog --title "Delete Build Queue" --ok-label "Delete" \
+        dialog --title "Edit Build Queue" --ok-label "Delete" \
             --extra-button --extra-label "Clear" --help-button \
             --help-label "Done" --cancel-label "Cancel" \
             --menu "$(crunch "The following packages are currently in \
@@ -2549,8 +2548,8 @@ queue_menu () {
             "\nChoose one of the following or press <Back> to go back.\n" \
             15 60 $HEIGHT \
             "View" "View the build queue" \
-            "Delete" "Delete items from the build queue" \
             "Load" "Load a saved build queue" \
+            "Edit" "Edit the current build queue" \
             "Save" "Save the current build queue" \
             "${ROOT_OPTS[@]}" \
             2>$TMP/sbopkg_queue_menu_answer
@@ -2558,10 +2557,10 @@ queue_menu () {
         Q="$(cat $TMP/sbopkg_queue_menu_answer)"
 
         case "$Q" in
+            "Edit")     edit_build_queue ;;
             "View")       view_queue ;;
             "Process")    BUILDPKGS=1
                           process_queue ;;
-            "Delete")     delete_build_queue ;;
             "Load")       load_user_queue ;;
             "Save")       save_user_queue ;;
             *)            # "Exit", or an empty string if Exit, instead of Ok,
