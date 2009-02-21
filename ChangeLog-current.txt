@@ -40,4 +40,8 @@ enhancements:
     translation for sbopkg.  I am sure folks will appreciate the work she put
     into it.  If anyone else wants to follow her lead and provide some other
     translations, I would be happy to include them.  Thanks Marie-Claude!
+  * Add in several patches from slakmagik that lets user choose from saved
+    queues, modifies how the saved queues and backup queues work, and modifies
+    several other queue-related functions and menus.  Many thanks to slakmagik
+    for his continually excellent contributions.
 +--------------------------+
