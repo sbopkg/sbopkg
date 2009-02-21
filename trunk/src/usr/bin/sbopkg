@@ -83,8 +83,8 @@ config_check () {
     # needed variables with any value, and set them.
     local MISSING VAR
 
-    if [ ! -e /etc/sbopkg/sbopkg-renames ]; then
-        echo "$SCRIPT: No /etc/sbopkg/sbopkg-renames was found." 1>&2
+    if [ ! -e $SBOPKG_RENAMES ]; then
+        echo "$SCRIPT: No $SBOPKG_RENAMES was found." 1>&2
         echo "Please correct this error and run $SCRIPT again." 1>&2
         exit 1
     fi
@@ -720,15 +720,20 @@ view_app_file () {
 }
 
 info_item () {
-    local APP CATEGORY SHORTPATH RVERSION RARCH RBUILD U
+    local APP RAPP CATEGORY SHORTPATH RVERSION RARCH RBUILD U
     local CURAPP LONGAPP SHORTAPP
     local STRING INDEX NAME VER BUILD KPACKAGE
-    local IPACKAGE KPACKAGE LPACKAGE
+    local IPACKAGE KPACKAGE LPACKAGE RPACKAGE
     local CHOICE PARSED_SLACK_DESC SBOPKGINSTALLOUTPUT
 
     # This function shows the menu for each package where the user can see
     # certain information or build the package if he is root.
     APP="$(cat $TMP/sbopkg_item_selection)"
+
+    # We need to check and see if the APP has ever been renamed
+    RAPP=$(grep -w $APP $SBOPKG_RENAMES | cut -d"=" -f1)
+    if [ "$RAPP" == "" ]; then RAPP=$APP ; fi
+
     CATEGORY="$(cat $TMP/sbopkg_category_selection)"
     SHORTPATH=$LOCALREPO/$SLACKVER/$CATEGORY/$APP
     RVERSION=$(grep VERSION $SHORTPATH/$APP.info |
@@ -739,12 +744,13 @@ s/\$.*/unknown/")
     RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$APP.SlackBuild |
         sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
     while :; do
-        CURAPP=$(ls /var/log/packages/*SBo* 2>/dev/null | grep $APP)
+        CURAPP=$(ls /var/log/packages/*SBo* 2>/dev/null | grep "$APP\|$RAPP")
         unset KPACKAGE
         for i in $CURAPP; do
             LONGAPP=$(echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//')
             SHORTAPP=$(echo $LONGAPP | sed -e 's/^.*\///g')
-            if [ "$SHORTAPP" == "$APP" ]; then
+
+            if [ "$SHORTAPP" == "$APP" ] || [ "$SHORTAPP" == "$RAPP" ]; then
                 # Again, code from pkgtool
                 STRING=$(basename $i _SBo)
                 INDEX="$(echo $STRING | tr -d -c -)"
@@ -757,7 +763,12 @@ s/\$.*/unknown/")
                 ARCH=$(expr $INDEX - 1)
                 ARCH="$(echo $STRING | cut -f $ARCH -d -)"
                 BUILD="$(echo $STRING | cut -f $INDEX -d -)"
-                KPACKAGE=$NAME-$VER-$ARCH-$BUILD
+
+                if [ "$SHORTAPP" == "$APP" ]; then
+                    KPACKAGE=$NAME-$VER-$ARCH-$BUILD
+                else # Must be a renamed app
+                    RPACKAGE=$NAME-$VER-$ARCH-$BUILD
+                fi
             fi
         done
         if $(echo $(ls -1 $OUTPUT) | grep -E -q "$APP.*$RVERSION"); then
@@ -774,7 +785,11 @@ s/\$.*/unknown/")
             JPACKAGE="Install $IPACKAGE"
         fi
         if [ "$KPACKAGE" = "" ]; then
-            LPACKAGE="$APP (Not Installed)"
+            if [ "$RPACKAGE" = "" ]; then
+                LPACKAGE="$APP (Not Installed)"
+            else
+                LPACKAGE="$APP (Installed: $RPACKAGE)"
+            fi
         else
             LPACKAGE="$APP (Installed: $KPACKAGE)"
         fi
