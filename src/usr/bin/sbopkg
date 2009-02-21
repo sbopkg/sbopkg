@@ -1074,16 +1074,6 @@ load_backup_queue () {
     fi
 }
 
-save_backup_queue () {
-    # This function saves the build queue and merges it with any current
-    # $TMPQUEUE.
-    TMPQUEUE=$TMP/sbopkg-tmp-queue
-    PERMQUEUE=$TMP/sbopkg-savedqueue
-    if [ -e $TMPQUEUE ]; then
-        mv $TMPQUEUE $PERMQUEUE
-    fi
-}
-
 load_user_queue () {
     # This function loads a user's specified saved queue and merges it
     # with any current $TMPQUEUE.
@@ -1128,35 +1118,59 @@ load_user_queue () {
 }
 
 save_user_queue () {
-    # This function saves the build queue to a location the user
-    # specifies.
-    rm -f $TMP/sbopkg-user-queue
-    if empty_queue; then return; fi
+    # This function saves the build queue to the filename the user specifies.
+    # If --end is specified as first parameter, assume that the user is
+    # exiting sbopkg and that this call is about saving the currently active
+    # queue. In that case, show the filename dialog only if there actually
+    # is an active queue, and return silently otherwise.
+    local TMPQUEUE MSG DEFAULT i
+
     TMPQUEUE=$TMP/sbopkg-tmp-queue
-    dialog --title "Save Queue" --inputbox "$(crunch "Please enter the \
-        filename you wish to save your queue as:")" 10 50 \
+
+    if [[ "$1" == "--end" ]]; then
+        if [[ ! -s $TMPQUEUE ]]; then
+            return
+        else
+            MSG=$(crunch "A current queue is active. Please enter the \
+                filename you wish to save your queue as or choose <Cancel> \
+                to discard it")
+            # Find an unused automatic file name
+            i=0
+            while [[ -f $QUEUEDIR/sbopkg-autosave-$i ]]; do
+                (( i++ ))
+            done
+            DEFAULT=sbopkg-autosave-$i
+        fi
+    else
+        if empty_queue; then
+            return
+        else
+            MSG=$(crunch "Please enter the filename you wish to save your \
+                queue as:")
+        fi
+    fi
+
+    dialog --title "Save Queue" --inputbox "$MSG" 10 50 $DEFAULT \
         2>$TMP/sbopkg-user-queue
-    if [ $? = 0 ]; then
-        if [ "$(cat $TMP/sbopkg-user-queue)" = "" ]; then
+    if [[ $? == 0 ]]; then
+        if [[ ! -s $TMP/sbopkg-user-queue ]]; then
             return 0
         fi
         USERQUEUE="$QUEUEDIR/$(cat $TMP/sbopkg-user-queue)"
-        if [ ! "$USERQUEUE" = "" ]; then
-            if [ -e $USERQUEUE ]; then
-                dialog --title "Error" --yesno "$(crunch "Another file \
-                    with that name already exists.  Press <Yes> to \
-                    continue and overwrite the other file, or press <No> \
-                    to cancel.")" 10 50
-                if [ $? != 0 ]; then
-                    dialog --title "Not saved" --msgbox \
-                        "The build queue has not been saved." 8 30
-                    continue
-                fi
+        if [ -e "$USERQUEUE" ]; then
+            dialog --title "ERROR" --yesno "$(crunch "Another file \
+                with that name already exists.  Press <Yes> to \
+                continue and overwrite the other file, or press <No> \
+                to cancel.")" 10 50
+            if [[ $? != 0 ]]; then
+                dialog --title "Not saved" --msgbox \
+                    "The build queue has not been saved." 8 30
+                rm $TMPQUEUE
+                continue
             fi
-            cp $TMPQUEUE $USERQUEUE ||
-            dialog --title "ERROR" --msgbox \
-                "Problem saving build queue." 8 30
         fi
+        cp $TMPQUEUE $USERQUEUE ||
+            dialog --title "ERROR" --msgbox "Problem saving build queue." 8 30
     fi
 }
 
@@ -2520,9 +2534,6 @@ check_for_latest () {
 
 queue_menu () {
     # Separate menu for queue functions.
-    if [ -e $TMP/sbopkg-savedqueue ]; then
-        load_backup_queue
-    fi
     while :; do
         if has_root; then
             ROOT_OPTS=(
@@ -2540,7 +2551,7 @@ queue_menu () {
             "View" "View the build queue" \
             "Delete" "Delete items from the build queue" \
             "Load" "Load a saved build queue" \
-            "Save" "Save a build queue" \
+            "Save" "Save the current build queue" \
             "${ROOT_OPTS[@]}" \
             2>$TMP/sbopkg_queue_menu_answer
 
@@ -2748,23 +2759,23 @@ main_menu () {
         R="$(cat $TMP/sbopkg_main_menu_answer)"
 
         case "$R" in
-            "Rsync")      rsync_repo ;;
-            "ChangeLog")  show_changelog ;;
-            "Packages")   get_sbo_packages ;;
-            "Updates")    main_updates ;;
-            "Browse")     browse_categories
-                          rm -f $TMP/sbopkg_return_main_menu ;;
-            "Search")     main_search
-                          rm -f $TMP/sbopkg_search_*
-                          rm -f $TMP/sbopkg_return_main_menu ;;
-            "Utilities")  utilities_menu ;;
-            "Queue")      queue_menu ;;
-            *)            # "Exit", or an empty string if Exit, instead of Ok,
-                          # was pressed
-                          save_backup_queue
-                          clear
-                          return
-                          ;;
+            "Rsync")        rsync_repo ;;
+            "ChangeLog")    show_changelog ;;
+            "Packages")     get_sbo_packages ;;
+            "Updates")      main_updates ;;
+            "Browse")       browse_categories
+                            rm -f $TMP/sbopkg_return_main_menu ;;
+            "Search")       main_search
+                            rm -f $TMP/sbopkg_search_*
+                            rm -f $TMP/sbopkg_return_main_menu ;;
+            "Utilities")    utilities_menu ;;
+            "Queue")        queue_menu ;;
+            *)              # "Exit", or an empty string if Exit, instead of
+                            # Ok, was pressed
+                            save_user_queue --end
+                            clear
+                            return
+                            ;;
         esac
     done
 }
