@@ -97,7 +97,7 @@ be kept.
 
 The default value of QUEUEDIR is:
 .br
-QUEUEDIR=$TMP/queues
+QUEUEDIR=$TMP/queues.
 
 .TP 5
 .B KEEPLOG
@@ -164,6 +164,26 @@ these default options is not recommended.
 The default value of WGETFLAGS is:
 .br
 "--continue --progress-bar --timeout=15 --tries=5".
+
+.TP 5
+.B DIFF
+.br
+This option allows the user to set which diff program to use when
+sbopkg displays differences between edited files.
+
+The default value of DIFF is:
+.br
+DIFF=${DIFF:-diff}.
+
+.TP 5
+.B DIFFOPTS
+.br
+This option allows the user to set which options are used by the $DIFF
+program when sbopkg displays differences between edited files.
+
+The default value of DIFFOPTS is:
+
+DIFFOPTS=${DIFFOPTS:--u}
 
 .SH FILES
 .TP 5
