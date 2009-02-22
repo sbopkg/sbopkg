@@ -1,4 +1,4 @@
-Thu Feb 19 21:47:06 UTC 2009
+Sun Feb 22 05:04:02 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -17,9 +17,10 @@ enhancements:
   * Assorted menu navigation fixes, and document -p switch in sbopkg(8) man
     page; thanks to Mauro Giachero for these improvements.
   * Add ability to view a diff of an edited .info or SlackBuild file before
-    choosing which one to use; thanks to Phillip Warner for the suggestion and
-    thanks to Mauro Giachero for helping debug/improve my original
-    implemenation.
+    choosing which one to use; this feature adds two configuration variables
+    to the sbopkg.conf file: DIFF and DIFFOPTS; thanks to Phillip Warner for
+    the suggestion and thanks to Mauro Giachero for helping debug/improve my
+    original implemenation.
   * Add ability to view more files in each application's folder, i.e.
     doinst.sh, or *.desktop files; thanks to Phillip Warner for the suggestion
     and thanks to slakmagik for the patch implementing this feature.
@@ -29,9 +30,9 @@ enhancements:
   * Allow the usage of the -d, -f and -v command-line options in dialog mode,
     and spit an error message when the command line contains unrecognized
     tokens.
-  * Implement a workaround so that the dialog interface now works with
-    rxvt-based terminals. Thanks to Phillip Warner for raising the issue and
-    thanks to Mauro Giachero for working on the implementation.
+  * Implement a workaround so that the dialog interface now works better with
+    GNU Screen and rxvt-based terminals. Thanks to Phillip Warner for raising
+    the issue and thanks to Mauro Giachero for working on the implementation.
   * Include a French translation of the two sbopkg man pages.  For now, these
     man pages will be included in the /doc directory until I have time to
     figure out whether they can be automatically installed in place of the

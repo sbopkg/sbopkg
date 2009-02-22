@@ -27,3 +27,5 @@ DEBUG=0
 # change these default values.
 RSYNCFLAGS="--verbose --timeout=10"
 WGETFLAGS="--continue --progress=bar --timeout=15 --tries=5"
+DIFF=${DIFF:-diff}
+DIFFOPTS=${DIFFOPTS:--u}

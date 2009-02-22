@@ -99,7 +99,7 @@ config_check () {
         KEEPLOG=$(echo "$KEEPLOG" | tr [[:lower:]] [[:upper:]])
         # Some configuration options are mandatory
         for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT QUEUEDIR \
-            KEEPLOG LOGFILE DEBUG RSYNCFLAGS WGETFLAGS; do
+            KEEPLOG LOGFILE DEBUG RSYNCFLAGS WGETFLAGS DIFF DIFFOPTS; do
             if [ -z "${!VAR}" ]; then
                 MISSING+="$VAR "
             fi
@@ -2260,7 +2260,7 @@ pick_file () {
     fi
     PICKFILE="original"
     if [[ -f $PKGPATH/$PKG.$FILE.sbopkg ]]; then
-        ${DIFF:-diff} ${DIFFOPTS:--u} $PKGPATH/$PKG.$FILE{,.sbopkg} \
+        $DIFF $DIFFOPTS $PKGPATH/$PKG.$FILE{,.sbopkg} \
             > $TMP/sbopkg_diff
     fi
     if [[ -s $TMP/sbopkg_diff ]]; then
