@@ -1640,7 +1640,24 @@ gen_search_package () {
 }
 
 string_search() {
-    local SEARCH_TERM="$1"
+    # if the search string is prefixed with 'inst:', then the user only wants
+    # to search installed packages, so this shaves the 'inst:' off, and
+    # generates a potentially huge path consisting only of installed *SBo
+    # packages to hand to find. Otherwise, just search for $1 in REPO as
+    # usual.
+    if [[ "${SEARCH_TERM%%:*}" == "inst" ]]; then
+        local SEARCH_TERM="${SEARCH_TERM#*:}"
+        local SBOPKGS=($(ls /var/log/packages/*_SBo))
+        for (( i=0; i<${#SBOPKGS[*]}; i++ )); do
+            local PKGNAME=$(echo ${SBOPKGS[$i]} |
+                sed 's,.*/,,;s/-[^-]*-[^-]*-[^-]*$//')
+            local INST_PKGS+="$LOCALREPO/$SLACKVER/*/$PKGNAME "
+        done
+        local FIND_PATH="$INST_PKGS"
+    else
+        local SEARCH_TERM="$1"
+        local FIND_PATH="$REPO"
+    fi
     local REPO="$LOCALREPO/$SLACKVER"
     local MENU_FILE=$TMP/sbopkg_menu-file
     local PICKED_FILE=$TMP/sbopkg_picked-file
@@ -1649,7 +1666,7 @@ string_search() {
     # the sed expression processes find's output into data usable for the menu
     # file but the first two parts are needed to sanitize the input - which
     # raises the question of true general sanitizing of this input
-    ( find $REPO -iname 'README' -exec egrep -iwm1 "$SEARCH_TERM" {} + |
+    ( find $FIND_PATH -iname 'README' -exec egrep -iwm1 "$SEARCH_TERM" {} + |
         sed "
             s,\",\',g
             s/\\\/\\\\\\\\/g
@@ -2786,12 +2803,15 @@ main_search() {
                 <PKG> search or a string <String> search.\n\nThe package \
                 search executes a glob search on package names in \
                 $REPO.\n\nThe string search executes 'grep -iwm1 \
-                \"<your_string>\"' on the README files in the repo. This \
+                \"your_string\"' on the README files in the repo. This \
                 means it returns the first matching line from the README \
                 files, where the line contains a case-insensitive word \
                 that matches your string, where a 'word' is a sequence of \
                 alphanumeric characters and underscores. For details, see \
-                the egrep(1) manual page.")" 0 0
+                the egrep(1) manual page.\n\nIf the search string is \
+                prefixed with \"inst:\" in the form \"inst:your_string\", \
+                then it will search for \"your_string\" within installed \
+                packages only.")" 0 0
                 continue
                 ;;
             0) PKG=yes ;;
