@@ -1261,7 +1261,7 @@ save_user_queue () {
                 break
             fi
             USERQUEUE="$QUEUEDIR/$(cat $TMP/sbopkg-user-queue)"
-            DEFAULT="$USERQUEUE"
+            DEFAULT="${USERQUEUE##*/}"
             if ! validate_queue_name $TMP/sbopkg-user-queue; then
                 continue
             fi
