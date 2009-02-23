@@ -388,7 +388,7 @@ function read_nonblock () {
 
 function progressbar_interrupted () {
     # This function checks whether the user pressed ESC
-    local ESC="" KEY
+    local ESC=$'\033' KEY
 
     read_nonblock KEY
     [[ "$KEY" = "$ESC" ]]
@@ -1181,6 +1181,7 @@ validate_queue_name() {
 rename_user_queue() {
     # this function renames queues
     local QRN=$TMP/sbopkg-queue-rename
+    local NEWNAME
 
     queue_dir_lister "Rename Queue" "$(crunch "Select the queue(s) you \
         wish to rename and choose <OK> or choose <Back> to \
@@ -1196,18 +1197,21 @@ rename_user_queue() {
             while :; do
                 dialog --title "Rename Queue" \
                     --inputbox "Enter the new filename for ${USERQUEUE[$i]}" \
-                    0 0 2>$QRN
+                    0 0 $NEWNAME 2>$QRN
+                NEWNAME="$(cat $QRN)"
                 if [[ $? = 0 ]]; then
                     if ! validate_queue_name $QRN; then
                         continue
-                    elif [ -e "$QUEUEDIR/$(cat $QRN)" ]; then
+                    elif [ -f "$QUEUEDIR/$NEWNAME" ]; then
                         dialog --title "ERROR" --msgbox "$(crunch "File \
                             exists. Please choose another name.")" 0 0
                         continue
                     else
-                        mv "$FILE" "$QUEUEDIR/$(cat $QRN)"
+                        mv "$FILE" "$QUEUEDIR/$NEWNAME"
                         break
                     fi
+                else
+                    continue 2
                 fi
             done
             # I've already forgotten why this is here, but it was important
@@ -1260,7 +1264,7 @@ save_user_queue () {
             if [[ ! -s $TMP/sbopkg-user-queue ]]; then
                 break
             fi
-            USERQUEUE="$QUEUEDIR/$(cat $TMP/sbopkg-user-queue)"
+            USERQUEUE="$(cat $TMP/sbopkg-user-queue)"
             DEFAULT="${USERQUEUE##*/}"
             if ! validate_queue_name $TMP/sbopkg-user-queue; then
                 continue
@@ -1274,7 +1278,7 @@ save_user_queue () {
                     continue
                 fi
             fi
-            cp $TMPQUEUE $USERQUEUE ||
+            cp $TMPQUEUE $QUEUEDIR/$USERQUEUE ||
                 dialog --title "ERROR" --msgbox "Problem saving build queue."\
                     8 30
         fi
@@ -2756,9 +2760,7 @@ control_c () {
         done;
         rm -f $TMP/sbopkgpidlist
     fi
-    if [ "$DIAG" = 1 ]; then
-        break
-    else
+    if [ "$DIAG" != 1 ]; then
         cleanup
         exit 0
     fi
