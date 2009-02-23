@@ -1181,7 +1181,7 @@ validate_queue_name() {
 rename_user_queue() {
     # this function renames queues
     local QRN=$TMP/sbopkg-queue-rename
-    local NEWNAME
+    local NEWNAME COUNTER FILE
 
     queue_dir_lister "Rename Queue" "$(crunch "Select the queue(s) you \
         wish to rename and choose <OK> or choose <Back> to \
