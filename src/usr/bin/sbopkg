@@ -1125,7 +1125,7 @@ load_user_queue () {
         leave this menu.")"
 
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
-        FILE=$QUEUEDIR/${USERQUEUE[$i]//\"/} #"} # FIXME workaround for kate
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/} #"} # FIXME workaround for kate
         if [ -r $FILE ]; then
             # this inhibits add_item_to_queue's msgbox for each added app
             touch $TMP/sbopkg_user_queue.lck
@@ -1149,7 +1149,7 @@ delete_user_queue() {
         leave this menu.")"
 
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
-        FILE=$QUEUEDIR/${USERQUEUE[$i]//\"/} #"} # FIXME workaround for kate
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/} #"} # FIXME workaround for kate
         if ! rm -f $FILE 2>/dev/null; then
             dialog --title "ERROR" --msgbox \
                 "You do not have permission to remove $FILE" 0 0
@@ -1190,7 +1190,7 @@ rename_user_queue() {
     # I have to assign to this because I shrink the array later
     COUNTER=${#USERQUEUE[*]}
     for ((i=0; i<$COUNTER; i++)); do
-        FILE=$QUEUEDIR/${USERQUEUE[$i]//\"/} #"} # FIXME workaround for kate
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/} #"} # FIXME workaround for kate
         if [ -w "${FILE%/*}" ]; then
             # This loops so the user can be brought back to the inputbox on a
             # failure (continue) or back to the dir lister on success (break)
