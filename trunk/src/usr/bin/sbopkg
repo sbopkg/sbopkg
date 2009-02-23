@@ -372,8 +372,13 @@ function progressbar () {
         local MESSAGE=$(crunch "$2")
         local MESSAGELINES=$(echo "$MESSAGE" |fmt -66 |wc -l)
         dialog --title "$1" --gauge "$MESSAGE" $(($MESSAGELINES + 5)) 70 0
-    else
+    elif [[ ! "$QUIET" ]]; then
         progressbar_cli "$1" "$2"
+    else
+        #if [[ -n "$1" ]]; then
+        #    echo "[ $1 ]"
+        #fi
+        cat >/dev/null
     fi
 }
 
@@ -1125,7 +1130,7 @@ load_user_queue () {
         leave this menu.")"
 
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
-        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/} #"} # FIXME workaround for kate
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
         if [ -r $FILE ]; then
             # this inhibits add_item_to_queue's msgbox for each added app
             touch $TMP/sbopkg_user_queue.lck
@@ -1149,7 +1154,7 @@ delete_user_queue() {
         leave this menu.")"
 
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
-        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/} #"} # FIXME workaround for kate
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
         if ! rm -f $FILE 2>/dev/null; then
             dialog --title "ERROR" --msgbox \
                 "You do not have permission to remove $FILE" 0 0
@@ -1190,7 +1195,7 @@ rename_user_queue() {
     # I have to assign to this because I shrink the array later
     COUNTER=${#USERQUEUE[*]}
     for ((i=0; i<$COUNTER; i++)); do
-        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/} #"} # FIXME workaround for kate
+        FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
         if [ -w "${FILE%/*}" ]; then
             # This loops so the user can be brought back to the inputbox on a
             # failure (continue) or back to the dir lister on success (break)
@@ -2754,6 +2759,9 @@ cleanup () {
         echo
         exit 0
     else
+        if $HAS_NCURSES; then
+            tput cnorm # Restore cursor
+        fi
         rm -f $TMP/sbopkg_*
         rm -f $TMP/sbopkgpidlist
         rm -rf $TMP/sbooutput
@@ -2916,8 +2924,9 @@ main_menu () {
 # script when it is first run.
 
 DIAG=1
+unset QUIET
 # This is the command line options and help.
-while getopts ":b:cd:f:hi:lopq:rs:uv:" OPT; do
+while getopts ":b:cd:f:g:hi:lopqrs:uv:" OPT; do
     case $OPT in
         b ) BFLAG=1
             BUILDPKGS=1
@@ -2930,6 +2939,9 @@ while getopts ":b:cd:f:hi:lopq:rs:uv:" OPT; do
         d ) LOCALREPO="$OPTARG"
             ;;
         f ) SBOPKG_CONF="$OPTARG"
+            ;;
+        g ) GENSEARCH="$OPTARG"
+            unset DIAG
             ;;
         i ) IFLAG=1
             BUILDPKGS=1
@@ -2946,7 +2958,7 @@ while getopts ":b:cd:f:hi:lopq:rs:uv:" OPT; do
         p ) GETPKGS=1
             unset DIAG
             ;;
-        q ) GENSEARCH="$OPTARG"
+        q ) QUIET=1
             unset DIAG
             ;;
         r ) RSYNC=1
@@ -2969,20 +2981,22 @@ Options are:
   -c              Check for updates to installed SlackBuilds.org packages.
   -d localdir     Location of local copy of SlackBuilds.org repository
   -f              Override default configuration file with specified file.
+  -g package(s)   General search for packages matching string.
   -h              Display this help message.
   -i package(s)   Build and install package(s).
   -l              Display the SlackBuilds.org ChangeLog.txt and then quit.
   -o              Display the obsoleted source files and prompt for deletion.
   -p              List installed SlackBuilds.org packages.
-  -q package(s)   Query for packages matching string.
+  -q              Quiet some of the command-line output.
   -r              Rsync the SlackBuilds.org repository with
                   the local mirror and then quit.
-  -s package(s)   Search by specific package name and, if found,
+  -s package(s)   Specific search by specific package and, if found,
                   display package information.
+  -u              Check for an update to sbopkg.
   -v version      Set the Slackware version for the
                   mirror (current choices are 11.0, 12.0, 12.1, and 12.2)
 
-Note: multiple arguments to -b, -i, -q, and -s must be quoted ("pkg1 pkg2")
+Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2")
 EOF
             exit
             ;;
