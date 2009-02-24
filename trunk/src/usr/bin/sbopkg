@@ -2804,8 +2804,8 @@ main_search() {
         dialog --title "Search" --ok-label "PKG" \
             --extra-button --extra-label "String" \
             --help-button --inputbox \
-            "Enter your search term (prefix your search with 'inst:' \
-                to narrow search to installed packages)..." 10 39 \
+            "Enter your search term (prefix your string search with 'inst:' \
+                to narrow search to installed packages)..." 11 41 \
                 2> $TERM_FILE
         case $? in # 0=PKG 3=String 1=Cancel 2=Help
             3) STRING=yes ;;
