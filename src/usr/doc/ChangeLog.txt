@@ -5,7 +5,6 @@ enhancements:
   * Fix regression where packages could not be installed in certain
     instances.  Thanks to artourter for the bug report.
 +--------------------------+
-
 Fri Jan 30 04:21:44 UTC 2009
 Sbopkg 0.26.1 released.  This version contains the following fixes and
 enhancements:
@@ -23,7 +22,6 @@ enhancements:
   * Fix issue where sometimes duplicate items would appear in the search
     results dialog; thanks to Phillip Warner for the suggestion.
 +--------------------------+
-
 Thu Jan 29 14:41:00 UTC 2009
 Sbopkg 0.26.0 released.  This version contains the following fixes and
 enhancements:
