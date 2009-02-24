@@ -34,7 +34,7 @@ enhancements:
   * Move the -q option to -g (General search) in order to make way for -q,
     'quiet mode' where the output of some of the command line options (i.e.
     the command line progressbar) can be minimized.  More quieting will likely
-    occur in future releases.  Thanks to alkos333 for the feature request
+    occur in future releases.  Thanks to alkos333 for the feature request.
   * Implement a workaround so that the dialog interface now works better with
     GNU Screen and rxvt-based terminals. Thanks to Phillip Warner for raising
     the issue and thanks to Mauro Giachero for working on the implementation.
@@ -50,4 +50,10 @@ enhancements:
     queues, modifies how the saved queues and backup queues work, and modifies
     several other queue-related functions and menus.  Many thanks to slakmagik
     for his continually excellent contributions.
+  * Allow specifying queue names to '-b' and '-i'. Thanks to Alan Hicks for
+    suggesting this feature.
+  * Allow the user to specify what to do on errors once and for all with the
+    '-e' command line switch. The user can now tell sbopkg to ignore any error
+    or to automatically stop on the first one. Thanks to Alan Hicks for
+    suggesting this feature.
 +--------------------------+

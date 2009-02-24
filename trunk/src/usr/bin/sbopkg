@@ -1534,9 +1534,15 @@ search_package () {
     PKG="$1"
     PKGPATH=( $(find -type d -mindepth 2 -name "$PKG") )
     if [[ -z $PKGPATH ]]; then
+        if [[ $SINGLE == yes ]]; then
+            echo "ERROR: Package or queuefile \"$PKG\" not found.  Exiting."
+            exit 1
+        fi
         if [ "$BUILDPKGS" = 1 ]; then
             echo "ERROR: Package \"$PKG\" not found" >> $PRECHECKLOG
             echo "ERROR: Package \"$PKG\" not found - skipped" >> $SUMMARYLOG
+            echo >> $PRECHECKLOG
+            echo >> $SUMMARYLOG
             continue
         else
             if [ "$DIAG" = 1 ]; then
@@ -1848,23 +1854,23 @@ get_source () {
                 while :; do
                     cat <<EOF
 
-What do you want to do with the downloaded $PKG source:
+Do you want to use the downloaded $PKG source:
 $SRCNAME in $SRCDIR?
 
 You can choose among the following options:
- - (Y)es, delete the source and abort build.
- - (N)o, keep the source and continue.
+ - (Y)es, keep the source and continue;
+ - (N)o, delete the source and abort build.
 Your choice?
 EOF
-                    read ANS
+                    error_read ANS
                     case $ANS in
-                        y* | Y* )
+                        n* | N* )
                             rm -f "$SRCDIR/$SRCNAME"
                             echo "Source deleted."
                             FAILURE=md5sum
                             break
                             ;;
-                        n* | N* )
+                        y* | Y* )
                             MD5SUM=$(tr / _ <<<"$MD5CHK")
                             echo "Keeping the source and continuing." |
                                 tee -a $SUMMARYLOG
@@ -1893,7 +1899,7 @@ EOF
                 echo "then it may not make sense to continue."
                 echo
                 echo "Press (Y)es to continue or (N)o to abort."
-                read ANS
+                error_read ANS
                 case $ANS in
                     y* | Y* ) return 1
                     ;;
@@ -2102,6 +2108,26 @@ install_package () {
     fi
 }
 
+error_read () {
+    # This function wraps a simple 'read' call. The read itself is skipped if
+    # $ON_ERROR != "ask", and the value put in the variable ($1) is "Yes" when
+    # $ON_ERROR == "continue", and "No" when $ON_ERROR == "stop".
+    # Useful in all those places where the CLI version of sbopkg asks the
+    # user what to do on build errors.
+    # The automatic answer is printed to stdout, to record it on the permanent
+    # build log.
+    case $ON_ERROR in
+        ask)    read $1 ; return ;;
+        stop)   eval $1=No
+                echo -n "No "
+                ;;
+        cont*)  eval $1=Yes
+                echo -n "Yes "
+                ;;
+    esac
+    echo "(as specified with '-e')"
+}
+
 build_package () {
     unset MD5CHK MD5SUM
     # Start fetching and building the package.
@@ -2123,7 +2149,7 @@ build_package () {
         *) return 1 ;;
     esac
     echo "Building Slackware package for $PKG..."
-    export $BUILDOPTIONS
+    [[ $BUILDOPTIONS ]] && export $BUILDOPTIONS
     sh $PKG.SlackBuild.build
     cd $OUTPUT
     if [ ! -e *.tgz ]; then
@@ -2139,7 +2165,7 @@ build_package () {
             echo "then it may not make sense to continue."
             echo
             echo "Press (Y)es to continue or (N)o to abort."
-            read ANS
+            error_read ANS
             case $ANS in
                 y* | Y* ) continue
                 ;;
@@ -2441,6 +2467,9 @@ process_queue () {
     echo "******************************************" >> $SUMMARYLOG
     echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $SUMMARYLOG
     echo "Using SlackBuilds.org $SLACKVER repository" >> $SUMMARYLOG
+    if [ -z $QUEUEFILE ]; then
+        echo "Using the queuefile $CLIQUEUEFILE" >> $SUMMARYLOG
+    fi
     echo >> $SUMMARYLOG
     if [ "$BUILDPKGS" = 1 ]; then
         touch $PRECHECKLOG
@@ -2448,9 +2477,15 @@ process_queue () {
         echo "******************************************" >> $PRECHECKLOG
         echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $PRECHECKLOG
         echo "Using SlackBuilds.org $SLACKVER repository" >> $PRECHECKLOG
+        if [ -z $QUEUEFILE ]; then
+            echo "Using the queuefile $CLIQUEUEFILE" >> $PRECHECKLOG
+        fi
         echo >> $PRECHECKLOG
         for CHKBUILD in $(cat $STARTQUEUE); do
             unset PKG
+            if [[ $(wc -l <$STARTQUEUE) == 1 ]]; then
+                local SINGLE=yes
+            fi
             search_package $CHKBUILD
             pick_info $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
@@ -2928,8 +2963,9 @@ main_menu () {
 
 DIAG=1
 unset QUIET
+ON_ERROR=ask
 # This is the command line options and help.
-while getopts ":b:cd:f:g:hi:lopqrs:uv:" OPT; do
+while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
     case $OPT in
         b ) BFLAG=1
             BUILDPKGS=1
@@ -2940,6 +2976,9 @@ while getopts ":b:cd:f:g:hi:lopqrs:uv:" OPT; do
             unset DIAG
             ;;
         d ) LOCALREPO="$OPTARG"
+            ;;
+        e ) ON_ERROR="$OPTARG"
+            unset DIAG
             ;;
         f ) SBOPKG_CONF="$OPTARG"
             ;;
@@ -2980,13 +3019,16 @@ while getopts ":b:cd:f:g:hi:lopqrs:uv:" OPT; do
 $SCRIPT $SBOVER
 Usage: $SCRIPT [OPTIONS] <packagename(s)>
 Options are:
-  -b package(s)   Build package(s).
+  -b pkg/queue(s) Build the specified package(s). If one or more queues are
+                  specified, build the packages they refer to.
   -c              Check for updates to installed SlackBuilds.org packages.
   -d localdir     Location of local copy of SlackBuilds.org repository
+  -e error_action Specify what sbopkg is supposed to do on build errors.
+                  Valid options are: ask (default), continue, stop.
   -f              Override default configuration file with specified file.
   -g package(s)   General search for packages matching string.
   -h              Display this help message.
-  -i package(s)   Build and install package(s).
+  -i pkg/queue(s) Like '-b', but also install built packages.
   -l              Display the SlackBuilds.org ChangeLog.txt and then quit.
   -o              Display the obsoleted source files and prompt for deletion.
   -p              List installed SlackBuilds.org packages.
@@ -3010,14 +3052,21 @@ done
 shift $(($OPTIND - 1))
 if [[ $# -gt 0 ]]; then
     echo "Error: unknown token \"$@\"" >&2
-    exit 0
+    exit 1
 fi
 
-if [[ "$BFLAG" = 1 && "$BUILD" = "i" || "$IFLAG" = 1 && \
-    "$BUILD" = "b" ]]; then
+if [[ "$BFLAG" = 1 && "$IFLAG" = 1 ]]; then
     echo "Error:  The -b and -i options cannot be used together." >&2
     echo "Please use one or the other.  Exiting." >&2
-    exit 0
+    exit 1
+fi
+
+if [[ "$ON_ERROR" != "ask" && \
+      "$ON_ERROR" != "continue" && \
+      "$ON_ERROR" != "stop" ]]; then
+    echo "Unknown -e specifier -- \"$ON_ERROR\"" >&2
+    echo "Valid values are: ask (default), continue, stop" >&2
+    exit 1
 fi
 
 # Check for a good config file and set initial variables
@@ -3042,9 +3091,29 @@ if [[ "$DIAG" ]]; then
 else
     if [ -n "$BUILD" ]; then
         if has_root; then
+            CLIQUEUE=$TMP/sbopkg_cli_queue
+            > $TMP/sbopkg-start-queue
             for PKGBUILD in $BUILD; do
-                echo $PKGBUILD >> $TMP/sbopkg-start-queue
+                if [[ -r $QUEUEDIR/$PKGBUILD ]]; then
+                    # Add an entire queue
+                    CLIQUEUEFILE=$PKGBUILD
+                    echo "Using the queuefile $CLIQUEUEFILE"
+                    cp $QUEUEDIR/$PKGBUILD $CLIQUEUE
+                else
+                    # Add a single package
+                    echo $PKGBUILD >$CLIQUEUE
+                fi
+                # Reading from $CLIQUEUE...
+                while read PICK; do
+                    PICK_NAME=${PICK%% *}
+                    #search_package "$PICK_NAME"
+                    if ! grep -qx $PICK_NAME $TMP/sbopkg-start-queue; then
+                        echo $PICK_NAME >>$TMP/sbopkg-start-queue
+                    fi
+                done < $CLIQUEUE
             done
+            rm -f $CLIQUEUE
+            unset CLIQUEUE
             process_queue
         else
             crunch_fmt "You must run this script as the root user in order \
@@ -3071,8 +3140,8 @@ else
     fi
 
     if [ -n "$RSYNC" ]; then
-        echo "Rsyncing with Slackbuilds.org repository into \
-$LOCALREPO/$SLACKVER."
+        crunch_fmt "Rsyncing with Slackbuilds.org repository into \
+            $LOCALREPO/$SLACKVER."
         rsync_repo
         echo "Finished rsync."
     fi
