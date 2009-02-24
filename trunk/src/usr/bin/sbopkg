@@ -857,6 +857,7 @@ s/\$.*/unknown/")
                         process_queue ;;
                     Install)
                         SBOPKGINSTALLOUTPUT=$TMP/sbopkg_install_output
+                        if [ ! -e $OUTPUT/$IPACKAGE ]; then continue; fi
                         install_package $IPACKAGE | tee $SBOPKGINSTALLOUTPUT
                         read -n 1 -p "Press any key to continue."
                         if [ "$KEEPLOG" = "YES" ]; then
@@ -2803,7 +2804,9 @@ main_search() {
         dialog --title "Search" --ok-label "PKG" \
             --extra-button --extra-label "String" \
             --help-button --inputbox \
-            "Enter your search term..." 8 39 2> $TERM_FILE
+            "Enter your search term (prefix your search with 'inst:' \
+                to narrow search to installed packages)..." 10 39 \
+                2> $TERM_FILE
         case $? in # 0=PKG 3=String 1=Cancel 2=Help
             3) STRING=yes ;;
             2) dialog --title "Search Help" --msgbox \
