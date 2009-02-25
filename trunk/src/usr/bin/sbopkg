@@ -1133,6 +1133,7 @@ load_user_queue () {
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
         FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
         if [ -r $FILE ]; then
+            CLIQUEUEFILE=$FILE
             # this inhibits add_item_to_queue's msgbox for each added app
             touch $TMP/sbopkg_user_queue.lck
             # Reading from $FILE...

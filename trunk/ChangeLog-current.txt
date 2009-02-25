@@ -55,5 +55,6 @@ enhancements:
   * Allow the user to specify what to do on errors once and for all with the
     '-e' command line switch. The user can now tell sbopkg to ignore any error
     or to automatically stop on the first one. Thanks to Alan Hicks for
-    suggesting this feature.
+    suggesting this feature and thanks to Mauro Giachero for implementing both
+    the previous feature and this one.
 +--------------------------+
