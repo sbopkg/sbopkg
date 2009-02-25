@@ -38,7 +38,7 @@
 
 # Variables
 SCRIPT=${0##*/}
-unset DIAG BUILDPKGS INSTALLPKGS BUILDOPTIONS
+unset BUILDPKGS INSTALLPKGS BUILDOPTIONS LAST_USER_QUEUE_ON_DISK QUIET
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 SBOPKG_RENAMES="${SBOPKG_RENAMES:-/etc/sbopkg/sbopkg-renames}"
 CWD="$(pwd)"
@@ -1140,6 +1140,7 @@ load_user_queue () {
             while read PICK; do
                 add_item_to_queue $PICK
             done < $FILE
+            LAST_USER_QUEUE_ON_DISK=$FILE
             rm -f $TMP/sbopkg_user_queue.lck
         else
             dialog --title "ERROR" --msgbox \
@@ -1244,6 +1245,10 @@ save_user_queue () {
     if [[ "$1" == "--end" ]]; then
         if [[ ! -s $TMPQUEUE ]]; then
             return
+        elif [[ -f $LAST_USER_QUEUE_ON_DISK ]] && \
+                diff $LAST_USER_QUEUE_ON_DISK $TMPQUEUE >/dev/null; then
+            # The active queue is unchanged since the last loaded/saved one
+            return
         else
             MSG=$(crunch "A current queue is active. Please enter the \
                 filename you wish to save your queue as or choose <Cancel> \
@@ -1285,9 +1290,12 @@ save_user_queue () {
                     continue
                 fi
             fi
-            cp $TMPQUEUE $QUEUEDIR/$USERQUEUE ||
+            if cp $TMPQUEUE $QUEUEDIR/$USERQUEUE; then
+                LAST_USER_QUEUE_ON_DISK=$QUEUEDIR/$USERQUEUE
+            else
                 dialog --title "ERROR" --msgbox "Problem saving build queue."\
                     8 30
+            fi
         fi
         break
     done
@@ -2963,7 +2971,6 @@ main_menu () {
 # script when it is first run.
 
 DIAG=1
-unset QUIET
 ON_ERROR=ask
 # This is the command line options and help.
 while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
