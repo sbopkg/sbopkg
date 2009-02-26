@@ -26,12 +26,13 @@ enhancements:
     doinst.sh, or *.desktop files; thanks to Phillip Warner for the suggestion
     and thanks to slakmagik for the patch implementing this feature.
   * Rework the check for root:root permissions when installing packages; now,
-    it will display the output of ls -l <packagename> and ask if the user
-    wishes to install or abort, rather than only aborting.
+    if the package does not have root:root permissions, sbopkg will display
+    the output of ls -l <packagename> and ask if the user wishes to install or
+    abort, rather than only aborting.
   * Allow the usage of the -d, -f and -v command-line options in dialog mode,
-    and spit an error message when the command line contains unrecognized
+    and output an error message when the command line contains unrecognized
     tokens.
-  * Move the -q option to -g (General search) in order to make way for -q,
+  * Move the -q option to -g (general search) in order to make way for -q,
     'quiet mode' where the output of some of the command line options (i.e.
     the command line progressbar) can be minimized.  More quieting will likely
     occur in future releases.  Thanks to alkos333 for the feature request.
@@ -46,15 +47,13 @@ enhancements:
     translation for sbopkg.  I am sure folks will appreciate the work she put
     into it.  If anyone else wants to follow her lead and provide some other
     translations, I would be happy to include them.  Thanks Marie-Claude!
-  * Add in several patches from slakmagik that lets user choose from saved
+  * Add in several patches from slakmagik that lets the user choose from saved
     queues, modifies how the saved queues and backup queues work, and modifies
     several other queue-related functions and menus.  Many thanks to slakmagik
     for his continually excellent contributions.
-  * Allow specifying queue names to '-b' and '-i'. Thanks to Alan Hicks for
-    suggesting this feature.
-  * Allow the user to specify what to do on errors once and for all with the
-    '-e' command line switch. The user can now tell sbopkg to ignore any error
-    or to automatically stop on the first one. Thanks to Alan Hicks for
-    suggesting this feature and thanks to Mauro Giachero for implementing both
-    the previous feature and this one.
+  * Implement an 'autoqueue' by allowing the user to specify queue names to
+    '-b' and '-i' and by adding a -e option whereby the user can specify what
+    to do on errors (stop, ask, or continue).  Thanks to Alan Hicks for
+    suggesting this feature and thanks to Mauro Giachero for the
+    implementation.
 +--------------------------+
