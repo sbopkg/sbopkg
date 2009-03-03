@@ -2639,7 +2639,7 @@ check_for_latest () {
                     download the update package or press (N)o to quit.")"
             fi
         fi
-    elif [ "$CVRS" == "$NVRS" ]; then
+    else
         MSG="It appears your version of sbopkg is up to date."
     fi
     if [ "$DIAG" = 1 ]; then
@@ -2651,9 +2651,6 @@ check_for_latest () {
             return 0
         fi
         if [ "$SBOPKGUP" = 1 ]; then
-            NEWPKG=http://www.sbopkg.org/pkg.php
-            NEWSBOPKG=$(wget -T 10 -q -O - ${NEWPKG})
-            NEWDLPKG=http://sbopkg.googlecode.com/files/$NEWSBOPKG
             dialog --title "Download new package?" --yesno "$(crunch "Would \
                 you like to download the new sbopkg \
                 package:\n\n$NEWSBOPKG\n\nThe new sbopkg package will saved \
@@ -2690,7 +2687,7 @@ check_for_latest () {
         echo "######################################################"
         echo "Download complete.  The downloaded file is located at:"
         echo
-        echo "$TMP/$NEWSBOPKG"
+        echo "$OUTPUT/$NEWSBOPKG"
         echo
         echo "You can now quit sbopkg and upgrade sbopkg manually."
         echo
