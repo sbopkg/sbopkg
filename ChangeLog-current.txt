@@ -1,7 +1,10 @@
-Thu Feb 26 15:05:35 UTC 2009
+Wed Mar  4 21:03:29 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * 
+  * Remove some useless code from check_for_latest and also fix the
+    download folder for sbopkg updates.  Thanks to David Somero for the bug
+    report.
+  * Alter sed expression in download code to work around calcurse filename
+    idiosyncrasy; thanks to Glenn Becker for the bug report.
 +--------------------------+
-
