@@ -1834,10 +1834,11 @@ get_source () {
         wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> \
             $TMP/sbopkgpidlist 2>>$SBOPKGOUTPUT
         wait
-        # Source file name correction for Virtualbox, where wget adds a '?='
-        # at the end
+        # Source filename corrections for Virtualbox, where '?e=foo' gets
+        # appended to the filename and for calcurse, where a 'foo?' gets
+        # prepended to the filename
         DL=$(ls -A . 2>/dev/null)
-        SRCNAME=$(sed -e  's/\?e=.*$//' <<<"$DL")
+        SRCNAME=$(sed 's/?e=.*$//;s/^.*?//' <<<"$DL")
         if [[ "$SRCNAME" ]]; then
             mv "$DL" "$SRCDIR/$SRCNAME"
         else
