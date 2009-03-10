@@ -38,8 +38,8 @@ find . \
 mkdir -p $PKG/etc/sbopkg
 cp etc/sbopkg/* $PKG/etc/sbopkg
 
-mkdir -p $PKG/usr/bin
-cp usr/bin/* $PKG/usr/bin
+mkdir -p $PKG/usr/sbin
+cp usr/sbin/* $PKG/usr/sbin
 
 mkdir -p $PKG/usr/man
 cp -a usr/man/* $PKG/usr/man
