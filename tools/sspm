@@ -63,7 +63,7 @@ fi
 # old package. But, as the doctor said to the guy who complained that it hurt
 # when he did that, don't DO that.
 if [[ $build == yes || $inst == yes ]]; then
-    svn_script="$repo/src/usr/bin/sbopkg"
+    svn_script="$repo/src/usr/sbin/sbopkg"
     if [ -r $svn_script ]; then
         export VERSION=svn$(svnversion $repo)
     else
