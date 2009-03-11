@@ -4,6 +4,9 @@ enhancements:
 
   * Move sbopkg to /usr/sbin; move French man pages to /usr/man/fr/man*;
     update sbopkg.SlackBuild and sspm to reflect /usr/sbin.
+  * Remove code related to user-mode support; sbopkg must now be run as
+    root in all cases; add single check at start of script to make sure we
+    are root.
   * Remove some useless code from check_for_latest and also fix the
     download folder for sbopkg updates.  Thanks to David Somero for the bug
     report.
