@@ -221,15 +221,6 @@ pid_check () {
     echo $$ > $PIDFILE
 }
 
-has_root () {
-    # Check to see whether the user is root or not.
-    if [ ! $(id -u) = "0" ]; then
-        return 1
-    else
-        return 0
-    fi
-}
-
 check_write () {
     # Check to see whether the user has write permissions on the
     # directory.
@@ -732,10 +723,10 @@ info_item () {
     local CHOICE PARSED_SLACK_DESC SBOPKGINSTALLOUTPUT
 
     # This function shows the menu for each package where the user can see
-    # certain information or build the package if he is root.
+    # certain information or build the package.
     APP="$(cat $TMP/sbopkg_item_selection)"
 
-    # We need to check and see if the APP has ever been renamed
+    # We need to check and see if the APP has ever been renamed.
     RAPP=$(grep -w $APP $SBOPKG_RENAMES | cut -d"=" -f1)
     if [ "$RAPP" == "" ]; then RAPP=$APP ; fi
 
@@ -798,22 +789,13 @@ s/\$.*/unknown/")
         else
             LPACKAGE="$APP (Installed: $KPACKAGE)"
         fi
-        if has_root; then
-            ROOT_OPTS=(
-                "Build" "Build a package for $APP"
-                $JPACKAGE
-            )
-            HEIGHT=10
-        else
-            HEIGHT=9
-        fi
         dialog --default-item "$U" \
             --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
             --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
             --cancel-label "Main Menu" --menu \
             "$(crunch "Please choose an item or press <Back> to go back \
             or press <Main Menu> to return to the main menu.\n")" \
-            18 60 $HEIGHT \
+            18 60 10 \
             "README" "View the README file" \
             "Info" "View the .info file" \
             "SlackBuild" "View the SlackBuild file" \
@@ -822,7 +804,8 @@ s/\$.*/unknown/")
             "Remove" "Remove $APP sources in cache" \
             "Options" "Edit Build Options/Flavors" \
             "Queue" "Add $APP to build queue" \
-            "${ROOT_OPTS[@]}" \
+            "Build" "Build a package for $APP" \
+            $JPACKAGE \
             2>$TMP/sbopkg_info_selection
         case $? in
             1)  rm -f $TMP/sbopkg_category_manual_selection
@@ -955,17 +938,13 @@ view_perm_log () {
         continue
     else
         dialog --title "Displaying $LOGFILE" --textbox $LOGFILE 0 0
-        if has_root; then
-            dialog --title "Keep Log?" --yes-label "Keep" \
-                --no-label "Delete" --yesno "$(crunch "Would you like to \
-                keep the permanent build log $LOGFILE?")" 6 50
-            if [ $? = 1 ]; then
-                rm -f $LOGFILE
-                dialog --title "Done" --msgbox \
-                    "The build log has been deleted." 8 30
-                continue
-            fi
-        else
+        dialog --title "Keep Log?" --yes-label "Keep" \
+            --no-label "Delete" --yesno "$(crunch "Would you like to \
+            keep the permanent build log $LOGFILE?")" 6 50
+        if [ $? = 1 ]; then
+            rm -f $LOGFILE
+            dialog --title "Done" --msgbox \
+                "The build log has been deleted." 8 30
             continue
         fi
     fi
@@ -1982,18 +1961,13 @@ remove_sources () {
     # $2 is either "ON" or "OFF", and is used as the default checklist status
     local APP="$1"
     local ONOFF="$2"
-    local SRC USER_OPTS DELETE ANS ROOT_OPTS DLGWIDTH
+    local SRC USER_OPTS DELETE ANS DLGWIDTH
 
     cd $SRCDIR
     if [[ -s $TMP/sbopkg_app_sources ]]; then
         sed "s/^\(.*\)$/\\1 \"\" $ONOFF/g" <$TMP/sbopkg_app_sources |
             sort >$TMP/sbopkg_app_sources_checklist
         if [[ "$DIAG" ]]; then
-            if has_root; then
-                ROOT_OPTS='--no-cancel --extra-button'
-            else
-                ROOT_OPTS='--no-ok'
-            fi
             # Compute a reasonable dialog width
             DLGWIDTH=$(wc -L <$TMP/sbopkg_app_sources_checklist)
             (( DLGWIDTH += 3 ))
@@ -2003,7 +1977,7 @@ remove_sources () {
             dialog --title "$(crunch "Displaying $APP sources")" \
                 --ok-label "Keep all" --extra-label "Delete selected" \
                 --cancel-label "OK" \
-                $ROOT_OPTS \
+                --no-cancel --extra-button \
                 --separate-output --checklist "$(crunch "Would you like to \
                 keep the $APP sources in the cache directory $SRCDIR?")"\
                 20 $DLGWIDTH 12 --file $TMP/sbopkg_app_sources_checklist \
@@ -2017,7 +1991,7 @@ remove_sources () {
                 >$TMP/sbopkg_app_sources_deleting
             echo -e "[ Displaying $APP sources ]\n" | \
                 cat - $TMP/sbopkg_app_sources_deleting |${PAGER:-more}
-            has_root && while :; do
+            while :; do
                 echo
                 echo "Do you want to delete these source files?"
                 echo "Press (Y)es to delete or (N)o to keep them."
@@ -2086,10 +2060,6 @@ install_package () {
     INSTPKG=$1
     OWNER=$(stat -c %U $OUTPUT/$INSTPKG)
     GROUP=$(stat -c %G $OUTPUT/$INSTPKG)
-    if ! has_root; then
-        crunch_fmt "Only the root user may install packages."
-        return 0
-    fi
     if [[ ! "$OWNER" == "root" && ! "$GROUP" == "root" ]]; then
         crunch_fmt "WARNING:  The file $INSTPKG is not set with root:root \
             permissions!  Do you want to proceed?  Here is the \
@@ -2451,14 +2421,6 @@ process_queue () {
     if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
         if empty_queue; then return; fi
     fi
-    if ! has_root; then
-        if [ "$DIAG" = 1 ]; then
-            dialog --title "ERROR" --msgbox "$(crunch "You must run this \
-                script as the root user in order to build packages.")" 8 30
-            rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
-            continue
-        fi
-    fi
     if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
         view_queue
     fi
@@ -2710,26 +2672,18 @@ check_for_latest () {
 queue_menu () {
     # Separate menu for queue functions.
     while :; do
-        if has_root; then
-            ROOT_OPTS=(
-                "Process" "Process the current build queue"
-            )
-            HEIGHT=7
-        else
-            HEIGHT=6
-        fi
         dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --cancel-label "Back" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
-            15 60 $HEIGHT \
+            15 60 7 \
             "View" "View the current build queue" \
             "Load" "Load a saved build queue" \
             "Save" "Save the current build queue" \
             "Edit" "Edit the current build queue" \
             "Rename" "Rename a saved build queue" \
             "Delete" "Delete a saved build queue" \
-            "${ROOT_OPTS[@]}" \
+            "Process" "Process the current build queue" \
             2>$TMP/sbopkg_queue_menu_answer
 
         Q="$(cat $TMP/sbopkg_queue_menu_answer)"
@@ -2796,9 +2750,7 @@ cleanup () {
         echo "it appears that you do not have sufficient permissions to"
         echo "do so.  Please check your \$TMP setting in sbopkg.conf,"
         echo "verify that your permissions are correct, or manually"
-        echo "delete any leftover files in \$TMP.  Some features of"
-        echo "sbopkg are generally available only to the root user,"
-        echo "so running sbopkg as root may be advisable.  Exiting."
+        echo "delete any leftover files in \$TMP.  Exiting."
         echo
         exit 0
     else
@@ -2968,6 +2920,12 @@ main_menu () {
 # END OF FUNCTIONS.  What comes below is the actual start of the
 # script when it is first run.
 
+# Make sure we are root.
+if [[ $(id -u) != 0 ]]; then
+    echo "$SCRIPT: $SCRIPT must be run by the root user.  Exiting." 1>&2
+    exit 1
+fi
+
 DIAG=1
 ON_ERROR=ask
 # This is the command line options and help.
@@ -3096,37 +3054,30 @@ if [[ "$DIAG" ]]; then
     cleanup
 else
     if [ -n "$BUILD" ]; then
-        if has_root; then
-            CLIQUEUE=$TMP/sbopkg_cli_queue
-            > $TMP/sbopkg-start-queue
-            for PKGBUILD in $BUILD; do
-                if [[ -r $QUEUEDIR/$PKGBUILD ]]; then
-                    # Add an entire queue
-                    CLIQUEUEFILE=$PKGBUILD
-                    echo "Using the queuefile $CLIQUEUEFILE"
-                    cp $QUEUEDIR/$PKGBUILD $CLIQUEUE
-                else
-                    # Add a single package
-                    echo $PKGBUILD >$CLIQUEUE
+        CLIQUEUE=$TMP/sbopkg_cli_queue
+        > $TMP/sbopkg-start-queue
+        for PKGBUILD in $BUILD; do
+            if [[ -r $QUEUEDIR/$PKGBUILD ]]; then
+                # Add an entire queue
+                CLIQUEUEFILE=$PKGBUILD
+                echo "Using the queuefile $CLIQUEUEFILE"
+                cp $QUEUEDIR/$PKGBUILD $CLIQUEUE
+            else
+                # Add a single package
+                echo $PKGBUILD >$CLIQUEUE
+            fi
+            # Reading from $CLIQUEUE...
+            while read PICK; do
+                PICK_NAME=${PICK%% *}
+                #search_package "$PICK_NAME"
+                if ! grep -qx $PICK_NAME $TMP/sbopkg-start-queue; then
+                    echo $PICK_NAME >>$TMP/sbopkg-start-queue
                 fi
-                # Reading from $CLIQUEUE...
-                while read PICK; do
-                    PICK_NAME=${PICK%% *}
-                    #search_package "$PICK_NAME"
-                    if ! grep -qx $PICK_NAME $TMP/sbopkg-start-queue; then
-                        echo $PICK_NAME >>$TMP/sbopkg-start-queue
-                    fi
-                done < $CLIQUEUE
-            done
-            rm -f $CLIQUEUE
-            unset CLIQUEUE
-            process_queue
-        else
-            crunch_fmt "You must run this script as the root user in order \
-                to build packages." >&2
-            cleanup
-            exit 0
-        fi
+            done < $CLIQUEUE
+        done
+        rm -f $CLIQUEUE
+        unset CLIQUEUE
+        process_queue
     fi
 
     if [ -n "$CHK_UPDATES" ]; then
