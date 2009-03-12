@@ -96,7 +96,7 @@ config_check () {
         [[ -e $SBOPKG_CONF       ]] && . $SBOPKG_CONF
         [[ -e $HOME/.sbopkg.conf ]] && . $HOME/.sbopkg.conf
 
-        KEEPLOG=$(echo "$KEEPLOG" | tr [[:lower:]] [[:upper:]])
+        KEEPLOG=$(echo "$KEEPLOG" | tr "[:lower:]" "[:upper:]")
         # Some configuration options are mandatory
         for VAR in RSYNCMIRROR SLACKVER LOCALREPO SRCDIR TMP OUTPUT QUEUEDIR \
             KEEPLOG LOGFILE DEBUG RSYNCFLAGS WGETFLAGS DIFF DIFFOPTS; do
