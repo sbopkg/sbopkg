@@ -1,5 +1,5 @@
-.TH SBOPKG.CONF 5 "Janvier 2009" sbopkg-0.26.2 ""
-.SH NOM
+.TH SBOPKG.CONF 5 "Février 2009" sbopkg-0.27.0 ""
+.SH NAME
 .B sbopkg.conf
 \- Fichier de Configuration pour sbopkg
 
@@ -17,8 +17,8 @@ Voici les différentes options de configuration\ :
 .TP 5
 .B RSYNCMIRROR
 .br
-Cette option permet à l'utilisateur de définir le miroir de dépôt 
-SBo synchronisé que sbopkg utilisera.
+Cette option permet à l'utilisateur de définir le miroir de 
+synchronisation du dépôt SBo que sbopkg utilisera.
 
 La valeur par défaut de RSYNCMIRROR est\ :
 .br
@@ -29,7 +29,7 @@ slackbuilds.org::slackbuilds.
 .br
 Cette option permet à l'utilisateur de définir la version de 
 Slackware qu'il veut synchroniser avec le dépôt SBo correspondant. Les 
-valeurs possibles sont 11.0, 12.0, 12.1, 12.2, et local. L'option 
+valeurs possibles sont 11.0, 12.0, 12.1, 12.2 et local. L'option 
 "local" permet à l'utilisateur de maintenir un dépôt local de la 
 même manière que le dépôt SBo et de le gérer avec sbopkg. Le dépôt 
 local doit être au même niveau de répertoire que celui de SBo. Par 
@@ -71,7 +71,7 @@ export SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
 Cette option indique le répertoire dans lequel certains fichiers 
 de travail seront sauvegardés temporairement. TMP doit être exporté 
 car il est aussi utilisé par les SlackBuilds SBo. La valeur 
-par défaut de TMP est donc la même que dans les SlackBuildS SBO.
+par défaut de TMP est donc la même que dans les scripts de SlackBuildS SBO.
 
 La valeur par défaut de TMP est\ :
 .br
@@ -88,6 +88,16 @@ dans les SlackBuildS SBO.
 La valeur par défaut de OUTPUT est\ :
 .br
 export OUTPUT=${OUTPUT:-/tmp}.
+
+.TP 5
+.B QUEUEDIR
+.br
+Cette option définit le répertoire dans lequel on enregistrera les 
+files d'attente sauvegardées.
+
+La valeur par défaut de QUEUEDIR est\ :
+.br
+QUEUEDIR=$TMP/queues.
 
 .TP 5
 .B KEEPLOG
@@ -112,10 +122,10 @@ La valeur par défaut de LOGFILE is: $TMP/sbopkg-build-log.
 .TP 5
 .B DEBUG
 .br
-Cette option a pour valeur 0, 1 ou 2. DEBUG définit le niveau de debogage 
+Cette option a pour valeur 0, 1 ou 2. DEBUG définit le niveau de débogage 
 par défaut de la liste de mise à jour de sbopkg. Si DEBUG vaut 0, seuls 
 les paquets pouvant être mis à jour sont montrés. C'était la sortie par 
-défaut avant l'utilisation de la vataible DEBUG. Si DEBUG vaut 1, sont 
+défaut avant l'utilisation de la variable DEBUG. Si DEBUG vaut 1, sont 
 montrés les paquets qui peuvent être mis à jour, les paquets qui ne sont 
 pas dans le dépôt et les paquets qui sont plus neufs que ceux du dépôt. 
 Modifier la valeur de DEBUG à 1 peut aider si la liste des mises à jour 
@@ -123,7 +133,7 @@ parait incompléte. Si DEBUG vaut 2 (la valeur la plus élevée), en plus
 des résultats du niveau 1, la liste des mises à jour affiche chaque paquet 
 SBo installé, même s'il n'y a pas de mise à jour, ainsi que d'autres 
 informations de débogage utiles pour corriger des erreurs. Le niveau 2 ne 
-devrait être utilisé que pour envoyer un rappor de bogue de mise à jour.
+devrait être utilisé que pour envoyer un rapport de bogue des mises à jour.
 
 La valeur par défaut de DEBUG est\ : 0.
 
@@ -151,32 +161,53 @@ Wget est utilisé par sbopkg pour télécharger les sources des paquets
 contre toute modification des valeurs par défaut de ces indicateurs, 
 de nouvelles valeurs peuvent fonctionner ou non.
 Note\ : sbopkg utilise déjà l'option -O de wget, il n'est donc pas nécessaire 
-de le rajouter dans les options de wget. Modifier ces options par défaut 
+de le rajouter dans les options de WGETFLAGS. Modifier ces options par défaut 
 n'est pas conseillé.
 
 La valeur par défaut de WGETFLAGS est\ :
 .br
 "--continue --progress-bar --timeout=15 --tries=5".
 
-.SH FICHIERS
+.TP 5
+.B DIFF
+.br
+Cette option permet à l'utilisateur de définir le programme de 
+comparaison à utiliser quand sbopkg doit montrer les différences 
+entre fichiers.
+
+La valeur par défaut de DIFF est\ :
+.br
+DIFF=${DIFF:-diff}.
+
+.TP 5
+.B DIFFOPTS
+.br
+Cette option permet à l'utilisateur de définir les options utilisées 
+par le programme de comparaison quand sbopkg affiche les différences 
+entre fichiers.
+
+La valeur par défaut de DIFFOPTS est\ :
+
+DIFFOPTS=${DIFFOPTS:--u}
+
+.SH FILES
 .TP 5
 .B /etc/sbopkg/sbopkg.conf
 
-.SH ENVIRONNEMENT
+.SH ENVIRONMENT
 Il est possible de définir ou de redéfinir des variables d'environnement 
 et de les exporter vers les scripts SlackBuilds lorsqu'il sont 
-construits à partir de sbopkg. Nous avons déjà vu l'exemple suivant dans 
+construits avec sbopkg. Nous avons déjà vu l'exemple suivant dans 
 le fichier sbopkg.conf\ :
 
 export TMP=${TMP:-/tmp/SBo}
 
-Ceci fixe la valeur de $TMP pour les besoins de sbopkg (c-a-d l'endroit 
+Ceci définit la valeur de $TMP pour les besoins de sbopkg (c-a-d l'endroit 
 où sbopkg conserve son journal) et pour la construction des paquets 
 par sbopkg (c'est déjà la valeur par défaut dans les SlackBuilds SBo. 
 Puisque cette variable est exportée, elle peut être modifiée à la fois 
 pour sbopkg et pour la construction des paquets SBo. Par exemple, 
 modifier cette ligne pour\ :
-
 export TMP=${TMP:-/home/sbo/tmp}
 
 définit $TMP comme /home/sbo/tmp pour sbopkg et pour la construcion 
@@ -198,7 +229,7 @@ $OUTPUT pour sauvegarder les paquets compilés dans /home/sbo/packages.
 .SH TRADUCTION
 
 Ce document est une traduction réalisée par M.C Collilieux 
-<http://mcclinews.free.fr/> le 14\ février\ 2009.
+<http://mcclinews.free.fr/> le 14\ mars\ 2009.
 
 La version anglaise la plus à jour de ce document est toujours 
 consultable via la commande\ : «\ \fBLANG=en\ man\ 5\ sbopkg.conf\fR\ ».

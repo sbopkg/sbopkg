@@ -7,4 +7,7 @@ enhancements:
     report.
   * Alter sed expression in download code to work around calcurse filename
     idiosyncrasy; thanks to Glenn Becker for the bug report.
+  * Move French man pages into correct /usr/man/fr* location and remove them
+    from the /docs directory; update French man pages; thanks to Marie-Claude
+    Collilieux.
 +--------------------------+

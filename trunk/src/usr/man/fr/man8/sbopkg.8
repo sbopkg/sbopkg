@@ -1,7 +1,7 @@
-.TH SBOPKG 8 "Janvier 2009" sbopkg-0.26.2 ""
-.SH NOM
+.TH SBOPKG 8 "Février 2009" sbopkg-0.27.0 ""
+.SH NAME
 .B sbopkg
-\- Le navigateur des paquets SlackBuilds.org
+\ - Le navigateur des paquets SlackBuilds.org
 
 .SH SYNOPSIS
 .B sbopkg
@@ -14,6 +14,11 @@ tierce de scripts SlackBuild pour compiler des paquets
 Slackware.
 
 .SH INSTRUCTIONS
+L'utilisation de sbopkg suppose une compréhension des scripts SlackBuild, 
+en général et du dépôt SlackBuilds.org en particulier. Il est fortement 
+recommandé de lire attentivement http://www.slackbuilds.org/howto/ et les 
+pages à propos des scripts SlackBuild de http://www.slackwiki.org.
+
 Avant de pouvoir utiliser sbopkg, il faut créer le fichier de 
 configuration /etc/sbopkg/sbopkg.conf. Un fichier exemple est 
 fourni avec /etc/sbopkg/sbopkg.conf.new. Voir
@@ -62,13 +67,13 @@ SlackBuild. La fonction affichage recherche la variable d'environnement
 $PAGER et si celle-ci n'est pas définie, utilise "more". De même, la 
 fonction édition recherche la variable $EDITOR et si celle-ci n'est pas 
 définie, utilise "vi". Si on souhaite que sbopkg utilise un autre 
-éditeur, nano par exemple, ajouter l'information nécessaire 
+éditeur, nano par exemple, il suffit d'ajouter l'information nécessaire 
 dans ~/.bashrc, /etc/profile ou tout autre fichier de configuration 
-similaire qui exporte la variable $EDITOR devrait suffire.
+similaire qui exporte la variable $EDITOR.
 
 .SH OPTIONS
 .TP 5
-.B -b PAQUET(s)
+.B -b PAQUET(s)/QUEUE(s)
 Recherche et compile PAQUET(s) à partir du dépôt SBo local. Si on 
 indique plusieurs paquets, il faut les mettre entre guillemets, 
 par exemple\ :
@@ -77,6 +82,17 @@ par exemple\ :
 
 compilera toto et ensuite titi.
 
+On peut aussi indiquer un nom de file d'attente. Dans ce cas, tous les paquets 
+indiqués dans le fichier de queue seront compilés. Si par hasard, un fichier de 
+file d'attente portait le même nom qu'un paquet (l'utilisateur aurait donné au 
+fichier de file d'attente le nom d'un paquet existant), sbopkg utiliserait le 
+fichier de file d'attente.
+Les éléments (noms de paquets ou de files d'attente) sont traités dans l'ordre 
+indiqué pour la ligne de commande ou dans l'ordre de compilation indiqué dans la 
+file d'attente pour celle-ci.
+Si un paquet est cité plusieurs fois, il ne sera inclus dans la file d'attente 
+que la première fois. 
+
 .TP 5
 .B -c
 Affiche la liste des paquets SBo installés et les mises à jour 
@@ -84,13 +100,39 @@ possibles.
 
 .TP 5
 .B -d REPERTOIRE
-Indique le chemin complet du REPERTOIRE contenant 
-le dépôt SBo local.
+Indique le chemin complet du REPERTOIRE contenant le dépôt SBo local.
+
+.TP 5
+.B -e ask|continue|stop
+Indique ce que sbopkg doit faire s'il rencontre une erreur pendant la 
+compilation d'un paquet. Les options possibles sont\ :
+
+.B ask
+: Valeur par défaut, demande à l'utilisateur ce qu'il faut faire\ ;
+
+.B continue
+: ignore l'erreur et continue le tratement (comme si l'utilisateur 
+répondait "Yes" à toutes les questions)\ ;
+
+.B stop
+: Stoppe le processus (comme si l'utilisateur répondait "No" à toutes 
+les questions)\ ;
+
 
 .TP 5
 .B -f
 Remplace le fichier de configuration par défaut, celui de 
 /etc/sbopkg/sbopkg.conf, par un autre fichier de configuration.
+
+.TP 5
+.B -g PAQUET(s)
+Cherche un PAQUET(s) à partir d'un extrait. Par exemple\ :
+
+#sbopkg -g nv
+
+renverra la liste des concordances, comme les paquets nvidia, 
+konversation, et les autres paquets comportant "nv" dans leur nom. 
+Si on indique plusieurs extraits, il faut les placer entre guillemets.
 
 .TP 5
 .B -h
@@ -112,19 +154,34 @@ programme principal. Bien sûr, selon la nature des dépendances,
 cela ne sera pas toujours possible, et cette possibilité ne constitue 
 pas une fonctionnalité garantie. Ceci dit, quand ça marche, ça aide.
 
+Les noms de file d'attente sont aussi acceptés. Pour plus de détails, 
+se reporter à l'explication de la commande "-b".
+
 .TP 5
 .B -l
-Affiche le fichier ChangeLog.txt de SBo et quitte.
+Affiche le fichier ChangeLog.txt de SBo et quitte le programme.
 
 .TP 5
-.B -q PAQUET(s)
-Cherche un PAQUET(s) à partir d'un extrait. Par exemple\ :
+.B -o
+Affiche la liste des fichiers source installés dans le cache qui sont 
+considérés comme obsolètes et propose de les effacer.
 
-#sbopkg -q nv
+Les fichiers source sont obsolètes quand plus aucun script SBo ne les  
+mentionne, ce qui peut arriver après avoir synchronisé le dépôt local.
 
-renverra la liste des concordances, comme les paquets nvidia, 
-konversation, et les autres paquets comportant "nv" dans leur nom. 
-Si on indique plusieurs extraits, il faut les placer entre guillemets.
+Notez qu'on utilise seulement le dépôt actuellement actif pour identifier 
+les sources obsolètes, donc si vous utilisez des dépôts différents (pour 
+des versions différentes de Slackware), les fichiers source utilisés 
+dans "d'autres" dépôts seront affichés.
+
+.TP 5
+.B -p
+Affiche la liste des paquets SBo installés.
+
+.TP 5
+.B -q
+Entre dans le "mode silencieux". Quand ce drapeau est mis, la sortie 
+de certaines option en mode ligne de commande devient plus succinte.
 
 .TP 5
 .B -r
@@ -142,14 +199,18 @@ paquets, ils doivent être entre guillemets. Par exemple\ :
 cherche toto puis titi.
 
 .TP 5
+.B -u
+Vérifie l'existence d'une mise à jour pour sbopkg lui-même et quitte.
+
+.TP 5
 .B -v VERSION
 Définit la version de Slackware à utiliser pour la recherche dans 
 le miroir local SBo. Les valeurs possibles sont 11.0, 12.0, 12.1, 
-12.2, et local. Voir la page man 
+12.2 et local. Voir la page de manuel 
 .B sbopkg.conf (5)
 pour plus d'information sur le dépôt "local".
 
-.SH FICHIERS
+.SH FILES
 .B /etc/sbopkg/sbopkg.conf
 \ - Fichier qui contient les options de configuration.
 
@@ -166,7 +227,7 @@ Chess Griffin
 
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<http://mcclinews.free.fr/> le 14\ février\ 2009.
+<http://mcclinews.free.fr/> le 14\ mars\ 2009.
 
 La version anglaise la plus à jour de ce document est toujours 
 consultable via la commande\ : «\ \fBLANG=en\ man\ 8\ sbopkg\fR\ ».

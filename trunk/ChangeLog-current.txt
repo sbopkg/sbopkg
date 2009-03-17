@@ -12,4 +12,6 @@ enhancements:
     report.
   * Alter sed expression in download code to work around calcurse filename
     idiosyncrasy; thanks to Glenn Becker for the bug report.
+  * Update French man pages; correctly name French man pages without the
+    _fr tag; ihanks to Marie-Claude Collilieux.
 +--------------------------+
