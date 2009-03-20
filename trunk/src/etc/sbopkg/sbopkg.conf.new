@@ -4,27 +4,32 @@
 # configuration file, including an explanation of how to set these
 # variables.
 
-# The following are variables used by sbopkg.  NOTE:  $TMP and $OUTPUT
-# must be exported as both are used by the SlackBuild scripts as well.
-# Any of the other variables could be exported as well, if desired.
+# The following are variables used by sbopkg.  Any of these variables could
+# be exported, if desired.
+# Directory variables
+LOCALREPO=${LOCALREPO:-/var/lib/sbopkg/sbo}
+LOGDIR=${LOGDIR:-/var/log/sbopkg}
+QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
+SRCDIR=${SRCDIR:-/var/cache/sbopkg}
+SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}
+# Non-directory variables:
 RSYNCMIRROR=slackbuilds.org::slackbuilds
 SLACKVER=${SLACKVER:-12.2}
-LOCALREPO=${LOCALREPO:-/home/sbo}
-SRCDIR=${SRCDIR:-/var/cache/sbopkg}
-export TMP=${TMP:-/tmp/SBo}
-export OUTPUT=${OUTPUT:-/tmp}
-QUEUEDIR=$TMP/queues
 KEEPLOG=YES
-LOGFILE=$TMP/sbopkg-build-log
+LOGFILE=$SBOPKGTMP/sbopkg-build-log
 DEBUG=0
 
+# The following variables are used by sbopkg and by the SlackBuild scripts
+# themselves.  They are exported for this reason.
+export TMP=${TMP:-/tmp/SBo}
+export OUTPUT=${OUTPUT:-/tmp}
+
 # The following variables are required and can be tweaked if desired,
-# although most users should leave them alone.  Note:  rsync already
-# uses --archive, --delete, --no-owner, and --exclude in the main
-# sbopkg script so there is no need to add those flags here.
-# Similarly, wget already uses the -O options so there is no need to
-# add that either.  In general, it is not recommended that users
-# change these default values.
+# although most users should leave them alone.  Note:  rsync already uses
+# --archive, --delete, --no-owner, and --exclude in the main sbopkg script
+# so there is no need to add those flags here.  Similarly, wget already
+# uses the -O options so there is no need to add that either.  In general,
+# it is not recommended that users change these default values.
 RSYNCFLAGS="--verbose --timeout=10"
 WGETFLAGS="--continue --progress=bar --timeout=15 --tries=5"
 DIFF=${DIFF:-diff}
