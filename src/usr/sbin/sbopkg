@@ -49,7 +49,7 @@ dialog_refresh_workaround() {
     # some rxvt-based terminals and screen sessions), preventing correct
     # dialogs rendering.
     # This function enables a workaround, consisting of a background task
-    # sending SIGWINCH to any new dialog istance.
+    # sending SIGWINCH to any new dialog instance.
     # Despite being probably harmless on "good" terminals, this function
     # should really be called only on problematic ones.
     DIALOG_REFRESH_WORKAROUND_SBOPKG_PID=$$
@@ -469,7 +469,7 @@ check_for_updates () {
                 NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 
                 # Step 1 - find the version expression
-                # This looks for the last istance of $OUTPUT.
+                # This looks for the last instance of $OUTPUT.
                 # Note that part of the name can be returned by mistake, typically for
                 # cases such as
                 #    makepkg [...] $OUTPUT/$PRGNAM-something-$VERSION-$ARCH-$BUILD$TAG
@@ -588,7 +588,7 @@ function updates__resolve_expression() {
 function updates__compare_versions() {
     # Compare numeric versions
     # Takes 2N arguments, where N is the number of numbers (...)
-    # componing the version number.
+    # composing the version number.
     # E.g. if the two packages are of version 1.2.3 build 7 and
     # 1.2.50 build 4, the argument list is
     # 1 2 3 7 1 2 50 4
