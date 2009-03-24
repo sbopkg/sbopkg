@@ -399,6 +399,54 @@ function progressbar_interrupted () {
     [[ "$KEY" = "$ESC" ]]
 }
 
+get_new_name() {
+    # Return the new package name, as for sbopkg-renames.
+    # If there isn't any new name, return the old name.
+    # $1 = the variable where to put the new name
+    # $2 = the old name
+    local NEW_NAME_VAR="$1"
+    local OLD_NAME="$2"
+    local CANDIDATE
+
+    CANDIDATE=$(grep "^$OLD_NAME=" $SBOPKG_RENAMES)
+    if [[ -z "$CANDIDATE" ]]; then
+        # No rename occurred
+        CANDIDATE="$OLD_NAME"
+    else
+        # The package got renamed
+        CANDIDATE=$(cut -d= -f2 <<<"$CANDIDATE")
+    fi
+    eval $NEW_NAME_VAR="$CANDIDATE"
+}
+
+get_old_name() {
+    # Return the old package name if installed, as for sbopkg-renames.
+    # If there isn't any old named package installed, return the new name.
+    # $1 = the variable where to put the old name
+    # $2 = the new name
+    local OLD_NAME_VAR="$1"
+    local NEW_NAME="$2"
+    local CANDIDATE INSTALLED SUBSTITUTIONS
+
+    # Manage package renames
+    SUBSTITUTIONS=$(grep "=$NEW_NAME\$" $SBOPKG_RENAMES |cut -d= -f1)
+    # By default, the old name is the new name
+    eval $OLD_NAME_VAR=$NEW_NAME
+    # Set the old name to the first installed old-named package found.
+    # Reading from $substitutions...
+    while read CANDIDATE; do
+        [[ -z "$CANDIDATE" ]] && continue
+        INSTALLED=$(ls /var/log/packages |
+            grep -x "$CANDIDATE-[^-]*-[^-]*-[^-]*")
+        if [[ -n "$INSTALLED" ]]; then
+            # Old-named installed package found, assume this is the correct
+            # old name to return.
+            eval $OLD_NAME_VAR=$CANDIDATE
+            break
+        fi
+    done <<<"$SUBSTITUTIONS"
+}
+
 check_for_updates () {
     # This checks for updates to installed SBo packages.  Thanks to Mauro
     # Giachero for this much-improved update code and related functions!
@@ -452,14 +500,7 @@ check_for_updates () {
         # End pkgtool code
 
             # Manage package renames
-            NAME=$(grep "^$OLDNAME=" $SBOPKG_RENAMES)
-            if [ -z $NAME ]; then
-                # No rename occoured
-                NAME=$OLDNAME
-            else
-                # The package got renamed
-                NAME=$(echo $NAME |cut -d= -f2)
-            fi
+            get_new_name NAME $OLDNAME
 
             # Find the current SlackBuild
             NEWSB=$(find $LOCALREPO/$SLACKVER -name "$NAME.SlackBuild")
@@ -736,8 +777,7 @@ info_item () {
     APP="$(cat $TMP/sbopkg_item_selection)"
 
     # We need to check and see if the APP has ever been renamed
-    RAPP=$(grep -w $APP $SBOPKG_RENAMES | cut -d"=" -f1)
-    if [ "$RAPP" == "" ]; then RAPP=$APP ; fi
+    get_old_name RAPP $APP
 
     CATEGORY="$(cat $TMP/sbopkg_category_selection)"
     SHORTPATH=$LOCALREPO/$SLACKVER/$CATEGORY/$APP
@@ -2081,6 +2121,23 @@ add_options () {
     fi
 }
 
+do_install() {
+    # This is mostly equivalent to "upgradepkg --reinstall --install-new $@", but
+    # also checks for renames
+    local PKG PKGNAME
+    local OLDPKG
+
+    for PKG in "$@"; do
+        # Strip the path from $PKG
+        PKGNAME=${PKG##*/}
+        # Remove version, arch, build and tag
+        PKGNAME=$(sed 's/-[^-]*-[^-]*-[^-]*$//' <<<"$PKGNAME")
+
+        get_old_name OLDPKG "$PKGNAME"
+        upgradepkg --reinstall --install-new $OLDPKG%"$PKG"
+    done
+}
+
 install_package () {
     # Install the package.
     INSTPKG=$1
@@ -2111,9 +2168,9 @@ install_package () {
         esac
     fi
     if [ "$INSTALLPKGS" = "1" ]; then
-        upgradepkg --reinstall --install-new $OUTPUT/*
+        do_install $OUTPUT/*
     else
-        upgradepkg --reinstall --install-new $OUTPUT/$INSTPKG
+        do_install $OUTPUT/$INSTPKG
         echo "Done upgrading/installing package."
     fi
 }
