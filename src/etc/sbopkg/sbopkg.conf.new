@@ -16,7 +16,7 @@ SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}
 RSYNCMIRROR=slackbuilds.org::slackbuilds
 SLACKVER=${SLACKVER:-12.2}
 KEEPLOG=YES
-LOGFILE=$SBOPKGTMP/sbopkg-build-log
+LOGFILE=$LOGDIR/sbopkg-build-log
 DEBUG=0
 
 # The following variables are used by sbopkg and by the SlackBuild scripts
