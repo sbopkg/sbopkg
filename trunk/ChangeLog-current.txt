@@ -1,9 +1,12 @@
-Tue Mar 10 02:50:30 UTC 2009
+Tue Mar 24 18:20:08 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
   * Move sbopkg to /usr/sbin; move French man pages to /usr/man/fr/man*;
     update sbopkg.SlackBuild and sspm to reflect /usr/sbin.
+  * Change default directory paths in sbopkg.conf.new; add new variable
+    SBOPKGTMP, which will be used to store sbopkg-related temp files; also
+    add new variable LOGDIR which will contain any sbopkg-related log files.
   * Remove code related to user-mode support; sbopkg must now be run as
     root in all cases; add single check at start of script to make sure we
     are root.
