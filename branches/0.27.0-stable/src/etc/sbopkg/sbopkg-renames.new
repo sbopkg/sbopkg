@@ -5,3 +5,4 @@ libsigcxx=libsigc++
 libxmlxx=libxml++
 TiMidityxx=TiMidity++
 MPlayer=mplayer
+wbxml2=libwbxml
