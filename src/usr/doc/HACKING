@@ -33,6 +33,7 @@ Please make sure your patches conform to these stylistic points:
 
       my_func() {
           # comments here
+
           stuff
       }
 
