@@ -2578,8 +2578,9 @@ process_queue () {
         done
         echo "******************************************" >> $PRECHECKLOG
         if [ "$DIAG" = 1 ]; then
-            dialog --title "Pre-Check Log" --yes-label "Start Build" \
-                --no-label "Back" --yesno "$(cat $PRECHECKLOG)" 0 0
+            dialog --title "Pre-Check Log" --ok-label "Start Build" \
+                --extra-button --extra-label "Back" --no-cancel \
+                --textbox $PRECHECKLOG 0 0
             if [ $? != 0 ]; then
                 rm -f $PKGPATH/$PKG*.build
                 rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
