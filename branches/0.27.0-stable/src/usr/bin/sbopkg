@@ -2534,9 +2534,6 @@ process_queue () {
     echo "******************************************" >> $SUMMARYLOG
     echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $SUMMARYLOG
     echo "Using SlackBuilds.org $SLACKVER repository" >> $SUMMARYLOG
-    if [ -z $QUEUEFILE ]; then
-        echo "Using the queuefile $CLIQUEUEFILE" >> $SUMMARYLOG
-    fi
     echo >> $SUMMARYLOG
     if [ "$BUILDPKGS" = 1 ]; then
         touch $PRECHECKLOG
@@ -2544,9 +2541,6 @@ process_queue () {
         echo "******************************************" >> $PRECHECKLOG
         echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $PRECHECKLOG
         echo "Using SlackBuilds.org $SLACKVER repository" >> $PRECHECKLOG
-        if [ -z $QUEUEFILE ]; then
-            echo "Using the queuefile $CLIQUEUEFILE" >> $PRECHECKLOG
-        fi
         echo >> $PRECHECKLOG
         for CHKBUILD in $(cat $STARTQUEUE); do
             unset PKG
@@ -3161,7 +3155,6 @@ else
                 if [[ -r $QUEUEDIR/$PKGBUILD ]]; then
                     # Add an entire queue
                     CLIQUEUEFILE=$PKGBUILD
-                    echo "Using the queuefile $CLIQUEUEFILE"
                     cp $QUEUEDIR/$PKGBUILD $CLIQUEUE
                 else
                     # Add a single package

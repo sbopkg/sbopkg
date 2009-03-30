@@ -14,4 +14,8 @@ enhancements:
   * Move French man pages into correct /usr/man/fr* location and remove them
     from the /docs directory; update French man pages; thanks to
     Marie-Claude Collilieux.
+  * Fix a problem with the Pre-Check Log dialog being non-scrollable and
+    having a visual glitch. Thanks to Erik Hanson for the bug report.
+  * Remove a problem where the "Using the queuefile QUEUEFILE" messages could
+    be incorrect.
 +--------------------------+
