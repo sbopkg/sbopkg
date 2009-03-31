@@ -2480,9 +2480,9 @@ use_options () {
                 echo
                 read ANS
                 case $ANS in
-                    y* | Y* ) BUILDOPTIONS=$TMPOPTIONS
+                    y* | Y* ) BUILDOPTIONS=$TMPOPTIONS; break
                     ;;
-                    n* | N* ) unset BUILDOPTIONS
+                    n* | N* ) unset BUILDOPTIONS; break
                     ;;
                     * ) echo "Unknown response."
                     ;;

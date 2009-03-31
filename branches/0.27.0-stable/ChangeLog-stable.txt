@@ -18,4 +18,5 @@ enhancements:
     having a visual glitch. Thanks to Erik Hanson for the bug report.
   * Remove a problem where the "Using the queuefile QUEUEFILE" messages could
     be incorrect.
+  * Fix a possible infinite loop when building in CLI mode.
 +--------------------------+
