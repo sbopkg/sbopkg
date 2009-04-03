@@ -2722,15 +2722,17 @@ check_for_latest () {
         echo
         echo $MSG
         if [ "$SBOPKGUP" = 1 ]; then
-            read ANS
-            case $ANS in
-                y* | Y* ) continue
-                ;;
-                n* | N* ) cleanup; exit 0
-                ;;
-                * ) echo "Unknown response."
-                ;;
-            esac
+            while :; do
+                read ANS
+                case $ANS in
+                    y* | Y* ) break
+                    ;;
+                    n* | N* ) cleanup; exit 0
+                    ;;
+                    * ) echo "Unknown response."
+                    ;;
+                esac
+            done
         fi
     fi
     if [ "$SBOPKGUP" = 1 ]; then
