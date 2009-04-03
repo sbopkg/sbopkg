@@ -2389,7 +2389,7 @@ pick_file () {
                 dialog --title "Choose $PKG $FILE file" --menu \
                     "$(crunch "A local $FILE file for $PKG was found in \
                     addition to the original file. Which one \
-                    would you like to use?")" 10 60 4 \
+                    would you like to use?")" 11 60 3 \
                     "Local" "Use the local $FILE" \
                     "Original" "Use the original $FILE" \
                     "Diff" "View a diff of the two" \
