@@ -2216,7 +2216,7 @@ build_package () {
         *) return 1 ;;
     esac
     echo "Building Slackware package for $PKG..."
-    [[ $BUILDOPTIONS ]] && export $BUILDOPTIONS
+    [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
     sh $PKG.SlackBuild.build
     cd $OUTPUT
     if [ ! -e *.tgz ]; then
