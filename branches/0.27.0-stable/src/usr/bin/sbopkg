@@ -458,9 +458,14 @@ check_for_updates () {
     local PKGS NUMPKGS PROGRESSCOUNTER=0
 
     if [ "$SLACKVER" = "local" ]; then
-        dialog --title "ERROR" --msgbox \
-            "You cannot check for updates when using the /home/sbo/local \
-            repository." 8 40
+        if [[ $DIAG ]]; then
+            dialog --title "ERROR" --msgbox \
+                "You cannot check for updates when using the /home/sbo/local \
+                repository." 8 40
+        else
+            crunch_fmt "You cannot check for updates when using the \
+                /home/sbo/local repository."
+        fi
         return 0
     fi
     # Check to see if there are any updates to installed SBo pkgs.
