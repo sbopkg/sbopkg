@@ -39,6 +39,7 @@
 # Variables
 SCRIPT=${0##*/}
 unset BUILDPKGS INSTALLPKGS BUILDOPTIONS LAST_USER_QUEUE_ON_DISK QUIET
+unset HAS_NCURSES
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 SBOPKG_RENAMES="${SBOPKG_RENAMES:-/etc/sbopkg/sbopkg-renames}"
 CWD="$(pwd)"
@@ -325,9 +326,6 @@ function progressbar_cli () {
     local PROGRESS SCREENPROGRESS i
     local SCREENWIDTH BARWIDTH
     local BAR SPACES
-    local HAS_NCURSES=false
-
-    [[ -x /usr/bin/tput ]] && HAS_NCURSES=true
 
     # Initial messages
     if [[ -n "$1" ]]; then
@@ -339,7 +337,7 @@ function progressbar_cli () {
 
     # Initialize the bar
     # Screen size
-    if $HAS_NCURSES; then
+    if [[ $HAS_NCURSES ]]; then
         tput civis # Hide cursor
         SCREENWIDTH=$(tput cols)
     else
@@ -360,7 +358,7 @@ function progressbar_cli () {
 
     # Cleanup
     echo
-    if $HAS_NCURSES; then
+    if [[ $HAS_NCURSES ]]; then
         tput cnorm # Restore cursor
     fi
 }
@@ -2861,7 +2859,7 @@ cleanup () {
         echo
         exit 0
     else
-        if $HAS_NCURSES; then
+        if [[ $HAS_NCURSES ]]; then
             tput cnorm # Restore cursor
         fi
         rm -f $TMP/sbopkg_*
@@ -3136,6 +3134,7 @@ fi
 
 # Check for a good config file and set initial variables
 config_check
+[[ -x /usr/bin/tput ]] && HAS_NCURSES=1
 
 # Change $SLACKVER if set manually using cli -v
 if [ -n "$VERSION" ]; then
