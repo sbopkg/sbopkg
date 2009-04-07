@@ -1,3 +1,29 @@
+Tue Apr  7 13:32:05 UTC 2009
+Sbopkg 0.27.1 released.  This version contains the following fixes and
+enhancements:
+
+  * Remove some useless code from check_for_latest and also fix the
+    download folder for sbopkg updates.  Thanks to David Somero for the bug
+    report.
+  * Re-implement the code that checks for renamed software; fix upgrading
+    of renamed packages; thanks to Phillip Warner for raising the issues
+    with the older code; add wbxml2->libwbxml to sbopkg-renames; thanks to
+    Mauro Giachero for working on these fixes.
+  * Fix a tr invocation issue where in certain instances, sbopkg would not run
+    from certain directories; thanks to Marie-Claude Collilieux for the bug
+    report.
+  * Alter sed expression in download code to work around calcurse filename
+    idiosyncrasy; thanks to Glenn Becker for the bug report.
+  * Move French man pages into correct /usr/man/fr* location and remove them
+    from the /docs directory; update French man pages; thanks to
+    Marie-Claude Collilieux.
+  * Fix a problem with the Pre-Check Log dialog being non-scrollable and
+    having a visual glitch. Thanks to Erik Hanson for the bug report.
+  * Remove a problem where the "Using the queuefile QUEUEFILE" messages could
+    be incorrect.
+  * Fix a possible infinite loop when building in CLI mode.
+  * Fix an issue with an ncurses check and the cleanup() function.
++--------------------------+
 Thu Feb 26 14:48:54 UTC 2009
 Sbopkg 0.27.0 released.  This version contains the following fixes and
 enhancements:

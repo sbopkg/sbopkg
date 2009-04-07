@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id$
+# $Id: sbopkg 519 2009-04-03 11:12:24Z mauro.giachero $
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2009 Chess Griffin <chess@chessgriffin.com>
@@ -42,14 +42,14 @@ unset BUILDPKGS INSTALLPKGS BUILDOPTIONS LAST_USER_QUEUE_ON_DISK QUIET
 SBOPKG_CONF="${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}"
 SBOPKG_RENAMES="${SBOPKG_RENAMES:-/etc/sbopkg/sbopkg-renames}"
 CWD="$(pwd)"
-SBOVER=svn_r$(cut -d' ' -f2 <<<"\$Revision$")
+SBOVER=0.27.1
 
 dialog_refresh_workaround() {
     # Dialog has refresh problems on some terminals (currently known are
     # some rxvt-based terminals and screen sessions), preventing correct
     # dialogs rendering.
     # This function enables a workaround, consisting of a background task
-    # sending SIGWINCH to any new dialog instance.
+    # sending SIGWINCH to any new dialog istance.
     # Despite being probably harmless on "good" terminals, this function
     # should really be called only on problematic ones.
     DIALOG_REFRESH_WORKAROUND_SBOPKG_PID=$$
@@ -218,6 +218,15 @@ pid_check () {
     fi
     cleanup
     echo $$ > $PIDFILE
+}
+
+has_root () {
+    # Check to see whether the user is root or not.
+    if [ ! $(id -u) = "0" ]; then
+        return 1
+    else
+        return 0
+    fi
 }
 
 check_write () {
@@ -448,9 +457,14 @@ check_for_updates () {
     local PKGS NUMPKGS PROGRESSCOUNTER=0
 
     if [ "$SLACKVER" = "local" ]; then
-        dialog --title "ERROR" --msgbox \
-            "You cannot check for updates when using the /home/sbo/local \
-            repository." 8 40
+        if [[ $DIAG ]]; then
+            dialog --title "ERROR" --msgbox \
+                "You cannot check for updates when using the /home/sbo/local \
+                repository." 8 40
+        else
+            crunch_fmt "You cannot check for updates when using the \
+                /home/sbo/local repository."
+        fi
         return 0
     fi
     # Check to see if there are any updates to installed SBo pkgs.
@@ -510,7 +524,7 @@ check_for_updates () {
                 NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
 
                 # Step 1 - find the version expression
-                # This looks for the last instance of $OUTPUT.
+                # This looks for the last istance of $OUTPUT.
                 # Note that part of the name can be returned by mistake, typically for
                 # cases such as
                 #    makepkg [...] $OUTPUT/$PRGNAM-something-$VERSION-$ARCH-$BUILD$TAG
@@ -629,7 +643,7 @@ function updates__resolve_expression() {
 function updates__compare_versions() {
     # Compare numeric versions
     # Takes 2N arguments, where N is the number of numbers (...)
-    # composing the version number.
+    # componing the version number.
     # E.g. if the two packages are of version 1.2.3 build 7 and
     # 1.2.50 build 4, the argument list is
     # 1 2 3 7 1 2 50 4
@@ -763,10 +777,10 @@ info_item () {
     local CHOICE PARSED_SLACK_DESC SBOPKGINSTALLOUTPUT
 
     # This function shows the menu for each package where the user can see
-    # certain information or build the package.
+    # certain information or build the package if he is root.
     APP="$(cat $TMP/sbopkg_item_selection)"
 
-    # We need to check and see if the APP has ever been renamed.
+    # We need to check and see if the APP has ever been renamed
     get_old_name RAPP $APP
 
     CATEGORY="$(cat $TMP/sbopkg_category_selection)"
@@ -828,13 +842,22 @@ s/\$.*/unknown/")
         else
             LPACKAGE="$APP (Installed: $KPACKAGE)"
         fi
+        if has_root; then
+            ROOT_OPTS=(
+                "Build" "Build a package for $APP"
+                $JPACKAGE
+            )
+            HEIGHT=10
+        else
+            HEIGHT=9
+        fi
         dialog --default-item "$U" \
             --title "$APP ($RVERSION-$RARCH-$RBUILD)" \
             --backtitle "$LPACKAGE" --extra-button --extra-label "Back" \
             --cancel-label "Main Menu" --menu \
             "$(crunch "Please choose an item or press <Back> to go back \
             or press <Main Menu> to return to the main menu.\n")" \
-            18 60 10 \
+            18 60 $HEIGHT \
             "README" "View the README file" \
             "Info" "View the .info file" \
             "SlackBuild" "View the SlackBuild file" \
@@ -843,8 +866,7 @@ s/\$.*/unknown/")
             "Remove" "Remove $APP sources in cache" \
             "Options" "Edit Build Options/Flavors" \
             "Queue" "Add $APP to build queue" \
-            "Build" "Build a package for $APP" \
-            $JPACKAGE \
+            "${ROOT_OPTS[@]}" \
             2>$TMP/sbopkg_info_selection
         case $? in
             1)  rm -f $TMP/sbopkg_category_manual_selection
@@ -977,13 +999,17 @@ view_perm_log () {
         continue
     else
         dialog --title "Displaying $LOGFILE" --textbox $LOGFILE 0 0
-        dialog --title "Keep Log?" --yes-label "Keep" \
-            --no-label "Delete" --yesno "$(crunch "Would you like to \
-            keep the permanent build log $LOGFILE?")" 6 50
-        if [ $? = 1 ]; then
-            rm -f $LOGFILE
-            dialog --title "Done" --msgbox \
-                "The build log has been deleted." 8 30
+        if has_root; then
+            dialog --title "Keep Log?" --yes-label "Keep" \
+                --no-label "Delete" --yesno "$(crunch "Would you like to \
+                keep the permanent build log $LOGFILE?")" 6 50
+            if [ $? = 1 ]; then
+                rm -f $LOGFILE
+                dialog --title "Done" --msgbox \
+                    "The build log has been deleted." 8 30
+                continue
+            fi
+        else
             continue
         fi
     fi
@@ -2000,13 +2026,18 @@ remove_sources () {
     # $2 is either "ON" or "OFF", and is used as the default checklist status
     local APP="$1"
     local ONOFF="$2"
-    local SRC USER_OPTS DELETE ANS DLGWIDTH
+    local SRC USER_OPTS DELETE ANS ROOT_OPTS DLGWIDTH
 
     cd $SRCDIR
     if [[ -s $TMP/sbopkg_app_sources ]]; then
         sed "s/^\(.*\)$/\\1 \"\" $ONOFF/g" <$TMP/sbopkg_app_sources |
             sort >$TMP/sbopkg_app_sources_checklist
         if [[ "$DIAG" ]]; then
+            if has_root; then
+                ROOT_OPTS='--no-cancel --extra-button'
+            else
+                ROOT_OPTS='--no-ok'
+            fi
             # Compute a reasonable dialog width
             DLGWIDTH=$(wc -L <$TMP/sbopkg_app_sources_checklist)
             (( DLGWIDTH += 3 ))
@@ -2016,7 +2047,7 @@ remove_sources () {
             dialog --title "$(crunch "Displaying $APP sources")" \
                 --ok-label "Keep all" --extra-label "Delete selected" \
                 --cancel-label "OK" \
-                --no-cancel --extra-button \
+                $ROOT_OPTS \
                 --separate-output --checklist "$(crunch "Would you like to \
                 keep the $APP sources in the cache directory $SRCDIR?")"\
                 20 $DLGWIDTH 12 --file $TMP/sbopkg_app_sources_checklist \
@@ -2030,7 +2061,7 @@ remove_sources () {
                 >$TMP/sbopkg_app_sources_deleting
             echo -e "[ Displaying $APP sources ]\n" | \
                 cat - $TMP/sbopkg_app_sources_deleting |${PAGER:-more}
-            while :; do
+            has_root && while :; do
                 echo
                 echo "Do you want to delete these source files?"
                 echo "Press (Y)es to delete or (N)o to keep them."
@@ -2116,6 +2147,10 @@ install_package () {
     INSTPKG=$1
     OWNER=$(stat -c %U $OUTPUT/$INSTPKG)
     GROUP=$(stat -c %G $OUTPUT/$INSTPKG)
+    if ! has_root; then
+        crunch_fmt "Only the root user may install packages."
+        return 0
+    fi
     if [[ ! "$OWNER" == "root" && ! "$GROUP" == "root" ]]; then
         crunch_fmt "WARNING:  The file $INSTPKG is not set with root:root \
             permissions!  Do you want to proceed?  Here is the \
@@ -2185,7 +2220,7 @@ build_package () {
         *) return 1 ;;
     esac
     echo "Building Slackware package for $PKG..."
-    [[ $BUILDOPTIONS ]] && export $BUILDOPTIONS
+    [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
     sh $PKG.SlackBuild.build
     cd $OUTPUT
     if [ ! -e *.tgz ]; then
@@ -2358,7 +2393,7 @@ pick_file () {
                 dialog --title "Choose $PKG $FILE file" --menu \
                     "$(crunch "A local $FILE file for $PKG was found in \
                     addition to the original file. Which one \
-                    would you like to use?")" 10 60 4 \
+                    would you like to use?")" 11 60 3 \
                     "Local" "Use the local $FILE" \
                     "Original" "Use the original $FILE" \
                     "Diff" "View a diff of the two" \
@@ -2449,9 +2484,9 @@ use_options () {
                 echo
                 read ANS
                 case $ANS in
-                    y* | Y* ) BUILDOPTIONS=$TMPOPTIONS
+                    y* | Y* ) BUILDOPTIONS=$TMPOPTIONS; break
                     ;;
-                    n* | N* ) unset BUILDOPTIONS
+                    n* | N* ) unset BUILDOPTIONS; break
                     ;;
                     * ) echo "Unknown response."
                     ;;
@@ -2477,6 +2512,14 @@ process_queue () {
     if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
         if empty_queue; then return; fi
     fi
+    if ! has_root; then
+        if [ "$DIAG" = 1 ]; then
+            dialog --title "ERROR" --msgbox "$(crunch "You must run this \
+                script as the root user in order to build packages.")" 8 30
+            rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
+            continue
+        fi
+    fi
     if [[ "$DIAG" = 1 && "$BUILDPKGS" = 1 ]]; then
         view_queue
     fi
@@ -2495,9 +2538,6 @@ process_queue () {
     echo "******************************************" >> $SUMMARYLOG
     echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $SUMMARYLOG
     echo "Using SlackBuilds.org $SLACKVER repository" >> $SUMMARYLOG
-    if [ -z $QUEUEFILE ]; then
-        echo "Using the queuefile $CLIQUEUEFILE" >> $SUMMARYLOG
-    fi
     echo >> $SUMMARYLOG
     if [ "$BUILDPKGS" = 1 ]; then
         touch $PRECHECKLOG
@@ -2505,9 +2545,6 @@ process_queue () {
         echo "******************************************" >> $PRECHECKLOG
         echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $PRECHECKLOG
         echo "Using SlackBuilds.org $SLACKVER repository" >> $PRECHECKLOG
-        if [ -z $QUEUEFILE ]; then
-            echo "Using the queuefile $CLIQUEUEFILE" >> $PRECHECKLOG
-        fi
         echo >> $PRECHECKLOG
         for CHKBUILD in $(cat $STARTQUEUE); do
             unset PKG
@@ -2539,8 +2576,9 @@ process_queue () {
         done
         echo "******************************************" >> $PRECHECKLOG
         if [ "$DIAG" = 1 ]; then
-            dialog --title "Pre-Check Log" --yes-label "Start Build" \
-                --no-label "Back" --yesno "$(cat $PRECHECKLOG)" 0 0
+            dialog --title "Pre-Check Log" --ok-label "Start Build" \
+                --extra-button --extra-label "Back" --no-cancel \
+                --textbox $PRECHECKLOG 0 0
             if [ $? != 0 ]; then
                 rm -f $PKGPATH/$PKG*.build
                 rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
@@ -2688,15 +2726,17 @@ check_for_latest () {
         echo
         echo $MSG
         if [ "$SBOPKGUP" = 1 ]; then
-            read ANS
-            case $ANS in
-                y* | Y* ) continue
-                ;;
-                n* | N* ) cleanup; exit 0
-                ;;
-                * ) echo "Unknown response."
-                ;;
-            esac
+            while :; do
+                read ANS
+                case $ANS in
+                    y* | Y* ) break
+                    ;;
+                    n* | N* ) cleanup; exit 0
+                    ;;
+                    * ) echo "Unknown response."
+                    ;;
+                esac
+            done
         fi
     fi
     if [ "$SBOPKGUP" = 1 ]; then
@@ -2728,18 +2768,26 @@ check_for_latest () {
 queue_menu () {
     # Separate menu for queue functions.
     while :; do
+        if has_root; then
+            ROOT_OPTS=(
+                "Process" "Process the current build queue"
+            )
+            HEIGHT=7
+        else
+            HEIGHT=6
+        fi
         dialog --default-item "$Q" --title "Build Queue Menu" --backtitle \
             "Currently using the SlackBuilds.org $SLACKVER repository." \
             --cancel-label "Back" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
-            15 60 7 \
+            15 60 $HEIGHT \
             "View" "View the current build queue" \
             "Load" "Load a saved build queue" \
             "Save" "Save the current build queue" \
             "Edit" "Edit the current build queue" \
             "Rename" "Rename a saved build queue" \
             "Delete" "Delete a saved build queue" \
-            "Process" "Process the current build queue" \
+            "${ROOT_OPTS[@]}" \
             2>$TMP/sbopkg_queue_menu_answer
 
         Q="$(cat $TMP/sbopkg_queue_menu_answer)"
@@ -2806,7 +2854,9 @@ cleanup () {
         echo "it appears that you do not have sufficient permissions to"
         echo "do so.  Please check your \$TMP setting in sbopkg.conf,"
         echo "verify that your permissions are correct, or manually"
-        echo "delete any leftover files in \$TMP.  Exiting."
+        echo "delete any leftover files in \$TMP.  Some features of"
+        echo "sbopkg are generally available only to the root user,"
+        echo "so running sbopkg as root may be advisable.  Exiting."
         echo
         exit 0
     else
@@ -2976,12 +3026,6 @@ main_menu () {
 # END OF FUNCTIONS.  What comes below is the actual start of the
 # script when it is first run.
 
-# Make sure we are root.
-if [[ $(id -u) != 0 ]]; then
-    echo "$SCRIPT: $SCRIPT must be run by the root user.  Exiting." 1>&2
-    exit 1
-fi
-
 DIAG=1
 ON_ERROR=ask
 # This is the command line options and help.
@@ -3110,30 +3154,36 @@ if [[ "$DIAG" ]]; then
     cleanup
 else
     if [ -n "$BUILD" ]; then
-        CLIQUEUE=$TMP/sbopkg_cli_queue
-        > $TMP/sbopkg-start-queue
-        for PKGBUILD in $BUILD; do
-            if [[ -r $QUEUEDIR/$PKGBUILD ]]; then
-                # Add an entire queue
-                CLIQUEUEFILE=$PKGBUILD
-                echo "Using the queuefile $CLIQUEUEFILE"
-                cp $QUEUEDIR/$PKGBUILD $CLIQUEUE
-            else
-                # Add a single package
-                echo $PKGBUILD >$CLIQUEUE
-            fi
-            # Reading from $CLIQUEUE...
-            while read PICK; do
-                PICK_NAME=${PICK%% *}
-                #search_package "$PICK_NAME"
-                if ! grep -qx $PICK_NAME $TMP/sbopkg-start-queue; then
-                    echo $PICK_NAME >>$TMP/sbopkg-start-queue
+        if has_root; then
+            CLIQUEUE=$TMP/sbopkg_cli_queue
+            > $TMP/sbopkg-start-queue
+            for PKGBUILD in $BUILD; do
+                if [[ -r $QUEUEDIR/$PKGBUILD ]]; then
+                    # Add an entire queue
+                    CLIQUEUEFILE=$PKGBUILD
+                    cp $QUEUEDIR/$PKGBUILD $CLIQUEUE
+                else
+                    # Add a single package
+                    echo $PKGBUILD >$CLIQUEUE
                 fi
-            done < $CLIQUEUE
-        done
-        rm -f $CLIQUEUE
-        unset CLIQUEUE
-        process_queue
+                # Reading from $CLIQUEUE...
+                while read PICK; do
+                    PICK_NAME=${PICK%% *}
+                    #search_package "$PICK_NAME"
+                    if ! grep -qx $PICK_NAME $TMP/sbopkg-start-queue; then
+                        echo $PICK_NAME >>$TMP/sbopkg-start-queue
+                    fi
+                done < $CLIQUEUE
+            done
+            rm -f $CLIQUEUE
+            unset CLIQUEUE
+            process_queue
+        else
+            crunch_fmt "You must run this script as the root user in order \
+                to build packages." >&2
+            cleanup
+            exit 0
+        fi
     fi
 
     if [ -n "$CHK_UPDATES" ]; then
