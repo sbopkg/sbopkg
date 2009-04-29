@@ -1710,7 +1710,7 @@ gen_search_package() {
         if [[ $DIAG ]]; then
             for i in $RESULTS; do
                 DESC=$(grep -hZm1 ^$(cut -d/ -f2 <<< "$i") ./$i/slack-desc* |
-                    sed 's/^[^(]*( *\(.*[^ ]\) *)[^)]*$/\1/')
+                    sed 's/^[^(]*( *\(.*[^ ]\) *)[^)]*$/\1/;s/"/'\''/g')
                 if [[ $CATEGORY == '*' ]]; then
                     NAME=$i
                 else
