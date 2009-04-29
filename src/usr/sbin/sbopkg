@@ -2933,7 +2933,7 @@ check_for_latest() {
     if [[ $SBOPKGUP ]]; then
         cd $OUTPUT
         wget $WGETFLAGS $NEWDLPKG
-        cd $CWD
+        cd "$CWD"
         crunch_fmt \
             "######################################################\
             \nDownload complete. The downloaded file is located at:\
@@ -3041,7 +3041,7 @@ cleanup() {
     rm -f $PIDFILE
 
     # Back to the directory the user started sbopkg in
-    cd $CWD
+    cd "$CWD"
 }
 
 control_c() {
