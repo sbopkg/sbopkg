@@ -541,7 +541,6 @@ check_for_updates() {
                 fi
 
             # Extract the new package version
-            NEWSB=$(find $LOCALREPO/$SLACKVER -name $NAME.SlackBuild)
             if [[ ! -z $NEWSB ]]; then
                 NEWARCH=$(egrep -m1 "^ARCH" $NEWSB | sed -e \
                     's/[ #}\t].*$//;s/^.*[=-]//;s/\"//g')
