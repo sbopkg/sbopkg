@@ -1553,8 +1553,8 @@ rsync_repo () {
     # This function does the rsync with SBo.
     if [ "$SLACKVER" = "local" ]; then
         if [ "$DIAG" = 1 ]; then
-            dialog --title "ERROR" --msgbox $(crunch "You cannot rsync when \
-                using the /home/sbo/local repository." 8 40
+            dialog --title "ERROR" --msgbox "$(crunch "You cannot rsync when \
+                using the /home/sbo/local repository.")" 8 40
         else
             crunch_fmt "You cannot rsync when using the /home/sbo/local \
                 repository."
