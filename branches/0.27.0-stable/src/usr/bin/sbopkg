@@ -302,10 +302,18 @@ get_sbo_packages () {
     for i in $PKGS; do
         echo $i >> $SBOPKGLIST
     done
-    if [ "$DIAG" = 1 ]; then
-        dialog --title "Installed SBo Packages" --textbox $SBOPKGLIST 20 65
+    if [[ -f $SBOPKGLIST ]]; then
+        if [ "$DIAG" = 1 ]; then
+            dialog --title "Installed SBo Packages" --textbox \
+                $SBOPKGLIST 20 65
+        else
+            ${PAGER:-more} $SBOPKGLIST
+        fi
     else
-        ${PAGER:-more} $SBOPKGLIST
+        if [ "$DIAG" = 1 ]; then
+            dialog --title "No packages found" --msgbox "$(crunch_fmt "It \
+                appears that you have no SBo packages installed.")" 8 40
+        fi
     fi
 }
 
