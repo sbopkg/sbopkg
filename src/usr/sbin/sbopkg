@@ -1620,8 +1620,8 @@ rsync_repo() {
 
     if [[ $SLACKVER == local ]]; then
         if [[ $DIAG ]]; then
-            dialog --title "ERROR" --msgbox $(crunch "You cannot rsync when \
-                using the $LOCALREPO/local repository.") 8 40
+            dialog --title "ERROR" --msgbox "$(crunch "You cannot rsync when \
+                using the $LOCALREPO/local repository.")" 8 40
         else
             crunch_fmt "You cannot rsync when using the $LOCALREPO/local \
                 repository."
