@@ -10,6 +10,10 @@ enhancements:
   * Remove code related to user-mode support; sbopkg must now be run as
     root in all cases; add single check at start of script to make sure we
     are root.
+  * Apply a major code cleanup that touches just about every part of sbopkg.
+    This cleanup makes the code more readable, manageable, and less bug-prone.
+    Several bugs were fixed as part of this cleanup, and the cleanup will ease
+    further development and debugging efforts.
   * Remove some useless code from check_for_latest and also fix the
     download folder for sbopkg updates.  Thanks to David Somero for the bug
     report.
@@ -25,4 +29,15 @@ enhancements:
   * Move French man pages into correct /usr/man/fr* location and remove them
     from the /docs directory; update French man pages; thanks to
     Marie-Claude Collilieux.
+  * Remove a stale 'find' call, which slightly improves the update feature.
+  * Add acroread->adobe-reader and GNOME-Colors->gnome-colors to
+    sbopkg-renames.new.
+  * Display a message when no packages are installed instead of doing nothing.
+  * Properly quote the current working directory variable in the event there
+    are spaces in the directory name.
+  * Fix a bug where 'sbopkg -c -v local' would display a dialog even though
+    running in cli mode.
+  * Fix issue where the 'games' directory was non-browsable due to a
+    slack-desc file containing double-quotes in the first line; thanks to
+    Glenn Becker for the original bug report.
 +--------------------------+
