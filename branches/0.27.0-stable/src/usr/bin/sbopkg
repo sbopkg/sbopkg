@@ -2748,7 +2748,7 @@ check_for_latest () {
     if [ "$SBOPKGUP" = 1 ]; then
         cd $OUTPUT
         wget $WGETFLAGS $NEWDLPKG
-        cd $CWD
+        cd "$CWD"
         echo "######################################################"
         echo "Download complete.  The downloaded file is located at:"
         echo
@@ -2875,7 +2875,7 @@ cleanup () {
         rm -f $TMP/sbopkg-*-queue
         rm -f $TMP/sbopkg.pid
     fi
-    cd $CWD
+    cd "$CWD"
 }
 
 control_c () {
