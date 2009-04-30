@@ -2911,7 +2911,7 @@ check_for_latest() {
                 package:\n\n$NEWSBOPKG\n\nThe new sbopkg package will saved \
                 to your OUTPUT directory: $OUTPUT")" 13 50
             if [[ $? != 0 ]]; then
-                return 0`
+                return 0
             fi
         fi
     else
