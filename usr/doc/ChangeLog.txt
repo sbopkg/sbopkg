@@ -1,3 +1,45 @@
+Thu Apr 30 14:36:08 UTC 2009
+Sbopkg 0.27.2 released.  This version contains the following fixes and
+enhancements:
+
+  * Remove a stale 'find' call, which slightly improves the update feature.
+  * Add acroread->adobe-reader and GNOME-Colors->gnome-colors to
+    sbopkg-renames.new.
+  * Display a message when no packages are installed instead of doing nothing.
+  * Properly quote the current working directory variable in the event there
+    are spaces in the directory name.
+  * Fix a bug where 'sbopkg -c -v local' would display a dialog even though
+    running in cli mode.
+  * Fix issue where the 'games' directory was non-browsable due to a
+    slack-desc file containing double-quotes in the first line; thanks to
+    Glenn Becker for the original bug report.
++--------------------------+
+Tue Apr  7 13:32:05 UTC 2009
+Sbopkg 0.27.1 released.  This version contains the following fixes and
+enhancements:
+
+  * Remove some useless code from check_for_latest and also fix the
+    download folder for sbopkg updates.  Thanks to David Somero for the bug
+    report.
+  * Re-implement the code that checks for renamed software; fix upgrading
+    of renamed packages; thanks to Phillip Warner for raising the issues
+    with the older code; add wbxml2->libwbxml to sbopkg-renames; thanks to
+    Mauro Giachero for working on these fixes.
+  * Fix a tr invocation issue where in certain instances, sbopkg would not run
+    from certain directories; thanks to Marie-Claude Collilieux for the bug
+    report.
+  * Alter sed expression in download code to work around calcurse filename
+    idiosyncrasy; thanks to Glenn Becker for the bug report.
+  * Move French man pages into correct /usr/man/fr* location and remove them
+    from the /docs directory; update French man pages; thanks to
+    Marie-Claude Collilieux.
+  * Fix a problem with the Pre-Check Log dialog being non-scrollable and
+    having a visual glitch. Thanks to Erik Hanson for the bug report.
+  * Remove a problem where the "Using the queuefile QUEUEFILE" messages could
+    be incorrect.
+  * Fix a possible infinite loop when building in CLI mode.
+  * Fix an issue with an ncurses check and the cleanup() function.
++--------------------------+
 Thu Feb 26 14:48:54 UTC 2009
 Sbopkg 0.27.0 released.  This version contains the following fixes and
 enhancements:
