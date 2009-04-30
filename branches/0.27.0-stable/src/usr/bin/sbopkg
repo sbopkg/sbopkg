@@ -1637,7 +1637,7 @@ gen_search_package () {
             for i in $RESULTS; do
                 DESC=$(grep -hZm1 ^$(echo "$i" |
                     cut -d/ -f2) ./$i/slack-desc* |
-                    sed 's/^[^(]*( *\(.*[^ ]\) *)[^)]*$/\1/')
+                    sed 's/^[^(]*( *\(.*[^ ]\) *)[^)]*$/\1/;s/"/'\''/g')
                 if [[ "$CATEGORY" = "*" ]]; then
                     NAME=$i
                 else
