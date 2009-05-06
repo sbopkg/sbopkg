@@ -13,7 +13,6 @@ QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}
 # Non-directory variables:
-RSYNCMIRROR=slackbuilds.org::slackbuilds
 SLACKVER=${SLACKVER:-12.2}
 KEEPLOG=YES
 LOGFILE=$LOGDIR/sbopkg-build-log
@@ -34,3 +33,27 @@ RSYNCFLAGS="--verbose --timeout=10"
 WGETFLAGS="--continue --progress=bar --timeout=15 --tries=5"
 DIFF=${DIFF:-diff}
 DIFFOPTS=${DIFFOPTS:--u}
+
+# Known repositories.
+# The array format is:
+#    LABEL DESCRIPTION TAG TOOL SOURCE \
+#    ...
+# where:
+#    LABEL is a short unique identifier with no spaces (traditionally, SBo
+#        labels are named after the respective Slackware version)
+#    DESCRIPTION is a short line shown in the repository selection menus
+#    TAG is the packages' tag
+#    TOOL is the tool that should be able to manage the repository. Currently
+#        supported are rsync, git and "". In this latter case, SOURCE can
+#        be anything and is ignored (but must be present)
+#    LINK is the link given to TOOL when fetching the remote repository,
+#        ending with @BRANCH in the case of git links
+# DESCRIPTION is the only field where spaces (properly escaped) are allowed.
+REPOSITORIES=(\
+    12.2 "SBo repository for Slackware 12.2" _SBo rsync slackbuilds.org::slackbuilds/12.2 \
+    12.1 "SBo repository for Slackware 12.1" _SBo rsync slackbuilds.org::slackbuilds/12.1 \
+    12.0 "SBo repository for Slackware 12.0" _SBo rsync slackbuilds.org::slackbuilds/12.0 \
+    11.0 "SBo repository for Slackware 11.0" _SBo rsync slackbuilds.org::slackbuilds/11.0 \
+    SB64 "Slamd64Builds repository" _SB64 git http://builds.slamd64.com/slamd64builds.git@master \
+    local "Local repository" _SBo "" "" \
+)

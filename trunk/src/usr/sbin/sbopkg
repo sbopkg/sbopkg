@@ -99,7 +99,7 @@ config_check() {
             unset KEEPLOG
         fi
         # Some configuration options are mandatory
-        for VAR in LOCALREPO LOGDIR QUEUEDIR SRCDIR SBOPKGTMP RSYNCMIRROR \
+        for VAR in LOCALREPO LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPOSITORIES \
             SLACKVER KEEPLOG LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS WGETFLAGS \
             DIFF DIFFOPTS; do
             if [[ -z "${!VAR}" ]]; then
@@ -181,7 +181,7 @@ directory_checks() {
 
     ck_dir $LOCALREPO/$SLACKVER \
         "Creating local repository directory $LOCALREPO/$SLACKVER for the \
-            rsync mirror."
+            script mirror."
     ck_dir $LOGDIR \
         "Creating log directory $LOGDIR."
     ck_dir $QUEUEDIR \
@@ -253,7 +253,7 @@ check_if_repo_exists() {
             dialog --title "ERROR" --msgbox "$(crunch "The directory \
                 $LOCALREPO/$SLACKVER was not found or is empty.  Please make \
                 sure your repository directory is set correctly and that you \
-                have done an rsync first.")"  12 30
+                have done a sync first.")"  12 30
             continue
         else
             cat << EOF
@@ -262,7 +262,7 @@ ERROR
 The directory $LOCALREPO/$SLACKVER was not found
 or is empty.  Please make sure your respository
 directory is set correctly and that you have done
-an rsync first.
+a sync first.
 EOF
             cleanup
             exit 1
@@ -280,7 +280,7 @@ show_changelog() {
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "$(crunch "ChangeLog.txt not \
                 found or not readable.  Please make sure your repository \
-                directory is set correctly and that you have done an rsync \
+                directory is set correctly and that you have done a sync \
                 first.")" 10 30
             continue
         else
@@ -289,14 +289,14 @@ show_changelog() {
 ERROR
 No ChangeLog.txt found.  Please make sure your
 repository directory is set correctly and that
-you have done an rsync first.  Exiting.
+you have done a sync first.  Exiting.
 EOF
             cleanup
             exit 1
         fi
     else
         if [[ $DIAG ]]; then
-            dialog --title "SlackBuilds.org ChangeLog.txt" \
+            dialog --title "$REPO_DESC ChangeLog.txt" \
                 --textbox ./ChangeLog.txt 0 0
         else
             ${PAGER:-more} ./ChangeLog.txt
@@ -312,21 +312,22 @@ get_sbo_packages() {
 
     rm -f $SBOPKGLIST
     cd /var/log/packages
-    PKGS=$(ls *SBo* 2> /dev/null)
+    PKGS=$(ls *$REPO_TAG* 2> /dev/null)
     for FILE in $PKGS; do
         echo $FILE >> $SBOPKGLIST
     done
     if [[ -f $SBOPKGLIST ]]; then
         if [[ $DIAG ]]; then
-            dialog --title "Installed SBo Packages" --textbox $SBOPKGLIST \
-                20 65
+            dialog --title "Installed ${REPO_TAG##*_} Packages" --textbox \
+                $SBOPKGLIST 20 65
         else
             ${PAGER:-more} $SBOPKGLIST
         fi
     else
         if [[ $DIAG ]]; then
             dialog --title "No packages found" --msgbox "$(crunch_fmt "It \
-                appears that you have no SBo packages installed.")" 8 40
+                appears that you have no ${REPO_TAG##*_} packages \
+                installed.")" 8 40
         fi
     fi
 }
@@ -490,11 +491,10 @@ check_for_updates() {
     if [[ $SLACKVER == local ]]; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox \
-                "You cannot check for updates when using the $LOCALREPO/local \
-                repository." 8 40
+                "You cannot check for updates when using the $REPO_DESC." 8 40
         else
             crunch_fmt "You cannot check for updates when using the \
-                $LOCALREPO/local respository."
+                $REPO_DESC."
         fi
         return 1
     fi
@@ -503,14 +503,14 @@ check_for_updates() {
     UPDATELIST=$SBOPKGTMP/sbopkg_updatelist
     rm -f $UPDATELIST
     cd /var/log/packages
-    PKGS=$(ls *_SBo 2> /dev/null)
+    PKGS=$(ls *$REPO_TAG 2> /dev/null)
     NUMPKGS=$(wc -w <<< "$PKGS")
     VERSION_FILE=$SBOPKGTMP/sbopkg-script-version
     PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
     if [[ -e "$PKGS" ]]; then
-        echo "No SlackBuilds.org packages detected." >> $UPDATELIST
+        echo "No $REPO_DESC packages detected." >> $UPDATELIST
     else
-        crunch_fmt "Listing installed SlackBuilds.org packages and flagging \
+        crunch_fmt "Listing installed $REPO_DESC packages and flagging \
             potential updates..." >> $UPDATELIST
         echo >> $UPDATELIST
         { # Grouping for the progressbar
@@ -521,7 +521,7 @@ check_for_updates() {
             progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
 
             # This next code is borrowed and modified from pkgtool
-            STRING=$(basename $CURPKG _SBo)
+            STRING=$(basename $CURPKG $REPO_TAG)
             INDEX="$(echo $STRING | tr -d -c -)"
             INDEX="$(expr length $INDEX + 1)"
             OLDNAME=$(expr $INDEX - 3)
@@ -613,14 +613,17 @@ check_for_updates() {
                     echo $NAME: >> $UPDATELIST
                     echo "  POTENTIAL UPDATE" >> $UPDATELIST
                     echo "  Installed version: " $CURPKG >> $UPDATELIST
-                    echo "  Repo version: " $NAME-$NEWVER-$NEWARCH-${NEWBUILD}_SBo >> $UPDATELIST
-                    echo "$NAME $NEWVER-$NEWBUILD ON" >> $SBOPKGTMP/sbopkg-update-queue
+                    echo "  Repo version: " \
+                        $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
+                        >> $UPDATELIST
+                    echo "$NAME $NEWVER-$NEWBUILD ON" >> \
+                        $SBOPKGTMP/sbopkg-update-queue
                 elif [[ $UPDATED -eq -1 ]]; then
                     if [[ $DEBUG -ge 1 ]]; then
                         echo $NAME: >> $UPDATELIST
                         echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
                         echo "  Installed version: " $CURPKG >> $UPDATELIST
-                        echo "  Repo version: " $NAME-$NEWVER-$NEWARCH-${NEWBUILD}_SBo >> $UPDATELIST
+                        echo "  Repo version: " $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG >> $UPDATELIST
                     fi
                 else
                     if [[ $DEBUG -eq 2 ]]; then
@@ -640,7 +643,7 @@ check_for_updates() {
             echo $(($PROGRESSCOUNTER * 100 / $NUMPKGS))
         done
         } | progressbar "Building list of potential updates" "This may take\
-            a few moments depending on how many SlackBuilds.org packages are\
+            a few moments depending on how many packages from the $REPO_DESC are\
             installed..."
         echo >> $UPDATELIST
         echo "Potential update list complete." >> $UPDATELIST
@@ -728,28 +731,49 @@ get_category_list() {
     fi
 }
 
+set_repo_vars() {
+    # Set REPO_{DESC,TAG,TOOL,LINK} according to $SLACKVER
+
+    local i
+
+    # Make sure we don't return old values with an invalid $SLACKVER
+    unset REPO_DESC REPO_TAG REPO_TOOL REPO_LINK
+
+    for ((i=0; i<${#REPOSITORIES[@]}; i+=5)); do
+        if [[ ${REPOSITORIES[$i]} = $SLACKVER ]]; then
+            REPO_DESC=${REPOSITORIES[$((i + 1))]}
+            REPO_TAG=${REPOSITORIES[$((i + 2))]}
+            REPO_TOOL=${REPOSITORIES[$((i + 3))]}
+            REPO_LINK=${REPOSITORIES[$((i + 4))]}
+            break
+        fi
+    done
+}
+
 select_version() {
-    # Create menu and list the SBo-supported versions of Slackware for
+    # Create menu and list the sbopkg-supported repositories for
     # user to choose from.
 
     while :; do
-        dialog --cancel-label "Back" --title \
-            "Choose a Slackware version" \
-            --menu "$(crunch "You are currently using sbopkg to browse a \
-            local copy of SBo for Slackware version $SLACKVER.  If you would \
+        eval dialog --cancel-label "Back" --title \
+            '"Choose a repository"' \
+            --menu '"$(crunch "You are currently using sbopkg to browse a \
+            local copy of the $REPO_DESC.  If you would \
             like to change it, please select another version below or press \
-            <Back> to go back.")" 16 50 5 \
-            "12.2" "Slackware version 12.2" \
-            "12.1" "Slackware version 12.1" \
-            "12.0" "Slackware version 12.0" \
-            "11.0" "Slackware version 11.0" \
-            "local" "Local repository" 2> $SBOPKGTMP/sbopkg_version_selection
+            <Back> to go back.")"' 17 50 6 \
+            $(
+                for ((i=0; i<${#REPOSITORIES[@]}; i+=5)); do
+                    echo ${REPOSITORIES[$i]}
+                    echo \"${REPOSITORIES[$((i+1))]}\"
+                done
+            ) 2> $SBOPKGTMP/sbopkg_version_selection
         if [[ $? != 0 ]]; then
             break
         fi
         SLACKVER="$(< $SBOPKGTMP/sbopkg_version_selection)"
+        set_repo_vars
         dialog --title "Save this setting?" --defaultno --yesno \
-            "$(crunch "Would you like to save this Slackware version setting \
+            "$(crunch "Would you like to save this repository setting \
             in the user's $HOME/.sbopkg.conf file? (One will be created if \
             it is not found).\n\nPress <Yes> to save in the user's \
             $HOME/.sbopkg.conf or press <No> to continue without saving, \
@@ -845,16 +869,16 @@ info_item() {
     CURBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$APP.SlackBuild |
         sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
     while :; do
-        CURAPP=$(ls /var/log/packages/*SBo* 2> /dev/null |
+        CURAPP=$(ls /var/log/packages/*$REPO_TAG* 2> /dev/null |
                 grep "$APP\|$OLDPKG")
         unset INSTALLEDPACKAGE
         for i in $CURAPP; do
-            LONGAPP=$(echo $i | sed 's/_SBo$//;s/-[^-]*-[^-]*-[^-]*$//')
+            LONGAPP=$(echo $i | sed "s/$REPO_TAG$//;s/-[^-]*-[^-]*-[^-]*$//")
             SHORTAPP=$(echo $LONGAPP | sed -e 's/^.*\///g')
 
             if [[ $SHORTAPP == $APP || $SHORTAPP == $OLDPKG ]]; then
                 # Again, code from pkgtool
-                STRING=$(basename $i _SBo)
+                STRING=$(basename $i $REPO_TAG)
                 INDEX="$(echo $STRING | tr -d -c -)"
                 INDEX="$(expr length $INDEX + 1)"
                 NAME=$(expr $INDEX - 3)
@@ -1006,7 +1030,7 @@ browse_categories() {
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "$(crunch "Repository seems to \
                 be empty. Please make sure your repository directory is set \
-                correctly and that you have done an rsync first.")" 10 30
+                correctly and that you have done a sync first.")" 10 30
             continue
         fi
     fi
@@ -1014,9 +1038,9 @@ browse_categories() {
     while :; do
         dialog --default-item "$DEFAULTITEM" --cancel-label "Back" \
             --title "Choose a category" --backtitle \
-            "Currently using the SlackBuilds.org $SLACKVER repository." \
+            "Currently using the $REPO_DESC." \
             --menu "Please select a category or press <Back> to go back." \
-            22 70 14 --file $SBOPKGTMP/sbopkg_category_list \
+            23 70 15 --file $SBOPKGTMP/sbopkg_category_list \
             2> $SBOPKGTMP/sbopkg_category_manual_selection
         if [[ $? != 0 ]]; then
             break
@@ -1569,14 +1593,14 @@ rsync_command() {
     # We do not use -z as this causes heavy CPU load on the server and has
     # very limited effect when most of the pull is .gz files.
 
-    local RSYNC_LOCK=$SBOPKGTMP/sbopkg_rsync.lck
+    local SYNC_LOCK=$SBOPKGTMP/sbopkg_sync.lck
 
     rsync --archive --delete --no-owner --exclude="*.sbopkg" \
-        $RSYNCFLAGS $RSYNCMIRROR/$SLACKVER/ $LOCALREPO/$SLACKVER/
+        $RSYNCFLAGS $REPO_LINK/ $LOCALREPO/$SLACKVER/
     case $? in
         35)
             echo
-            echo "The connection to $RSYNCMIRROR timed out."
+            echo "The connection to $REPO_LINK timed out."
             echo "You can modify the TIMEOUT value in sbopkg.conf"
             echo "if this problem persists."
             echo "(TIMEOUT is currently set to:  $TIMEOUT seconds)".
@@ -1585,46 +1609,76 @@ rsync_command() {
         30)
             echo
             echo "Rsync reported a timeout while waiting for data."
-            echo "$RSYNCMIRROR may under a heavy load."
+            echo "$REPO_LINK may under a heavy load."
             echo "Please try again later."
             echo
             ;;
         10)
             echo
             echo "Rsync reported a socket error which may be due to"
-            echo "a problem with the RSYNCMIRROR value in sbopkg.conf."
-            echo "(RSYNCMIRROR is currently set to:  $RSYNCMIRROR)."
+            echo "a problem with the LINK value in sbopkg.conf."
+            echo "(The repo's LINK is currently set to: $REPO_LINK)."
             echo "Please check your settings and try again later."
             echo
             ;;
         0)
             echo
-            echo "Rsync with SlackBuilds.org complete."
+            echo "Rsync with the $REPO_DESC complete."
             echo
             ;;
         *)
             echo
-            echo "Rsync with SlackBuilds.org failed."
+            echo "Rsync with the $REPO_DESC failed."
             echo "Please try again."
             echo
             ;;
     esac
-    rm -f $RSYNC_LOCK
+    rm -f $SYNC_LOCK
 }
 
-rsync_repo() {
-    # This function does the rsync with SBo.
+git_command() {
+    # This function synchronizes a local git repository with upstream.
 
-    local RSYNC_LOCK=$SBOPKGTMP/sbopkg_rsync.lck
+    local SYNC_LOCK=$SBOPKGTMP/sbopkg_sync.lck
+    local URL BRANCH CWD
+
+    eval $(sed 's/^\(.*\)@\(.*\)$/URL=\1; BRANCH=\2/g' <<< $REPO_LINK)
+
+    CWD=$(pwd)
+    # Create the repository if needed
+    if [[ ! -d $LOCALREPO/$SLACKVER/.git ]]; then
+        mkdir -p $LOCALREPO/$SLACKVER
+        cd $LOCALREPO/$SLACKVER
+        git init
+    fi
+    # Update the repository
+    cd $LOCALREPO/$SLACKVER
+    git pull $URL $BRANCH
+    # Remove leftovers
+    # This is optional, think of it as a way to emulate the --delete --exclude
+    # rsync directives
+    echo "*/*/*.sbopkg" > .gitignore
+    git clean -d -f -x
+    git reset --hard HEAD
+    # All done
+    rm -f $SBOPKGTMP/sbopkg_sync.lck
+    echo
+    echo "Repository update complete."
+    echo
+}
+
+sync_repo() {
+    # This function does the sync with SBo.
+
+    local SYNC_LOCK=$SBOPKGTMP/sbopkg_sync.lck
     local SBOPKGOUTPUT=$SBOPKGTMP/sbopkg_output
 
-    if [[ $SLACKVER == local ]]; then
+    if [[ $REPO_TOOL == "" ]]; then
         if [[ $DIAG ]]; then
-            dialog --title "ERROR" --msgbox "$(crunch "You cannot rsync when \
-                using the $LOCALREPO/local repository.")" 8 40
+            dialog --title "ERROR" --msgbox \
+                "You cannot sync the $REPO_DESC." 8 40
         else
-            crunch_fmt "You cannot rsync when using the $LOCALREPO/local \
-                repository."
+            crunch_fmt "You cannot sync the $REPO_DESC."
         fi
         continue
     fi
@@ -1641,17 +1695,27 @@ rsync_repo() {
             cleanup
             exit 1
         fi
+    elif [[ $REPO_TOOL != "rsync" && $REPO_TOOL != "git" ]]; then
+        if [[ $DIAG ]]; then
+            dialog --title "ERROR" --msgbox \
+                "Unsupported fetching tool \"$REPO_TOOL\"." 8 30
+            continue
+        else
+            echo "Unsupported fetching tool \"$REPO_TOOL\"."
+            cleanup
+            exit 0
+        fi
     fi
     if [[ $DIAG ]]; then
-        touch $RSYNC_LOCK
-        ( rsync_command >> $SBOPKGOUTPUT & ) 2>> $SBOPKGOUTPUT
-        while [[ -f $RSYNC_LOCK ]]; do
-            dialog --backtitle "Rsyncing with SlackBuilds.org" \
+        touch $SYNC_LOCK
+        ( ${REPO_TOOL}_command >> $SBOPKGOUTPUT & ) 2>> $SBOPKGOUTPUT
+        while [[ -f $SYNC_LOCK ]]; do
+            dialog --backtitle "Updating the local repository" \
                 --tailbox $SBOPKGOUTPUT 18 70
         done
         rm -f $SBOPKGOUTPUT
     else
-        rsync_command
+        ${REPO_TOOL}_command
     fi
 }
 
@@ -1723,7 +1787,7 @@ gen_search_package() {
                 # the first item.
                 dialog --title "Matches for $PKG in $CATEGORY" \
                     --backtitle "$(crunch "Currently using the \
-                    SlackBuilds.org $SLACKVER repository.")" \
+                    $REPO_DESC.")" \
                     --default-item "$SRCHPICK" --extra-button \
                     --cancel-label "Back" \
                     --help-button --help-label "Main Menu" \
@@ -1796,7 +1860,7 @@ string_search() {
 
     if [[ ${SEARCH_TERM%%:*} == "inst" ]]; then
         local SEARCH_TERM="${SEARCH_TERM#*:}"
-        local SBOPKGS=($(ls /var/log/packages/*_SBo))
+        local SBOPKGS=($(ls /var/log/packages/*$REPO_TAG))
         for ((i=0; i<${#SBOPKGS[*]}; i++)); do
             local PKGNAME=$(
                 sed 's,.*/,,;s/-[^-]*-[^-]*-[^-]*$//' <<< "${SBOPKGS[$i]}")
@@ -2318,7 +2382,7 @@ build_package() {
     esac
 
     # Start the actual build
-    echo "Building Slackware package for $PKGNAME..."
+    echo "Building package for $PKGNAME..."
     (   # Run the build in a subshell, to avoid namespace pollution
         [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
         export OUTPUT=$SB_OUTPUT
@@ -2728,14 +2792,14 @@ process_queue() {
     echo >> $SUMMARYLOG
     echo "******************************************" >> $SUMMARYLOG
     echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $SUMMARYLOG
-    echo "Using SlackBuilds.org $SLACKVER repository" >> $SUMMARYLOG
+    echo "Using the $REPO_DESC" >> $SUMMARYLOG
     echo >> $SUMMARYLOG
     if [[ $BUILDPKGS ]]; then
         > $PRECHECKLOG
         echo >> $PRECHECKLOG
         echo "******************************************" >> $PRECHECKLOG
         echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $PRECHECKLOG
-        echo "Using SlackBuilds.org $SLACKVER repository" >> $PRECHECKLOG
+        echo "Using the $REPO_DESC" >> $PRECHECKLOG
         echo >> $PRECHECKLOG
         for CHKBUILD in $(< $STARTQUEUE); do
             unset PKG
@@ -2969,7 +3033,7 @@ queue_menu() {
 
     while :; do
         dialog --title "Build Queue Menu" --backtitle \
-            "Currently using the SlackBuilds.org $SLACKVER repository." \
+            "Currently using the $REPO_DESC." \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
             15 60 7 \
@@ -3006,13 +3070,13 @@ utilities_menu() {
 
     while :; do
         dialog --title "Utilities Menu" --backtitle \
-            "Currently using the SlackBuilds.org $SLACKVER repository." \
+            "Currently using the $REPO_DESC." \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
             15 69 5 \
             "Cache" "View the contents of the cache directory" \
             "Log" "View the permanent build log" \
-            "Version" "Select Slackware version (currently: $SLACKVER)" \
+            "Version" "Select repository (currently: $SLACKVER)" \
             "Latest" "Check for an update to sbopkg"  \
             "Obsolete" "View the obsoleted cached sources" 2> $ANSWERFILE
 
@@ -3184,24 +3248,24 @@ main_menu() {
         dialog --cancel-label "Exit" --default-item "$DEFAULTITEM" --title \
             "SlackBuilds.org Package Browser (sbopkg version $SBOVER)" \
             --backtitle \
-            "Currently using the SlackBuilds.org $SLACKVER repository." \
+            "Currently using the $REPO_DESC." \
             --menu \
             "\nChoose one of the following or press <Exit> to exit.\n" \
             17 69 8 \
-            "Rsync" "Rsync with SlackBuilds.org" \
-            "ChangeLog" "View the SlackBuilds.org ChangeLog" \
-            "Packages" "List installed SBo packages" \
-            "Updates" "List potential updates to installed SBo packages" \
-            "Browse" "Browse the local SlackBuilds.org repository" \
-            "Search" "Search the local SlackBuilds.org repository" \
+            "Sync" "Sync with the remote repository" \
+            "ChangeLog" "View the ChangeLog" \
+            "Packages" "List installed ${REPO_TAG##*_} packages" \
+            "Updates" "List potential updates to installed ${REPO_TAG##*_} packages" \
+            "Browse" "Browse the local repository" \
+            "Search" "Search the local repository" \
             "Queue" "Manage the build queue" \
             "Utilities" "Go to the utilities menu" 2> $ANSWER_FILE
 
         DEFAULTITEM=$(< $ANSWER_FILE)
 
         case "$DEFAULTITEM" in
-            "Rsync" )
-                rsync_repo ;;
+            "Sync" )
+                sync_repo ;;
             "ChangeLog" )
                 show_changelog ;;
             "Packages" )
@@ -3253,6 +3317,10 @@ unset SBOPKG_CONF     # Configuration file
 unset LOCALREPO       # Directory containing all repository mirrors
 unset CWD             # sbopkg starting directory
 unset SLACKVER        # Currently active SBo repository
+unset REPO_DESC       # Active repository's description
+unset REPO_TAG        # Active repository's packages' tag
+unset REPO_TOOL       # Active repository's fetch tool
+unset REPO_LINK       # Active repository's fetch link
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER
@@ -3321,8 +3389,8 @@ while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
             QUIET=1
             unset DIAG
             ;;
-        r ) # Rsync with the remote repository
-            RSYNC=1
+        r ) # sync with the remote repository
+            SYNC=1
             unset DIAG
             ;;
         s ) # Name search
@@ -3333,7 +3401,7 @@ while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
             UPDATE=1
             unset DIAG
             ;;
-        v ) # Set Slackware version
+        v ) # Set repository
             VERSION=1
             CUSTOMVER="$OPTARG"
             ;;
@@ -3356,13 +3424,14 @@ Options are:
   -o              Display the obsoleted source files and prompt for deletion.
   -p              List installed SlackBuilds.org packages.
   -q              Quiet some of the command-line output.
-  -r              Rsync the SlackBuilds.org repository with
-                  the local mirror and then quit.
+  -r              Sync the remote repository with the local mirror and then
+                  quit.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
-  -v version      Set the Slackware version for the
-                  mirror (current choices are 11.0, 12.0, 12.1, and 12.2)
+  -v version      Set the repository (current choices are 11.0, 12.0, 12.1 and
+                  12.2 for SlackBuilds.org repositories, and SB64 for the
+                  Builds.Slamd64.com repository).
 
 Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2")
 EOF
@@ -3398,6 +3467,11 @@ config_check
 # Change $SLACKVER if set manually using cli -v
 if [[ $VERSION ]]; then
     SLACKVER=$CUSTOMVER
+fi
+set_repo_vars
+if [[ -z $REPO_LINK ]]; then
+    echo "Unknown repository name -- \"$SLACKVER\"" >&2
+    exit 1
 fi
 
 # Check for required directories
@@ -3454,11 +3528,11 @@ else
         get_sbo_packages
     fi
 
-    if [[ $RSYNC ]]; then
-        crunch_fmt "Rsyncing with Slackbuilds.org repository into \
+    if [[ $SYNC ]]; then
+        crunch_fmt "Syncing with the remote repository into \
             $LOCALREPO/$SLACKVER."
-        rsync_repo
-        echo "Finished rsync."
+        sync_repo
+        echo "Finished sync."
     fi
 
     if [[ -n $SEARCH ]]; then
