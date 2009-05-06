@@ -857,7 +857,7 @@ info_item() {
     local APP="$(< $SBOPKGTMP/sbopkg_item_selection)"
 
     # We need to check and see if the APP has ever been renamed.
-    get_old_name $OLDPKG $APP
+    get_old_name OLDPKG $APP
 
     CATEGORY="$(< $SBOPKGTMP/sbopkg_category_selection)"
     SHORTPATH=$LOCALREPO/$SLACKVER/$CATEGORY/$APP
