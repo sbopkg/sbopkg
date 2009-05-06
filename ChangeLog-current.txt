@@ -40,4 +40,7 @@ enhancements:
   * Fix issue where the 'games' directory was non-browsable due to a
     slack-desc file containing double-quotes in the first line; thanks to
     Glenn Becker for the original bug report.
+  * Implement configurable repository support, and use it to support
+    git-based repositories. The Slamd64Builds repository is now listed, for
+    the joy of all the Slamd64 users out there.
 +--------------------------+

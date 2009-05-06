@@ -15,21 +15,19 @@ Slackware packages.  A sample file is provided at
 The different configuration options are:
 
 .TP 5
-.B RSYNCMIRROR
+.B REPOSITORIES
 .br
-This option allows the user to set the rsync mirror of the SBo
-repository that will be used by sbopkg.
-
-The default value of RSYNCMIRROR is:
-.br
-slackbuilds.org::slackbuilds.
+This option allows the user to setup the repositories that should be
+available to sbopkg. See the comments inside
+.B sbopkg.conf.new
+for details about adding and removing repositories.
 
 .TP 5
 .B SLACKVER
 .br
 This option allows the user to set the default Slackware version in
 order to rsync with the matching SBo repository.  The current options
-are 11.0, 12.0, 12.1, 12.2, and local.  The 'local' option allows
+are 11.0, 12.0, 12.1, 12.2, SB64, and local.  The 'local' option allows
 the user to maintain a local repository in the style of the SBo
 repository and use sbopkg with it.  This local repository needs be
 maintained at the same directory level as the SBo repos.  For example,
