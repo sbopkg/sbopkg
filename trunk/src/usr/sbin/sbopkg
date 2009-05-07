@@ -782,10 +782,9 @@ select_version() {
             break
         fi
         if [[ -e $HOME/.sbopkg.conf ]]; then
-            sed -i "s/^SLACKVER.*$/SLACKVER=$SLACKVER/" $HOME/.sbopkg.conf
-        else
-            echo "SLACKVER=$SLACKVER" > $HOME/.sbopkg.conf
+            sed -i '/^SLACKVER=.*$/d' $HOME/.sbopkg.conf
         fi
+        echo "SLACKVER=$SLACKVER" >> $HOME/.sbopkg.conf
         break
     done
     rm -f $SBOPKGTMP/sbopkg_version_selection
