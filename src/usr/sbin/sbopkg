@@ -488,7 +488,7 @@ check_for_updates() {
     local VER_NUMERIC NEWVER_NUMERIC UPDATED
     local PKGS NUMPKGS PROGRESSCOUNTER=0
 
-    if [[ $SLACKVER == local ]]; then
+    if [[ -z $REPO_TOOL ]]; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox \
                 "You cannot check for updates when using the $REPO_DESC." 8 40
