@@ -1724,8 +1724,8 @@ search_package() {
     # and building.
 
     cd $LOCALREPO/$SLACKVER
-    local PKG="$1"
-    local PKGPATH=( $(find -type d -mindepth 2 -name "$PKG") )
+    PKG="$1"
+    PKGPATH=( $(find -type d -mindepth 2 -name "$PKG") )
 
     if [[ -z $PKGPATH ]]; then
         if [[ $SINGLE == yes ]]; then
