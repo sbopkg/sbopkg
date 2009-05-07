@@ -2386,7 +2386,7 @@ build_package() {
     (   # Run the build in a subshell, to avoid namespace pollution
         [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
         export OUTPUT=$SB_OUTPUT
-        sh $PKGNAME.SlackBuild.build
+        nice sh $PKGNAME.SlackBuild.build
     )
 
     # Cleanup
