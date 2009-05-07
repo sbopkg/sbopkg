@@ -3313,7 +3313,7 @@ unset BUILDPKGS       # TODO
 unset INSTALLPKGS     # TODO
 unset BUILDOPTIONS    # TODO
 unset SBOPKG_RENAMES  # File tracking package renames inside SBo
-unset SBOPKG_CONF     # Configuration file
+#     SBOPKG_CONF     # Configuration file
 unset LOCALREPO       # Directory containing all repository mirrors
 unset CWD             # sbopkg starting directory
 unset SLACKVER        # Currently active SBo repository
