@@ -79,8 +79,8 @@ config_check() {
 
     local MISSING VAR
 
-    if [[ ! -e $SBOPKG_RENAMES ]]; then
-        echo "$SCRIPT: No $SBOPKG_RENAMES was found." 1>&2
+    if [[ ! -e $SBOPKG_RENAMES_D ]]; then
+        echo "$SCRIPT: No $SBOPKG_RENAMES_D was found." 1>&2
         echo "Please correct this error and run $SCRIPT again." 1>&2
         exit 1
     fi
@@ -437,7 +437,7 @@ get_new_name() {
 
     local NEW_NAME_VAR="$1"
     local OLD_NAME="$2"
-    local CANDIDATE=$(grep "^$OLD_NAME=" $SBOPKG_RENAMES)
+    local CANDIDATE=$(grep -hr "^$OLD_NAME=" $SBOPKG_RENAMES_D | head -n1)
 
     if [[ -z "$CANDIDATE" ]]; then
         # No rename occurred
@@ -458,7 +458,7 @@ get_old_name() {
     local OLD_NAME_VAR="$1"
     local NEW_NAME="$2"
     local CANDIDATE INSTALLED
-    local SUBSTITUTIONS=$(grep "=$NEW_NAME\$" $SBOPKG_RENAMES | cut -d= -f1)
+    local SUBSTITUTIONS=$(grep -hr "=$NEW_NAME\$" $SBOPKG_RENAMES_D | cut -d= -f1)
 
     # By default, the old name is the new name
     eval $OLD_NAME_VAR=$NEW_NAME
@@ -3311,7 +3311,7 @@ unset LAST_USER_QUEUE_ON_DISK # The name of the last loaded/saved user queue
 unset BUILDPKGS       # TODO
 unset INSTALLPKGS     # TODO
 unset BUILDOPTIONS    # TODO
-unset SBOPKG_RENAMES  # File tracking package renames inside SBo
+unset SBOPKG_RENAMES_D  # Directory containing files tracking package renames
 #     SBOPKG_CONF     # Configuration file
 unset LOCALREPO       # Directory containing all repository mirrors
 unset CWD             # sbopkg starting directory
@@ -3326,7 +3326,7 @@ unset RSYNC SEARCH UPDATE VERSION CUSTOMVER
 
 SCRIPT=${0##*/}
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
-SBOPKG_RENAMES=${SBOPKG_RENAMES:-/etc/sbopkg/sbopkg-renames}
+SBOPKG_RENAMES_D=${SBOPKG_RENAMES_D:-/etc/sbopkg/renames.d}
 CWD=$(pwd)
 SBOVER=svn_r$(cut -d' ' -f2 <<< "\$Revision\$")
 DIAG=1
