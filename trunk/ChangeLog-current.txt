@@ -43,6 +43,8 @@ enhancements:
   * Implement configurable repository support, and use it to support
     git-based repositories. The Slamd64Builds repository is now listed, for
     the joy of all the Slamd64 users out there.
+  * 'Nice' the build process so as to improve sbopkg's resource utilization.
+  * Fix a few issues regarding user sbopkg.conf files.
   * Move sbopkg-renames to new /etc/sbopkg/renames.d/50-default to manage
     multiple renames files.  Thanks to Robby Workman for the suggestion.  Add
     new document README-renames.d that explains how this works.
