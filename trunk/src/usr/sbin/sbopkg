@@ -3303,6 +3303,7 @@ main_menu() {
 # The second group should be reduced/removed. For now, they are simply listed
 # here in a group, instead of being commented one by one.
 unset SCRIPT          # The script name (usually "sbopkg")
+unset REV             # Revision number
 unset SBOVER          # The sbopkg version
 unset DIAG            # When set, run in dialog mode (instead of CLI mode)
 unset QUIET           # When set, suppress less important output in CLI mode
@@ -3328,7 +3329,8 @@ SCRIPT=${0##*/}
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
 SBOPKG_RENAMES_D=${SBOPKG_RENAMES_D:-/etc/sbopkg/renames.d}
 CWD=$(pwd)
-SBOVER=svn_r$(cut -d' ' -f2 <<< "\$Revision\$")
+REV="$Revision"
+SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
 DIAG=1
 ON_ERROR=ask
 
