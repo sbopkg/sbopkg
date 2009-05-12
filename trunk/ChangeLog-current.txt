@@ -48,4 +48,5 @@ enhancements:
   * Move sbopkg-renames to new /etc/sbopkg/renames.d/50-default to manage
     multiple renames files.  Thanks to Robby Workman for the suggestion.  Add
     new document README-renames.d that explains how this works.
+  * Add support for new *.txz, *.tlz, and *.tbz Slackware package extensions.
 +--------------------------+

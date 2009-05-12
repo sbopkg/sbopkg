@@ -829,7 +829,7 @@ view_app_file() {
     case $FILE in
         slack-desc )
             sed -n "/^${DIR##*/}: */s///p" slack-desc > $AFSP ;;
-        *tar.gz | *tar.bz2 | *tgz )
+        *tar.gz | *tar.bz2 | *t?z )
             tar tvf $FILE > $AFSP ;;
         *gz ) zcat $FILE > $AFSP ;;
         *bz2 ) bzcat $FILE > $AFSP ;;
@@ -897,7 +897,7 @@ info_item() {
         done
         if $(echo $(ls -1 $OUTPUT) | grep -E -q "$APP.*$CURVERSION"); then
             CURPACKAGE="$(
-                basename $(ls -1 $OUTPUT/${APP}*${CURVERSION}*${CURBUILD}*tgz|
+                basename $(ls -1 $OUTPUT/${APP}*${CURVERSION}*${CURBUILD}*t?z|
                 head -n 1)
                 )"
         else
@@ -2394,7 +2394,7 @@ build_package() {
 
     # Let's see the result
     cd $SB_OUTPUT
-    if [ ! -f *.tgz ]; then
+    if [ ! -f *.t?z ]; then
         echo "$PKGNAME:" >> $SUMMARYLOG
         echo "Error occurred with build.  Please check the log." \
             >> $SUMMARYLOG
@@ -2425,7 +2425,7 @@ build_package() {
         fi
     else
         echo "Done building package for $PKG."
-        NEWPACKAGE=$(ls -1 *.tgz)
+        NEWPACKAGE=$(ls -1 *.t?z)
         echo "$PKGNAME:" >> $SUMMARYLOG
         echo "Built package: $NEWPACKAGE" >> $SUMMARYLOG
         echo "Built package: $NEWPACKAGE"
