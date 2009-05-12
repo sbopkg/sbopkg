@@ -35,8 +35,8 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-mkdir -p $PKG/etc/sbopkg
-cp etc/sbopkg/* $PKG/etc/sbopkg
+mkdir -p $PKG/etc/sbopkg/renames.d
+cp -a etc/sbopkg/* $PKG/etc/sbopkg
 
 mkdir -p $PKG/usr/sbin
 cp usr/sbin/* $PKG/usr/sbin
