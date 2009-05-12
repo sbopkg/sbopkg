@@ -2322,8 +2322,8 @@ install_package() {
             * ) echo "Unknown response."; break ;;
         esac
     fi
-    if [[ $INSTALLPKGS == 1 ]]; then
-        do_install $OUTPUT/*
+    if [[ $INSTALLPKGS ]]; then
+        do_install $SB_OUTPUT/*
     else
         do_install $OUTPUT/$INSTPKG
         echo "Done upgrading/installing package."
@@ -2762,7 +2762,7 @@ process_queue() {
     local PRECHECKLOG=$SBOPKGTMP/sbopkg_precheck_log
     local SUMMARYLOG=$SBOPKGTMP/sbopkg_summary
     local TMPPRECHECKLOG=$SBOPKGTMP/sbopkg_tmp_prechecklog
-    local INSTALLPKGS PKG SINGLE PKGPATH CHKBUILD ANS
+    local PKG SINGLE PKGPATH CHKBUILD ANS
 
     rm -f $SBOPKGTMPOUTPUT $FINALQUEUE $PRECHECKLOG $SUMMARYLOG $PRECHECKLOG
     if [[ $DIAG && $BUILDPKGS ]]; then
