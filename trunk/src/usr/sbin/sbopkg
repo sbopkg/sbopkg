@@ -1222,7 +1222,7 @@ queue_dir_lister() {
             continue
         fi
     fi
-    find $QUEUEDIR -type f -printf "\"%P\" \"\" off\n" | sort > $QFM
+    find $QUEUEDIR -type f -not -name '*~' -printf "\"%P\" \"\" off\n" | sort > $QFM
     # The --default item doesn't work on deletions and renames (because the
     # variable expands to a no-longer existing file) but you can't give it an
     # index argument, unfortunately
@@ -1235,6 +1235,20 @@ queue_dir_lister() {
         return 0
     fi
     USERQUEUE=( $(< $QFS) )
+}
+
+can_skip_line() {
+    # This function reads in a line and checks if it is blank or starts with a
+    # comment.
+
+    echo $1 | grep "^#" > /dev/null
+    if [[ $? == 0 ]]; then
+        return 1
+    fi
+    if [[ "$1" == "" ]]; then
+        return 1
+    fi
+    return 0
 }
 
 load_user_queue() {
@@ -1254,6 +1268,10 @@ load_user_queue() {
             touch $USERQUEUE_LOCK
             # Reading from $FILE...
             while read PICK; do
+                can_skip_line $PICK
+                if [[ $? == 1 ]]; then
+                    continue
+                fi
                 add_item_to_queue $PICK
             done < $FILE
             LAST_USER_QUEUE_ON_DISK=$FILE
@@ -3009,8 +3027,8 @@ queue_menu() {
             "Edit") edit_build_queue ;;
             "Rename") rename_user_queue ;;
             "Delete") delete_user_queue ;;
-            "Process") #empty_queue && return
-                       view_queue
+            "Process") #empty_queue && continue
+                       view_queue && continue
                        cp $SBOPKGTMP/sbopkg-ans-queue $STARTQUEUE
                        start_dialog_queue  ;;
             *) break ;;
