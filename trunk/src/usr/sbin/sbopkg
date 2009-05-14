@@ -2691,6 +2691,8 @@ process_queue() {
         echo "Package $COUNTER: $CHKBUILD" >> $TMPLOG
         if ! search_package $CHKBUILD; then
             echo "$CHKBUILD not found!" >> $TMPLOG
+            echo >> $TMPLOG
+            COUNTER=$((COUNTER+1))
             continue
         else
             echo $CHKBUILD >> $FINALQUEUE
@@ -2724,9 +2726,7 @@ process_queue() {
     done
     echo "------------------------------------------" >> $TMPLOG
     if [[ ! -e $FINALQUEUE ]]; then
-        echo "No valid file names in the queue.  Exiting."
-        cleanup
-        exit 1
+        return 1
     fi
     if [[ $DIAG ]]; then
         dialog --title "Pre-Check Log" --ok-label "Start Build" \
@@ -2812,6 +2812,11 @@ process_queue() {
     echo "------------------------------------------" >> $TMPLOG
     echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
+    if [[ $QUEUETYPE == "buildinstall" ]]; then
+        echo "Queue process: build and install" >> $TMPLOG
+    else
+        echo "Queue process: build" >> $TMPLOG
+    fi
     cat $TMPSUMMARYLOG >> $TMPLOG
     rm $TMPSUMMARYLOG
     echo >> $TMPLOG
@@ -2856,9 +2861,17 @@ start_dialog_queue() {
             ;;
         0 ) # Build and install
             process_queue buildinstall
+            if [[ $? == 1 ]]; then
+                dialog --title "Error" --msgbox "$(crunch "No valid \
+                    packages found.")" 8 40
+            fi
             ;;
         1 ) # Build only
             process_queue build
+            if [[ $? == 1 ]]; then
+                dialog --title "Error" --msgbox "$(crunch "No valid \
+                    packages found.")" 8 40
+            fi
             ;;
     esac
 }
@@ -3473,6 +3486,10 @@ else
         rm -f $CLIQUEUE
         unset CLIQUEUE
         process_queue $TYPE
+        if [[ $? == 1 ]]; then
+            echo "No valid packages found.  Exiting."
+            exit 1
+        fi
     fi
 
     if [[ $CHK_UPDATES ]]; then
