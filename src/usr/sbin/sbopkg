@@ -2383,12 +2383,6 @@ build_package() {
                     ;;
             esac
         done
-    else
-        echo "Done building package for $PKG."
-        NEWPACKAGE=$(ls -1 *.t?z)
-        echo "$PKGNAME:" >> $TMPSUMMARYLOG
-        echo "Built package: $NEWPACKAGE" >> $TMPSUMMARYLOG
-        echo "Built package: $NEWPACKAGE"
     fi
 }
 
@@ -2506,7 +2500,7 @@ pick_file() {
     # $3 = the package name
     # Returns 0 if the user did his choice, 1 if ESC was pressed.
 
-    FILE=$1
+    local FILE=$1
     local PKGPATH=$2
     local PKG=$3
     PICKFILE=original
@@ -2671,7 +2665,7 @@ process_queue() {
 
     # need to check the following before uncommenting
     #local PKG PKGBUILD SINGLE PKGPATH CHKBUILD ANS
-    local CHKBUILD ANS
+    local CHKBUILD ANS COUNTER
 
     rm -f $TMPLOG $TMPBUILDLOG $TMPSUMMARYLOG $FINALQUEUE
     # Start the precheck
@@ -2684,10 +2678,17 @@ process_queue() {
     echo "------------------------------------------" >> $TMPLOG
     echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
+    if [[ $QUEUETYPE == "buildinstall" ]]; then
+        echo "Queue process: build and install" >> $TMPLOG
+    else
+        echo "Queue process: build" >> $TMPLOG
+    fi
     echo >> $TMPLOG
+    COUNTER=1
     for CHKBUILD in $(< $STARTQUEUE); do
         # FIXME: This section still needs to be reviewed
         unset PKG PKGPATH PKGNAME VERSION BUILD PICKFILE FILE
+        echo "Package $COUNTER: $CHKBUILD" >> $TMPLOG
         if ! search_package $CHKBUILD; then
             echo "$CHKBUILD not found!" >> $TMPLOG
             continue
@@ -2699,7 +2700,7 @@ process_queue() {
             return 0
         else
             . $PKGPATH/$PKG.info.build
-            echo "Using $PICKFILE $FILE file" >> $TMPLOG-info
+            echo "Using $PICKFILE .info file" >> $TMPLOG-files
         fi
         if ! pick_slackbuild $PKGPATH $CHKBUILD; then
             rm -f $PKGPATH/$PKG*.build
@@ -2707,12 +2708,11 @@ process_queue() {
         else
             BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$PKG.SlackBuild.build |
                 sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
-            echo "Using $PICKFILE $FILE file" >> $TMPLOG-SB
+            echo "Using $PICKFILE SlackBuild file" >> $TMPLOG-files
         fi
         echo "Found $CHKBUILD $VERSION-$BUILD" >> $TMPLOG
-        cat $TMPLOG-info >> $TMPLOG
-        cat $TMPLOG-SB >> $TMPLOG
-        rm $TMPLOG-info $TMPLOG-SB
+        cat $TMPLOG-files >> $TMPLOG
+        rm $TMPLOG-files
         use_options $PKGPATH $CHKBUILD
         if [[ $BUILDOPTIONS ]]; then
             echo "Options: $BUILDOPTIONS" >> $TMPLOG
@@ -2720,6 +2720,7 @@ process_queue() {
             echo "Options: None" >> $TMPLOG
         fi
         echo >> $TMPLOG
+        COUNTER=$((COUNTER+1))
     done
     echo "------------------------------------------" >> $TMPLOG
     if [[ ! -e $FINALQUEUE ]]; then
@@ -2768,6 +2769,7 @@ process_queue() {
     # Okay, precheck done, now start the actual queue processing (build or
     # build+install)
     > $SBOPKGTMP/sbopkg_build.lck
+    COUNTER=1
     for PKGBUILD in $(< $FINALQUEUE); do
         if ! search_package $PKGBUILD; then
             echo "$CHKBUILD not found!" >> $TMPLOG
@@ -2776,6 +2778,12 @@ process_queue() {
         if [[ -f $SBOPKGTMP/sbopkg_build.lck ]]; then
             build_package $PKGPATH $PKGBUILD 2>&1 | tee $TMPBUILDLOG ||
                 break
+            echo "Done building package for $PKG."
+            NEWPACKAGE=$(ls -1t $SB_OUTPUT/*.t?z | head -n1)
+            echo "Package $COUNTER: $PKG" >> $TMPSUMMARYLOG
+            #echo "$PKG:" >> $TMPSUMMARYLOG
+            echo "Built package: $NEWPACKAGE" >> $TMPSUMMARYLOG
+            echo "Built package: $NEWPACKAGE"
             if [[ $QUEUETYPE == "buildinstall" ]]; then
                 if [[ $SB_OUTPUT/*.t?z ]]; then
                     #install_package $SB_OUTPUT *.t?z
@@ -2793,6 +2801,7 @@ process_queue() {
             echo "Not processed - build queue aborted." >> $TMPSUMMARYLOG
             echo >> $TMPSUMMARYLOG
         fi
+        COUNTER=$((COUNTER+1))
     done
     if [[ $KEEPLOG ]]; then
         cat $TMPBUILDLOG >> $LOGFILE
@@ -2837,18 +2846,18 @@ start_dialog_queue() {
     # When using cli, the -b or -i option will determine whether we build or
     # build and install.
 
-    dialog --title "Install Package(s)" --yes-label "Build" \
-        --no-label "Build and Install" --yesno \
-        "$(crunch  "Would you like to build the package(s) only, or \
-        build and install the package(s)?  (Press ESC to exit).")" 8 50
+    dialog --title "Install Package(s)" --yesno \
+        "$(crunch  "Would you like to install the packages as they are \
+            built?  Press <Yes> to install, <No> to build only, or <Esc> \
+            to exit.")" 8 50
     case $? in
         255|-1 ) # The user pressed ESC
             return 0
             ;;
-        1 ) # Build and install
+        0 ) # Build and install
             process_queue buildinstall
             ;;
-        0 ) # Build only
+        1 ) # Build only
             process_queue build
             ;;
     esac
