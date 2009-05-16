@@ -49,7 +49,4 @@ enhancements:
     multiple renames files.  Thanks to Robby Workman for the suggestion.  Add
     new document README-renames.d that explains how this works.
   * Add support for new *.txz, *.tlz, and *.tbz Slackware package extensions.
-  * Rewrite several portions of the process_queue function in order to
-    properly handle certain items by the caller; clean up and improve the
-    logging displayed during the build process.
 +--------------------------+
