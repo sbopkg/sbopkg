@@ -16,4 +16,3 @@ config() {
   # Otherwise, we leave the .new copy for the admin to consider...
 }
 config etc/sbopkg/sbopkg.conf.new
-config etc/sbopkg/sbopkg-renames.new
