@@ -2797,14 +2797,13 @@ process_queue() {
             build_package $PKGPATH $PKGBUILD 2>&1 | tee $TMPBUILDLOG ||
                 break
             echo "Done building package for $PKG."
-            NEWPACKAGE=$(ls -1t $SB_OUTPUT/*.t?z | head -n1)
+            cd $SB_OUTPUT
+            NEWPACKAGE=$(ls -1t *.t?z | head -n1)
             echo "Package $COUNTER: $PKG" >> $TMPSUMMARYLOG
-            #echo "$PKG:" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE"
             if [[ $QUEUETYPE == "buildinstall" ]]; then
                 if [[ $SB_OUTPUT/*.t?z ]]; then
-                    #install_package $SB_OUTPUT *.t?z
                     cd $SB_OUTPUT
                     NEWPACKAGE=$(ls -1t *.t?z | head -n1)
                     install_package $SB_OUTPUT $NEWPACKAGE
