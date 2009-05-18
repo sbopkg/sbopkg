@@ -8,27 +8,28 @@ Homepage:  http://www.sbopkg.org
 ABOUT
 
 Sbopkg is a command-line and dialog-based tool to synchronize with the
-SlackBuilds.org ("SBo") repository, a collection of third-party
-SlackBuild scripts to build Slackware packages.  Sbopkg will allow the
-user to create, synchronize, search, and browse a local copy of the
-SBo repository (currently, the size of a local copy of the SBo
-repository is less than 50MB), read the ChangeLog, list the installed
-SBo packages, display potential updates to SlackBuilds.org packages,
-view the README, SlackBuild, .info, and slack-desc files for each
-package, and make manual edits to a copy of the original .info or
-SlackBuild files.  Sbopkg will also allow the user to select packages
-to build and it will download the source code, check the md5sum, build
-a Slackware package, and, optionally install the package.  The user
-can also build, and optionally install, more than one package by using
-the 'build queue' feature.  Sbopkg will not check dependencies since
-that is not a feature native to Slackware, but since the build queue
-will process packages in the order listed, it sometimes may be
-possible to build and install dependencies in order prior to building
-and installing the final, desired package.  Given the nature of
-building dependencies, however, this probably will not always work and
-is not really a supported feature.  Ultimately, Sbopkg is one thing
-and one thing only: a medium to easily browse a local copy of the
-SlackBuilds.org repository and build packages from it.
+SlackBuilds.org ("SBo") repository, a collection of third-party SlackBuild
+scripts to build Slackware packages.  Sbopkg can also synchronize with certain
+third-party repositories or access a locally-maintained repository.
+
+Sbopkg will allow the user to create, synchronize, search, and browse a copy
+of the active repository (currently, the size of a local copy of the SBo
+repository is less than 50MB), read the ChangeLog (if available), list the
+installed SBo packages, display potential updates to SlackBuilds.org packages,
+view the README, SlackBuild, .info, and slack-desc files for each package, and
+make manual edits to a copy of the original .info or SlackBuild files.  Sbopkg
+will also allow the user to select packages to build and it will download the
+source code, check the md5sum, build a Slackware package, and, optionally
+install the package.  The user can also build, and optionally install, more
+than one package by using the 'build queue' feature.  Sbopkg will not check
+dependencies since that is not a feature native to Slackware, but since the
+build queue will process packages in the order listed, it sometimes may be
+possible to build and install dependencies in order prior to building and
+installing the final, desired package.  Given the nature of building
+dependencies, however, this probably will not always work and is not really a
+supported feature.  Ultimately, Sbopkg is one thing and one thing only: a
+medium to easily browse a local copy of the SlackBuilds.org and certain other
+repositories and build packages from them.
 
 Sbopkg can be also be used strictly from the command line without the
 dialog interface to do most of the above items.  Typing sbopkg -h
