@@ -20,7 +20,10 @@ The different configuration options are:
 This option allows the user to choose the repository to use.
 The default options are SBo, SB64 and local.
 The 'local' choice corresponds to a user-maintained repository whose
-structure must be the same as the one used by SlackBuilds.org.
+structure must be the same as the one used by SlackBuilds.org.  NOTE:
+all of the REPO_* variables are affected by the repository files
+maintained in /etc/sbopkg/repos.d.  Please see the README-repos.d
+document in the sbopkg /doc directory.
 
 The default value of REPO_NAME is:
 .br
