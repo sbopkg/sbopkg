@@ -18,7 +18,7 @@ TMP=${TMP:-/tmp/build}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
-DOCS="ChangeLog.txt HACKING README TODO"
+DOCS="ChangeLog.txt HACKING README TODO README-repos.d README-renames.d"
 
 set -e # Exit on most errors
 
@@ -35,7 +35,7 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-mkdir -p $PKG/etc/sbopkg/renames.d
+mkdir -p $PKG/etc/sbopkg
 cp -a etc/sbopkg/* $PKG/etc/sbopkg
 
 mkdir -p $PKG/usr/sbin

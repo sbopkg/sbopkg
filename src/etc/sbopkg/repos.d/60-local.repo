@@ -1,0 +1,4 @@
+# SlackBuilds.org repositories
+# Repo Branch Description Tag Tool Link
+# See README-repos.d in the documentation directory
+local local "default local repository" _SBo "" ""

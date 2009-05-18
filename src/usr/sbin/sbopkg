@@ -79,7 +79,12 @@ config_check() {
 
     local MISSING VAR
 
-    if [[ ! -e $SBOPKG_RENAMES_D ]]; then
+    if [[ ! -d $SBOPKG_REPOS_D ]]; then
+        echo "$SCRIPT: No $SBOPKG_REPOS_D was found." 1>&2
+        echo "Please correct this error and run $SCRIPT again." 1>&2
+        exit 1
+    fi
+    if [[ ! -d $SBOPKG_RENAMES_D ]]; then
         echo "$SCRIPT: No $SBOPKG_RENAMES_D was found." 1>&2
         echo "Please correct this error and run $SCRIPT again." 1>&2
         exit 1
@@ -99,9 +104,9 @@ config_check() {
             unset KEEPLOG
         fi
         # Some configuration options are mandatory
-        for VAR in LOCALREPO LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPOSITORIES \
-            SLACKVER KEEPLOG LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS WGETFLAGS \
-            DIFF DIFFOPTS; do
+        for VAR in REPO_ROOT LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME \
+            REPO_BRANCH KEEPLOG LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS WGETFLAGS \
+            DIFF DIFFOPTS SBOPKG_REPOS_D; do
             if [[ -z "${!VAR}" ]]; then
                 MISSING+="$VAR "
             fi
@@ -128,6 +133,10 @@ EOF
             exit 1
         fi
     fi
+
+    # Load the repositories data
+    eval REPOSITORIES=( $(cat $SBOPKG_REPOS_D/*.repo | grep -v '#' |
+        sed 's:":\\":g' | xargs echo) )
 }
 
 ck_dir() {
@@ -179,8 +188,8 @@ directory_checks() {
     # Check and make sure certain sbopkg-related directories exist.
     # If not, create them.
 
-    ck_dir $LOCALREPO/$SLACKVER \
-        "Creating local repository directory $LOCALREPO/$SLACKVER for the \
+    ck_dir $REPO_DIR \
+        "Creating local repository directory $REPO_DIR for the \
             script mirror."
     ck_dir $LOGDIR \
         "Creating log directory $LOGDIR."
@@ -246,12 +255,12 @@ check_write() {
 }
 
 check_if_repo_exists() {
-    # Check to see if $LOCALREPO/$SLACKVER exists and not empty
+    # Check to see if $REPO_DIR exists and not empty
 
-    if [[ ! -d $LOCALREPO/$SLACKVER/ ]]; then
+    if [[ ! -d $REPO_DIR ]]; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "$(crunch "The directory \
-                $LOCALREPO/$SLACKVER was not found or is empty.  Please make \
+                $REPO_DIR was not found or is empty.  Please make \
                 sure your repository directory is set correctly and that you \
                 have done a sync first.")"  12 30
             continue
@@ -259,7 +268,7 @@ check_if_repo_exists() {
             cat << EOF
 
 ERROR
-The directory $LOCALREPO/$SLACKVER was not found
+The directory $REPO_DIR was not found
 or is empty.  Please make sure your respository
 directory is set correctly and that you have done
 a sync first.
@@ -275,7 +284,7 @@ show_changelog() {
 
     check_if_repo_exists
 
-    cd $LOCALREPO/$SLACKVER
+    cd $REPO_DIR
     if [[ ! -r ./ChangeLog.txt ]]; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "$(crunch "ChangeLog.txt not \
@@ -318,7 +327,7 @@ get_sbo_packages() {
     done
     if [[ -f $SBOPKGLIST ]]; then
         if [[ $DIAG ]]; then
-            dialog --title "Installed ${REPO_TAG##*_} Packages" --textbox \
+            dialog --title "Installed $REPO_NAME Packages" --textbox \
                 $SBOPKGLIST 20 65
         else
             ${PAGER:-more} $SBOPKGLIST
@@ -326,7 +335,7 @@ get_sbo_packages() {
     else
         if [[ $DIAG ]]; then
             dialog --title "No packages found" --msgbox "$(crunch_fmt "It \
-                appears that you have no ${REPO_TAG##*_} packages \
+                appears that you have no $REPO_NAME packages \
                 installed.")" 8 40
         fi
     fi
@@ -507,8 +516,8 @@ check_for_updates() {
     NUMPKGS=$(wc -w <<< "$PKGS")
     VERSION_FILE=$SBOPKGTMP/sbopkg-script-version
     PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
-    if [[ -e "$PKGS" ]]; then
-        echo "No $REPO_DESC packages detected." >> $UPDATELIST
+    if [[ -z $PKGS ]]; then
+        echo "No packages from the $REPO_DESC detected." >> $UPDATELIST
     else
         crunch_fmt "Listing installed $REPO_DESC packages and flagging \
             potential updates..." >> $UPDATELIST
@@ -537,14 +546,13 @@ check_for_updates() {
             get_new_name NAME $OLDNAME
 
             # Find the current SlackBuild
-            NEWSB=$(find $LOCALREPO/$SLACKVER -name $NAME.SlackBuild)
+            NEWSB=$(find $REPO_DIR -name $NAME.SlackBuild)
                 if [[ -z $NEWSB ]]; then
                     # Maybe we're running an old repository where the rename
                     # didn't take place
                     if [[ $NAME != $OLDNAME ]]; then
                         NAME=$OLDNAME
-                        NEWSB=$(find $LOCALREPO/$SLACKVER -name \
-                            $NAME.SlackBuild)
+                        NEWSB=$(find $REPO_DIR -name $NAME.SlackBuild)
                     fi
                 fi
 
@@ -719,7 +727,7 @@ get_category_list() {
     local DIR CAT
 
     check_if_repo_exists
-    cd $LOCALREPO/$SLACKVER
+    cd $REPO_DIR
     #rm -f $SBOPKGTMP/sbopkg_category_list 2> /dev/null
     rm -f $SBOPKGTMP/sbopkg_category_list
     DIR=( */ )
@@ -731,47 +739,121 @@ get_category_list() {
     fi
 }
 
+checkout_rsync_branch() {
+    # This function makes sure that in $REPO_DIR there's the currently
+    # selected branch.
+    # This is the implementation for rsync repositories, where branches are
+    # simple subdirectories
+
+    REPO_DIR=$REPO_DIR/$REPO_BRANCH
+}
+
+checkout_git_branch() {
+    # This function makes sure that in $REPO_DIR there's the currently
+    # selected branch.
+    # This is the implementation for git repositories, which is relatively
+    # complex because we have to manage local changes.
+
+    local CURRENT_BRANCH NEW_BRANCH NEW_STASH
+    local COMMAND_OUTPUT=$SBOPKGTMP/sbopkg_git_checkout_output
+
+    rm -f $COMMAND_OUTPUT
+
+    # Make sure the repository is there
+    [[ -d $REPO_DIR/.git ]] || return 0
+
+    # No need to checkout if the right branch is already there
+    NEW_BRANCH=$(cut -d@ -f2 <<< $REPO_LINK)
+    cd $REPO_DIR
+    CURRENT_BRANCH=$(git branch | grep '^*')
+    CURRENT_BRANCH=${CURRENT_BRANCH//'* '}
+    [[ $CURRENT_BRANCH = $NEW_BRANCH ]] && return 0
+
+    # So we need to checkout the branch. First off, let's clean the tree
+    echo "*/*/*.sbopkg" > .gitignore
+    git clean -d -f > $COMMAND_OUTPUT
+    git reset --hard HEAD >> $COMMAND_OUTPUT
+
+    # Let's save the current user customizations to a stash
+    git add . >> $COMMAND_OUTPUT
+    git stash save sbopkg-auto-$CURRENT_BRANCH >> $COMMAND_OUTPUT
+
+    # Checkout the user-requested branch
+    git checkout $NEW_BRANCH >> $COMMAND_OUTPUT 2>&1
+
+    # Pop the stash of this branch, if any
+    NEW_STASH=$(git stash list | grep ": sbopkg-auto-$NEW_BRANCH\$" |
+        cut -d: -f1)
+    if [[ -n $NEW_STASH ]]; then
+        git stash pop $NEW_STASH >> $COMMAND_OUTPUT
+        # Make sure no changes are staged
+        git reset HEAD >> $COMMAND_OUTPUT
+    fi
+}
+
 set_repo_vars() {
-    # Set REPO_{DESC,TAG,TOOL,LINK} according to $SLACKVER
+    # Set REPO_{DESC,TAG,TOOL,LINK,DIR} according to $REPO_{NAME,BRANCH}.
+    # Returns nonzero if no match is found.
 
     local i
 
-    # Make sure we don't return old values with an invalid $SLACKVER
-    unset REPO_DESC REPO_TAG REPO_TOOL REPO_LINK
+    # Make sure we don't return old values with an invalid input
+    unset REPO_DESC REPO_TAG REPO_TOOL REPO_LINK REPO_DIR
 
-    for ((i=0; i<${#REPOSITORIES[@]}; i+=5)); do
-        if [[ ${REPOSITORIES[$i]} = $SLACKVER ]]; then
-            REPO_DESC=${REPOSITORIES[$((i + 1))]}
-            REPO_TAG=${REPOSITORIES[$((i + 2))]}
-            REPO_TOOL=${REPOSITORIES[$((i + 3))]}
-            REPO_LINK=${REPOSITORIES[$((i + 4))]}
-            break
+    for ((i=0; i<${#REPOSITORIES[@]}; i+=6)); do
+        if [[ ( ${REPOSITORIES[$i]} = $REPO_NAME || $REPO_NAME = "" ) &&
+                ${REPOSITORIES[$((i + 1))]} = $REPO_BRANCH ]]; then
+            REPO_NAME=${REPOSITORIES[i]}
+            REPO_DESC=${REPOSITORIES[$((i + 2))]}
+            REPO_TAG=${REPOSITORIES[$((i + 3))]}
+            REPO_TOOL=${REPOSITORIES[$((i + 4))]}
+            REPO_LINK=${REPOSITORIES[$((i + 5))]}
+            REPO_DIR=$REPO_ROOT/$REPO_NAME
+
+            if [[ $REPO_TOOL = "rsync" || $REPO_TOOL = "git" ]]; then
+                checkout_${REPO_TOOL}_branch
+            fi
+            return 0
         fi
     done
+
+    # Repository/branch not found
+    return 1
 }
 
-select_version() {
+select_repository() {
     # Create menu and list the sbopkg-supported repositories for
     # user to choose from.
+
+    local PID
 
     while :; do
         eval dialog --cancel-label "Back" --title \
             '"Choose a repository"' \
             --menu '"$(crunch "You are currently using sbopkg to browse a \
             local copy of the $REPO_DESC.  If you would \
-            like to change it, please select another version below or press \
-            <Back> to go back.")"' 17 50 6 \
+            like to change it, please select another repository below or \
+            press <Back> to go back.")"' 17 60 6 \
             $(
-                for ((i=0; i<${#REPOSITORIES[@]}; i+=5)); do
-                    echo ${REPOSITORIES[$i]}
-                    echo \"${REPOSITORIES[$((i+1))]}\"
+                for ((i=0; i<${#REPOSITORIES[@]}; i+=6)); do
+                    echo \"${REPOSITORIES[$((i+1))]} \(${REPOSITORIES[$i]}\)\"
+                    echo \"${REPOSITORIES[$((i+2))]}\"
                 done
             ) 2> $SBOPKGTMP/sbopkg_version_selection
         if [[ $? != 0 ]]; then
             break
         fi
-        SLACKVER="$(< $SBOPKGTMP/sbopkg_version_selection)"
+        eval $(sed 's:^\(.*\) (\(.*\))$:REPO_NAME=\2;REPO_BRANCH=\1:g' \
+            < $SBOPKGTMP/sbopkg_version_selection)
+        if [[ $DIAG ]]; then
+            (
+                sleep 0.2
+                dialog --infobox "Checking out..." 3 19
+            ) &
+            PID=$!
+        fi
         set_repo_vars
+        [[ $PID ]] && kill $PID 2>/dev/null
         dialog --title "Save this setting?" --defaultno --yesno \
             "$(crunch "Would you like to save this repository setting \
             in the user's $HOME/.sbopkg.conf file? (One will be created if \
@@ -782,9 +864,9 @@ select_version() {
             break
         fi
         if [[ -e $HOME/.sbopkg.conf ]]; then
-            sed -i '/^SLACKVER=.*$/d' $HOME/.sbopkg.conf
+            sed -i '/^REPO_BRANCH=.*$/d' $HOME/.sbopkg.conf
         fi
-        echo "SLACKVER=$SLACKVER" >> $HOME/.sbopkg.conf
+        echo "REPO_BRANCH=$REPO_BRANCH" >> $HOME/.sbopkg.conf
         break
     done
     rm -f $SBOPKGTMP/sbopkg_version_selection
@@ -859,7 +941,7 @@ info_item() {
     get_old_name OLDPKG $APP
 
     CATEGORY="$(< $SBOPKGTMP/sbopkg_category_selection)"
-    SHORTPATH=$LOCALREPO/$SLACKVER/$CATEGORY/$APP
+    SHORTPATH=$REPO_DIR/$CATEGORY/$APP
     CURVERSION=$(grep VERSION $SHORTPATH/$APP.info |
         cut -d= -f2 | sed s/\"//g)
     CURARCH=$(egrep -m1 "^ARCH" $SHORTPATH/$APP.SlackBuild |
@@ -1024,7 +1106,7 @@ browse_categories() {
 
     local DEFAULTITEM
 
-    if [[ -z $(ls -A $LOCALREPO/$SLACKVER 2> /dev/null) ]]; then
+    if [[ -z $(ls -A $REPO_DIR 2> /dev/null) ]]; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "$(crunch "Repository seems to \
                 be empty. Please make sure your repository directory is set \
@@ -1601,7 +1683,7 @@ rsync_command() {
     local SYNC_LOCK=$SBOPKGTMP/sbopkg_sync.lck
 
     rsync --archive --delete --no-owner --exclude="*.sbopkg" \
-        $RSYNCFLAGS $REPO_LINK/ $LOCALREPO/$SLACKVER/
+        $RSYNCFLAGS $REPO_LINK/ $REPO_DIR/
     case $? in
         35)
             echo
@@ -1651,19 +1733,19 @@ git_command() {
 
     CWD=$(pwd)
     # Create the repository if needed
-    if [[ ! -d $LOCALREPO/$SLACKVER/.git ]]; then
-        mkdir -p $LOCALREPO/$SLACKVER
-        cd $LOCALREPO/$SLACKVER
+    if [[ ! -d $REPO_DIR/.git ]]; then
+        mkdir -p $REPO_DIR
+        cd $REPO_DIR
         git init
     fi
     # Update the repository
-    cd $LOCALREPO/$SLACKVER
+    cd $REPO_DIR
     git pull $URL $BRANCH
     # Remove leftovers
     # This is optional, think of it as a way to emulate the --delete --exclude
     # rsync directives
     echo "*/*/*.sbopkg" > .gitignore
-    git clean -d -f -x
+    git clean -d -f
     git reset --hard HEAD
     # All done
     rm -f $SBOPKGTMP/sbopkg_sync.lck
@@ -1687,7 +1769,7 @@ sync_repo() {
         continue
     fi
     directory_checks
-    if ! check_write $LOCALREPO/$SLACKVER; then
+    if ! check_write $REPO_DIR; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox \
                 "You do not have write permissions on the target directory." \
@@ -1714,7 +1796,7 @@ sync_repo() {
         touch $SYNC_LOCK
         ( ${REPO_TOOL}_command >> $SBOPKGOUTPUT & ) 2>> $SBOPKGOUTPUT
         while [[ -f $SYNC_LOCK ]]; do
-            dialog --backtitle "Updating the local repository" \
+            dialog --backtitle "Updating the active repository" \
                 --tailbox $SBOPKGOUTPUT 18 70
         done
         rm -f $SBOPKGOUTPUT
@@ -1726,7 +1808,7 @@ sync_repo() {
 search_package() {
     # Search for package name and return error if not found.
 
-    cd $LOCALREPO/$SLACKVER
+    cd $REPO_DIR
     PKG="$1"
     PKGPATH=( $(find -type d -mindepth 2 -name "$PKG") )
 
@@ -1741,7 +1823,7 @@ gen_search_package() {
     # Search for package name glob generally using grep.  In dialog interface,
     # jump to selected package.
 
-    cd $LOCALREPO/$SLACKVER
+    cd $REPO_DIR
     local PKG=$1
     local CATEGORY=${2:-\*}
     local RETURN_MAIN_MENU=$SBOPKGTMP/sbopkg_return_main_menu
@@ -1800,14 +1882,14 @@ gen_search_package() {
                 fi
                 echo $SRCHCAT > $CAT_SELECTION
                 SRCHPKG="${SRCHPICK##*/}"
-                SHORTPATH=$LOCALREPO/$SLACKVER/$SRCHCAT/$SRCHPKG
+                SHORTPATH=$REPO_DIR/$SRCHCAT/$SRCHPKG
                 RVERSION=$(grep VERSION $SHORTPATH/$SRCHPKG.info |
                     cut -d= -f2 | sed s/\"//g)
                 RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$SRCHPKG.SlackBuild |
                     sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
                 if [[ $CHOICE == 0 ]]; then
                     echo $SRCHPKG > $ITEM_SELECTION
-                    cd $LOCALREPO/$SLACKVER
+                    cd $REPO_DIR
                     info_item
                     if [[ -e $RETURN_MAIN_MENU ]]; then
                         return 0
@@ -1849,14 +1931,13 @@ string_search() {
         for ((i=0; i<${#SBOPKGS[*]}; i++)); do
             local PKGNAME=$(
                 sed 's,.*/,,;s/-[^-]*-[^-]*-[^-]*$//' <<< "${SBOPKGS[$i]}")
-            local INST_PKGS+="$LOCALREPO/$SLACKVER/*/$PKGNAME "
+            local INST_PKGS+="$REPO_DIR/*/$PKGNAME "
         done
         local FIND_PATH="$INST_PKGS"
     else
         local SEARCH_TERM="$1"
         local FIND_PATH="$REPO"
     fi
-    local REPO="$LOCALREPO/$SLACKVER"
     local RETURN_MAIN_MENU=$SBOPKGTMP/sbopkg_return_main_menu
     local CAT_SELECTION=$SBOPKGTMP/sbopkg_category_selection
     local ITEM_SELECTION=$SBOPKGTMP/sbopkg_item_selection
@@ -1871,7 +1952,7 @@ string_search() {
         sed "
             s,\",\',g
             s/\\\/\\\\\\\\/g
-            s,$REPO/,,
+            s,$REPO_DIR/,,
             s/^/\"/
             s,/README:,\" \",
             s/$/\"/
@@ -1883,7 +1964,7 @@ string_search() {
         return 1
     fi
 
-    cd $REPO
+    cd $REPO_DIR
 
     while :; do
         dialog --title "String Search Results" --default-item "$PICKED" \
@@ -1909,7 +1990,7 @@ string_search() {
                 [[ -e $RETURN_MAIN_MENU ]] && return 0
                 ;;
             3)
-                SHORTPATH=$REPO/$SRCHCAT/$SRCHPKG
+                SHORTPATH=$REPO_DIR/$SRCHCAT/$SRCHPKG
                 RVERSION=$(grep VERSION $SHORTPATH/$SRCHPKG.info |
                     cut -d= -f2 | sed s/\"//g)
                 RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$SRCHPKG.SlackBuild |
@@ -1928,7 +2009,7 @@ string_search() {
 show_readme() {
     # Show the package's text files.
 
-    cd $LOCALREPO/$SLACKVER
+    cd $REPO_DIR
     ${PAGER:-more} \
         $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info.build,slack-desc}
     rm -f $PKGPATH/$PKGNAME.info.build
@@ -2081,7 +2162,7 @@ EOF
         fi
     fi
 
-    cd $LOCALREPO/$SLACKVER/$PKGPATH
+    cd $REPO_DIR/$PKGPATH
     rm -f "$SRCNAME"
 
     if [[ $FAILURE ]]; then
@@ -2135,7 +2216,7 @@ remove_obsoleted_sources() {
     { # Grouping for progressbar
     echo 0 # Progressbar begin
 
-    find $LOCALREPO/$SLACKVER -name \*.info > $FIND_RESULT
+    find $REPO_DIR -name \*.info > $FIND_RESULT
     NUMINFO=$(wc -l < $FIND_RESULT)
     ls -A $SRCDIR > $SOURCES
 
@@ -2241,7 +2322,7 @@ add_options() {
 
     local OPTIONPKG=$1
     local ADD_OPTIONS=$SBOPKGTMP/sbopkg_add_options
-    local OPTIONFILE=$LOCALREPO/$SLACKVER/$CATEGORY/$APP/options.sbopkg
+    local OPTIONFILE=$REPO_DIR/$CATEGORY/$APP/options.sbopkg
     local CUROPTIONS CHOICE CUSTOMOPTS
 
     if [[ ! -e $OPTIONFILE ]]; then
@@ -2352,7 +2433,7 @@ build_package() {
     # Fetch the source
     # Note that get_source() "knows" about the source cache, so this isn't
     # necessarily a download.
-    cd $LOCALREPO/$SLACKVER/$PKGPATH
+    cd $REPO_DIR/$PKGPATH
     get_source $PKGNAME.info.build
     case $? in
         0 ) ;;
@@ -2370,7 +2451,7 @@ build_package() {
     )
 
     # Cleanup
-    cd $LOCALREPO/$SLACKVER/$PKGPATH
+    cd $REPO_DIR/$PKGPATH
     rm $PKGNAME.{info,SlackBuild}.build
 
     # Let's see the result
@@ -2464,7 +2545,7 @@ edit_local_info() {
     local SHORTPATH=$1
     local APP=$2
 
-    if [[ ! -e $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info.sbopkg ]]; then
+    if [[ ! -e $REPO_DIR/$CATEGORY/$APP/$APP.info.sbopkg ]]; then
         cp $SHORTPATH/$APP.info $SHORTPATH/$APP.info.sbopkg
     fi
     # FIXME we should do the default assignment when reading the config file
@@ -2484,7 +2565,7 @@ delete_local_info() {
         dialog --title "ERROR" --msgbox \
             "There is no local copy of the .info file to delete." 8 30
     else
-        rm $LOCALREPO/$SLACKVER/$CATEGORY/$APP/$APP.info.sbopkg
+        rm $REPO_DIR/$CATEGORY/$APP/$APP.info.sbopkg
         dialog --title "DONE" --msgbox \
             "The local copy of the .info file has been deleted." 8 30
     fi
@@ -3051,7 +3132,7 @@ utilities_menu() {
             15 69 5 \
             "Cache" "View the contents of the cache directory" \
             "Log" "View the permanent build log" \
-            "Version" "Select repository (currently: $SLACKVER)" \
+            "Repository" "Select repository [ $REPO_BRANCH ($REPO_NAME) ]" \
             "Latest" "Check for an update to sbopkg"  \
             "Obsolete" "View the obsoleted cached sources" 2> $ANSWERFILE
 
@@ -3060,7 +3141,7 @@ utilities_menu() {
         case "$DEFAULTITEM" in
             "Cache" ) view_cache_dir ;;
             "Log" ) view_perm_log ;;
-            "Version" ) select_version ;;
+            "Repository" ) select_repository ;;
             "Latest" ) check_for_latest ;;
             "Obsolete" ) remove_obsoleted_sources ;;
             *) break ;;
@@ -3119,7 +3200,7 @@ main_search() {
 
     local TERM_FILE=$SBOPKGTMP/sbopkg_search_request
     local PKG STRING SEARCH_TERM
-    local REPO=$LOCALREPO/$SLACKVER
+    local REPO=$REPO_DIR
 
     check_if_repo_exists
     while :; do
@@ -3230,10 +3311,10 @@ main_menu() {
             17 69 8 \
             "Sync" "Sync with the remote repository" \
             "ChangeLog" "View the ChangeLog" \
-            "Packages" "List installed ${REPO_TAG##*_} packages" \
-            "Updates" "List potential updates to installed ${REPO_TAG##*_} packages" \
-            "Browse" "Browse the local repository" \
-            "Search" "Search the local repository" \
+            "Packages" "List installed $REPO_NAME packages" \
+            "Updates" "List potential updates to installed $REPO_NAME packages" \
+            "Browse" "Browse the active repository" \
+            "Search" "Search the active repository" \
             "Queue" "Manage the build queue" \
             "Utilities" "Go to the utilities menu" 2> $ANSWER_FILE
 
@@ -3282,20 +3363,23 @@ main_menu() {
 unset SCRIPT          # The script name (usually "sbopkg")
 unset REV             # Revision number
 unset SBOVER          # The sbopkg version
+unset CWD             # sbopkg starting directory
 unset DIAG            # When set, run in dialog mode (instead of CLI mode)
 unset QUIET           # When set, suppress less important output in CLI mode
 unset ON_ERROR        # The policy used in error conditions (see "-e")
 unset LAST_USER_QUEUE_ON_DISK # The name of the last loaded/saved user queue
 unset BUILDOPTIONS    # TODO
-unset SBOPKG_RENAMES_D  # Directory containing files tracking package renames
+#     SBOPKG_RENAMES_D  # Directory containing files tracking package renames
+#     SBOPKG_REPOS_D  # Directory containing repositories definitions
 #     SBOPKG_CONF     # Configuration file
-unset LOCALREPO       # Directory containing all repository mirrors
-unset CWD             # sbopkg starting directory
-unset SLACKVER        # Currently active SBo repository
-unset REPO_DESC       # Active repository's description
-unset REPO_TAG        # Active repository's packages' tag
-unset REPO_TOOL       # Active repository's fetch tool
-unset REPO_LINK       # Active repository's fetch link
+#     REPO_ROOT       # Directory containing all repository mirrors
+unset REPO_NAME       # Currently active repository (e.g. SBo)
+unset REPO_BRANCH     # Currently active branch (e.g. 12.2)
+unset REPO_DESC       # Active branch's description
+unset REPO_TAG        # Active branch's packages' tag
+unset REPO_TOOL       # Active branch's fetch tool
+unset REPO_LINK       # Active branch's fetch link
+unset REPO_DIR        # Active branch's directory
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER
@@ -3303,6 +3387,7 @@ unset RSYNC SEARCH UPDATE VERSION CUSTOMVER
 SCRIPT=${0##*/}
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
 SBOPKG_RENAMES_D=${SBOPKG_RENAMES_D:-/etc/sbopkg/renames.d}
+SBOPKG_REPOS_D=${SBOPKG_REPOS_D:-/etc/sbopkg/repos.d}
 CWD=$(pwd)
 REV="$Revision$"
 SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
@@ -3329,7 +3414,7 @@ while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
             unset DIAG
             ;;
         d ) # Location of the local SBo repository
-            LOCALREPO=$OPTARG
+            REPO_ROOT=$OPTARG
             ;;
         e ) # Default on-error behavior
             ON_ERROR=$OPTARG
@@ -3387,26 +3472,31 @@ Usage: $SCRIPT [OPTIONS] <packagename(s)>
 Options are:
   -b pkg/queue(s) Build the specified package(s). If one or more queues are
                   specified, build the packages they refer to.
-  -c              Check for updates to installed SlackBuilds.org packages.
-  -d localdir     Location of local copy of SlackBuilds.org repository
+  -c              Check for updates to installed packages.
+  -d localdir     Location of local copy of the repositories.
   -e error_action Specify what sbopkg is supposed to do on build errors.
                   Valid options are: ask (default), continue, stop.
-  -f              Override default configuration file with specified file.
+  -f file         Override default configuration file with specified file.
   -g package(s)   General search for packages matching string.
   -h              Display this help message.
   -i pkg/queue(s) Like '-b', but also install built packages.
-  -l              Display the SlackBuilds.org ChangeLog.txt and then quit.
+  -l              Display the repo's ChangeLog.txt and then quit.
   -o              Display the obsoleted source files and prompt for deletion.
-  -p              List installed SlackBuilds.org packages.
+  -p              List installed repo's packages.
   -q              Quiet some of the command-line output.
   -r              Sync the remote repository with the local mirror and then
                   quit.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
-  -v version      Set the repository (current choices are 11.0, 12.0, 12.1 and
-                  12.2 for SlackBuilds.org repositories, and SB64 for the
-                  Builds.Slamd64.com repository).
+  -v repo/branch  Set the repository/branch (e.g. "-v SBo/12.2").
+                  If the repository name is not specified, sbopkg will first
+                  try with the default one. If no match is found, sbopkg will
+                  look for the first matching branch of any repository.
+                  The default valid choices are SBo/{11.0,12.0,12.1,12.2} for
+                  the SlackBuilds.org repository, SB64/master for the
+                  builds.Slamd64.com repository and local/local for the local
+                  repository).
 
 Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2")
 EOF
@@ -3447,13 +3537,30 @@ SBOPKGOUTPUT=$SBOPKGTMP/sbopkg_output
 TMPBUILDLOG=$SBOPKGTMP/sbopkg-tmp-buildlog
 TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
 
-# Change $SLACKVER if set manually using cli -v
+# Change $REPO_BRANCH (and optinally REPO_NAME) if set manually using cli -v
 if [[ $VERSION ]]; then
-    SLACKVER=$CUSTOMVER
+    if [[ $CUSTOMVER =~ '.*/.*' ]]; then
+        # The user specified repository/branch
+        eval $(sed 's:^\(.*\)/\(.*\)$:REPO_NAME=\1;REPO_BRANCH=\2:g' \
+            <<< $CUSTOMVER)
+    else
+        # The user specified only the branch -- keep the default repository
+        REPO_BRANCH=$CUSTOMVER
+        if ! set_repo_vars; then
+            # Repository/branch not found -- let's try to be less strict.
+            # Try again without enforcing REPO_NAME
+            unset REPO_NAME
+        fi
+    fi
 fi
 set_repo_vars
-if [[ -z $REPO_LINK ]]; then
-    echo "Unknown repository name -- \"$SLACKVER\"" >&2
+if [[ $? -ne 0 ]] ; then
+    echo "Unknown repository name -- \"$CUSTOMVER\"" >&2
+    echo "Valid options are:" >&2
+    for ((i=0; i<${#REPOSITORIES[@]}; i+=6)); do
+        echo -en "${REPOSITORIES[$i]}/${REPOSITORIES[(($i + 1))]}\\t" >&2
+        echo "(${REPOSITORIES[(($i + 2))]})" >&2
+    done
     exit 1
 fi
 
@@ -3526,8 +3633,7 @@ else
     fi
 
     if [[ $SYNC ]]; then
-        crunch_fmt "Syncing with the remote repository into \
-            $LOCALREPO/$SLACKVER."
+        crunch_fmt "Syncing with the remote repository into $REPO_DIR."
         sync_repo
         echo "Finished sync."
     fi

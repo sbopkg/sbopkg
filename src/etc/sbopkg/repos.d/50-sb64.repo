@@ -1,0 +1,7 @@
+# SlackBuilds.org repositories
+# Repo Branch Description Tag Tool Link
+# See README-repos.d in the documentation directory
+# Note: the 'git' link here uses the 'http' protocol. We know this is
+#   suboptimal, but it's less probably blocked by firewalls and for some
+#   obscure reason checking out through http has proven more reliable here.
+SB64 master "Slamd64Builds master repository" _SB64 git http://builds.slamd64.com/slamd64builds.git@master
