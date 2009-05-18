@@ -216,8 +216,14 @@ branch in any repository.
 .B /etc/sbopkg/sbopkg.conf
 \ - File to specify configuration options.
 
-.B /etc/sbopkg/sbopkg-renames
-\ - File that lists software in SBo repository that has been renamed.
+.B /etc/sbopkg/renames.d/50-default
+\ - Default ile that lists software in SBo repository that has been renamed.
+See the README-renames.d document in the sbopkg /doc directory for more
+information.
+
+.B /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
+\ - Three default files for various types of sbopkg repositories.  See the
+README-repos.d document in the sbopkg /doc directory for more information.
 
 .SH "SEE ALSO"
 .BR sbopkg.conf (5)
