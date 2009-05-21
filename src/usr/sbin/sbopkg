@@ -105,8 +105,8 @@ config_check() {
         fi
         # Some configuration options are mandatory
         for VAR in REPO_ROOT LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME \
-            REPO_BRANCH KEEPLOG LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS WGETFLAGS \
-            DIFF DIFFOPTS SBOPKG_REPOS_D; do
+            REPO_BRANCH KEEPLOG LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS \
+            WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D; do
             if [[ -z "${!VAR}" ]]; then
                 MISSING+="$VAR "
             fi
@@ -125,6 +125,7 @@ sbopkg.conf file.  Please see the sbopkg.conf(5)
 man page for more details.
 
 Please correct this error and run $SCRIPT again.
+
 EOF
            exit 1
         fi
@@ -137,6 +138,9 @@ EOF
     # Load the repositories data
     eval REPOSITORIES=( $(cat $SBOPKG_REPOS_D/*.repo | grep -v '#' |
         sed 's:":\\":g' | xargs echo) )
+
+    # Check for ncurses
+    [[ -x /usr/bin/tput ]] && HAS_NCURSES=1
 }
 
 ck_dir() {
@@ -291,7 +295,7 @@ show_changelog() {
                 found or not readable.  Please make sure your repository \
                 directory is set correctly and that you have done a sync \
                 first.")" 10 30
-            continue
+            return
         else
             cat << EOF
 
@@ -308,7 +312,7 @@ EOF
             dialog --title "$REPO_DESC ChangeLog.txt" \
                 --textbox ./ChangeLog.txt 0 0
         else
-            ${PAGER:-more} ./ChangeLog.txt
+            $PAGER ./ChangeLog.txt
         fi
     fi
 }
@@ -330,7 +334,7 @@ get_sbo_packages() {
             dialog --title "Installed $REPO_NAME Packages" --textbox \
                 $SBOPKGLIST 20 65
         else
-            ${PAGER:-more} $SBOPKGLIST
+            $PAGER $SBOPKGLIST
         fi
     else
         if [[ $DIAG ]]; then
@@ -359,9 +363,6 @@ progressbar_cli() {
     local PROGRESS SCREENPROGRESS i
     local SCREENWIDTH BARWIDTH
     local BAR SPACES
-    local HAS_NCURSES=false
-
-    [[ -x /usr/bin/tput ]] && HAS_NCURSES=true
 
     # Initial messages
     if [[ -n "$1" ]]; then
@@ -373,7 +374,7 @@ progressbar_cli() {
 
     # Initialize the bar
     # Screen size
-    if $HAS_NCURSES; then
+    if [[ $HAS_NCURSES ]]; then
         tput civis # Hide cursor
         SCREENWIDTH=$(tput cols)
     else
@@ -394,7 +395,7 @@ progressbar_cli() {
 
     # Cleanup
     echo
-    if $HAS_NCURSES; then
+    if [[ $HAS_NCURSES ]]; then
         tput cnorm # Restore cursor
     fi
 }
@@ -1088,10 +1089,18 @@ customize_item() {
     if [[ $? = 0 ]]; then
         DEFAULTITEM="$(< $SBOPKGTMP/sbopkg_custom_selection)"
         case $DEFAULTITEM in
-            "Edit SlackBuild" ) edit_local_slackbuild $SHORTPATH $APP ;;
-            "Delete SlackBuild" ) delete_local_slackbuild $SHORTPATH $APP ;;
-            "Edit Info" ) edit_local_info $SHORTPATH $APP ;;
-            "Delete Info" ) delete_local_info $SHORTPATH $APP ;;
+            "Edit SlackBuild" )
+                edit_local_file SlackBuild $SHORTPATH $APP
+                ;;
+            "Delete SlackBuild" )
+                delete_local_file SlackBuild $SHORTPATH $APP
+                ;;
+            "Edit Info" )
+                edit_local_file info $SHORTPATH $APP
+                ;;
+            "Delete Info" )
+                delete_local_file info $SHORTPATH $APP
+                ;;
         esac
     else # Cancel or ESC
         rm -f $SBOPKGTMP/sbopkg_custom_selection
@@ -2014,7 +2023,7 @@ show_readme() {
     # Show the package's text files.
 
     cd $REPO_DIR
-    ${PAGER:-more} \
+    $PAGER \
         $PKGPATH/{README,$PKGNAME.SlackBuild,$PKGNAME.info.build,slack-desc}
     rm -f $PKGPATH/$PKGNAME.info.build
     return 0
@@ -2283,7 +2292,7 @@ remove_sources() {
             # Unquote file names
             tr -d \" < $APP_SOURCES > $APP_SOURCES_DELETING
             echo -e "[ Displaying $APP sources ]\n" |
-                cat - $APP_SOURCES_DELETING | ${PAGER:-more}
+                cat - $APP_SOURCES_DELETING | $PAGER
             while :; do
                 echo
                 echo "Do you want to delete these source files?"
@@ -2489,105 +2498,42 @@ build_package() {
     fi
 }
 
-edit_local_slackbuild() {
+edit_local_file() {
     # This function allows the user to create and edit a local copy of the
-    # SlackBuild.
-    # $1 = SlackBuild path
-    # $2 = application name
+    # SlackBuild or of the info file.
+    # $1 = info|SlackBuild (the extension of the customizable file)
+    # $2 = application path
+    # $3 = application name
 
-    local SHORTPATH=$1
-    local APP=$2
+    local FILE=$1
+    local SHORTPATH=$2
+    local APP=$3
 
-    if [[ ! -e $SHORTPATH/$APP.SlackBuild.sbopkg ]]; then
-        cp $SHORTPATH/$APP.SlackBuild $SHORTPATH/$APP.SlackBuild.sbopkg
+    if [[ ! -e $SHORTPATH/$APP.$FILE.sbopkg ]]; then
+        cp $SHORTPATH/$APP.$FILE $SHORTPATH/$APP.$FILE.sbopkg
     fi
-    # FIXME we should do the default assignment when reading the config file
-    ${EDITOR:-vi} $SHORTPATH/$APP.SlackBuild.sbopkg
+
+    $EDITOR $SHORTPATH/$APP.$FILE.sbopkg
 }
 
-delete_local_slackbuild() {
+delete_local_file() {
     # This function allows the user to delete the local SlackBuild.
-    # $1 = SlackBuild path
-    # $2 = application name
+    # $1 = info|SlackBuild (the extension of the customizable file)
+    # $2 = application path
+    # $3 = application name
 
-    local SHORTPATH=$1
-    local APP=$2
-
-    # FIXME should be checked on the caller side?
-    if [[ ! -e $SHORTPATH/$APP.SlackBuild.sbopkg ]]; then
-        dialog --title "ERROR" --msgbox \
-            "There is no local copy of the SlackBuild to delete." 8 30
-    else
-        rm $SHORTPATH/$APP.SlackBuild.sbopkg
-        dialog --title "DONE" --msgbox \
-            "The local copy of the SlackBuild has been deleted." 8 30
-    fi
-}
-
-pick_slackbuild() {
-    # This function acts as a wrapper around pick_file for the SlackBuild
-    # $1 = the package path
-    # $2 = the package name
-    # Returns 0 if the user did his choice, 1 if ESC was pressed.
-
-    local PKGPATH=$1
-    local PKGNAME=$2
-
-    if pick_file SlackBuild $PKGPATH $PKGNAME; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-edit_local_info() {
-    # This function allows the user to create and edit a local copy of the
-    # .info file.
-    # $1 = info path
-    # $2 = application name
-
-    local SHORTPATH=$1
-    local APP=$2
-
-    if [[ ! -e $REPO_DIR/$CATEGORY/$APP/$APP.info.sbopkg ]]; then
-        cp $SHORTPATH/$APP.info $SHORTPATH/$APP.info.sbopkg
-    fi
-    # FIXME we should do the default assignment when reading the config file
-    ${EDITOR:-vi} $SHORTPATH/$APP.info.sbopkg
-}
-
-delete_local_info() {
-    # This function allows the user to delete the local .info file.
-    # $1 = info path
-    # $2 = application name
-
-    local SHORTPATH=$1
-    local APP=$2
+    local FILE=$1
+    local SHORTPATH=$2
+    local APP=$3
 
     # FIXME should be checked on the caller side?
-    if [[ ! -e $SHORTPATH/$APP.info.sbopkg ]]; then
+    if [[ ! -e $SHORTPATH/$APP.$FILE.sbopkg ]]; then
         dialog --title "ERROR" --msgbox \
-            "There is no local copy of the .info file to delete." 8 30
+            "There is no local copy of the $FILE file to delete." 8 30
     else
-        rm $REPO_DIR/$CATEGORY/$APP/$APP.info.sbopkg
+        rm $SHORTPATH/$APP.$FILE.sbopkg
         dialog --title "DONE" --msgbox \
-            "The local copy of the .info file has been deleted." 8 30
-    fi
-}
-
-pick_info() {
-    # This function acts as a wrapper around pick_file for the .info file
-    # $1 = the package path
-    # $2 = the package name
-    # Returns 0 if the user did his choice, 1 if ESC was pressed.
-
-    local PKGPATH=$1
-    local PKGNAME=$2
-
-    if pick_file info $PKGPATH $PKGNAME; then
-        return 0
-    else
-        return 1
+            "The local copy of the $FILE file has been deleted." 8 30
     fi
 }
 
@@ -2685,7 +2631,7 @@ pick_file() {
                         break
                         ;;
                     d* | D* )
-                        ${PAGER:-more} $SBOPKGTMP/sbopkg_diff
+                        $PAGER $SBOPKGTMP/sbopkg_diff
                         ;;
                     c* | C* )
                         rm $SBOPKGTMP/sbopkg_diff
@@ -2800,14 +2746,14 @@ process_queue() {
         else
             echo $CHKBUILD >> $FINALQUEUE
         fi
-        if ! pick_info $PKGPATH $CHKBUILD; then
+        if ! pick_file info $PKGPATH $CHKBUILD; then
             rm -f $PKGPATH/$PKG*.build
             return 0
         else
             . $PKGPATH/$PKG.info.build
             echo "Using $PICKFILE .info file" >> $TMPLOG-files
         fi
-        if ! pick_slackbuild $PKGPATH $CHKBUILD; then
+        if ! pick_file SlackBuild $PKGPATH $CHKBUILD; then
             rm -f $PKGPATH/$PKG*.build
             return 0
         else
@@ -3158,8 +3104,7 @@ utilities_menu() {
 cleanup() {
     # Clean up cruft and remove temporary files.
 
-    # FIXME this is stylistically different from other flags!
-    if $HAS_NCURSES; then
+    if [[ $HAS_NCURSES ]]; then
         tput cnorm # Restore cursor
     fi
     rm -f $SBOPKGTMP/sbopkg_*
@@ -3377,6 +3322,7 @@ unset BUILDOPTIONS    # TODO
 #     SBOPKG_REPOS_D  # Directory containing repositories definitions
 #     SBOPKG_CONF     # Configuration file
 #     REPO_ROOT       # Directory containing all repository mirrors
+unset HAS_NCURSES     # Set if the ncurses package is installed
 unset REPO_NAME       # Currently active repository (e.g. SBo)
 unset REPO_BRANCH     # Currently active branch (e.g. 12.2)
 unset REPO_DESC       # Active branch's description
@@ -3392,6 +3338,8 @@ SCRIPT=${0##*/}
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
 SBOPKG_RENAMES_D=${SBOPKG_RENAMES_D:-/etc/sbopkg/renames.d}
 SBOPKG_REPOS_D=${SBOPKG_REPOS_D:-/etc/sbopkg/repos.d}
+EDITOR=${EDITOR:-vi}
+PAGER=${PAGER:-more}
 CWD=$(pwd)
 REV="$Revision$"
 SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
@@ -3669,7 +3617,7 @@ else
         for PKGSEARCH in "$SEARCH"; do
             echo "Searching for $PKGSEARCH"
             search_package "$PKGSEARCH"
-            pick_info "$PKGPATH" "$PKGSEARCH"
+            pick_file info "$PKGPATH" "$PKGSEARCH"
             show_readme
         done
     fi
