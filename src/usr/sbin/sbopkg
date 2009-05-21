@@ -1819,6 +1819,10 @@ sync_repo() {
 
 search_package() {
     # Search for package name and return error if not found.
+    # $1 = the name of the package we're looking for
+    # Returns 0 and sets PKGPATH if the package is found. Returns 1 otherwise.
+
+    local PKG
 
     cd $REPO_DIR
     PKG="$1"
@@ -2789,17 +2793,17 @@ process_queue() {
             echo $CHKBUILD >> $FINALQUEUE
         fi
         if ! pick_file info $PKGPATH $CHKBUILD; then
-            rm -f $PKGPATH/$PKG*.build
+            rm -f $PKGPATH/$CHKBUILD*.build
             return 0
         else
-            . $PKGPATH/$PKG.info.build
+            . $PKGPATH/$CHKBUILD.info.build
             echo "Using $PICKFILE .info file" >> $TMPLOG-files
         fi
         if ! pick_file SlackBuild $PKGPATH $CHKBUILD; then
-            rm -f $PKGPATH/$PKG*.build
+            rm -f $PKGPATH/$CHKBUILD*.build
             return 0
         else
-            BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$PKG.SlackBuild.build |
+            BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$CHKBUILD.SlackBuild.build |
                 sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
             echo "Using $PICKFILE SlackBuild file" >> $TMPLOG-files
         fi
@@ -2824,7 +2828,6 @@ process_queue() {
             --extra-button --extra-label "Back" --no-cancel \
             --textbox $TMPLOG 0 0
         if [[ $? != 0 ]]; then
-            rm -f $PKGPATH/$PKG*.build
             return 0
         fi
     else
@@ -2863,16 +2866,16 @@ process_queue() {
     COUNTER=1
     for PKGBUILD in $(< $FINALQUEUE); do
         if ! search_package $PKGBUILD; then
-            echo "$CHKBUILD not found!" >> $TMPLOG
+            echo "$PKGBUILD not found!" >> $TMPLOG
             continue
         fi
         if [[ -f $SBOPKGTMP/sbopkg_build.lck ]]; then
             build_package $PKGPATH $PKGBUILD 2>&1 | tee $TMPBUILDLOG ||
                 break
-            echo "Done building package for $PKG."
+            echo "Done building package for $PKGBUILD."
             cd $SB_OUTPUT
             NEWPACKAGE=$(ls -1t *.t?z | head -n1)
-            echo "Package $COUNTER: $PKG" >> $TMPSUMMARYLOG
+            echo "Package $COUNTER: $PKGBUILD" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE"
             if [[ $QUEUETYPE == "buildinstall" ]]; then
@@ -2887,7 +2890,7 @@ process_queue() {
                 mv $SB_OUTPUT/*.t?z $OUTPUT/
             fi
         else
-            echo "$PKG:" >> $TMPSUMMARYLOG
+            echo "$PKGBUILD:" >> $TMPSUMMARYLOG
             echo "Not processed - build queue aborted." >> $TMPSUMMARYLOG
             echo >> $TMPSUMMARYLOG
         fi
