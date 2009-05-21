@@ -135,6 +135,30 @@ EOF
         fi
     fi
 
+    # Make sure there are no unexpected files in $SBOPKGTMP
+    if [[ -n $(find $SBOPKGTMP -maxdepth 1 -not -name sbopkg\*) ]]; then
+        cat << EOF
+
+ERROR
+$SCRIPT: Unexpected files found in working directory
+
+$SCRIPT performs many file operations, including some 'rm -rf',
+inside \$SBOPKGTMP, which is currently set to:
+$SBOPKGTMP
+
+As a safety measure to prevent user data loss due to a bad
+program configuration, $SCRIPT will now exit. Please fix this
+error by making sure that \$SBOPKGTMP refers to a directory
+$SCRIPT can use freely, and then make sure it contains no
+stale files.
+
+If \$SBOPKGTMP is actually correct, and the only files it
+contains are $SCRIPT-generated, please file a bug report.
+
+EOF
+        exit 1
+    fi
+
     # Load the repositories data
     eval REPOSITORIES=( $(cat $SBOPKG_REPOS_D/*.repo | grep -v '#' |
         sed 's:":\\":g' | xargs echo) )
@@ -491,9 +515,10 @@ check_for_updates() {
     # This checks for updates to installed SBo packages.  Thanks to Mauro
     # Giachero for this much-improved update code and related functions!
 
+    local TEMPFILE=$SBOPKGTMP/sbopkg_updates_tempfile
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
-    local TEMPFILE UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
+    local UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
     local STRING INDEX OLDNAME NAME VER ARCH BUILD
     local VER_NUMERIC NEWVER_NUMERIC UPDATED
     local PKGS NUMPKGS PROGRESSCOUNTER=0
@@ -584,7 +609,6 @@ check_for_updates() {
 
                 # Step 3 - reverse the file order
                 # Because dependencies must be first...
-                TEMPFILE=$(tempfile -d $SBOPKGTMP)
                 tac $VERSION_FILE > $TEMPFILE
                 mv $TEMPFILE $VERSION_FILE
 
@@ -880,8 +904,8 @@ app_files_chooser() {
 
     local DIR=$1
     local DEFAULTITEM
-    local AFS=$SBOPKGTMP/app_files_selection
-    local AFM=$SBOPKGTMP/app_files_menu
+    local AFS=$SBOPKGTMP/sbopkg_app_files_selection
+    local AFM=$SBOPKGTMP/sbopkg_app_files_menu
     local TITLE="${D##*/} files"
 
     while :; do
@@ -906,7 +930,7 @@ view_app_file() {
     local DIR=$1
     local FILE="$2"
     local PLAIN
-    local AFSP=$SBOPKGTMP/app_files_selection_parsed
+    local AFSP=$SBOPKGTMP/sbopkg_app_files_selection_parsed
 
     cd $DIR
     case $FILE in
@@ -1200,7 +1224,7 @@ empty_queue() {
 sort_queue() {
     # This function sorts the build queue in $TMPQUEUE.
 
-    local PARTIALSORT=$(tempfile -d $SBOPKGTMP)
+    local PARTIALSORT=$SBOPKGTMP/sbopkg_sort_tempfile
     local CHOICE
     local SELECTED
     local PKGSCOUNT=$(wc -l < $TMPQUEUE)
@@ -2098,7 +2122,7 @@ get_source() {
 
     local INFO="$1"
     local BUILD_LOCK=$SBOPKGTMP/sbopkg_build.lck
-    local DLDIR=$SBOPKGTMP/download
+    local DLDIR=$SBOPKGTMP/sbopkg-download
     local PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
     local SRCNAME DL FAILURE ANS MD5CHK
@@ -3109,7 +3133,7 @@ cleanup() {
     fi
     rm -f $SBOPKGTMP/sbopkg_*
     rm -f $SBOPKGTMP/sbopkgpidlist
-    rm -rf $SBOPKGTMP/sbooutput
+    rm -rf $SBOPKGTMP/sbopkg-sbooutputdir
     rm -f $SBOPKGTMP/sbopkg-*-queue
     rm -f $SBOPKGTMP/sbopkg-tmp-*
     rm -f $PIDFILE
@@ -3484,7 +3508,7 @@ STARTQUEUE=$SBOPKGTMP/sbopkg-start-queue
 TMPLOG=$SBOPKGTMP/sbopkg_tmplog
 TMPQUEUE=$SBOPKGTMP/sbopkg-tmp-queue
 FINALQUEUE=$SBOPKGTMP/sbopkg-final-queue
-SB_OUTPUT=$SBOPKGTMP/sbooutput
+SB_OUTPUT=$SBOPKGTMP/sbopkg-sbooutputdir
 SBOPKGOUTPUT=$SBOPKGTMP/sbopkg_output
 TMPBUILDLOG=$SBOPKGTMP/sbopkg-tmp-buildlog
 TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
