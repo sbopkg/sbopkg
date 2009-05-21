@@ -813,6 +813,12 @@ checkout_git_branch() {
         # Make sure no changes are staged
         git reset HEAD >> $COMMAND_OUTPUT
     fi
+
+    # Create a changelog
+    # (it makes no sense to have one tracked in a git repo)
+    if [[ ! -f ChangeLog.txt ]]; then
+        git log --pretty=format:"%cd%n%s%n%b" > ChangeLog.txt
+    fi
 }
 
 set_repo_vars() {
@@ -1780,6 +1786,11 @@ git_command() {
     echo "*/*/*.sbopkg" > .gitignore
     git clean -d -f
     git reset --hard HEAD
+    # Create a changelog
+    # (it makes no sense to have one tracked in a git repo)
+    if [[ ! -f ChangeLog.txt ]]; then
+        git log --pretty=format:"%cd%n%s%n%b" > ChangeLog.txt
+    fi
     # All done
     rm -f $SBOPKGTMP/sbopkg_sync.lck
     echo
