@@ -2104,6 +2104,74 @@ get_source_names() {
     ls -A $SRCDIR | grep "^${SRCNAME##*/}"
 }
 
+check_source() {
+    # Check the source file for correctness.
+    # Parameters:
+    # - $1 = package name
+    # - $2 = expected MD5
+    # - $3 = source file name
+    # Returns 0 if the source is OK, 1 if the source should be (re)downloaded
+    # (this includes the cases where $3 is empty or refers to a nonexistent
+    # file) and 2 if the user asked to abort the build.
+
+    local PKG=$1
+    local MD5SUM="$2"
+    local SRCNAME="$3"
+    local MD5CHK ANS
+
+    # If there's no known source name, or if it doesn't exist, it has to be
+    # downloaded...
+    [[ -z $SRCNAME || ! -f $SRCDIR/$SRCNAME ]] && return 1
+
+    # Check MD5
+    echo "Checking MD5SUM for \"$SRCNAME\"..."
+    MD5CHK=$(md5sum "$SRCDIR/$SRCNAME" | cut -d' ' -f1)
+    if [[ $MD5CHK == $MD5SUM ]]; then
+        echo "OK"
+    else
+        echo >> $TMPSUMMARYLOG
+        echo "$PKG:" >> $TMPSUMMARYLOG
+        echo "MD5SUM check failed." | tee -a $TMPSUMMARYLOG
+        echo "Expected: $MD5SUM" | tee -a $TMPSUMMARYLOG
+        echo "Found:    $MD5CHK" | tee -a $TMPSUMMARYLOG
+        # Ask the user what to do with the bad source
+        while :; do
+            cat << EOF
+
+Do you want to use the downloaded $PKG source:
+$SRCNAME in $SRCDIR?
+
+You can choose among the following options:
+ - (Y)es, keep the source and continue;
+ - (N)o, delete the source and abort build;
+ - No, (d)ownload another copy and try again.
+Your choice?
+EOF
+            error_read ANS
+            case $ANS in
+                n* | N* )
+                    rm -f "$SRCDIR/$SRCNAME"
+                    echo "Source deleted." | tee -a $TMPSUMMARYLOG
+                    return 2
+                    ;;
+                y* | Y* )
+                    MD5SUM=$(tr / _ <<< "$MD5CHK")
+                    echo "Keeping the source and continuing." |
+                        tee -a $TMPSUMMARYLOG
+                    return 0
+                    ;;
+                d* | D* )
+                    echo "Downloading again." | tee -a $TMPSUMMARYLOG
+                    return 1
+                    ;;
+                * )
+                    echo "Unknown response."
+                    ;;
+            esac
+        done
+    fi
+}
+
 get_source() {
     # Check to see if the source tarball exists in the local cache directory.
     # If it does, make a symlink to the package directory in the local mirror.
@@ -2118,17 +2186,26 @@ get_source() {
     # 2 = failed, stop queue processing
 
     local INFO="$1"
+    local PKG=$(sed 's:\.info.*$::g' <<< $INFO)
     local BUILD_LOCK=$SBOPKGTMP/sbopkg_build.lck
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-    local SRCNAME DL FAILURE ANS MD5CHK
+    local SRCNAME DL FAILURE ANS MD5CHK SOURCE_STATUS
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
+    . "$INFO"
     SRCNAME=$(get_source_names "$INFO")
-    if [[ -z $SRCNAME || ! -f $SRCDIR/$SRCNAME ]]; then
-        . "$INFO"
+
+    check_source $PKG $MD5SUM $SRCNAME
+    SOURCE_STATUS=$?
+    while [[ $SOURCE_STATUS != 0 ]] ; do
+        if [[ $SOURCE_STATUS == 2 ]]; then
+            FAILURE=download
+            break
+        fi
+
         mkdir -p $DLDIR
         cd $DLDIR
         wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> \
@@ -2149,52 +2226,13 @@ get_source() {
         fi
         cd $SRCDIR
         rm -rf $DLDIR
-        # Check MD5SUM
-        if [[ ! $FAILURE ]]; then
-            echo "Checking MD5SUM for \"$SRCNAME\"..."
-            MD5CHK=$(md5sum "$SRCNAME" | cut -d' ' -f1)
-            if [[ $MD5CHK == $MD5SUM ]]; then
-                echo "OK"
-            else
-                echo >> $TMPSUMMARYLOG
-                echo "$PKG:" >> $TMPSUMMARYLOG
-                echo "MD5SUM check failed." | tee -a $TMPSUMMARYLOG
-                echo "Expected: $MD5SUM" | tee -a $TMPSUMMARYLOG
-                echo "Found:    $MD5CHK" | tee -a $TMPSUMMARYLOG
-                # Ask the user what to do with the bad source
-                while :; do
-                    cat << EOF
 
-Do you want to use the downloaded $PKG source:
-$SRCNAME in $SRCDIR?
-
-You can choose among the following options:
- - (Y)es, keep the source and continue;
- - (N)o, delete the source and abort build.
-Your choice?
-EOF
-                    error_read ANS
-                    case $ANS in
-                        n* | N* )
-                            rm -f "$SRCDIR/$SRCNAME"
-                            echo "Source deleted."
-                            FAILURE=md5sum
-                            break
-                            ;;
-                        y* | Y* )
-                            MD5SUM=$(tr / _ <<< "$MD5CHK")
-                            echo "Keeping the source and continuing." |
-                                tee -a $TMPSUMMARYLOG
-                            break
-                            ;;
-                        * )
-                            echo "Unknown response."
-                            ;;
-                    esac
-                done
-            fi
+        if [[ $FAILURE ]]; then
+            break
         fi
-    fi
+        check_source $PKG $MD5SUM $SRCNAME
+        SOURCE_STATUS=$?
+    done
 
     cd $REPO_DIR/$PKGPATH
     rm -f "$SRCNAME"
