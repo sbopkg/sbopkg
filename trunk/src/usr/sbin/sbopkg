@@ -753,7 +753,6 @@ get_category_list() {
 
     check_if_repo_exists
     cd $REPO_DIR
-    #rm -f $SBOPKGTMP/sbopkg_category_list 2> /dev/null
     rm -f $SBOPKGTMP/sbopkg_category_list
     DIR=( */ )
     if [[ -n $DIR ]]; then
@@ -962,6 +961,7 @@ info_item() {
     local CURPACKAGE INSTALLEDPACKAGE MENUPACKAGE TITLEPACKAGE RENAMEDPACKAGE
     local CHOICE PARSED_SLACK_DESC
     local APP="$(< $SBOPKGTMP/sbopkg_item_selection)"
+    local RETVAL=0
 
     # We need to check and see if the APP has ever been renamed.
     get_old_name OLDPKG $APP
@@ -1045,14 +1045,9 @@ info_item() {
             2> $SBOPKGTMP/sbopkg_info_selection
         case $? in
             1 ) # Return to Main Menu
-                rm -f $SBOPKGTMP/sbopkg_category_manual_selection
-                rm -f $SBOPKGTMP/sbopkg_category_selection
-                rm -f $SBOPKGTMP/sbopkg_info_selection
-                rm -f $SBOPKGTMP/sbopkg_item_selection
-                rm -f $SBOPKGTMP/sbopkg_search_*
-                return 1
-                ;;
-            3 ) return 0 ;; # Back
+                RETVAL=1; break ;;
+            3 ) # Back
+                break ;;
             0 ) # OK
                 DEFAULTITEM="$(< $SBOPKGTMP/sbopkg_info_selection)"
                 CATEGORY="$(< $SBOPKGTMP/sbopkg_category_selection)"
@@ -1087,12 +1082,13 @@ info_item() {
                         ;;
                 esac
                 ;;
-            *) # ESC
-                rm -f $SBOPKGTMP/sbopkg_*
-                break
-                ;;
+            * ) # ESC
+                break ;;
         esac
     done
+
+    rm -f $SBOPKGTMP/sbopkg_info_selection
+    return $RETVAL
 }
 
 customize_item() {
@@ -1159,8 +1155,10 @@ browse_categories() {
             break
         fi
         DEFAULTITEM=$(< $SBOPKGTMP/sbopkg_category_manual_selection)
-        gen_search_package '*' $DEFAULTITEM || return 0
+        gen_search_package '*' $DEFAULTITEM || break
     done
+    rm -f $SBOPKGTMP/sbopkg_category_manual_selection
+    rm -f $SBOPKGTMP/sbopkg_category_list
 }
 
 view_cache_dir() {
@@ -1861,6 +1859,7 @@ gen_search_package() {
     cd $REPO_DIR
     local PKG=$1
     local CATEGORY=${2:-\*}
+    local RETVAL=0
     local CAT_SELECTION=$SBOPKGTMP/sbopkg_category_selection
     local ITEM_SELECTION=$SBOPKGTMP/sbopkg_item_selection
     local SEARCH_CHOICE=$SBOPKGTMP/sbopkg_search_choice
@@ -1900,12 +1899,11 @@ gen_search_package() {
                 CHOICE=$?
                 if [[ $CHOICE =~ '^(1|255|-1)$' ]]; then
                     # Back or ESC
-                    rm -f $SEARCH_RESULTS
-                    return 0
+                    break
                 elif [[ $CHOICE == 2 ]]; then
                     # Main Menu
-                    rm -f $SEARCH_RESULTS
-                    return 1
+                    RETVAL=1
+                    break
                 fi
                 SRCHPICK="$(< $SEARCH_CHOICE)"
                 if [[ $CATEGORY == '*' ]]; then
@@ -1923,10 +1921,13 @@ gen_search_package() {
                 if [[ $CHOICE == 0 ]]; then
                     echo $SRCHPKG > $ITEM_SELECTION
                     cd $REPO_DIR
-                    info_item || return 1
+                    if ! info_item; then
+                        RETVAL=1
+                        break
+                    fi
                 else # $CHOICE = 3
                     add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
-                    return 0
+                    break
                 fi
             done
         else
@@ -1943,7 +1944,8 @@ gen_search_package() {
         fi
     fi
 
-    return 0
+    rm -f $SEARCH_RESULTS $SEARCH_CHOICE $CAT_SELECTION $ITEM_SELECTION
+    return $RETVAL
 }
 
 string_search() {
@@ -2014,7 +2016,11 @@ string_search() {
         case $BUTTON in
             0)
                 echo $SRCHPKG > $ITEM_SELECTION
-                info_item || return 1
+                if ! info_item; then
+                    rm -f $PICKED_FILE $MENU_FILE $CAT_SELECTION \
+                        $ITEM_SELECTION
+                    return 1
+                fi
                 ;;
             3)
                 SHORTPATH=$REPO_DIR/$SRCHCAT/$SRCHPKG
@@ -2026,7 +2032,7 @@ string_search() {
                 continue
                 ;;
             *)
-                rm -f $PICKED_FILE
+                rm -f $PICKED_FILE $MENU_FILE $CAT_SELECTION $ITEM_SELECTION
                 return 0
             ;;
         esac
@@ -3198,7 +3204,7 @@ main_search() {
             0 ) # Package search
                 PKG=yes ;;
             * ) # Cancel or ESC
-                return 0 ;;
+                break ;;
         esac
 
         if [[ -s $TERM_FILE ]]; then
@@ -3215,15 +3221,18 @@ main_search() {
                 continue
             fi
         else
-            return 0
+            break
         fi
 
         if [[ $PKG ]]; then
-            gen_search_package "$SEARCH_TERM" || return
+            gen_search_package "$SEARCH_TERM" || break
         elif [[ $STRING ]]; then
-            string_search "$SEARCH_TERM" || return
+            string_search "$SEARCH_TERM" || break
         fi
     done
+
+    rm -f $TERM_FILE
+    return 0
 }
 
 main_updates() {
@@ -3290,9 +3299,7 @@ main_menu() {
             "Browse" )
                 browse_categories ;;
             "Search" )
-                main_search
-                # FIXME main_search should delete this
-                rm -f $SBOPKGTMP/sbopkg_search_* ;;
+                main_search ;;
             "Utilities" )
                 utilities_menu ;;
             "Queue" )
