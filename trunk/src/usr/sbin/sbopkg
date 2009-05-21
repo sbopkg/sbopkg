@@ -1292,37 +1292,6 @@ sort_queue() {
     continue
 }
 
-load_backup_queue() {
-    # This function loads any backup queue and merges it with any current
-    # $TMPQUEUE.
-
-    local PERMQUEUE=$SBOPKGTMP/sbopkg-savedqueue
-    local BACKUPQUEUE_LOCK=$SBOPKGTMP/sbopkg_backup_queue.lck
-
-    if [[ -e $PERMQUEUE ]]; then
-        dialog --title "Load Temporary Backup Queue?" --yesno "$(crunch "A \
-            temporary backup queue was found.  Would you like to load it? \
-            Either way, the temporary backup queue will be deleted.  A new \
-            temporary backup queue will be automatically created if you quit \
-            sbopkg with items in the build queue.\n\nPress <Yes> to load the \
-            temporary backup queue into the build queue, or press <No> to \
-            cancel.")" 11 65
-        if [[ $? == 0 ]]; then
-            touch $BACKUPQUEUE_LOCK
-            # Reading from $PERMQUEUE...
-            while read PICK; do
-                add_item_to_queue $PICK
-            done < $PERMQUEUE
-            rm -f $BACKUPQUEUE_LOCK
-            rm $PERMQUEUE
-            dialog --title "Done" --msgbox \
-                "The backup queue has been loaded." 8 30
-        else
-            rm -f $PERMQUEUE
-        fi
-    fi
-}
-
 queue_dir_lister() {
     # This function produces a checklist from the contents of the QUEUEDIR and
     # takes two arguments - the title and the text of the widget - and makes
