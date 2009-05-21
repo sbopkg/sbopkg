@@ -1,4 +1,4 @@
-Mon Apr  6 20:09:44 UTC 2009
+Wed May 20 13:41:46 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -39,9 +39,12 @@ enhancements:
   * Fix issue where the 'games' directory was non-browsable due to a
     slack-desc file containing double-quotes in the first line; thanks to
     Glenn Becker for the original bug report.
-  * Implement configurable repository support, and use it to support
-    git-based repositories. The Slamd64Builds repository is now listed, for
-    the joy of all the Slamd64 users out there.
+  * Implement configurable repository support by introducing a new
+    /etc/sbopkg/repos.d directory where separate repositories files can be
+    maintained and also by adding support for git-based repositories.  The
+    Slamd64Builds repository is now listed, to the joy of all the Slamd64
+    users out there.  Add a new document README-repos.d that explains how
+    these repository files work.
   * 'Nice' the build process so as to improve sbopkg's resource utilization.
   * Fix a few issues regarding user sbopkg.conf files.
   * Move sbopkg-renames to new /etc/sbopkg/renames.d/50-default to manage
@@ -51,4 +54,16 @@ enhancements:
   * Rewrite several portions of the process_queue function in order to
     properly handle certain items by the caller; clean up and improve the
     logging displayed during the build process.
+  * Require build queuefiles have a '.sboq' file extension.
+  * Add a sanity check for files in sbopkg's temp directory.
+  * Cleanup several of the functions related to editing the .info and
+    SlackBuild files to remove code duplication; also cleanup and fix issues
+    associated with the two primary search functions, and improve file cleanup
+    for these search-related functions.
+  * Fix issue where MD5SUM checking would fail when certain upstream packages
+    do not change source file name on version updates by adding in an extra
+    check for existing sources.  Additionally, add an option to retry a source
+    download in the event of an MD5SUM failure to avoid having to restart a
+    build.  Thanks to David Spencer for raising these issues and thanks to
+    Mauro Giachero for the fixes and improvements.
 +--------------------------+
