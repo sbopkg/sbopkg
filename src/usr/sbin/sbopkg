@@ -2191,20 +2191,24 @@ get_source() {
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-    local SRCNAME DL FAILURE ANS MD5CHK SOURCE_STATUS
+    local SRCNAME DL FAILURE ANS MD5CHK
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
     . "$INFO"
     SRCNAME=$(get_source_names "$INFO")
 
-    check_source $PKG $MD5SUM $SRCNAME
-    SOURCE_STATUS=$?
-    while [[ $SOURCE_STATUS != 0 ]] ; do
-        if [[ $SOURCE_STATUS == 2 ]]; then
-            FAILURE=download
-            break
-        fi
+    while :; do
+        check_source $PKG $MD5SUM $SRCNAME
+        case $? in
+            0 ) # Source OK
+                break
+                ;;
+            2 ) # Abort
+                FAILURE=download
+                break
+                ;;
+        esac
 
         mkdir -p $DLDIR
         cd $DLDIR
@@ -2226,12 +2230,7 @@ get_source() {
         fi
         cd $SRCDIR
         rm -rf $DLDIR
-
-        if [[ $FAILURE ]]; then
-            break
-        fi
-        check_source $PKG $MD5SUM $SRCNAME
-        SOURCE_STATUS=$?
+        [[ $FAILURE ]] && break
     done
 
     cd $REPO_DIR/$PKGPATH
