@@ -2042,6 +2042,11 @@ string_search() {
 
 show_readme() {
     # Show the package's text files.
+    # $1 = Package path
+    # $2 = Package name
+
+    local PKGPATH=$1
+    local PKGNAME=$2
 
     cd $REPO_DIR
     $PAGER \
@@ -3668,9 +3673,12 @@ else
         check_if_repo_exists
         for PKGSEARCH in "$SEARCH"; do
             echo "Searching for $PKGSEARCH"
-            search_package "$PKGSEARCH"
-            pick_file info "$PKGPATH" "$PKGSEARCH"
-            show_readme
+            if search_package $PKGSEARCH; then
+                pick_file info $PKGPATH $PKGSEARCH
+                show_readme $PKGPATH $PKGSEARCH
+            else
+                echo "ERROR: Package \"$PKGSEARCH\" not found." >&2
+            fi
         done
     fi
 
