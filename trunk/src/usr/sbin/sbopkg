@@ -1329,12 +1329,12 @@ can_skip_line() {
 
     echo $1 | grep "^#" > /dev/null
     if [[ $? == 0 ]]; then
-        return 1
+        return 0
     fi
     if [[ "$1" == "" ]]; then
-        return 1
+        return 0
     fi
-    return 0
+    return 1
 }
 
 load_user_queue() {
@@ -1355,8 +1355,7 @@ load_user_queue() {
             touch $USERQUEUE_LOCK
             # Reading from $FILE...
             while read PICK; do
-                can_skip_line $PICK
-                if [[ $? == 1 ]]; then
+                if can_skip_line $PICK; then
                     continue
                 fi
                 add_item_to_queue $PICK
