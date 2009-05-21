@@ -954,6 +954,7 @@ view_app_file() {
 info_item() {
     # This function shows the menu for each package where the user can see
     # certain information or build the package.
+    # Returns 0 unless the user asked to jump back to the main menu.
 
     local OLDPKG CATEGORY SHORTPATH CURVERSION CURARCH CURBUILD
     local CURAPP LONGAPP SHORTAPP
@@ -1049,8 +1050,7 @@ info_item() {
                 rm -f $SBOPKGTMP/sbopkg_info_selection
                 rm -f $SBOPKGTMP/sbopkg_item_selection
                 rm -f $SBOPKGTMP/sbopkg_search_*
-                > $SBOPKGTMP/sbopkg_return_main_menu
-                return 0
+                return 1
                 ;;
             3 ) return 0 ;; # Back
             0 ) # OK
@@ -1159,10 +1159,7 @@ browse_categories() {
             break
         fi
         DEFAULTITEM=$(< $SBOPKGTMP/sbopkg_category_manual_selection)
-        gen_search_package '*' $DEFAULTITEM
-        if [[ -e $SBOPKGTMP/sbopkg_return_main_menu ]]; then
-            return 0
-        fi
+        gen_search_package '*' $DEFAULTITEM || return 0
     done
 }
 
@@ -1859,11 +1856,11 @@ search_package() {
 gen_search_package() {
     # Search for package name glob generally using grep.  In dialog interface,
     # jump to selected package.
+    # Returns 0 unless the user asked to jump back to the main menu.
 
     cd $REPO_DIR
     local PKG=$1
     local CATEGORY=${2:-\*}
-    local RETURN_MAIN_MENU=$SBOPKGTMP/sbopkg_return_main_menu
     local CAT_SELECTION=$SBOPKGTMP/sbopkg_category_selection
     local ITEM_SELECTION=$SBOPKGTMP/sbopkg_item_selection
     local SEARCH_CHOICE=$SBOPKGTMP/sbopkg_search_choice
@@ -1908,8 +1905,7 @@ gen_search_package() {
                 elif [[ $CHOICE == 2 ]]; then
                     # Main Menu
                     rm -f $SEARCH_RESULTS
-                    touch $RETURN_MAIN_MENU
-                    return 0
+                    return 1
                 fi
                 SRCHPICK="$(< $SEARCH_CHOICE)"
                 if [[ $CATEGORY == '*' ]]; then
@@ -1927,10 +1923,7 @@ gen_search_package() {
                 if [[ $CHOICE == 0 ]]; then
                     echo $SRCHPKG > $ITEM_SELECTION
                     cd $REPO_DIR
-                    info_item
-                    if [[ -e $RETURN_MAIN_MENU ]]; then
-                        return 0
-                    fi
+                    info_item || return 1
                 else # $CHOICE = 3
                     add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
                     continue
@@ -1947,7 +1940,7 @@ gen_search_package() {
     else
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "No match for $PKG found" 8 30
-            return 1
+            return 0
         else
             echo "$SCRIPT: No match for $PKG found." >&2
             continue
@@ -1961,6 +1954,7 @@ string_search() {
     # generates a potentially huge path consisting only of installed *SBo
     # packages to hand to find. Otherwise, just search for $1 in REPO as
     # usual.
+    # Returns 0 unless the user asked to jump back to the main menu.
 
     if [[ ${SEARCH_TERM%%:*} == "inst" ]]; then
         local SEARCH_TERM="${SEARCH_TERM#*:}"
@@ -1975,7 +1969,6 @@ string_search() {
         local SEARCH_TERM="$1"
         local FIND_PATH="$REPO"
     fi
-    local RETURN_MAIN_MENU=$SBOPKGTMP/sbopkg_return_main_menu
     local CAT_SELECTION=$SBOPKGTMP/sbopkg_category_selection
     local ITEM_SELECTION=$SBOPKGTMP/sbopkg_item_selection
     local MENU_FILE=$SBOPKGTMP/sbopkg_menu-file
@@ -1998,7 +1991,7 @@ string_search() {
 
     if [[ ! -s $MENU_FILE ]]; then
         dialog --title "ERROR" --msgbox "No match for $SEARCH_TERM found" 8 30
-        return 1
+        return 0
     fi
 
     cd $REPO_DIR
@@ -2023,8 +2016,7 @@ string_search() {
         case $BUTTON in
             0)
                 echo $SRCHPKG > $ITEM_SELECTION
-                info_item
-                [[ -e $RETURN_MAIN_MENU ]] && return 0
+                info_item || return 1
                 ;;
             3)
                 SHORTPATH=$REPO_DIR/$SRCHCAT/$SRCHPKG
@@ -3231,12 +3223,10 @@ main_search() {
         # FIXME *search*() functions use "continue" to influence this loop!
         # There's too much stuff outside my 1/3 to fix this now.
         if [[ $PKG ]]; then
-            gen_search_package "$SEARCH_TERM"
+            gen_search_package "$SEARCH_TERM" || return
         elif [[ $STRING ]]; then
-            string_search "$SEARCH_TERM"
+            string_search "$SEARCH_TERM" || return
         fi
-
-        [[ -f $SBOPKGTMP/sbopkg_return_main_menu ]] && return
     done
 }
 
@@ -3272,7 +3262,6 @@ main_menu() {
 
     local DEFAULTITEM
     local ANSWER_FILE=$SBOPKGTMP/sbopkg_main_menu_answer
-    local RETURN_MAIN_MENU=$SBOPKGTMP/sbopkg_return_main_menu
 
     while :; do
         dialog --cancel-label "Exit" --default-item "$DEFAULTITEM" --title \
@@ -3303,13 +3292,11 @@ main_menu() {
             "Updates" )
                 main_updates ;;
             "Browse" )
-                browse_categories
-                rm -f $RETURN_MAIN_MENU ;;
+                browse_categories ;;
             "Search" )
                 main_search
                 # FIXME main_search should delete this
-                rm -f $SBOPKGTMP/sbopkg_search_*
-                rm -f $RETURN_MAIN_MENU ;;
+                rm -f $SBOPKGTMP/sbopkg_search_* ;;
             "Utilities" )
                 utilities_menu ;;
             "Queue" )
