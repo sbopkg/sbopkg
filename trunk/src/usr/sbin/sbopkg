@@ -519,9 +519,9 @@ check_for_updates() {
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
     local UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
-    local STRING INDEX OLDNAME NAME VER ARCH BUILD
+    local STRING INDEX OLDNAME NAME VER INST_ARCH BUILD
     local VER_NUMERIC NEWVER_NUMERIC UPDATED
-    local PKGS NUMPKGS PROGRESSCOUNTER=0
+    local CURPKG PKGS NUMPKGS PROGRESSCOUNTER=0
 
     if [[ -z $REPO_TOOL ]]; then
         if [[ $DIAG ]]; then
@@ -563,8 +563,8 @@ check_for_updates() {
             OLDNAME="$(echo $STRING | cut -f 1-$OLDNAME -d -)"
             VER=$(expr $INDEX - 2)
             VER="$(echo $STRING | cut -f $VER -d -)"
-            ARCH=$(expr $INDEX - 1)
-            ARCH="$(echo $STRING | cut -f $ARCH -d -)"
+            INST_ARCH=$(expr $INDEX - 1)
+            INST_ARCH="$(echo $STRING | cut -f $INST_ARCH -d -)"
             BUILD="$(echo $STRING | cut -f $INDEX -d -)"
             # End pkgtool code
 
@@ -963,7 +963,7 @@ info_item() {
 
     local OLDPKG CATEGORY SHORTPATH CURVERSION CURARCH CURBUILD
     local CURAPP LONGAPP SHORTAPP
-    local STRING INDEX NAME VER BUILD DEFAULTITEM
+    local STRING INDEX NAME INST_ARCH VER BUILD DEFAULTITEM
     local CURPACKAGE INSTALLEDPACKAGE MENUPACKAGE TITLEPACKAGE RENAMEDPACKAGE
     local CHOICE PARSED_SLACK_DESC
     local APP="$(< $SBOPKGTMP/sbopkg_item_selection)"
@@ -998,14 +998,14 @@ info_item() {
                 NAME="$(echo $STRING | cut -f 1-$NAME -d -)"
                 VER=$(expr $INDEX - 2)
                 VER="$(echo $STRING | cut -f $VER -d -)"
-                ARCH=$(expr $INDEX - 1)
-                ARCH="$(echo $STRING | cut -f $ARCH -d -)"
+                INST_ARCH=$(expr $INDEX - 1)
+                INST_ARCH="$(echo $STRING | cut -f $INST_ARCH -d -)"
                 BUILD="$(echo $STRING | cut -f $INDEX -d -)"
 
                 if [[ $SHORTAPP == $APP ]]; then
-                    INSTALLEDPACKAGE=$NAME-$VER-$ARCH-$BUILD
+                    INSTALLEDPACKAGE=$NAME-$VER-$INST_ARCH-$BUILD
                 else # Must be a renamed app
-                    RENAMEDPACKAGE=$NAME-$VER-$ARCH-$BUILD
+                    RENAMEDPACKAGE=$NAME-$VER-$INST_ARCH-$BUILD
                 fi
             fi
         done
