@@ -1655,12 +1655,13 @@ add_item_to_queue() {
 
 view_queue() {
     # This function displays the contents of the build queue.
+    # Returns 0 if the user choose OK, nonzero otherwise
 
     local ANSQUEUE=$SBOPKGTMP/sbopkg-ans-queue
     local REVERSEDQUEUE=$SBOPKGTMP/sbopkg-reversed-queue
     local WORKINGQUEUE=$SBOPKGTMP/sbopkg-working-queue
 
-    empty_queue && return
+    empty_queue && return 1
     while :; do
         dialog --title "Viewing Build Queue" --separate-output \
             --extra-button --extra-label "Reverse" \
@@ -1704,7 +1705,7 @@ view_queue() {
         esac
     done
     rm -f $WORKINGQUEUE
-    continue
+    return 1
 }
 
 rsync_command() {
@@ -3078,7 +3079,7 @@ queue_menu() {
             "Rename") rename_user_queue ;;
             "Delete") delete_user_queue ;;
             "Process") #empty_queue && continue
-                       view_queue && continue
+                       view_queue || continue
                        cp $SBOPKGTMP/sbopkg-ans-queue $STARTQUEUE
                        start_dialog_queue  ;;
             *) break ;;
