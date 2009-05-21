@@ -1926,26 +1926,24 @@ gen_search_package() {
                     info_item || return 1
                 else # $CHOICE = 3
                     add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
-                    continue
+                    return 0
                 fi
             done
-            continue
         else
             echo "Found the following matches for $PKG:"
             for i in $RESULTS; do
                 echo $i
             done
-            continue
         fi
     else
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "No match for $PKG found" 8 30
-            return 0
         else
             echo "$SCRIPT: No match for $PKG found." >&2
-            continue
         fi
     fi
+
+    return 0
 }
 
 string_search() {
@@ -3220,8 +3218,6 @@ main_search() {
             return 0
         fi
 
-        # FIXME *search*() functions use "continue" to influence this loop!
-        # There's too much stuff outside my 1/3 to fix this now.
         if [[ $PKG ]]; then
             gen_search_package "$SEARCH_TERM" || return
         elif [[ $STRING ]]; then
