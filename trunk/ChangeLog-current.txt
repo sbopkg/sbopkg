@@ -66,4 +66,14 @@ enhancements:
     download in the event of an MD5SUM failure to avoid having to restart a
     build.  Thanks to David Spencer for raising these issues and thanks to
     Mauro Giachero for the fixes and improvements.
+  * Create a ChangeLog.txt for git repos on the fly.
+  * Remove usage of ARCH in preparation for Slackware64 support.
+  * Remove obsolete load_backup_queue.
+  * Improve and fix some issues with the search functions and leaking
+    variables.
+  * Change queuefile format.  No longer will the queuefile format be 'APP
+    VERSION ON/OFF' but instead will simply be one 'APP' per line.  If a user
+    wants an APP to be deselected in the dialog menus, simply put a '-' in
+    front of it, e.g. '-APP'.  This should make creating, using, and sharing
+    queuefiles much easier and more intuitive.
 +--------------------------+
