@@ -3626,7 +3626,7 @@ else
             else
                 if [[ -r $QUEUEDIR/$PKGBUILD.sboq ]]; then
                     # Add an entire queue
-                    cp $QUEUEDIR/$PKGBUILD.sboq $CLIQUEUE
+                    cat $QUEUEDIR/$PKGBUILD.sboq >> $CLIQUEUE
                 else
                     if search_package $PKGBUILD; then
                         # Add a single package
@@ -3646,9 +3646,16 @@ else
         fi
         # Reading from $CLIQUEUE...
         while read PICK; do
+            if can_skip_line $PICK; then
+                continue
+            fi
             PICK_NAME=${PICK%% *}
-            if ! grep -qx $PICK_NAME $SBOPKGTMP/sbopkg-start-queue; then
-                echo $PICK_NAME >> $SBOPKGTMP/sbopkg-start-queue
+            if [[ ${PICK_NAME:0:1} == "-" ]]; then
+                continue
+            else
+                if ! grep -qx $PICK_NAME $SBOPKGTMP/sbopkg-start-queue; then
+                    echo $PICK_NAME >> $SBOPKGTMP/sbopkg-start-queue
+                fi
             fi
         done < $CLIQUEUE
         rm -f $CLIQUEUE
