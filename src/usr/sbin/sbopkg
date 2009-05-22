@@ -1353,6 +1353,7 @@ load_user_queue() {
             CLIQUEUEFILE=$FILE
             # this inhibits add_item_to_queue's msgbox for each added app
             touch $USERQUEUE_LOCK
+            echo "Reading the queuefile, please be patient..."
             # Reading from $FILE...
             while read PICK; do
                 if can_skip_line $PICK; then
@@ -1463,15 +1464,27 @@ save_user_queue() {
     # queue. In that case, show the filename dialog only if there actually is
     # an active queue, and return silently otherwise.
 
+    local SAVEQUEUE=$SBOPKGTMP/sbopkg-tmpsave-queue
     local USERQUEUE=$SBOPKGTMP/sbopkg-user-queue
     local DEFAULT MSG USERQUEUE_NAME i
-    local USERQUEUE_NAME
+    local USERQUEUE_NAME PICK SAVENAME SAVEONOFF
 
+    rm -f $SAVEQUEUE
+    # Reading from $TMPQUEUE...
+    while read PICK; do
+        SAVENAME=$(echo $PICK | cut -d ' ' -f1)
+        SAVEONOFF=$(echo $PICK | cut -d ' ' -f3)
+        if [[ $SAVEONOFF =~ [oO][nN] ]]; then
+            echo $SAVENAME >> $SAVEQUEUE
+        else
+            echo "-$SAVENAME" >> $SAVEQUEUE
+        fi
+    done < $TMPQUEUE
     if [[ $1 == "--end" ]]; then
         if [[ ! -s $TMPQUEUE ]]; then
             return 1
         elif [[ -f $LAST_USER_QUEUE_ON_DISK ]] &&
-                diff $LAST_USER_QUEUE_ON_DISK $TMPQUEUE > /dev/null; then
+                diff $LAST_USER_QUEUE_ON_DISK $SAVEQUEUE > /dev/null; then
             # The active queue is unchanged since the last loaded/saved one
             return 0
         else
@@ -1515,7 +1528,7 @@ save_user_queue() {
                     continue
                 fi
             fi
-            if cp $TMPQUEUE $QUEUEDIR/$USERQUEUE_NAME.sboq; then
+            if cp $SAVEQUEUE $QUEUEDIR/$USERQUEUE_NAME.sboq; then
                 LAST_USER_QUEUE_ON_DISK=$QUEUEDIR/$USERQUEUE_NAME.sboq
             else
                 dialog --title "ERROR" --msgbox "Problem saving build queue."\
@@ -1592,9 +1605,21 @@ edit_build_queue() {
 }
 
 add_item_to_queue() {
-    # This function takes three arguments: APP, VERSIONBUILD, and ONOFF.  If
-    # APP is already in the queue and is of a different version, ask user if
-    # they want to replace it (so updated pkgs will get updated in the queue).
+    # This function can take up to three arguments: APP, VERSIONBUILD, and
+    # ONOFF and normally does when items are added to the build queue from the
+    # dialog menus.  However, saved user queues only have one item per line,
+    # which is the application name.  If the application was deselected when
+    # the queue was saved, then a '-' is appended to the front of the
+    # application name in the queuefile.  This means that, when
+    # load_user_queue reads each line of a saved queuefile and sends it to
+    # add_item_to_queue, the second and third arguments will be empty.
+    # Therefore, the start of this function first tests to see if the second
+    # argument is empty.  If so, then it proceeds to gather information about
+    # the application like the VERSION and BUILD, and then sets ONOFF to 'OFF'
+    # if the first character was '-' otherwise it is set to 'ON'.  If we
+    # have all three arguments, then we continue on.  If APP is already in the
+    # queue and is of a different version, ask user if they want to replace it
+    # (so updated pkgs will get updated in the queue).
 
     local APP=$1
     local VERSIONBUILD=$2
@@ -1602,17 +1627,23 @@ add_item_to_queue() {
     local BACKUPQUEUE_LOCK=$SBOPKGTMP/sbopkg_backup_queue.lck
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
-    local OLDVER="$(awk '/^'$APP'/{ print $2 }' $TMPQUEUE 2> /dev/null)"
+    local TESTONOFF PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL
+    local APPROVED BUILD
 
-    if grep "^$APP " $TMPQUEUE 2> /dev/null | grep -qv "$VERSIONBUILD"; then
-        dialog --title "WARNING" --yesno "$(crunch "$APP $OLDVER is \
-            already in the queue.  Do you want to replace it with $APP \
-            $VERSIONBUILD?  Press <Yes> to replace or press <No> to \
-            skip.")" 10 50
-        if [[ $? == 0 ]]; then
-            sed -i "s/^$APP .*$/$APP $VERSIONBUILD $ONOFF/" $TMPQUEUE
+    if [[ -z $VERSIONBUILD ]]; then
+        if [[ ${APP:0:1} == "-" ]]; then
+            APP=${APP:1}
+            ONOFF=OFF
+        else
+            ONOFF=ON
         fi
-    elif grep -q "^$APP " $TMPQUEUE 2> /dev/null; then
+        search_package $APP
+        . $PKGPATH/$APP.info
+        BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$APP.SlackBuild |
+            sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+        VERSIONBUILD="$VERSION-$BUILD"
+    fi
+    if grep -q "^$APP " $TMPQUEUE 2> /dev/null; then
         : # it's the same app and version so toss it
     else
         echo "$APP $VERSIONBUILD $ONOFF" >> $TMPQUEUE
