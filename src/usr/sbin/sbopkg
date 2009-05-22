@@ -3721,6 +3721,6 @@ fi
 
 exit 0
 
-# vim:set fdm=marker fen syn=jtext tw=72:
+# vim:set syn=sh sw=4 et ts=4 tw=78:
 # kate: syntax Bash; indent-width 4; replace-trailing-space-save on;
 # kate: replace-tabs on; tab-width 4; word-wrap-column 78
