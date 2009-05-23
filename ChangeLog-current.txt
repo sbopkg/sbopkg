@@ -76,4 +76,6 @@ enhancements:
     wants an APP to be deselected in the dialog menus, simply put a '-' in
     front of it, e.g. '-APP'.  This should make creating, using, and sharing
     queuefiles much easier and more intuitive.
+  * Add ability to load more than one queuefile at a time when building
+    from command line interface.
 +--------------------------+
