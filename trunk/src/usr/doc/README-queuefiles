@@ -1,0 +1,15 @@
+Sbopkg queuefiles are very simple to create, maintain, and share amongst other
+users.  Each queuefile can contain a list of applications to build in order,
+from top to bottom.  If the application's name is left alone, it will default
+to 'ON,' or selected, in the sbopkg dialog menus when the queuefile is loaded.
+If the application's name is prepended with a '-' it will default to 'OFF,' or
+deselected, in the dialog menus.
+
+For example, a queuefile might contain:
+
+foo
+-bar
+baz
+
+In this case, both 'foo' and 'baz' will appear 'ON,' or selected, in the sbopkg
+dialog menus, and 'bar' will appear 'OFF,' or deselected.
