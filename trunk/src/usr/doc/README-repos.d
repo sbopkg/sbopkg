@@ -1,3 +1,5 @@
+# $Id$
+
 In sbopkg parlance, a "repository" is a local or remote service used as a
 source of scripts.  For example, slackbuilds.org is a repository.  The
 builds.slamd64.com project is another repository.  Every repository has one or
