@@ -2901,8 +2901,9 @@ process_queue() {
             continue
         fi
         if [[ -f $SBOPKGTMP/sbopkg_build.lck ]]; then
-            build_package $PKGPATH $PKGBUILD 2>&1 | tee $TMPBUILDLOG ||
-                break
+            set -o pipefail
+            build_package $PKGPATH $PKGBUILD 2>&1 | tee $TMPBUILDLOG || break
+            set +o pipefail
             echo "Done building package for $PKGBUILD."
             cd $SB_OUTPUT
             NEWPACKAGE=$(ls -1t *.t?z | head -n1)
