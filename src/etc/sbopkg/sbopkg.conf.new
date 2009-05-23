@@ -23,6 +23,7 @@ DEBUG=0
 # themselves.  They are exported for this reason.
 export TMP=${TMP:-/tmp/SBo}
 export OUTPUT=${OUTPUT:-/tmp}
+export ARCH=${ARCH:-i486}
 
 # The following variables are required and can be tweaked if desired,
 # although most users should leave them alone.  Note:  rsync already uses
