@@ -1,3 +1,5 @@
+# $Id$
+
 Sbopkg queuefiles are very simple to create, maintain, and share amongst other
 users.  Each queuefile can contain a list of applications to build in order,
 from top to bottom.  If the application's name is left alone, it will default
