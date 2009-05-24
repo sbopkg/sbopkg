@@ -95,6 +95,19 @@ The default value of OUTPUT is:
 export OUTPUT=${OUTPUT:-/tmp}.
 
 .TP 5
+.B ARCH
+.br
+This option sets the default architecture for compiling packages from
+the repository.  ARCH must be exported as it is also used by the SBo
+SlackBuilds.  Also note that the default value of OUTPUT is therefore
+the same as in the SBo SlackBuilds.  Typically, this value is either
+i486, i686, or x86_64.
+
+The default value of ARCH is:
+.br
+export ARCH=${ARCH:-i486}.
+
+.TP 5
 .B QUEUEDIR
 .br
 This option defines the directory under which saved queue files will
