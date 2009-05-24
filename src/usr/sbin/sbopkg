@@ -1457,6 +1457,16 @@ rename_user_queue() {
     done
 }
 
+stripcom() {
+    local _file="$1"
+
+    sed '
+        /^[ \t]*#/d
+        s/[ \t][ \t]*#.*//
+        /^[ \t]*$/d
+        ' $_file
+}
+
 save_user_queue() {
     # This function saves the build queue to the filename the user specifies.
     # If --end is specified as first parameter, assume that the user is
@@ -1484,7 +1494,8 @@ save_user_queue() {
         if [[ ! -s $TMPQUEUE ]]; then
             return 1
         elif [[ -f $LAST_USER_QUEUE_ON_DISK ]] &&
-                diff $LAST_USER_QUEUE_ON_DISK $SAVEQUEUE > /dev/null; then
+                diff <(stripcom $LAST_USER_QUEUE_ON_DISK) $SAVEQUEUE &> \
+                    /dev/null; then
             # The active queue is unchanged since the last loaded/saved one
             return 0
         else
@@ -1522,8 +1533,9 @@ save_user_queue() {
             if [[ -e $USERQUEUE_NAME.sboq ]]; then
                 dialog --title "ERROR" --yesno "$(crunch "Another file \
                     with that name already exists.  Press <Yes> to \
-                    continue and overwrite the other file, or press <No> \
-                    to cancel.")" 10 50
+                    continue and overwrite the other file (keep in mind that \
+                    the active queue will not preserve any comments from an \
+                    on-disk queue), or press <No> to cancel.")" 10 50
                 if [[ $? != 0 ]]; then
                     continue
                 fi
