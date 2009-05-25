@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # $Id$
 #
@@ -1002,10 +1002,8 @@ info_item() {
                 BUILD="$(echo $STRING | cut -f $INDEX -d -)"
 
                 if [[ $SHORTAPP == $APP ]]; then
-                    #INSTALLEDPACKAGE=$NAME-$VER-$INST_ARCH-$BUILD
                     INSTALLEDPACKAGE=$NAME-$VER-$INST_ARCH-$BUILD
                 else # Must be a renamed app
-                    #RENAMEDPACKAGE=$NAME-$VER-$INST_ARCH-$BUILD
                     RENAMEDPACKAGE=$NAME-$VER-$INST_ARCH-$BUILD
                 fi
             fi
