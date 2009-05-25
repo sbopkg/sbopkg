@@ -1457,13 +1457,18 @@ rename_user_queue() {
 }
 
 stripcom() {
-    local _file="$1"
+    # This function removes comments and blank lines from the file given as
+    # the argument. It deletes lines beginning with zero or more whitespaces
+    # and a comment symbol, strips any text after whitespace and a comment
+    # symbol, and deletes blank or whitespace-only lines.
+
+    local FILE="$1"
 
     sed '
         /^[ \t]*#/d
         s/[ \t][ \t]*#.*//
         /^[ \t]*$/d
-        ' $_file
+        ' $FILE
 }
 
 save_user_queue() {
