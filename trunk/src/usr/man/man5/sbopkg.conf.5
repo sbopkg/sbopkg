@@ -101,7 +101,8 @@ This option sets the default architecture for compiling packages from
 the repository.  ARCH must be exported as it is also used by the SBo
 SlackBuilds.  Also note that the default value of ARCH is therefore
 the same as in the SBo SlackBuilds.  Generally, this value can be
-set to either i486, i686, or x86_64.
+set to either i486, i686, or x86_64, and probably should be set to
+x86_64 for Slackware64.
 
 The default value of ARCH is:
 .br
@@ -213,7 +214,7 @@ file:
 export TMP=${TMP:-/tmp/SBo}
 
 This sets $TMP to /tmp/SBo for building SBo packages within sbopkg (which is
-current default for SBo SlackBuilds already).  Since this variable is
+currently the default for SBo SlackBuilds already).  Since this variable is
 exported, it could be changed for both sbopkg and for building SBo
 packages within sbopkg.  For example, changing this line so it reads:
 
