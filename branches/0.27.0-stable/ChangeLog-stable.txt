@@ -3,5 +3,9 @@ Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
   * Add museek-plus->museek+ to sbopkg-renames.new.
+  * Modify the source fetching code to check the md5sum also of cached
+    sources, to fix problems arising with those programs whose source archive
+    doesn't change name on version updates. Thanks to David Spencer for
+    raising the issue.
 
 +--------------------------+

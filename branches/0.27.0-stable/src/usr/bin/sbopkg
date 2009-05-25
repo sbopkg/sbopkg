@@ -1881,8 +1881,9 @@ get_source () {
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
     SRCNAME=$(get_source_names "$INFO")
-    if [[ (-z "$SRCNAME") || (! -f "$SRCDIR/$SRCNAME") ]]; then
-        . "$INFO"
+    . "$INFO"
+    cd $SRCDIR
+    if [[ (-z "$SRCNAME") || (! -f "$SRCNAME") ]]; then
         mkdir -p $DLDIR
         cd $DLDIR
         wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> \
@@ -1903,20 +1904,21 @@ get_source () {
         fi
         cd $SRCDIR
         rm -rf $DLDIR
-        # Check MD5SUM
-        if [[ ! "$FAILURE" ]]; then
-            echo "Checking MD5SUM for \"$SRCNAME\"..."
-            MD5CHK=$(md5sum "$SRCNAME" | cut -d' ' -f1)
-            if [ "$MD5CHK" == $MD5SUM ]; then
-                echo "OK"
-            else
-                echo "$PKG:" >> $SUMMARYLOG
-                echo "MD5SUM check failed." |tee -a $SUMMARYLOG
-                echo "Expected: $MD5SUM"    |tee -a $SUMMARYLOG
-                echo "Found:    $MD5CHK"    |tee -a $SUMMARYLOG
-                # Ask the user what to do with the bad source
-                while :; do
-                    cat <<EOF
+    fi
+    # Check MD5SUM
+    if [[ ! "$FAILURE" ]]; then
+        echo "Checking MD5SUM for \"$SRCNAME\"..."
+        MD5CHK=$(md5sum "$SRCNAME" | cut -d' ' -f1)
+        if [ "$MD5CHK" == $MD5SUM ]; then
+            echo "OK"
+        else
+            echo "$PKG:" >> $SUMMARYLOG
+            echo "MD5SUM check failed." |tee -a $SUMMARYLOG
+            echo "Expected: $MD5SUM"    |tee -a $SUMMARYLOG
+            echo "Found:    $MD5CHK"    |tee -a $SUMMARYLOG
+            # Ask the user what to do with the bad source
+            while :; do
+                cat <<EOF
 
 Do you want to use the downloaded $PKG source:
 $SRCNAME in $SRCDIR?
@@ -1926,25 +1928,24 @@ You can choose among the following options:
  - (N)o, delete the source and abort build.
 Your choice?
 EOF
-                    error_read ANS
-                    case $ANS in
-                        n* | N* )
-                            rm -f "$SRCDIR/$SRCNAME"
-                            echo "Source deleted."
-                            FAILURE=md5sum
-                            break
-                            ;;
-                        y* | Y* )
-                            MD5SUM=$(tr / _ <<<"$MD5CHK")
-                            echo "Keeping the source and continuing." |
-                                tee -a $SUMMARYLOG
-                            break
-                            ;;
-                        * ) echo "Unknown response."
-                            ;;
-                    esac
-                done
-            fi
+                error_read ANS
+                case $ANS in
+                    n* | N* )
+                        rm -f "$SRCDIR/$SRCNAME"
+                        echo "Source deleted."
+                        FAILURE=md5sum
+                        break
+                        ;;
+                    y* | Y* )
+                        MD5SUM=$(tr / _ <<<"$MD5CHK")
+                        echo "Keeping the source and continuing." |
+                            tee -a $SUMMARYLOG
+                        break
+                        ;;
+                    * ) echo "Unknown response."
+                        ;;
+                esac
+            done
         fi
     fi
 
