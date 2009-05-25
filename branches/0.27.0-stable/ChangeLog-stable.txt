@@ -2,5 +2,6 @@ Mon May 11 17:45:25 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * 
+  * Add museek-plus->museek+ to sbopkg-renames.new.
+
 +--------------------------+
