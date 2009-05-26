@@ -961,9 +961,9 @@ info_item() {
     # Returns 0 unless the user asked to jump back to the main menu.
 
     local OLDPKG CATEGORY SHORTPATH CURVERSION CURARCH CURBUILD
-    local CURAPP LONGAPP SHORTAPP
+    local CURAPP OUTPUTFILES
     local STRING INDEX NAME INST_ARCH VER BUILD DEFAULTITEM
-    local CURPACKAGE INSTALLEDPACKAGE MENUPACKAGE TITLEPACKAGE RENAMEDPACKAGE
+    local CURPACKAGE INSTALLEDPACKAGE MENUPACKAGE TITLEPACKAGE
     local CHOICE PARSED_SLACK_DESC
     local APP="$(< $SBOPKGTMP/sbopkg_item_selection)"
     local RETVAL=0
@@ -971,7 +971,7 @@ info_item() {
     # We need to check and see if the APP has ever been renamed.
     get_old_name OLDPKG $APP
 
-    CATEGORY="$(< $SBOPKGTMP/sbopkg_category_selection)"
+    CATEGORY=$(< $SBOPKGTMP/sbopkg_category_selection)
     SHORTPATH=$REPO_DIR/$CATEGORY/$APP
     CURVERSION=$(grep VERSION $SHORTPATH/$APP.info |
         cut -d= -f2 | sed s/\"//g)
@@ -981,57 +981,41 @@ info_item() {
     CURBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$APP.SlackBuild |
         sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
     while :; do
-        CURAPP=$(ls /var/log/packages/*$REPO_TAG* 2> /dev/null |
-                grep "$APP\|$OLDPKG")
-        unset INSTALLEDPACKAGE
-        for i in $CURAPP; do
-            LONGAPP=$(echo $i | sed "s/$REPO_TAG$//;s/-[^-]*-[^-]*-[^-]*$//")
-            SHORTAPP=$(echo $LONGAPP | sed -e 's/^.*\///g')
+        INSTALLEDPACKAGE=$(ls /var/log/packages |
+            egrep "^($APP|$OLDPKG)-[^-]*-[^-]*-[^-]*\$")
+        # Only get the first package (not that the same package should be
+        # installed more than once on a sane system...)
+        INSTALLEDPACKAGE=$(head -n 1 <<< "$INSTALLEDPACKAGE")
+        # Find the available package to install, if any, using several
+        # "strictness levels" (to pick the right one if available, but falling
+        # back to "less right" alternatives when appropriate)
+        OUTPUTFILES=$(ls -1 $OUTPUT)
+        CURPACKAGE=$( \
+            grep "^$APP-$CURVERSION-$CURARCH-$CURBUILD$REPO_TAG\\.t.z\$" \
+            <<< "$OUTPUTFILES")
+        [[ -z $CURPACKAGE ]] && CURPACKAGE=$( \
+            grep "^$APP-$CURVERSION-[^-]*-$CURBUILD$REPO_TAG\\.t.z\$" \
+            <<< "$OUTPUTFILES")
+        [[ -z $CURPACKAGE ]] && CURPACKAGE=$( \
+            grep "^$APP-$CURVERSION-[^-]*-[^-]*$REPO_TAG\\.t.z\$" \
+            <<< "$OUTPUTFILES")
+        [[ -z $CURPACKAGE ]] && CURPACKAGE=$( \
+            grep "^$APP-[^-]*-[^-]*-[^-]*$REPO_TAG\\.t.z\$" \
+            <<< "$OUTPUTFILES")
 
-            if [[ $SHORTAPP == $APP || $SHORTAPP == $OLDPKG ]]; then
-                # Again, code from pkgtool
-                STRING=$(basename $i $REPO_TAG)
-                INDEX="$(echo $STRING | tr -d -c -)"
-                INDEX="$(expr length $INDEX + 1)"
-                NAME=$(expr $INDEX - 3)
-                NAME="$(echo $STRING | cut -f 1-$NAME -d -)"
-                VER=$(expr $INDEX - 2)
-                VER="$(echo $STRING | cut -f $VER -d -)"
-                INST_ARCH=$(expr $INDEX - 1)
-                INST_ARCH="$(echo $STRING | cut -f $INST_ARCH -d -)"
-                BUILD="$(echo $STRING | cut -f $INDEX -d -)"
-
-                if [[ $SHORTAPP == $APP ]]; then
-                    INSTALLEDPACKAGE=$NAME-$VER-$INST_ARCH-$BUILD
-                else # Must be a renamed app
-                    RENAMEDPACKAGE=$NAME-$VER-$INST_ARCH-$BUILD
-                fi
-            fi
-        done
-        if $(echo $(ls -1 $OUTPUT) | grep -E -q "$APP.*$CURVERSION"); then
-            CURPACKAGE="$(
-                basename $(ls -1 $OUTPUT/${APP}*${CURVERSION}*${CURBUILD}*t?z|
-                head -n 1)
-                )"
-        else
-            unset CURPACKAGE
-        fi
         if [[ -z $CURPACKAGE ]]; then
             unset MENUPACKAGE
         else
+            CURPACKAGE=$(head -n 1 <<< "$CURPACKAGE")
             MENUPACKAGE="Install $CURPACKAGE"
         fi
         if [[ -z $INSTALLEDPACKAGE ]]; then
-            if [[ -z $RENAMEDPACKAGE ]]; then
-                TITLEPACKAGE="$APP (Not Installed)"
-            else
-                TITLEPACKAGE="$APP (Installed: $RENAMEDPACKAGE)"
-            fi
+            TITLEPACKAGE="$APP (Not Installed)"
         else
             TITLEPACKAGE="$APP (Installed: $INSTALLEDPACKAGE)"
         fi
         dialog --default-item "$DEFAULTITEM" \
-            --title "$APP ($CURVERSION-$CURARCH-$CURBUILD)" \
+            --title "$APP ($CURVERSION-$CURARCH-$CURBUILD$REPO_TAG)" \
             --backtitle "$TITLEPACKAGE" --extra-button --extra-label "Back" \
             --cancel-label "Main Menu" --menu \
             "$(crunch "Please choose an item or press <Back> to go back \
