@@ -1634,7 +1634,6 @@ add_item_to_queue() {
     local APP=$1
     local VERSIONBUILD=$2
     local ONOFF=$3
-    local BACKUPQUEUE_LOCK=$SBOPKGTMP/sbopkg_backup_queue.lck
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
     local TESTONOFF PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL
@@ -1661,7 +1660,6 @@ add_item_to_queue() {
     # Only display this if we are not loading a queue; otherwise getting this
     # after each app was added to the queue may get annoying.
     if [[ ! -e $USERQUEUE_LOCK &&
-            ! -e $BACKUPQUEUE_LOCK &&
             ! -e $UPDATEQUEUE ]]; then
         dialog --title "Done" --msgbox "$(crunch "$APP has been added to \
             the build queue.")" 8 40
@@ -1721,6 +1719,46 @@ view_queue() {
     done
     rm -f $WORKINGQUEUE
     return 1
+}
+
+add_all_to_queue() {
+    # This function adds all currently installed repo packages to the
+    # build queue.
+    local SBOPKGLIST=$SBOPKGTMP/sbopkg_pkglist
+    local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
+    local PKGS FILE INDEX STRING NAME
+
+    rm -f $SBOPKGLIST
+    touch $USERQUEUE_LOCK
+    cd /var/log/packages
+    PKGS=$(ls *$REPO_TAG* 2> /dev/null)
+    for FILE in $PKGS; do
+        echo $FILE >> $SBOPKGLIST
+    done
+    if [[ -f $SBOPKGLIST ]]; then
+        crunch_fmt "Loading all installed $REPO_TAG packages into the build \
+            queue. This may take a few moments depending on how many \
+            $REPO_TAG packages you have installed."
+        # Reading from $SBOPKGLIST
+        while read PICK; do
+            if can_skip_line $PICK; then
+                continue
+            fi
+            STRING=$(basename $PICK $REPO_TAG)
+            INDEX="$(echo $STRING | tr -d -c -)"
+            INDEX="$(expr length $INDEX + 1)"
+            NAME=$(expr $INDEX - 3)
+            NAME="$(echo $STRING | cut -f 1-$NAME -d -)"
+            add_item_to_queue $NAME
+        done < $SBOPKGLIST
+        rm -f $USERQUEUE_LOCK
+    else
+        if [[ $DIAG ]]; then
+            dialog --title "No packages found" --msgbox "$(crunch_fmt "It \
+                appears that you have no $REPO_NAME packages \
+                installed.")" 8 40
+        fi
+    fi
 }
 
 rsync_command() {
@@ -3125,13 +3163,14 @@ queue_menu() {
             "Currently using the $REPO_DESC." \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
-            15 60 7 \
+            15 60 8 \
             "View" "View the current build queue" \
             "Load" "Load a saved build queue" \
             "Save" "Save the current build queue" \
             "Edit" "Edit the current build queue" \
             "Rename" "Rename a saved build queue" \
             "Delete" "Delete a saved build queue" \
+            "Add" "Add all installed packages to the queue" \
             "Process" "Process the current build queue" 2> $ANSWERFILE
 
         DEFAULTITEM=$(< $ANSWERFILE)
@@ -3144,6 +3183,7 @@ queue_menu() {
             "Edit") edit_build_queue ;;
             "Rename") rename_user_queue ;;
             "Delete") delete_user_queue ;;
+            "Add") add_all_to_queue ;;
             "Process") #empty_queue && continue
                        view_queue || continue
                        cp $SBOPKGTMP/sbopkg-ans-queue $STARTQUEUE
