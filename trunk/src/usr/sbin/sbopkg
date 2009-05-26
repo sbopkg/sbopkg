@@ -1479,7 +1479,7 @@ save_user_queue() {
 
     rm -f $SAVEQUEUE
     # Reading from $TMPQUEUE...
-    while read PICK; do
+    [[ -s $TMPQUEUE ]] && while read PICK; do
         SAVENAME=$(echo $PICK | cut -d ' ' -f1)
         SAVEONOFF=$(echo $PICK | cut -d ' ' -f3)
         if [[ $SAVEONOFF =~ [oO][nN] ]]; then
@@ -1490,7 +1490,7 @@ save_user_queue() {
     done < $TMPQUEUE
     if [[ $1 == "--end" ]]; then
         if [[ ! -s $TMPQUEUE ]]; then
-            return 1
+            return 0
         elif [[ -f $LAST_USER_QUEUE_ON_DISK ]] &&
                 diff <(stripcom $LAST_USER_QUEUE_ON_DISK) $SAVEQUEUE &> \
                     /dev/null; then
