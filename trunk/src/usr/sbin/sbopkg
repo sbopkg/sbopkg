@@ -135,7 +135,8 @@ EOF
     fi
 
     # Make sure there are no unexpected files in $SBOPKGTMP
-    if [[ -n $(find $SBOPKGTMP -maxdepth 1 -not -name sbopkg\*) ]]; then
+    if [[ -n $(find $SBOPKGTMP -maxdepth 1 -not -name sbopkg\* 2> \
+            /dev/null) ]]; then
         cat << EOF
 
 ERROR
@@ -519,7 +520,7 @@ check_for_updates() {
     local VERSION_EXPRESSION
     local UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
     local STRING INDEX OLDNAME NAME VER INST_ARCH BUILD
-    local VER_NUMERIC NEWVER_NUMERIC UPDATED
+    local VER_NUMERIC NEWVER_NUMERIC VER_NDIGITS NEWVER_NDIGIT UPDATED
     local CURPKG PKGS NUMPKGS PROGRESSCOUNTER=0
 
     if [[ -z $REPO_TOOL ]]; then
@@ -628,16 +629,22 @@ check_for_updates() {
                 VER_NUMERIC=$(tr -c "[:digit:]" " " <<< "$VER")
                 NEWVER_NUMERIC=$(tr -c "[:digit:]" " " <<< "$NEWVER")
                 # The version number must have the same number of digits
-                while [[ $(wc -w <<< $VER_NUMERIC) -lt $(wc -w <<< $NEWVER_NUMERIC) ]]; do
+                VER_NDIGIT=$(wc -w <<< $VER_NUMERIC)
+                NEWVER_NDIGIT=$(wc -w <<< $NEWVER_NUMERIC)
+                while [[ $VER_NDIGIT -lt $NEWVER_NDIGIT ]]; do
                     VER_NUMERIC="$VER_NUMERIC 0"
+                    ((VER_NDIGIT++))
                 done
-                while [[ $(wc -w <<< $VER_NUMERIC) -gt $(wc -w <<< $NEWVER_NUMERIC) ]]; do
+                while [[ $VER_NDIGIT -gt $NEWVER_NDIGIT ]]; do
                     NEWVER_NUMERIC="$NEWVER_NUMERIC 0"
+                    ((NEWVER_NDIGIT++))
                 done
                 # The build number is just like the least significant version
                 # number
-                VER_NUMERIC="$VER_NUMERIC $(tr -c "[:digit:]" ' ' <<< "$BUILD")"
-                NEWVER_NUMERIC="$NEWVER_NUMERIC $(tr -c "[:digit:]" ' ' <<< "$NEWBUILD")"
+                VER_NUMERIC="$VER_NUMERIC $(tr -c "[:digit:]" ' ' \
+                    <<< "$BUILD")"
+                NEWVER_NUMERIC="$NEWVER_NUMERIC $(tr -c "[:digit:]" ' ' \
+                    <<< "$NEWBUILD")"
                 UPDATED=$(updates_compare_versions $VER_NUMERIC \
                     $NEWVER_NUMERIC)
 
@@ -653,9 +660,12 @@ check_for_updates() {
                 elif [[ $UPDATED -eq -1 ]]; then
                     if [[ $DEBUG -ge 1 ]]; then
                         echo $NAME: >> $UPDATELIST
-                        echo "  INSTALLED PACKAGE IS NEWER THAN REPO" >> $UPDATELIST
+                        echo "  INSTALLED PACKAGE IS NEWER THAN REPO" \
+                            >> $UPDATELIST
                         echo "  Installed version: " $CURPKG >> $UPDATELIST
-                        echo "  Repo version: " $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG >> $UPDATELIST
+                        echo "  Repo version: " \
+                            $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
+                            >> $UPDATELIST
                     fi
                 else
                     if [[ $DEBUG -eq 2 ]]; then
@@ -675,8 +685,8 @@ check_for_updates() {
             echo $(($PROGRESSCOUNTER * 100 / $NUMPKGS))
         done
         } | progressbar "Building list of potential updates" "This may take\
-            a few moments depending on how many packages from the $REPO_DESC are\
-            installed..."
+            a few moments depending on how many packages from the $REPO_DESC\
+            are installed..."
         echo >> $UPDATELIST
         echo "Potential update list complete." >> $UPDATELIST
     fi
@@ -882,7 +892,7 @@ select_repository() {
             PID=$!
         fi
         set_repo_vars
-        [[ $PID ]] && kill $PID 2>/dev/null
+        [[ $PID ]] && kill $PID 2> /dev/null
         dialog --title "Save this setting?" --defaultno --yesno \
             "$(crunch "Would you like to save this repository setting \
             in the user's $HOME/.sbopkg.conf file? (One will be created if \
@@ -3604,7 +3614,8 @@ else
         CLIQUEUE=$SBOPKGTMP/sbopkg_cli_queue
         > $SBOPKGTMP/sbopkg-start-queue
         for PKGBUILD in $BUILD; do
-            if [[ -r $QUEUEDIR/$PKGBUILD.sboq ]] && search_package $PKGBUILD; then
+            if [[ -r $QUEUEDIR/$PKGBUILD.sboq ]] &&
+                    search_package $PKGBUILD; then
                 crunch_fmt "Both a queuefile and a package were found with \
                     the name \"$PKGBUILD\".  Which would you like to use?"
                 echo
@@ -3633,8 +3644,8 @@ else
                         # Add a single package
                         echo $PKGBUILD >> $CLIQUEUE
                     else
-                        crunch_fmt "Queuefile or package $PKGBUILD not found - \
-                            skipping."
+                        crunch_fmt "Queuefile or package $PKGBUILD not found\
+                            - skipping."
                         echo
                     fi
                 fi
