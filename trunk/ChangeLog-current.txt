@@ -78,4 +78,7 @@ enhancements:
     queuefiles much easier and more intuitive.
   * Add ability to load more than one queuefile at a time when building
     from command line interface.
+  * The info_item dialog now shows non-SBo installed packages and gained a
+    more robust approach to finding both the installed package names and
+    the available packages in $OUTPUT.
 +--------------------------+
