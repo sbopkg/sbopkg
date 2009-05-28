@@ -85,4 +85,6 @@ enhancements:
     alphabetical list, so shuffling/reordering of the queue will be necessary
     in order to list the dependencies correctly, but at least this will give
     users a head start on setting up a large build queue.
+  * The process of searching for obsolete source archives can now be
+    interrupted with ESC.
 +--------------------------+
