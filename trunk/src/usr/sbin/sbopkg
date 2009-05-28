@@ -1334,6 +1334,9 @@ load_user_queue() {
     # This function loads a user's specified saved queue and merges it
 
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
+    local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_luq_missing
+
+    rm -f $MISSING_LIST_FILE
 
     queue_dir_lister "Load Queue" "$(crunch "Select the queue(s) you \
         wish to load and choose <OK> or choose <Back> to \
@@ -1352,10 +1355,24 @@ load_user_queue() {
                 if can_skip_line $PICK; then
                     continue
                 fi
-                add_item_to_queue $PICK
+                if ! add_item_to_queue $PICK; then
+                    if [[ ! -f $MISSING_LIST_FILE ]]; then
+                        cat > $MISSING_LIST_FILE <<EOF
+The following packages cannot be found
+in the currently active repository
+($REPO_NAME/$REPO_BRANCH) and have been skipped:
+
+EOF
+                    fi
+                    echo $PICK >> $MISSING_LIST_FILE
+                fi
             done < $FILE
+            if [[ -f $MISSING_LIST_FILE ]]; then
+                dialog --title "Packages not found" --textbox \
+                    $MISSING_LIST_FILE 0 0
+            fi
             LAST_USER_QUEUE_ON_DISK=$FILE
-            rm -f $USERQUEUE_LOCK
+            rm -f $USERQUEUE_LOCK $MISSING_LIST_FILE
         else
             dialog --title "ERROR" --msgbox \
                 "$FILE is not readable or does not exist" 0 0
@@ -1630,6 +1647,11 @@ add_item_to_queue() {
     # have all three arguments, then we continue on.  If APP is already in the
     # queue and is of a different version, ask user if they want to replace it
     # (so updated pkgs will get updated in the queue).
+    #
+    # If an obsolete name is used, add_item_to_queue() automatically retrieves
+    # and uses the current name.
+    #
+    # This function returns 0 if the insertion was successful, 1 otherwise.
 
     local APP=$1
     local VERSIONBUILD=$2
@@ -1646,7 +1668,10 @@ add_item_to_queue() {
         else
             ONOFF=ON
         fi
-        search_package $APP
+        if ! search_package $APP; then
+            get_new_name APP $APP
+            search_package $APP || return 1
+        fi
         . $PKGPATH/$APP.info
         BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$APP.SlackBuild |
             sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
@@ -1664,6 +1689,7 @@ add_item_to_queue() {
         dialog --title "Done" --msgbox "$(crunch "$APP has been added to \
             the build queue.")" 8 40
     fi
+    return 0
 }
 
 view_queue() {
@@ -1726,21 +1752,29 @@ add_all_to_queue() {
     # build queue.
     local SBOPKGLIST=$SBOPKGTMP/sbopkg_pkglist
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
+    local TMPQUEUE_BACKUP=$SBOPKGTMP/sbopkg_addall_backup
+    local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
+    local PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
     local PKGS FILE INDEX STRING NAME
+    local PROGRESS=0 NUM_PACKAGES
 
-    rm -f $SBOPKGLIST
+    rm -f $SBOPKGLIST $MISSING_LIST_FILE $PROGRESSBAR_INTERRUPTED
+    cp $TMPQUEUE $TMPQUEUE_BACKUP 2> /dev/null
     touch $USERQUEUE_LOCK
     cd /var/log/packages
     PKGS=$(ls *$REPO_TAG* 2> /dev/null)
     for FILE in $PKGS; do
         echo $FILE >> $SBOPKGLIST
     done
+    NUM_PACKAGES=$(wc -l < $SBOPKGLIST)
     if [[ -f $SBOPKGLIST ]]; then
-        crunch_fmt "Loading all installed $REPO_TAG packages into the build \
-            queue. This may take a few moments depending on how many \
-            $REPO_TAG packages you have installed."
-        # Reading from $SBOPKGLIST
-        while read PICK; do
+        { # Grouping for progressbar
+        echo 0 # Progressbar begin
+
+        for PICK in $(cat $SBOPKGLIST); do
+            # Bail out if the user pressed ESC
+            progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
+
             if can_skip_line $PICK; then
                 continue
             fi
@@ -1749,9 +1783,36 @@ add_all_to_queue() {
             INDEX="$(expr length $INDEX + 1)"
             NAME=$(expr $INDEX - 3)
             NAME="$(echo $STRING | cut -f 1-$NAME -d -)"
-            add_item_to_queue $NAME
-        done < $SBOPKGLIST
-        rm -f $USERQUEUE_LOCK
+            if ! add_item_to_queue $NAME; then
+                if [[ ! -f $MISSING_LIST_FILE ]]; then
+                    cat > $MISSING_LIST_FILE <<EOF
+The following packages cannot be found
+in the currently active repository
+($REPO_NAME/$REPO_BRANCH) and have been skipped:
+
+EOF
+                fi
+                echo $NAME >> $MISSING_LIST_FILE
+            fi
+
+            ((PROGRESS++))
+            echo $((PROGRESS*100/NUM_PACKAGES))
+        done
+        } | progressbar "Queuing installed packages" \
+            "Loading all installed $REPO_NAME packages into the build queue.\
+            This may take a few moments depending on how many $REPO_NAME\
+            packages you have installed, so please be patient..."
+        if [[ -f $PROGRESSBAR_INTERRUPTED ]]; then
+            rm -f $TMPQUEUE
+            mv $TMPQUEUE_BACKUP $TMPQUEUE 2> /dev/null
+            rm $PROGRESSBAR_INTERRUPTED
+        else
+            if [[ -f $MISSING_LIST_FILE ]]; then
+                dialog --title "Packages not found" --textbox \
+                    $MISSING_LIST_FILE 0 0
+            fi
+        fi
+        rm -f $USERQUEUE_LOCK $MISSING_LIST_FILE $TMPQUEUE_BACKUP
     else
         if [[ $DIAG ]]; then
             dialog --title "No packages found" --msgbox "$(crunch_fmt "It \
@@ -3162,7 +3223,7 @@ queue_menu() {
         dialog --title "Build Queue Menu" --backtitle \
             "Currently using the $REPO_DESC." \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
-            "\nChoose one of the following or press <Back> to go back.\n" \
+            "Choose one of the following or press <Back> to go back.\n" \
             15 60 8 \
             "View" "View the current build queue" \
             "Load" "Load a saved build queue" \
