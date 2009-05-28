@@ -2408,9 +2408,12 @@ remove_obsoleted_sources() {
 
     local FIND_RESULT=$SBOPKGTMP/sbopkg_obsolete_find
     local SOURCES=$SBOPKGTMP/sbopkg_app_sources
+    local PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
     local PROGRESS=0
     local NUMINFO
     local INFO APP_CURRSRC REGEX
+
+    rm -f $PROGRESSBAR_INTERRUPTED
 
     { # Grouping for progressbar
     echo 0 # Progressbar begin
@@ -2419,8 +2422,10 @@ remove_obsoleted_sources() {
     NUMINFO=$(wc -l < $FIND_RESULT)
     ls -A $SRCDIR > $SOURCES
 
-    # Reading from $FIND_RESULT...
-    while read INFO; do
+    for INFO in $(cat $FIND_RESULT); do
+        # Bail out if the user pressed ESC
+        progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
+
         APP_CURRSRC=$(get_source_names "$INFO")
         if [[ $APP_CURRSRC ]]; then
             REGEX="/^$APP_CURRSRC$/d;$REGEX"
@@ -2429,10 +2434,15 @@ remove_obsoleted_sources() {
         # Progress indicator, for the progressbar
         (( PROGRESS += 1 ))
         echo $(($PROGRESS * 100 / $NUMINFO))
-    done < $FIND_RESULT
+    done
     sed -i "$REGEX" $SOURCES
     } | progressbar "Searching obsolete sources" \
         "This may take a while, so please be patient..."
+
+    if [[ -f $PROGRESSBAR_INTERRUPTED ]]; then
+        rm -f $PROGRESSBAR_INTERRUPTED $SOURCES
+        return
+    fi
 
     # Quote file names
     sed -i "s/^\(.*\)$/\"\\1\"/" $SOURCES
