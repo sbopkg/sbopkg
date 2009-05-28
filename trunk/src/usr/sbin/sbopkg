@@ -2272,7 +2272,7 @@ $SRCNAME in $SRCDIR?
 You can choose among the following options:
  - (Y)es, keep the source and continue;
  - (N)o, delete the source and abort build;
- - No, (d)ownload another copy and try again.
+ - (D)ownload another copy and try again.
 Your choice?
 EOF
             error_read ANS
