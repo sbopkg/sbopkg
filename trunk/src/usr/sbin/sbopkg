@@ -1045,7 +1045,7 @@ info_item() {
             --cancel-label "Main Menu" --menu \
             "$(crunch "Please choose an item or press <Back> to go back \
             or press <Main Menu> to return to the main menu.\n")" \
-            18 60 10 \
+            20 62 12 \
             "README" "View the README file" \
             "Info" "View the .info file" \
             "SlackBuild" "View the SlackBuild file" \
@@ -1053,6 +1053,8 @@ info_item() {
             "Custom" "Customize the .info or SlackBuild" \
             "Remove" "Remove $APP sources in cache" \
             "Options" "Edit Build Options/Flavors" \
+            "Check GPG" "Check the GPG signature of the $REPO_NAME tarball" \
+            "Extract" "Re-extract the $REPO_NAME tarball" \
             "Queue" "Add $APP to build queue" \
             "Build" "Build a package for $APP" \
             $MENUPACKAGE \
@@ -1079,13 +1081,27 @@ info_item() {
                     Custom ) customize_item ;;
                     Remove ) remove_sources_for_app $SHORTPATH/$APP.info ;;
                     Options ) add_options $APP ;;
+                    "Check GPG" )
+                        check_gpg $SHORTPATH
+                        if [[ $? == 1 ]]; then
+                            RETVAL=1
+                            break
+                        fi
+                        ;;
+                    Extract )
+                        extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
+                        if [[ $? == 1 ]]; then
+                            RETVAL=1
+                            break
+                        fi
+                        ;;
                     Queue ) add_item_to_queue $APP $CURVERSION-$CURBUILD ON ;;
                     Build )
                         echo "$APP" > $SBOPKGTMP/sbopkg-start-queue
                         start_dialog_queue ;;
                     Install )
                         if [[ ! -e $OUTPUT/$CURPACKAGE ]]; then
-                              continue;
+                            continue;
                         fi
                         install_package $OUTPUT $CURPACKAGE | tee $TMPLOG
                         read -n 1 -p "Press any key to continue."
@@ -1103,6 +1119,58 @@ info_item() {
 
     rm -f $SBOPKGTMP/sbopkg_info_selection
     return $RETVAL
+}
+
+extract_tarball() {
+    # Re-extract the $APP tarball on top of local directory.  Can be used
+    # if tarball fails GPG check.
+    local DELPKG=$1
+    local DESTINATION=$2
+    local DELNAME=$(basename $DELPKG)
+
+    if [[ ! -e $DELPKG.tar.gz ]]; then
+        dialog --title "Error" --msgbox "$(crunch "No $REPO_NAME $DELNAME \
+            tarball found.")" 8 40
+        return 0
+    fi
+    dialog --title "Delete?" --yesno "$(crunch "Do you wish to re-extract \
+        the $DELNAME tarball on top of the local directory?  Press <Yes> to \
+        extract or <No> to return.")" 0 0
+        if [[ $? == 0 ]]; then
+            tar -C $DESTINATION -zxvf $DELPKG.tar.gz
+            dialog --title "Done" --msgbox \
+                "The tarball has been extracted." 8 30
+            return 1
+        fi
+}
+
+check_gpg() {
+    # Check the .asc signature of the tarball from info_item menu
+    local CHKPKG=$1
+    local GPGNAME=$(basename $CHKPKG)
+
+    if [[ ! -e $CHKPKG.tar.gz ]]; then
+        dialog --title "Error" --msgbox "$(crunch "No $REPO_NAME $GPGNAME \
+            tarball found.")" 8 40
+        return 0
+    fi
+    if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
+        dialog --title "WARNING" --yesno "$(crunch "GPG CHECK FAILED!\n\n\
+            Would you like to delete the $GPGNAME directory and tarball \
+            so you can perform a new sync?  If so, all local changes to \
+            the files in the $GPGNAME directory will be lost and you will \
+            be returned to the main menu.  Press <Yes> to delete or <No> \
+            to skip.")" 0 0
+            if [[ $? == 0 ]]; then
+                rm -rf $CHKPKG; rm $CHKPKG.*
+                dialog --title "Done" --msgbox \
+                    "The directory and tarball have been deleted." 8 30
+                return 1
+            fi
+    else
+        dialog --title "OK" --msgbox "GPG check passed." 6 25
+        return 0
+    fi
 }
 
 customize_item() {
@@ -1874,6 +1942,9 @@ rsync_command() {
             echo
             echo "Rsync with the $REPO_DESC complete."
             echo
+            echo "Importing $REPO_DESC GPG Key..."
+            gpg --quiet --fetch-key http://www.slackbuilds.org/GPG-KEY
+            echo "Import done."
             ;;
         *)
             echo
@@ -2270,11 +2341,9 @@ check_source() {
     echo "Checking MD5SUM for \"$SRCNAME\"..."
     MD5CHK=$(md5sum "$SRCDIR/$SRCNAME" | cut -d' ' -f1)
     if [[ $MD5CHK == $MD5SUM ]]; then
-        echo "OK"
+        echo "MD5SUM check passed." | tee -a $TMPSUMMARYLOG
     else
-        echo >> $TMPSUMMARYLOG
-        echo "$PKG:" >> $TMPSUMMARYLOG
-        echo "MD5SUM check failed." | tee -a $TMPSUMMARYLOG
+        echo "MD5SUM check failed!" | tee -a $TMPSUMMARYLOG
         echo "Expected: $MD5SUM" | tee -a $TMPSUMMARYLOG
         echo "Found:    $MD5CHK" | tee -a $TMPSUMMARYLOG
         # Ask the user what to do with the bad source
@@ -2285,25 +2354,25 @@ Do you want to use the downloaded $PKG source:
 $SRCNAME in $SRCDIR?
 
 You can choose among the following options:
- - (Y)es, keep the source and continue;
- - (N)o, delete the source and abort build;
- - (D)ownload another copy and try again.
+ - (Y)es, keep the source and continue the build process;
+ - (N)o, delete the source and abort the build process; or
+ - (R)etry download and continue the build process.
 Your choice?
 EOF
             error_read ANS
             case $ANS in
-                n* | N* )
-                    rm -f "$SRCDIR/$SRCNAME"
-                    echo "Source deleted." | tee -a $TMPSUMMARYLOG
-                    return 2
-                    ;;
                 y* | Y* )
                     MD5SUM=$(tr / _ <<< "$MD5CHK")
                     echo "Keeping the source and continuing." |
                         tee -a $TMPSUMMARYLOG
                     return 0
                     ;;
-                d* | D* )
+                n* | N* )
+                    rm -f "$SRCDIR/$SRCNAME"
+                    echo "Source deleted." | tee -a $TMPSUMMARYLOG
+                    return 2
+                    ;;
+                r* | R* )
                     echo "Downloading again." | tee -a $TMPSUMMARYLOG
                     return 1
                     ;;
@@ -2367,6 +2436,7 @@ get_source() {
             mv "$DL" "$SRCDIR/$SRCNAME"
         else
             FAILURE=download
+            echo >> $TMPSUMMARYLOG
             echo "$PKG:" >> $TMPSUMMARYLOG
             echo "Download failed." >> $TMPSUMMARYLOG
             echo >> $TMPSUMMARYLOG
@@ -2392,7 +2462,7 @@ get_source() {
             echo "Press (Y)es to continue or (N)o to abort."
             error_read ANS
             case $ANS in
-                y* | Y* ) return 1 ;;
+                y* | Y* ) return 2 ;;
                 n* | N* ) rm -f $BUILD_LOCK && return 2 ;;
                 * ) echo "Unknown response." ;;
             esac
@@ -2653,6 +2723,14 @@ build_package() {
     # Prepare a temporary output directory
     rm -rf $SB_OUTPUT
     mkdir -p $SB_OUTPUT
+
+    # Check the GPG signature of the tarball.
+    check_asc $PKGPATH
+    case $? in
+        0 ) ;;
+        1 ) return 0 ;;
+        * ) return 1 ;;
+    esac
 
     # Fetch the source
     # Note that get_source() "knows" about the source cache, so this isn't
@@ -2920,6 +2998,68 @@ use_options() {
     fi
 }
 
+check_asc() {
+    # Check the .asc signature of the tarball
+    local CHKPKG=$1
+    local GPGNAME=$(basename $CHKPKG)
+
+    echo "Checking GPG for $GPGNAME..."
+    echo >> $TMPSUMMARYLOG
+    if [[ ! -e $CHKPKG.tar.gz ]]; then
+        echo "$GPGNAME:" | tee -a $TMPSUMMARYLOG
+        echo "GPG check skipped!  No tarball found." | tee -a $TMPSUMMARYLOG
+        return 0
+    fi
+    echo
+    if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
+        echo "$GPGNAME:" | tee -a $TMPSUMMARYLOG
+        echo "GPG check failed!" | tee -a $TMPSUMMARYLOG
+        while :; do
+            cat << EOF
+
+Do you want keep the $GPGNAME directory and tarball and continue with the
+build process?  Selecting "No" will delete the $GPGNAME directory and
+tarball and all local changes to $GPGNAME and its files will be lost.
+
+You can choose among the following options:
+ - (Y)es, keep the $GPGNAME directory and tarball and continue the build process;
+ - (N)o, delete the $GPGNAME directory and tarball and abort the build process; or
+ - (A)bort the build process without deleting anything.
+Your choice?
+EOF
+            error_read ANS
+            case $ANS in
+                y* | Y* )
+                    echo "Keeping $GPGNAME directory and tarball." |
+                        tee -a $TMPSUMMARYLOG
+                    return 0
+                    ;;
+                n* | N* )
+                    echo "Deleting $GPGNAME directory and tarball." |
+                        tee -a $TMPSUMMARYLOG
+                    rm -rf $PKGPATH; rm $PKGPATH.*
+                    rm -f $BUILD_LOCK
+                    return 2
+                    break
+                    ;;
+                a* | A* )
+                    echo "Aborting the build process." |
+                        tee -a $TMPSUMMARYLOG
+                    rm -f $BUILD_LOCK
+                    return 2
+                    ;;
+                * )
+                    echo "Unknown response."
+                    ;;
+            esac
+        done
+    else
+        echo "$GPGNAME:" >> $TMPSUMMARYLOG
+        echo "GPG check passed." | tee -a $TMPSUMMARYLOG
+    fi
+    return 0
+}
+
 process_queue() {
     local QUEUETYPE=$1 # build|buildinstall
 
@@ -2930,12 +3070,12 @@ process_queue() {
     rm -f $TMPLOG $TMPBUILDLOG $TMPSUMMARYLOG $FINALQUEUE
     # Start the precheck
     echo >> $TMPLOG
-    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
+    echo "##########################################" >> $TMPLOG
     echo "       New queue process started on" >> $TMPLOG
     echo "       $(date)" >> $TMPLOG
-    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
+    echo "##########################################" >> $TMPLOG
     echo >> $TMPLOG
-    echo "------------------------------------------" >> $TMPLOG
+    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
     if [[ $QUEUETYPE == "buildinstall" ]]; then
@@ -2984,7 +3124,7 @@ process_queue() {
         echo >> $TMPLOG
         COUNTER=$((COUNTER+1))
     done
-    echo "------------------------------------------" >> $TMPLOG
+    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     if [[ ! -e $FINALQUEUE ]]; then
         return 1
     fi
@@ -3036,11 +3176,17 @@ process_queue() {
         fi
         if [[ -f $SBOPKGTMP/sbopkg_build.lck ]]; then
             set -o pipefail
-            build_package $PKGPATH $PKGBUILD 2>&1 | tee $TMPBUILDLOG || break
+            build_package $PKGPATH $PKGBUILD 2>&1 | tee -a $TMPBUILDLOG
+            case $? in
+                0 ) ;;
+                1 ) continue ;;
+                * ) break ;;
+            esac
             set +o pipefail
             echo "Done building package for $PKGBUILD."
             cd $SB_OUTPUT
             NEWPACKAGE=$(ls -1t *.t?z | head -n1)
+            echo "[[ PACKAGE RESULTS ]]" >> $TMPSUMMARYLOG
             echo "Package $COUNTER: $PKGBUILD" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE"
@@ -3056,6 +3202,7 @@ process_queue() {
                 mv $SB_OUTPUT/*.t?z $OUTPUT/
             fi
         else
+            echo >> $TMPSUMMARYLOG
             echo "$PKGBUILD:" >> $TMPSUMMARYLOG
             echo "Not processed - build queue aborted." >> $TMPSUMMARYLOG
             echo >> $TMPSUMMARYLOG
@@ -3068,7 +3215,7 @@ process_queue() {
     fi
     rm -f $SBOPKGTMP/sbopkg_build.lck
     echo >> $TMPLOG
-    echo "------------------------------------------" >> $TMPLOG
+    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
     if [[ $QUEUETYPE == "buildinstall" ]]; then
@@ -3079,14 +3226,16 @@ process_queue() {
     cat $TMPSUMMARYLOG >> $TMPLOG
     rm $TMPSUMMARYLOG
     echo >> $TMPLOG
-    echo "------------------------------------------" >> $TMPLOG
+    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     echo >> $TMPLOG
-    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
+    echo "##########################################" >> $TMPLOG
     echo "          Queue process complete" >> $TMPLOG
-    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
+    echo "##########################################" >> $TMPLOG
     echo >> $TMPLOG
     cat $TMPLOG
-    read -n 1 -p "Press any key to continue."
+    if [[ $DIAG ]]; then
+        read -n 1 -p "Press any key to continue."
+    fi
     if [[ $KEEPLOG ]]; then
         cat $TMPLOG >> $LOGFILE
     fi
@@ -3273,7 +3422,7 @@ queue_menu() {
             "Process") #empty_queue && continue
                        view_queue || continue
                        cp $SBOPKGTMP/sbopkg-ans-queue $STARTQUEUE
-                       start_dialog_queue  ;;
+                       start_dialog_queue ;;
             *) break ;;
         esac
     done
