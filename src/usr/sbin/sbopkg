@@ -75,10 +75,10 @@ crunch_fmt() {
 
 split_pkg_name() {
     # This function takes a string in the Slackware format NAME-VER-ARCH-BUILD
-    # (with an optional _TAG) and splits the string into those respective
+    # (with an optional TAG) and splits the string into those respective
     # PKG_-prefixed variables. (foo-1.0-i486-1_bar results in 'foo' being
     # assigned to PKG_NAME, '1.0' being assigned to PKG_VER, 'i486' being
-    # assigned to PKG_ARCH, '1' being assigned to PKG_BUILD, and 'bar' being
+    # assigned to PKG_ARCH, '1' being assigned to PKG_BUILD, and '_bar' being
     # assigned to PKG_TAG. If the string has no tag, PKG_TAG will be an empty
     # string.
 
