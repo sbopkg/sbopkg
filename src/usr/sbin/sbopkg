@@ -73,6 +73,23 @@ crunch_fmt() {
     echo -e "$@" | tr -s ' ' | fmt -78
 }
 
+split_pkg_name() {
+    # This function takes a string in the Slackware format NAME-VER-ARCH-BUILD
+    # (with an optional _TAG) and splits the string into those respective
+    # PKG_-prefixed variables. (foo-1.0-i486-1_bar results in 'foo' being
+    # assigned to PKG_NAME, '1.0' being assigned to PKG_VER, 'i486' being
+    # assigned to PKG_ARCH, '1' being assigned to PKG_BUILD, and 'bar' being
+    # assigned to PKG_TAG. If the string has no tag, PKG_TAG will be an empty
+    # string.
+
+    local FILE=${1##*/}
+
+    eval $(echo $FILE | sed '
+        s/\(.*\)-\([^-]*\)-\([^-]*\)-\([0-9]*\)\(.*\)*/\
+        PKG_NAME=\1 PKG_VER=\2 PKG_ARCH=\3 PKG_BUILD=\4 PKG_TAG=\5/
+    ')
+}
+
 config_check() {
     # Check if config file is there and if so check that it has all
     # needed variables with any value, and set them.
@@ -519,7 +536,7 @@ check_for_updates() {
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
     local UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
-    local STRING INDEX OLDNAME NAME VER INST_ARCH BUILD
+    local OLDNAME PKG_NAME PKG_VER PKG_ARCH PKG_BUILD
     local VER_NUMERIC NEWVER_NUMERIC VER_NDIGITS NEWVER_NDIGIT UPDATED
     local CURPKG PKGS NUMPKGS PROGRESSCOUNTER=0
 
@@ -528,8 +545,8 @@ check_for_updates() {
             dialog --title "ERROR" --msgbox \
                 "You cannot check for updates when using the $REPO_DESC." 8 40
         else
-            crunch_fmt "You cannot check for updates when using the \
-                $REPO_DESC."
+            crunch_fmt \
+                "You cannot check for updates when using the $REPO_DESC."
         fi
         return 1
     fi
@@ -555,32 +572,23 @@ check_for_updates() {
             # Bail out if the user pressed ESC
             progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
 
-            # This next code is borrowed and modified from pkgtool
-            STRING=$(basename $CURPKG $REPO_TAG)
-            INDEX="$(echo $STRING | tr -d -c -)"
-            INDEX="$(expr length $INDEX + 1)"
-            OLDNAME=$(expr $INDEX - 3)
-            OLDNAME="$(echo $STRING | cut -f 1-$OLDNAME -d -)"
-            VER=$(expr $INDEX - 2)
-            VER="$(echo $STRING | cut -f $VER -d -)"
-            INST_ARCH=$(expr $INDEX - 1)
-            INST_ARCH="$(echo $STRING | cut -f $INST_ARCH -d -)"
-            BUILD="$(echo $STRING | cut -f $INDEX -d -)"
-            # End pkgtool code
+            # split CURPKG into its components
+            split_pkg_name $CURPKG
+            OLDNAME=$PKG_NAME
 
             # Manage package renames
             get_new_name NAME $OLDNAME
 
             # Find the current SlackBuild
             NEWSB=$(find $REPO_DIR -name $NAME.SlackBuild)
-                if [[ -z $NEWSB ]]; then
-                    # Maybe we're running an old repository where the rename
-                    # didn't take place
-                    if [[ $NAME != $OLDNAME ]]; then
-                        NAME=$OLDNAME
-                        NEWSB=$(find $REPO_DIR -name $NAME.SlackBuild)
-                    fi
+            if [[ -z $NEWSB ]]; then
+                # Maybe we're running an old repository where the rename
+                # didn't take place
+                if [[ $NAME != $OLDNAME ]]; then
+                    NAME=$OLDNAME
+                    NEWSB=$(find $REPO_DIR -name $NAME.SlackBuild)
                 fi
+            fi
 
             # Extract the new package version
             if [[ ! -z $NEWSB ]]; then
@@ -610,7 +618,7 @@ check_for_updates() {
                 echo "echo $VERSION_EXPRESSION" > $VERSION_FILE
 
                 # Step 2 - find the used variables and their expressions
-                # recursively This fills the VERSION_FILE with the proper
+                # recursively. This fills the VERSION_FILE with the proper
                 # variables assignments in reversed order (first dependant,
                 # then dependencies)
                 updates_resolve_expression "$VERSION_EXPRESSION"
@@ -634,7 +642,7 @@ check_for_updates() {
                 fi
 
                 # Compare the old $VER and the new $NEWVER
-                VER_NUMERIC=$(tr -c "[:digit:]" " " <<< "$VER")
+                VER_NUMERIC=$(tr -c "[:digit:]" " " <<< "$PKG_VER")
                 NEWVER_NUMERIC=$(tr -c "[:digit:]" " " <<< "$NEWVER")
                 # The version number must have the same number of digits
                 VER_NDIGIT=$(wc -w <<< $VER_NUMERIC)
@@ -650,7 +658,7 @@ check_for_updates() {
                 # The build number is just like the least significant version
                 # number
                 VER_NUMERIC="$VER_NUMERIC $(tr -c "[:digit:]" ' ' \
-                    <<< "$BUILD")"
+                    <<< "$PKG_BUILD")"
                 NEWVER_NUMERIC="$NEWVER_NUMERIC $(tr -c "[:digit:]" ' ' \
                     <<< "$NEWBUILD")"
                 UPDATED=$(updates_compare_versions $VER_NUMERIC \
@@ -743,7 +751,7 @@ updates_compare_versions() {
     # 1.2.50 build 4, the argument list is
     # 1 2 3 7 1 2 50 4
     # Prints -1 if the "left" package is newer (not an update), 0 if
-    # the version is unchanges, 1 if the "left" package is newer.
+    # the version is unchanged, 1 if the "left" package is newer.
 
     local COUNT=$(($# / 2))
     local i RESULT=0
@@ -980,7 +988,7 @@ info_item() {
 
     local OLDPKG CATEGORY SHORTPATH CURVERSION CURARCH CURBUILD
     local CURAPP OUTPUTFILES
-    local STRING INDEX NAME INST_ARCH VER BUILD DEFAULTITEM
+    local DEFAULTITEM
     local CURPACKAGE INSTALLEDPACKAGE MENUPACKAGE TITLEPACKAGE
     local CHOICE PARSED_SLACK_DESC
     local APP="$(< $SBOPKGTMP/sbopkg_item_selection)"
@@ -1838,7 +1846,7 @@ add_all_to_queue() {
     local TMPQUEUE_BACKUP=$SBOPKGTMP/sbopkg_addall_backup
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
     local PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
-    local PKGS FILE INDEX STRING NAME
+    local PKGS FILE PKG_NAME
     local PROGRESS=0 NUM_PACKAGES
 
     rm -f $SBOPKGLIST $MISSING_LIST_FILE $PROGRESSBAR_INTERRUPTED
@@ -1861,12 +1869,8 @@ add_all_to_queue() {
             if can_skip_line $PICK; then
                 continue
             fi
-            STRING=$(basename $PICK $REPO_TAG)
-            INDEX="$(echo $STRING | tr -d -c -)"
-            INDEX="$(expr length $INDEX + 1)"
-            NAME=$(expr $INDEX - 3)
-            NAME="$(echo $STRING | cut -f 1-$NAME -d -)"
-            if ! add_item_to_queue $NAME; then
+            split_pkg_name $PICK
+            if ! add_item_to_queue $PKG_NAME; then
                 if [[ ! -f $MISSING_LIST_FILE ]]; then
                     cat > $MISSING_LIST_FILE <<EOF
 The following packages cannot be found
@@ -1875,7 +1879,7 @@ in the currently active repository
 
 EOF
                 fi
-                echo $NAME >> $MISSING_LIST_FILE
+                echo $PKG_NAME >> $MISSING_LIST_FILE
             fi
 
             ((PROGRESS++))
