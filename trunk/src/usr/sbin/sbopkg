@@ -2748,7 +2748,6 @@ build_package() {
     esac
 
     # Start the actual build
-    echo >> $TMPSUMMARYLOG
     echo "Building package for $PKGNAME..."
     (   # Run the build in a subshell, to avoid namespace pollution
         [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
@@ -3190,8 +3189,6 @@ process_queue() {
             echo "Done building package for $PKGBUILD."
             cd $SB_OUTPUT
             NEWPACKAGE=$(ls -1t *.t?z | head -n1)
-            echo "[[ PACKAGE RESULTS ]]" >> $TMPSUMMARYLOG
-            echo "Package $COUNTER: $PKGBUILD" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE"
             if [[ $QUEUETYPE == "buildinstall" ]]; then
