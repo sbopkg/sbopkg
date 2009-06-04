@@ -990,7 +990,7 @@ info_item() {
     local CURAPP OUTPUTFILES
     local DEFAULTITEM
     local CURPACKAGE INSTALLEDPACKAGE MENUPACKAGE TITLEPACKAGE
-    local CHOICE PARSED_SLACK_DESC
+    local CHOICE PARSED_SLACK_DESC CHKRETVAL
     local APP="$(< $SBOPKGTMP/sbopkg_item_selection)"
     local RETVAL=0
 
@@ -1086,19 +1086,38 @@ info_item() {
                         view_app_file $SHORTPATH $APP.SlackBuild
                         ;;
                     "More Files" ) app_files_chooser $SHORTPATH ;;
-                    Custom ) customize_item ;;
+                    Custom )
+                        check_gpg $SHORTPATH
+                        if [[ $? == 1 ]]; then
+                            RETVAL=1
+                            break
+                        fi
+                        extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
+                        if [[ $? == 1 ]]; then
+                            RETVAL=1
+                            break
+                        fi
+                        customize_item
+                        ;;
                     Remove ) remove_sources_for_app $SHORTPATH/$APP.info ;;
                     Options ) add_options $APP ;;
                     "Check GPG" )
                         check_gpg $SHORTPATH
-                        if [[ $? == 1 ]]; then
+                        CHKRETVAL=$?
+                        if [[ $CHKRETVAL == 0 ]]; then
+                            dialog --title "OK" --msgbox "GPG check passed." \
+                                6 25
+                        elif [[ $CHKRETVAL == 1 ]]; then
                             RETVAL=1
                             break
                         fi
                         ;;
                     Extract )
                         extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
-                        if [[ $? == 1 ]]; then
+                        if [[ $? == 0 ]]; then
+                            dialog --title "Done" --msgbox "$(crunch "The \
+                                tarball has been extracted.")" 8 30
+                        else
                             RETVAL=1
                             break
                         fi
@@ -1137,19 +1156,16 @@ extract_tarball() {
     local DELNAME=$(basename $DELPKG)
 
     if [[ ! -e $DELPKG.tar.gz ]]; then
-        dialog --title "Error" --msgbox "$(crunch "No $REPO_NAME $DELNAME \
-            tarball found.")" 8 40
-        return 0
-    fi
-    dialog --title "Delete?" --yesno "$(crunch "Do you wish to re-extract \
-        the $DELNAME tarball on top of the local directory?  Press <Yes> to \
-        extract or <No> to return.")" 0 0
-        if [[ $? == 0 ]]; then
-            tar -C $DESTINATION -zxvf $DELPKG.tar.gz
-            dialog --title "Done" --msgbox \
-                "The tarball has been extracted." 8 30
-            return 1
+        if [[ $DIAG ]]; then
+            dialog --title "Error" --msgbox "$(crunch "No $REPO_NAME \
+                $DELNAME tarball found.")" 8 40
+        else
+            crunch_fmt "ERROR:  No $REPO_NAME $DELNAME tarball found."
         fi
+        return 1
+    fi
+    tar -C $DESTINATION -zxf $DELPKG.tar.gz
+    return 0
 }
 
 check_gpg() {
@@ -1158,9 +1174,9 @@ check_gpg() {
     local GPGNAME=$(basename $CHKPKG)
 
     if [[ ! -e $CHKPKG.tar.gz ]]; then
-        dialog --title "Error" --msgbox "$(crunch "No $REPO_NAME $GPGNAME \
-            tarball found.")" 8 40
-        return 0
+        dialog --title "GPG check error" --msgbox "$(crunch "No $REPO_NAME \
+            $GPGNAME tarball found.")" 8 40
+        return 1
     fi
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
         dialog --title "WARNING" --yesno "$(crunch "GPG CHECK FAILED!\n\n\
@@ -1175,8 +1191,8 @@ check_gpg() {
                     "The directory and tarball have been deleted." 8 30
                 return 1
             fi
+        return 2
     else
-        dialog --title "OK" --msgbox "GPG check passed." 6 25
         return 0
     fi
 }
@@ -2344,6 +2360,8 @@ check_source() {
     # Check MD5
     echo "Checking MD5SUM for \"$SRCNAME\"..."
     MD5CHK=$(md5sum "$SRCDIR/$SRCNAME" | cut -d' ' -f1)
+    echo | tee -a $TMPSUMMARYLOG
+    echo "$PKG:" | tee -a $TMPSUMMARYLOG
     if [[ $MD5CHK == $MD5SUM ]]; then
         echo "MD5SUM check passed." | tee -a $TMPSUMMARYLOG
     else
@@ -2728,14 +2746,6 @@ build_package() {
     rm -rf $SB_OUTPUT
     mkdir -p $SB_OUTPUT
 
-    # Check the GPG signature of the tarball.
-    check_asc $PKGPATH
-    case $? in
-        0 ) ;;
-        1 ) return 0 ;;
-        * ) return 1 ;;
-    esac
-
     # Fetch the source
     # Note that get_source() "knows" about the source cache, so this isn't
     # necessarily a download.
@@ -3005,18 +3015,17 @@ check_asc() {
     # Check the .asc signature of the tarball
     local CHKPKG=$1
     local GPGNAME=$(basename $CHKPKG)
+    local CATEGORY=$(echo $CHKPKG | cut -d/ -f2)
 
+    echo
     echo "Checking GPG for $GPGNAME..."
-    echo >> $TMPSUMMARYLOG
     if [[ ! -e $CHKPKG.tar.gz ]]; then
-        echo "$GPGNAME:" | tee -a $TMPSUMMARYLOG
-        echo "GPG check skipped!  No tarball found." | tee -a $TMPSUMMARYLOG
+        echo "GPG check skipped!  No tarball found." | tee -a $TMPLOG
         return 0
     fi
     echo
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
-        echo "$GPGNAME:" | tee -a $TMPSUMMARYLOG
-        echo "GPG check failed!" | tee -a $TMPSUMMARYLOG
+        echo "GPG check failed!" | tee -a $TMPLOG
         while :; do
             cat << EOF
 
@@ -3034,22 +3043,19 @@ EOF
             case $ANS in
                 y* | Y* )
                     echo "Keeping $GPGNAME directory and tarball." |
-                        tee -a $TMPSUMMARYLOG
+                        tee -a $TMPLOG
                     return 0
                     ;;
                 n* | N* )
                     echo "Deleting $GPGNAME directory and tarball." |
-                        tee -a $TMPSUMMARYLOG
+                        tee -a $TMPLOG
                     rm -rf $PKGPATH; rm $PKGPATH.*
-                    rm -f $BUILD_LOCK
-                    return 2
-                    break
+                    return 1
                     ;;
                 a* | A* )
                     echo "Aborting the build process." |
-                        tee -a $TMPSUMMARYLOG
-                    rm -f $BUILD_LOCK
-                    return 2
+                        tee -a $TMPLOG
+                    return 1
                     ;;
                 * )
                     echo "Unknown response."
@@ -3057,9 +3063,9 @@ EOF
             esac
         done
     else
-        echo "$GPGNAME:" >> $TMPSUMMARYLOG
-        echo "GPG check passed." | tee -a $TMPSUMMARYLOG
+        echo "GPG check passed." | tee -a $TMPLOG
     fi
+    tar -C ./$CATEGORY -zxf $CHKPKG.tar.gz
     return 0
 }
 
@@ -3099,6 +3105,10 @@ process_queue() {
             continue
         else
             echo $CHKBUILD >> $FINALQUEUE
+        fi
+        check_asc $PKGPATH
+        if [[ $? == 1 ]]; then
+            return 0
         fi
         if ! pick_file info $PKGPATH $CHKBUILD; then
             rm -f $PKGPATH/$CHKBUILD*.build
