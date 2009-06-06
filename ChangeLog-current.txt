@@ -102,3 +102,6 @@ enhancements:
     queuefile is parsed, it will recursively go down into the 'bar.sboq'
     queuefile as well.  The '@' symbol is used in front of an entry in a
     queuefile to denote another queuefile.
+  * Remove the old "$APP $VERSION$BUILD $ONOFF" format for the temporary queue
+    and instead make all queue formats "$APP" only.  This simplifies some code
+    and results in a small speed increase.
