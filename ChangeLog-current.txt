@@ -97,3 +97,8 @@ enhancements:
     these tarballs when building or installing a package.  Additionally, there
     are two new menu items in info_item that allow the user to check the GPG
     signature or re-extract the GPG-signed tarball.
+  * Add ability to have recursive queuefiles, so one queuefile named
+    "foo.sboq" may have an entry "@bar" in which case as the foo.sboq
+    queuefile is parsed, it will recursively go down into the 'bar.sboq'
+    queuefile as well.  The '@' symbol is used in front of an entry in a
+    queuefile to denote another queuefile.
