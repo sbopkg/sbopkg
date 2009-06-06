@@ -1441,7 +1441,7 @@ load_user_queue() {
     # This function loads a user's specified saved queue and merges it
 
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
-    local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_luq_missing
+    local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
 
     rm -f $MISSING_LIST_FILE
 
@@ -1453,27 +1453,10 @@ load_user_queue() {
         FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
         FILE="$FILE.sboq"
         if [[ -r $FILE ]]; then
-            CLIQUEUEFILE=$FILE
             # this inhibits add_item_to_queue's msgbox for each added app
             touch $USERQUEUE_LOCK
             echo "Reading the queuefile, please be patient..."
-            # Reading from $FILE...
-            while read PICK; do
-                if can_skip_line $PICK; then
-                    continue
-                fi
-                if ! add_item_to_queue $PICK; then
-                    if [[ ! -f $MISSING_LIST_FILE ]]; then
-                        cat > $MISSING_LIST_FILE <<EOF
-The following packages cannot be found
-in the currently active repository
-($REPO_NAME/$REPO_BRANCH) and have been skipped:
-
-EOF
-                    fi
-                    echo $PICK >> $MISSING_LIST_FILE
-                fi
-            done < $FILE
+            parse_queue $FILE
             if [[ -f $MISSING_LIST_FILE ]]; then
                 dialog --title "Packages not found" --textbox \
                     $MISSING_LIST_FILE 0 0
@@ -1738,6 +1721,32 @@ edit_build_queue() {
     done
 }
 
+parse_queue() {
+    # Comment to be added.
+    local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
+    local FILE=$1
+    local PICK
+
+    # Reading from $FILE...
+    while read PICK; do
+        if can_skip_line $PICK; then
+            continue
+        fi
+        if ! add_item_to_queue $PICK; then
+            if [[ ! -f $MISSING_LIST_FILE ]]; then
+                cat > $MISSING_LIST_FILE <<EOF
+
+The following packages cannot be found
+in the currently active repository
+($REPO_NAME/$REPO_BRANCH) and have been skipped:
+
+EOF
+            fi
+            echo $PICK >> $MISSING_LIST_FILE
+        fi
+    done < $FILE
+}
+
 add_item_to_queue() {
     # This function can take up to three arguments: APP, VERSIONBUILD, and
     # ONOFF and normally does when items are added to the build queue from the
@@ -1765,13 +1774,34 @@ add_item_to_queue() {
     local ONOFF=$3
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
+    local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
     local TESTONOFF PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL
-    local APPROVED BUILD
+    local APPROVED BUILD FILE
 
     if [[ -z $VERSIONBUILD ]]; then
         if [[ ${APP:0:1} == "-" ]]; then
+            if [[ $DIAG ]]; then
+                APP=${APP:1}
+                ONOFF=OFF
+            else
+                return 0
+            fi
+        elif [[ ${APP:0:1} == "@" ]]; then
             APP=${APP:1}
-            ONOFF=OFF
+            FILE="$QUEUEDIR/$APP.sboq"
+            # FIXME: This next line unset APP is there to apparently fix an
+            # issue where a recursive queue with a @ in front of it would
+            # finish up and then cut off the first letter of the next package
+            # listed in the original queue, i.e. a queue with @foo on line 1
+            # and openbox on line 2, would cut off the first 'o' in openbox
+            # upon @foo returning from parse_queue.
+            unset APP
+            if [[ -r $FILE ]]; then
+                parse_queue $FILE
+            else
+                return 1
+            fi
+            return 0
         else
             ONOFF=ON
         fi
@@ -1787,7 +1817,11 @@ add_item_to_queue() {
     if grep -q "^$APP " $TMPQUEUE 2> /dev/null; then
         : # it's the same app and version so toss it
     else
-        echo "$APP $VERSIONBUILD $ONOFF" >> $TMPQUEUE
+        if [[ $DIAG ]]; then
+            echo "$APP $VERSIONBUILD $ONOFF" >> $TMPQUEUE
+        else
+            echo "$APP" >> $TMPQUEUE
+        fi
     fi
     # Only display this if we are not loading a queue; otherwise getting this
     # after each app was added to the queue may get annoying.
@@ -3897,8 +3931,8 @@ if [[ $DIAG ]]; then
     cleanup
 else
     if [[ $BUILD ]]; then
-        CLIQUEUE=$SBOPKGTMP/sbopkg_cli_queue
         > $SBOPKGTMP/sbopkg-start-queue
+        > $SBOPKGTMP/sbopkg_user_queue.lck
         for PKGBUILD in $BUILD; do
             if [[ -r $QUEUEDIR/$PKGBUILD.sboq ]] &&
                     search_package $PKGBUILD; then
@@ -3909,10 +3943,9 @@ else
                 while :; do
                     read ANS
                     case $ANS in
-                        q* | Q* ) cp $QUEUEDIR/$PKGBUILD.sboq $CLIQUEUE
-                                  break
+                        q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sboq
                                   ;;
-                        p* | P* ) echo $PKGBUILD >> $CLIQUEUE
+                        p* | P* ) echo $PKGBUILD >> $TMPQUEUE
                                   break
                                   ;;
                         a* | A* ) cleanup
@@ -3924,11 +3957,11 @@ else
             else
                 if [[ -r $QUEUEDIR/$PKGBUILD.sboq ]]; then
                     # Add an entire queue
-                    cat $QUEUEDIR/$PKGBUILD.sboq >> $CLIQUEUE
+                    parse_queue $QUEUEDIR/$PKGBUILD.sboq
                 else
                     if search_package $PKGBUILD; then
                         # Add a single package
-                        echo $PKGBUILD >> $CLIQUEUE
+                        echo $PKGBUILD >> $TMPQUEUE
                     else
                         crunch_fmt "Queuefile or package $PKGBUILD not found\
                             - skipping."
@@ -3937,12 +3970,17 @@ else
                 fi
             fi
         done
-        if [[ ! -e $CLIQUEUE ]]; then
+        rm $SBOPKGTMP/sbopkg_user_queue.lck
+        MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
+        if [[ -f $MISSING_LIST_FILE ]]; then
+            cat $MISSING_LIST_FILE
+        fi
+        if [[ ! -e $TMPQUEUE ]]; then
             echo "No valid queuefile or package name given.  Exiting."
             cleanup
             exit 1
         fi
-        # Reading from $CLIQUEUE...
+        # Reading from $TMPQUEUE...
         while read PICK; do
             if can_skip_line $PICK; then
                 continue
@@ -3955,9 +3993,8 @@ else
                     echo $PICK_NAME >> $SBOPKGTMP/sbopkg-start-queue
                 fi
             fi
-        done < $CLIQUEUE
-        rm -f $CLIQUEUE
-        unset CLIQUEUE
+        done < $TMPQUEUE
+        rm -f $TMPQUEUE
         process_queue $TYPE
         if [[ $? == 1 ]]; then
             echo "No valid packages found.  Exiting."
