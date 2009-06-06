@@ -671,7 +671,7 @@ check_for_updates() {
                     echo "  Repo version: " \
                         $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
                         >> $UPDATELIST
-                    echo "$NAME $NEWVER-$NEWBUILD ON" >> \
+                    echo "$NAME Found ON" >> \
                         $SBOPKGTMP/sbopkg-update-queue
                 elif [[ $UPDATED -eq -1 ]]; then
                     if [[ $DEBUG -ge 1 ]]; then
@@ -716,6 +716,8 @@ check_for_updates() {
         # Permanent log of the updatelist is saved when DEBUG is enabled.
         if [[ $DEBUG -ge 1 ]]; then
             cp $UPDATELIST $SBOPKGTMP/sbopkg-debug-updatelist
+        else
+            rm $UPDATELIST
         fi
     else
         rm -f $PROGRESSBAR_INTERRUPTED
@@ -1122,7 +1124,7 @@ info_item() {
                             break
                         fi
                         ;;
-                    Queue ) add_item_to_queue $APP $CURVERSION-$CURBUILD ON ;;
+                    Queue ) add_item_to_queue $APP ;;
                     Build )
                         echo "$APP" > $SBOPKGTMP/sbopkg-start-queue
                         start_dialog_queue ;;
@@ -1748,77 +1750,58 @@ EOF
 }
 
 add_item_to_queue() {
-    # This function can take up to three arguments: APP, VERSIONBUILD, and
-    # ONOFF and normally does when items are added to the build queue from the
-    # dialog menus.  However, saved user queues only have one item per line,
-    # which is the application name.  If the application was deselected when
-    # the queue was saved, then a '-' is appended to the front of the
-    # application name in the queuefile.  This means that, when
-    # load_user_queue reads each line of a saved queuefile and sends it to
-    # add_item_to_queue, the second and third arguments will be empty.
-    # Therefore, the start of this function first tests to see if the second
-    # argument is empty.  If so, then it proceeds to gather information about
-    # the application like the VERSION and BUILD, and then sets ONOFF to 'OFF'
-    # if the first character was '-' otherwise it is set to 'ON'.  If we
-    # have all three arguments, then we continue on.  If APP is already in the
-    # queue and is of a different version, ask user if they want to replace it
-    # (so updated pkgs will get updated in the queue).
-    #
+    # This function takes one argument: APP.  When loading a userqueue, some
+    # APPS may have a '-' or a '@' as the first character, which means to set
+    # the APP to 'OFF' in the dialog menu, or to recursively load another
+    # queuefile, respectively.  If an APP is found in the repo, then add it to
+    # TMPQUEUE.
+
     # If an obsolete name is used, add_item_to_queue() automatically retrieves
     # and uses the current name.
     #
     # This function returns 0 if the insertion was successful, 1 otherwise.
 
     local APP=$1
-    local VERSIONBUILD=$2
-    local ONOFF=$3
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
-    local TESTONOFF PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL
-    local APPROVED BUILD FILE
+    local FILE ONOFF
 
-    if [[ -z $VERSIONBUILD ]]; then
-        if [[ ${APP:0:1} == "-" ]]; then
-            if [[ $DIAG ]]; then
-                APP=${APP:1}
-                ONOFF=OFF
-            else
-                return 0
-            fi
-        elif [[ ${APP:0:1} == "@" ]]; then
-            APP=${APP:1}
-            FILE="$QUEUEDIR/$APP.sboq"
-            # FIXME: This next line unset APP is there to apparently fix an
-            # issue where a recursive queue with a @ in front of it would
-            # finish up and then cut off the first letter of the next package
-            # listed in the original queue, i.e. a queue with @foo on line 1
-            # and openbox on line 2, would cut off the first 'o' in openbox
-            # upon @foo returning from parse_queue.
-            unset APP
-            if [[ -r $FILE ]]; then
-                parse_queue $FILE
-            else
-                return 1
-            fi
-            return 0
+    # This next if is for legacy queuefiles with $APP $VERSION$BUILD $ONOFF
+    if [[ $3 =~ "[Oo][Ff][Ff]" ]]; then
+          APP=-$APP
+    fi
+    if [[ ${APP:0:1} == "-" ]]; then
+        APP=${APP:1}
+        ONOFF=OFF
+    elif [[ ${APP:0:1} == "@" ]]; then
+        APP=${APP:1}
+        FILE="$QUEUEDIR/$APP.sboq"
+        # FIXME: This next line unset APP is there to apparently fix an
+        # issue where a recursive queue with a @ in front of it would
+        # finish up and then cut off the first letter of the next package
+        # listed in the original queue, i.e. a queue with @foo on line 1
+        # and openbox on line 2, would cut off the first 'o' in openbox
+        # upon @foo returning from parse_queue.
+        unset APP
+        if [[ -r $FILE ]]; then
+            parse_queue $FILE
         else
-            ONOFF=ON
+            return 1
         fi
-        if ! search_package $APP; then
-            get_new_name APP $APP
-            search_package $APP || return 1
-        fi
-        . $PKGPATH/$APP.info
-        BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$APP.SlackBuild |
-            sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
-        VERSIONBUILD="$VERSION-$BUILD"
+        return 0
+    else
+        ONOFF=ON
+    fi
+    if ! search_package $APP; then
+        get_new_name APP $APP
+        search_package $APP || return 1
     fi
     if grep -q "^$APP " $TMPQUEUE 2> /dev/null; then
         : # it's the same app and version so toss it
     else
         if [[ $DIAG ]]; then
-            echo "$APP $VERSIONBUILD $ONOFF" >> $TMPQUEUE
+            echo "$APP Found $ONOFF" >> $TMPQUEUE
         else
             echo "$APP" >> $TMPQUEUE
         fi
@@ -2190,7 +2173,7 @@ gen_search_package() {
                         break
                     fi
                 else # $CHOICE = 3
-                    add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
+                    add_item_to_queue $SRCHPKG
                     break
                 fi
             done
@@ -2292,7 +2275,7 @@ string_search() {
                     cut -d= -f2 | sed s/\"//g)
                 RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$SRCHPKG.SlackBuild |
                     sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
-                add_item_to_queue $SRCHPKG $RVERSION-$RBUILD ON
+                add_item_to_queue $SRCHPKG
                 continue
                 ;;
             *)
@@ -3051,15 +3034,12 @@ check_asc() {
     local GPGNAME=$(basename $CHKPKG)
     local CATEGORY=$(echo $CHKPKG | cut -d/ -f2)
 
-    echo
-    echo "Checking GPG for $GPGNAME..."
     if [[ ! -e $CHKPKG.tar.gz ]]; then
         echo "GPG check skipped!  No tarball found." | tee -a $TMPLOG
         return 0
     fi
-    echo
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
-        echo "GPG check failed!" | tee -a $TMPLOG
+        echo "$GPGNAME:  GPG check failed!" | tee -a $TMPLOG
         while :; do
             cat << EOF
 
@@ -3097,7 +3077,7 @@ EOF
             esac
         done
     else
-        echo "GPG check passed." | tee -a $TMPLOG
+        echo "GPG check passed." >> $TMPLOG
     fi
     tar -C ./$CATEGORY -zxf $CHKPKG.tar.gz
     return 0
@@ -3127,6 +3107,8 @@ process_queue() {
         echo "Queue process: build" >> $TMPLOG
     fi
     echo >> $TMPLOG
+    echo "Checking GPG signatures.  Please be patient..."
+    echo
     COUNTER=1
     for CHKBUILD in $(< $STARTQUEUE); do
         # FIXME: This section still needs to be reviewed
@@ -3636,12 +3618,7 @@ main_updates() {
             "$(crunch "Would you like to add the flagged updates to \
             the build queue?")" 8 35
         if [[ $? == 0 ]]; then
-            # Reading from $UPDATES_QUEUE...
-            while read PICK; do
-                eval $(sed "s/^\(.*\) \(.*\) \(.*\)\$/\
-                    APP=\\1 VERSIONBUILD=\\2 ONOFF=\\3/g" <<< $PICK)
-                add_item_to_queue $APP $VERSIONBUILD $ONOFF
-            done < $UPDATES_QUEUE
+            cat $UPDATES_QUEUE >> $TMPQUEUE
             rm -f $UPDATES_QUEUE
             dialog --title "Done" --msgbox "$(crunch "The flagged \
                 updates have been added to the build queue.")" 8 30
