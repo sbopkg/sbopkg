@@ -1,4 +1,4 @@
-Mon May 11 17:45:25 UTC 2009
+Sun Jun  7 03:39:54 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -7,5 +7,5 @@ enhancements:
     sources, to fix problems arising with those programs whose source archive
     doesn't change name on version updates. Thanks to David Spencer for
     raising the issue.
-
+  * Edit edit_build_queue menu with 'ESC'; thanks to Nille for the bug report.
 +--------------------------+
