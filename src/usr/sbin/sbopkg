@@ -1402,15 +1402,15 @@ queue_dir_lister() {
     local QFS=$SBOPKGTMP/sbopkg_queue_files_selection
     local QFM=$SBOPKGTMP/sbopkg_queue_files_menu
 
-    if [[ -z $(ls -A $QUEUEDIR/*.sboq 2> /dev/null) ]]; then
+    if [[ -z $(ls -A $QUEUEDIR/*.sqf 2> /dev/null) ]]; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "$(crunch "The queue directory \
                 $QUEUEDIR is empty.")" 8 30
             continue
         fi
     fi
-    find $QUEUEDIR -type f -name '*.sboq' -printf "\"%P\" \"\" off\n" \
-        | sed -e 's/.sboq//' | sort > $QFM
+    find $QUEUEDIR -type f -name '*.sqf' -printf "\"%P\" \"\" off\n" \
+        | sed -e 's/.sqf//' | sort > $QFM
     # The --default item doesn't work on deletions and renames (because the
     # variable expands to a no-longer existing file) but you can't give it an
     # index argument, unfortunately
@@ -1453,7 +1453,7 @@ load_user_queue() {
 
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
         FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
-        FILE="$FILE.sboq"
+        FILE="$FILE.sqf"
         if [[ -r $FILE ]]; then
             # this inhibits add_item_to_queue's msgbox for each added app
             touch $USERQUEUE_LOCK
@@ -1482,7 +1482,7 @@ delete_user_queue() {
 
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
         FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
-        FILE="$FILE.sboq"
+        FILE="$FILE.sqf"
         if ! rm -f $FILE 2> /dev/null; then
             dialog --title "ERROR" --msgbox \
                 "You do not have permission to remove $FILE" 0 0
@@ -1525,7 +1525,7 @@ rename_user_queue() {
     COUNTER=${#USERQUEUE[*]}
     for ((i=0; i<$COUNTER; i++)); do
         FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
-        FILE="$FILE.sboq"
+        FILE="$FILE.sqf"
         if [[ -w ${FILE%/*} ]]; then
             # This loops so the user can be brought back to the inputbox on a
             # failure (continue) or back to the dir lister on success (break)
@@ -1542,7 +1542,7 @@ rename_user_queue() {
                             exists. Please choose another name.")" 0 0
                         continue
                     else
-                        mv "$FILE" "$QUEUEDIR/$NEWNAME.sboq"
+                        mv "$FILE" "$QUEUEDIR/$NEWNAME.sqf"
                         break
                     fi
                 else
@@ -1611,7 +1611,7 @@ save_user_queue() {
                 to discard it")
             # Find an unused automatic file name
             i=0
-            while [[ -f $QUEUEDIR/sbopkg-autosave-$i.sboq ]]; do
+            while [[ -f $QUEUEDIR/sbopkg-autosave-$i.sqf ]]; do
                 (( i++ ))
             done
             DEFAULT=sbopkg-autosave-$i
@@ -1637,7 +1637,7 @@ save_user_queue() {
             if ! validate_queue_name $USERQUEUE; then
                 continue
             fi
-            if [[ -e $USERQUEUE_NAME.sboq ]]; then
+            if [[ -e $USERQUEUE_NAME.sqf ]]; then
                 dialog --title "ERROR" --yesno "$(crunch "Another file \
                     with that name already exists.  Press <Yes> to \
                     continue and overwrite the other file (keep in mind that \
@@ -1647,8 +1647,8 @@ save_user_queue() {
                     continue
                 fi
             fi
-            if cp $SAVEQUEUE $QUEUEDIR/$USERQUEUE_NAME.sboq; then
-                LAST_USER_QUEUE_ON_DISK=$QUEUEDIR/$USERQUEUE_NAME.sboq
+            if cp $SAVEQUEUE $QUEUEDIR/$USERQUEUE_NAME.sqf; then
+                LAST_USER_QUEUE_ON_DISK=$QUEUEDIR/$USERQUEUE_NAME.sqf
             else
                 dialog --title "ERROR" --msgbox "Problem saving build queue."\
                     8 30
@@ -1776,7 +1776,7 @@ add_item_to_queue() {
         ONOFF=OFF
     elif [[ ${APP:0:1} == "@" ]]; then
         APP=${APP:1}
-        FILE="$QUEUEDIR/$APP.sboq"
+        FILE="$QUEUEDIR/$APP.sqf"
         # FIXME: This next line unset APP is there to apparently fix an
         # issue where a recursive queue with a @ in front of it would
         # finish up and then cut off the first letter of the next package
@@ -3911,7 +3911,7 @@ else
         > $SBOPKGTMP/sbopkg-start-queue
         > $SBOPKGTMP/sbopkg_user_queue.lck
         for PKGBUILD in $BUILD; do
-            if [[ -r $QUEUEDIR/$PKGBUILD.sboq ]] &&
+            if [[ -r $QUEUEDIR/$PKGBUILD.sqf ]] &&
                     search_package $PKGBUILD; then
                 crunch_fmt "Both a queuefile and a package were found with \
                     the name \"$PKGBUILD\".  Which would you like to use?"
@@ -3920,7 +3920,7 @@ else
                 while :; do
                     read ANS
                     case $ANS in
-                        q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sboq
+                        q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sqf
                                   ;;
                         p* | P* ) echo $PKGBUILD >> $TMPQUEUE
                                   break
@@ -3932,9 +3932,9 @@ else
                     esac
                 done
             else
-                if [[ -r $QUEUEDIR/$PKGBUILD.sboq ]]; then
+                if [[ -r $QUEUEDIR/$PKGBUILD.sqf ]]; then
                     # Add an entire queue
-                    parse_queue $QUEUEDIR/$PKGBUILD.sboq
+                    parse_queue $QUEUEDIR/$PKGBUILD.sqf
                 else
                     if search_package $PKGBUILD; then
                         # Add a single package
