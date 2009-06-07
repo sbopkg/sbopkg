@@ -1690,6 +1690,10 @@ edit_build_queue() {
         CHOICE=$? # 0 = Delete, 1 = Cancel, 2 = Done, 3 = Delete All
         REMOVED=$(< $ANSQUEUE)
         case $CHOICE in
+            255|-1) # ESC
+                rm -f $REMOVEQUEUE
+                return 0
+                ;;
             0)
                 echo $REMOVED >> $WORKINGQUEUE
                 sed -i "/^$REMOVED .*$/d" $REMOVEQUEUE
