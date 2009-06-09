@@ -19,7 +19,7 @@ PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
 DOCS="ChangeLog.txt HACKING README TODO README-repos.d README-renames.d \
-REAMDE-queuefiles"
+README-queuefiles"
 
 set -e # Exit on most errors
 
