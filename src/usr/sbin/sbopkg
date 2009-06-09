@@ -1459,7 +1459,6 @@ load_user_queue() {
             touch $USERQUEUE_LOCK
             echo "Reading the queuefile, please be patient..."
             parse_queue $FILE
-            rm -f $SBOPKGTMP/sbopkg-duplicate-queue
             if [[ -f $MISSING_LIST_FILE ]]; then
                 dialog --title "Packages not found" --textbox \
                     $MISSING_LIST_FILE 0 0
@@ -1729,11 +1728,23 @@ edit_build_queue() {
 }
 
 parse_queue() {
-    # Comment to be added.
+    # This begins the process of parsing through a queuefile.  The $2
+    # assignment to NODELETE is used in order to remove the $DUPEQUEUE file
+    # only when parse_queue is not called on a recursive queue loading.
+
+    local DUPEQUEUE=$SBOPKGTMP/sbopkg-duplicate-queue
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
     local FILE=$1
     local PICK
 
+    if [[ ! -e $DUPEQUEUE ]]; then
+        > $DUPEQUEUE
+    fi
+    if grep -qx "^$FILE" $DUPEQUEUE; then
+        return 0
+    else
+        echo "$FILE" >> $DUPEQUEUE
+    fi
     # Reading from $FILE...
     while read PICK; do
         if can_skip_line $PICK; then
@@ -1769,7 +1780,6 @@ add_item_to_queue() {
     local APP=$1
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
-    local DUPEQUEUE=$SBOPKGTMP/sbopkg-duplicate-queue
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
     local FILE ONOFF
 
@@ -1781,26 +1791,18 @@ add_item_to_queue() {
         APP=${APP:1}
         ONOFF=OFF
     elif [[ ${APP:0:1} == "@" ]]; then
-        if grep -q "^$APP " $DUPEQUEUE 2> /dev/null; then
-            APP=${APP:1}
+        APP=${APP:1}
+        if [[ ${APP:(-4)} != ".sqf" ]]; then
             FILE="$QUEUEDIR/$APP.sqf"
-            # FIXME: This next line unset APP is there to apparently fix an
-            # issue where a recursive queue with a @ in front of it would
-            # finish up and then cut off the first letter of the next package
-            # listed in the original queue, i.e. a queue with @foo on line 1
-            # and openbox on line 2, would cut off the first 'o' in openbox
-            # upon @foo returning from parse_queue.
-            unset APP
-            if [[ -r $FILE ]]; then
-                parse_queue $FILE
-            else
-                return 1
-            fi
-            return 0
         else
-            echo $APP >> $DUPEQUEUE
-            return 0
+            FILE="$QUEUEDIR/$APP"
         fi
+        if [[ -r $FILE ]]; then
+            parse_queue $FILE
+        else
+            return 1
+        fi
+        return 0
     else
         ONOFF=ON
     fi
@@ -3932,7 +3934,6 @@ else
                     read ANS
                     case $ANS in
                         q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sqf
-                                  rm -f $SBOPKGTMP/sbopkg-duplicate-queue
                                   ;;
                         p* | P* ) echo $PKGBUILD >> $TMPQUEUE
                                   break
@@ -3947,7 +3948,6 @@ else
                 if [[ -r $QUEUEDIR/$PKGBUILD.sqf ]]; then
                     # Add an entire queue
                     parse_queue $QUEUEDIR/$PKGBUILD.sqf
-                    rm -f $SBOPKGTMP/sbopkg-duplicate-queue
                 else
                     if search_package $PKGBUILD; then
                         # Add a single package
