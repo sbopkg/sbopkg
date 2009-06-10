@@ -2191,7 +2191,6 @@ gen_search_package() {
                     fi
                 else # $CHOICE = 3
                     add_item_to_queue $SRCHPKG
-                    break
                 fi
             done
         else
