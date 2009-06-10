@@ -1735,8 +1735,12 @@ parse_queue() {
     local DUPEQUEUE=$SBOPKGTMP/sbopkg-duplicate-queue
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
     local FILE=$1
+    local NODELETE=$2
     local PICK
 
+    if [[ $NODELETE != "NODELETE" ]]; then
+        rm -f $DUPEQUEUE
+    fi
     if [[ ! -e $DUPEQUEUE ]]; then
         > $DUPEQUEUE
     fi
@@ -1798,7 +1802,7 @@ add_item_to_queue() {
             FILE="$QUEUEDIR/$APP"
         fi
         if [[ -r $FILE ]]; then
-            parse_queue $FILE
+            parse_queue $FILE NODELETE
         else
             return 1
         fi
