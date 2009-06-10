@@ -3934,6 +3934,7 @@ else
                     read ANS
                     case $ANS in
                         q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sqf
+                                  break
                                   ;;
                         p* | P* ) echo $PKGBUILD >> $TMPQUEUE
                                   break
