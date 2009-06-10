@@ -3924,6 +3924,10 @@ else
         > $SBOPKGTMP/sbopkg-start-queue
         > $SBOPKGTMP/sbopkg_user_queue.lck
         for PKGBUILD in $BUILD; do
+            if [[ ${PKGBUILD:(-4)} == ".sqf" ]]; then
+                parse_queue $QUEUEDIR/$PKGBUILD
+                continue
+            fi
             if [[ -r $QUEUEDIR/$PKGBUILD.sqf ]] &&
                     search_package $PKGBUILD; then
                 crunch_fmt "Both a queuefile and a package were found with \
