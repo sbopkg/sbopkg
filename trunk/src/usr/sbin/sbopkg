@@ -2701,16 +2701,18 @@ do_install() {
     # This is mostly equivalent to "upgradepkg --reinstall --install-new $@",
     # but also checks for renames
 
-    local PKG PKGNAME
-    local OLDPKG
+    local PKG OLDPKG
+    local PKG_NAME PKG_VER PKG_ARCH PKG_BUILD PKG_TAG
 
     for PKG in "$@"; do
-        # Strip the path from $PKG
-        PKGNAME=${PKG##*/}
-        # Remove version, arch, build and tag
-        PKGNAME=$(sed 's/-[^-]*-[^-]*-[^-]*$//' <<< "$PKGNAME")
-
-        get_old_name OLDPKG "$PKGNAME"
+        split_pkg_name $PKG
+        get_old_name OLDNAME "$PKG_NAME"
+        # we grep ls's output rather than have ls return a glob so 'foo'
+        # doesn't match 'foo-bar'
+        if ! OLDPKG=$(ls /var/log/packages/ |
+                grep -m1 "$OLDNAME-[^-]*-[^-]*-[^-]*$REPO_TAG$"); then
+            OLDPKG=$PKG
+        fi
         upgradepkg --reinstall --install-new $OLDPKG%"$PKG"
     done
 }

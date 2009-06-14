@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # $Id$
 #
@@ -77,6 +77,23 @@ crunch() {
 
 crunch_fmt() {
     echo -e "$@" | tr -s ' ' | fmt -78
+}
+
+split_pkg_name() {
+    # This function takes a string in the Slackware format NAME-VER-ARCH-BUILD
+    # (with an optional TAG) and splits the string into those respective
+    # PKG_-prefixed variables. (foo-1.0-i486-1_bar results in 'foo' being
+    # assigned to PKG_NAME, '1.0' being assigned to PKG_VER, 'i486' being
+    # assigned to PKG_ARCH, '1' being assigned to PKG_BUILD, and '_bar' being
+    # assigned to PKG_TAG. If the string has no tag, PKG_TAG will be an empty
+    # string.
+
+    local FILE=${1##*/}
+
+    eval $(echo $FILE | sed '
+        s/\(.*\)-\([^-]*\)-\([^-]*\)-\([0-9]*\)\(.*\)*/\
+        PKG_NAME=\1 PKG_VER=\2 PKG_ARCH=\3 PKG_BUILD=\4 PKG_TAG=\5/
+    ')
 }
 
 config_check () {
@@ -2141,18 +2158,21 @@ add_options () {
 }
 
 do_install() {
-    # This is mostly equivalent to "upgradepkg --reinstall --install-new $@", but
-    # also checks for renames
-    local PKG PKGNAME
-    local OLDPKG
+    # This is mostly equivalent to "upgradepkg --reinstall --install-new $@",
+    # but also checks for renames
+
+    local PKG OLDPKG
+    local PKG_NAME PKG_VER PKG_ARCH PKG_BUILD PKG_TAG
 
     for PKG in "$@"; do
-        # Strip the path from $PKG
-        PKGNAME=${PKG##*/}
-        # Remove version, arch, build and tag
-        PKGNAME=$(sed 's/-[^-]*-[^-]*-[^-]*$//' <<<"$PKGNAME")
-
-        get_old_name OLDPKG "$PKGNAME"
+        split_pkg_name $PKG
+        get_old_name OLDNAME "$PKG_NAME"
+        # we grep ls's output rather than have ls return a glob so 'foo'
+        # doesn't match 'foo-bar'
+        if ! OLDPKG=$(ls /var/log/packages/ |
+                grep -m1 "$OLDNAME-[^-]*-[^-]*-[^-]*SBo$"); then
+            OLDPKG=$PKG
+        fi
         upgradepkg --reinstall --install-new $OLDPKG%"$PKG"
     done
 }

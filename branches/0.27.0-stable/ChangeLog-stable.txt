@@ -8,4 +8,7 @@ enhancements:
     doesn't change name on version updates. Thanks to David Spencer for
     raising the issue.
   * Edit edit_build_queue menu with 'ESC'; thanks to Nille for the bug report.
+  * Modify do_install() to correctly invoke upgradepkg to avoid a fairly rare
+    but serious case of removing the wrong package; thanks to NaCl for the
+    bug report.
 +--------------------------+
