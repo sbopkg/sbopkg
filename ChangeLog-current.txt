@@ -106,3 +106,6 @@ enhancements:
     and instead make all queue formats "$APP" only.  This simplifies some code
     and results in a small speed increase.
   * Exit edit_build_queue menu with 'ESC'; thanks to Nille for the bug report.
+  * Modify do_install() to correctly invoke upgradepkg to avoid a fairly rare
+    but serious case of removing the wrong package; thanks to NaCl for the
+    bug report.
