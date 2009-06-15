@@ -1,14 +1,6 @@
-Sun Jun  7 03:39:54 UTC 2009
+Mon Jun 15 02:05:51 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * Add museek-plus->museek+ to sbopkg-renames.new.
-  * Modify the source fetching code to check the md5sum also of cached
-    sources, to fix problems arising with those programs whose source archive
-    doesn't change name on version updates. Thanks to David Spencer for
-    raising the issue.
-  * Exit edit_build_queue menu with 'ESC'; thanks to Nille for the bug report.
-  * Modify do_install() to correctly invoke upgradepkg to avoid a fairly rare
-    but serious case of removing the wrong package; thanks to NaCl for the
-    bug report.
+  * 
 +--------------------------+
