@@ -1907,8 +1907,8 @@ add_all_to_queue() {
     for FILE in $PKGS; do
         echo $FILE >> $SBOPKGLIST
     done
-    NUM_PACKAGES=$(wc -l < $SBOPKGLIST)
     if [[ -f $SBOPKGLIST ]]; then
+        NUM_PACKAGES=$(wc -l < $SBOPKGLIST)
         { # Grouping for progressbar
         echo 0 # Progressbar begin
 
