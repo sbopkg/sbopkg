@@ -1590,6 +1590,7 @@ save_user_queue() {
 
     local SAVEQUEUE=$SBOPKGTMP/sbopkg-tmpsave-queue
     local USERQUEUE=$SBOPKGTMP/sbopkg-user-queue
+    local QUEUELIST=$SBOPKGTMP/sbopkg_queue_list
     local DEFAULT MSG USERQUEUE_NAME i
     local USERQUEUE_NAME PICK SAVENAME SAVEONOFF
 
@@ -1612,6 +1613,9 @@ save_user_queue() {
                     /dev/null; then
             # The active queue is unchanged since the last loaded/saved one
             return 0
+        elif [[ -f $QUEUELIST ]] && diff $QUEUELIST $TMPQUEUE \
+                  &> /dev/null; then
+              return 0
         else
             MSG=$(crunch "A current queue is active. Please enter the \
                 filename you wish to save your queue as or choose <Cancel> \
@@ -1655,6 +1659,7 @@ save_user_queue() {
                 fi
             fi
             if cp $SAVEQUEUE $QUEUEDIR/$USERQUEUE_NAME.sqf; then
+                cp $TMPQUEUE $QUEUELIST
                 LAST_USER_QUEUE_ON_DISK=$QUEUEDIR/$USERQUEUE_NAME.sqf
             else
                 dialog --title "ERROR" --msgbox "Problem saving build queue."\
@@ -1671,6 +1676,7 @@ edit_build_queue() {
     local ANSQUEUE=$SBOPKGTMP/sbopkg-ans-queue
     local REMOVEQUEUE=$SBOPKGTMP/sbopkg-remove-queue
     local WORKINGQUEUE=$SBOPKGTMP/sbopkg-working-queue
+    local QUEUELIST=$SBOPKGTMP/sbopkg_queue_list
     local CHOICE REMOVE REMOVED
 
     empty_queue && return
@@ -1725,7 +1731,7 @@ edit_build_queue() {
                 return 0
                 ;;
             3)
-                rm -f $REMOVEQUEUE $TMPQUEUE
+                rm -f $REMOVEQUEUE $TMPQUEUE $QUEUELIST
                 dialog --title "Done" --msgbox \
                     "The build queue has been cleared." 8 30
                 return 0
@@ -1791,6 +1797,7 @@ add_item_to_queue() {
     local APP=$1
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
+    local QUEUELIST=$SBOPKGTMP/sbopkg_queue_list
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
     local FILE ONOFF
 
@@ -1826,6 +1833,7 @@ add_item_to_queue() {
     else
         if [[ $DIAG ]]; then
             echo "$APP Found $ONOFF" >> $TMPQUEUE
+            echo "$APP Found $ONOFF" >> $QUEUELIST
         else
             echo "$APP" >> $TMPQUEUE
         fi
