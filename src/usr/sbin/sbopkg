@@ -560,7 +560,14 @@ check_for_updates() {
     VERSION_FILE=$SBOPKGTMP/sbopkg-script-version
     PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
     if [[ -z $PKGS ]]; then
-        echo "No packages from the $REPO_DESC detected." >> $UPDATELIST
+        if [[ $DIAG ]]; then
+            dialog --title "No packages found" --msgbox "$(crunch_fmt "It \
+                appears that you have no $REPO_NAME packages \
+                installed.")" 8 40
+        else
+            echo "It appears that you have no $REPO_NAME packages installed."
+        fi
+        return 1
     else
         crunch_fmt "Listing installed $REPO_DESC packages and flagging \
             potential updates..." >> $UPDATELIST
