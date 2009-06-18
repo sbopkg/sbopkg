@@ -54,7 +54,7 @@ enhancements:
   * Rewrite several portions of the process_queue function in order to
     properly handle certain items by the caller; clean up and improve the
     logging displayed during the build process.
-  * Require build queuefiles have a '.sboq' file extension.
+  * Require build queuefiles have a '.sqf' file extension.
   * Add a sanity check for files in sbopkg's temp directory.
   * Cleanup several of the functions related to editing the .info and
     SlackBuild files to remove code duplication; also cleanup and fix issues
@@ -98,8 +98,8 @@ enhancements:
     are two new menu items in info_item that allow the user to check the GPG
     signature or re-extract the GPG-signed tarball.
   * Add ability to have recursive queuefiles, so one queuefile named
-    "foo.sboq" may have an entry "@bar" in which case as the foo.sboq
-    queuefile is parsed, it will recursively go down into the 'bar.sboq'
+    "foo.sqf" may have an entry "@bar" in which case as the foo.sqf
+    queuefile is parsed, it will recursively go down into the 'bar.sqf'
     queuefile as well.  The '@' symbol is used in front of an entry in a
     queuefile to denote another queuefile.
   * Remove the old "$APP $VERSION$BUILD $ONOFF" format for the temporary queue
