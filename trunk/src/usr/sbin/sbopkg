@@ -945,7 +945,7 @@ app_files_chooser() {
     local DEFAULTITEM
     local AFS=$SBOPKGTMP/sbopkg_app_files_selection
     local AFM=$SBOPKGTMP/sbopkg_app_files_menu
-    local TITLE="${D##*/} files"
+    local TITLE="${DIR##*/} files"
 
     while :; do
         find $DIR -type f -printf "\"%P\" \"\"\n" | sort > $AFM
@@ -1749,7 +1749,7 @@ parse_queue() {
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
     local FILE=$1
     local NODELETE=$2
-    local PICK
+    local PICK LOADOPTIONS
 
     if [[ $NODELETE != "NODELETE" ]]; then
         rm -f $DUPEQUEUE
@@ -1767,7 +1767,13 @@ parse_queue() {
         if can_skip_line $PICK; then
             continue
         fi
-        if ! add_item_to_queue $PICK; then
+        unset LOADOPTIONS
+        if grep -q "|" <<< $PICK 2> /dev/null; then
+            LOADOPTIONS=$(echo $PICK | cut -d '|' -f2)
+            LOADOPTIONS=$(echo $LOADOPTIONS | sed -e 's/^ //')
+            PICK=$(echo $PICK | cut -d '|' -f1)
+        fi
+        if ! add_item_to_queue $PICK "$LOADOPTIONS"; then
             if [[ ! -f $MISSING_LIST_FILE ]]; then
                 cat > $MISSING_LIST_FILE <<EOF
 
@@ -1795,6 +1801,7 @@ add_item_to_queue() {
     # This function returns 0 if the insertion was successful, 1 otherwise.
 
     local APP=$1
+    local LOADOPTIONS="$2"
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
     local QUEUELIST=$SBOPKGTMP/sbopkg_queue_list
@@ -1834,8 +1841,16 @@ add_item_to_queue() {
         if [[ $DIAG ]]; then
             echo "$APP Found $ONOFF" >> $TMPQUEUE
             echo "$APP Found $ONOFF" >> $QUEUELIST
+            if [[ $LOADOPTIONS ]]; then
+                echo "$LOADOPTIONS" > $SBOPKGTMP/sbopkg_"$APP"_loadoptions
+            fi
         else
-            echo "$APP" >> $TMPQUEUE
+            if [[ $ONOFF == "ON" ]]; then
+                echo "$APP" >> $TMPQUEUE
+                if [[ $LOADOPTIONS ]]; then
+                    echo "$LOADOPTIONS" > $SBOPKGTMP/sbopkg_"$APP"_loadoptions
+                fi
+            fi
         fi
     fi
     # Only display this if we are not loading a queue; otherwise getting this
@@ -2520,8 +2535,8 @@ get_source() {
     rm -f "$SRCNAME"
 
     if [[ $FAILURE ]]; then
-        rm -f $PKG.info.build
-        rm -f $PKG.SlackBuild.build
+        rm -f $PKG.{info,SlackBuild}.build
+        rm -f options.build
         while :; do
             echo
             echo "Would you like to continue processing the rest of the"
@@ -2810,7 +2825,10 @@ build_package() {
     # Start the actual build
     echo "Building package for $PKGNAME..."
     (   # Run the build in a subshell, to avoid namespace pollution
-        [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
+        if [[ -f options.build ]]; then
+            BUILDOPTIONS=$(< options.build)
+            [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
+        fi
         export OUTPUT=$SB_OUTPUT
         nice sh $PKGNAME.SlackBuild.build
     )
@@ -2818,6 +2836,7 @@ build_package() {
     # Cleanup
     cd $REPO_DIR/$PKGPATH
     rm $PKGNAME.{info,SlackBuild}.build
+    rm options.build
 
     # Let's see the result
     cd $SB_OUTPUT
@@ -3017,42 +3036,100 @@ use_options() {
 
     local PKGPATH=$1
     local OPTAPP=$2
-    local TMPOPTIONS
+    local OPTCHOICE=$SBOPKGTMP/sbopkg_options_choice
+    local OPTLIST=$SBOPKGTMP/sbopkg_options_list
+    local TMPOPTIONS LDOPTIONS CHOICE
 
     # By default (i.e. no options.sbopkg file) there are no build options.
     unset BUILDOPTIONS
     if [[ -f $PKGPATH/options.sbopkg ]]; then
         TMPOPTIONS=$(< $PKGPATH/options.sbopkg)
+    fi
+    if [[ -f $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions ]]; then
+        LDOPTIONS=$(< $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions)
+    fi
+    if [[ $TMPOPTIONS || $LDOPTIONS ]]; then
         if [[ $DIAG ]]; then
-            dialog --title "Use Options for $OPTAPP" --yesno \
-                "$(crunch "Custom options for the $OPTAPP SlackBuild were \
-                found:\n\n$TMPOPTIONS\n\nWould you like to use these options \
-                for this build?")" 12 50
-            if [[ $? == 0 ]]; then
-                BUILDOPTIONS=$TMPOPTIONS
+            rm -f $OPTLIST $OPTCHOICE
+            echo "None \"Build with no options\"" >> $OPTLIST
+            if [[ $TMPOPTIONS ]]; then
+                echo "\"$TMPOPTIONS\" \"Saved options\"" >> $OPTLIST
             fi
+            if [[ $LDOPTIONS ]]; then
+                echo "\"$LDOPTIONS\" \"Queuefile options\"" >> $OPTLIST
+            fi
+            dialog --title "Build options" --menu "$(crunch "One or \
+                more build option files for the $OPTAPP \
+                SlackBuild were found.  Please choose which you \
+                would like to use.")" 12 50 7 \
+                --file $OPTLIST 2> $OPTCHOICE
+            CHOICE=$?
+            if [[ $CHOICE != 0 ]]; then
+                rm -f $OPTLIST $OPTCHOICE
+                return 1
+            else
+                if [[ $OPTCHOICE == "None" ]]; then
+                    rm -f $OPTLIST $OPTCHOICE
+                else
+                    cp "$OPTCHOICE" $PKGPATH/options.build
+                    BUILDOPTIONS=$(< "$OPTCHOICE")
+                    rm -f $OPTLIST $OPTCHOICE
+                fi
+             fi
         else
             while :; do
-                echo "Custom options for the $OPTAPP SlackBuild"
-                echo "script were found:"
+                echo "One or more build option files for the $OPTAPP"
+                echo "SlackBuild script were found:"
                 echo
-                echo $TMPOPTIONS
+                if [[ $TMPOPTIONS ]]; then
+                    echo "Saved options: $TMPOPTIONS"
+                else
+                    echo "Saved options: No saved build options found"
+                fi
+                if [[ $LDOPTIONS ]]; then
+                    echo "Queuefile options: $LDOPTIONS"
+                else
+                    echo "Queuefile options: No queuefile options found"
+                fi
                 echo
-                echo "Would you like to use these options for this"
-                echo "build?  Press (Y)es to use these options or"
-                echo "(N)o to skip them."
-                echo
+                crunch_fmt "Please choose (N)one, (S)aved, (Q)ueuefile, \
+                    or (A)bort"
                 read ANS
                 case $ANS in
-                    y* | Y* )
-                        BUILDOPTIONS=$TMPOPTIONS
-                        break
-                        ;;
                     n* | N* )
                         break
                         ;;
+                    s* | S* )
+                        if [[ $TMPOPTIONS ]]; then
+                            cp $PKGPATH/options.sbopkg $PKGPATH/options.build
+                            BUILDOPTIONS=$TMPOPTIONS
+                            break
+                        else
+                            echo
+                            crunch_fmt "No saved options found.  Please make \
+                                another choice."
+                            echo
+                        fi
+                        ;;
+                    q* | Q* )
+                        if [[ $LDOPTIONS ]]; then
+                            cp $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions \
+                                $PKGPATH/options.build
+                            BUILDOPTIONS=$LDOPTIONS
+                            break
+                        else
+                            echo
+                            crunch_fmt "No queuefile options found.  Please make \
+                                another choice."
+                            echo
+                        fi
+                        ;;
+                    a* | A* )
+                        return 1
+                        ;;
                     * )
                         echo "Unknown response."
+                        echo
                         ;;
                 esac
             done
@@ -3178,6 +3255,11 @@ process_queue() {
         cat $TMPLOG-files >> $TMPLOG
         rm $TMPLOG-files
         use_options $PKGPATH $CHKBUILD
+        if [[ $? == 1 ]]; then
+            rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
+            rm -f $PKGPATH/options.build
+            return 0
+        fi
         if [[ $BUILDOPTIONS ]]; then
             echo "Options: $BUILDOPTIONS" >> $TMPLOG
         else
@@ -3195,6 +3277,8 @@ process_queue() {
             --extra-button --extra-label "Back" --no-cancel \
             --textbox $TMPLOG 0 0
         if [[ $? != 0 ]]; then
+            rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
+            rm -f $PKGPATH/options.build
             return 0
         fi
     else
@@ -3214,6 +3298,8 @@ process_queue() {
                     break
                     ;;
                 n* | N* )
+                    rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
+                    rm -f $PKGPATH/options.build
                     return 0
                     ;;
                 * )
