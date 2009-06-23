@@ -4,9 +4,9 @@
 # reading/ripping CSS DVDs, DVD creation with menus, and VCD creation.
 # MPlayer will support quicktime #and reading encrypted DVDs,
 # k9copy/avidemux2/kino/audacity will have nearly have a full set of
-# encodings supported #as well. This is only a suggested build list and
-# order and is not directly endorsed by slackbuilds.org. YMMV.
-# Courtesy of antiwire
+# encodings supported as well. This is only a suggested build list and
+# order and is not directly endorsed by slackbuilds.org or sbopkg.
+# YMMV.  Courtesy of antiwire
 ######################################################################
 a52dec
 aften
