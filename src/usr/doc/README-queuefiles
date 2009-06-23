@@ -15,3 +15,49 @@ baz
 
 In this case, both 'foo' and 'baz' will appear 'ON,' or selected, in the sbopkg
 dialog menus, and 'bar' will appear 'OFF,' or deselected.
+
+Additionally, queuefiles may be loaded recursively.  This means the user can
+have separate queuefiles for certain applications, or certain queues, and then
+a 'master' queuefile can bring them all together.  Recursively-loaded queues
+are indicated by a '@' prepended to the name of the queuefile.
+
+For example, a user might have one queuefile named 'multimedia.sqf' with these
+items:
+
+app1
+app2
+app3
+
+And then the user might have another queuefile named 'mydesktop.sqf' with
+these items:
+
+app4
+app5
+@multimedia.sqf
+
+In this case, when the 'mydesktop.sqf' queuefile is loaded, it will first load
+app4, then app5, then the contents of the multimedia.sqf queuefile.  The final
+queue will look like this:
+
+app4
+app5
+app1
+app2
+app3
+
+Finally, it is possible to pass build options for an application in a
+queuefile.  This is done by using a single pipe ('|') character after the
+application name.  For example:
+
+app | FOO=yes BAR=no
+
+Only use one pipe to separate the application name and the variables.
+
+In case the user has saved build options individually in the dialog interface,
+and also puts build options for that same application in the queuefile, sbopkg
+will ask the user which one should be used.
+
+In all cases, whether loading software names more than once, or indicating
+build options in more than one queuefile, the first instance will apply.  So
+if a user has "app" in one queuefile, and "-app" in a recursive queuefile that
+is loaded further down the list, the first instance, or "app" will prevail.

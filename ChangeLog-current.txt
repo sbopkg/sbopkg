@@ -1,4 +1,4 @@
-Sun Jun  7 03:40:11 UTC 2009
+Tue Jun 23 01:08:54 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -109,3 +109,6 @@ enhancements:
   * Modify do_install() to correctly invoke upgradepkg to avoid a fairly rare
     but serious case of removing the wrong package; thanks to NaCl for the
     bug report.
+  * Add ability to pass build options in a queuefile when separated by a pipe
+    character, i.e. app | FOO=yes BAR=no
++--------------------------+

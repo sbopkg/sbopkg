@@ -1768,10 +1768,13 @@ parse_queue() {
             continue
         fi
         unset LOADOPTIONS
-        if grep -q "|" <<< $PICK 2> /dev/null; then
-            LOADOPTIONS=$(echo $PICK | cut -d '|' -f2)
-            LOADOPTIONS=$(echo $LOADOPTIONS | sed -e 's/^ //')
-            PICK=$(echo $PICK | cut -d '|' -f1)
+        if grep -q "|" <<< $PICK; then
+            #LOADOPTIONS=$(echo $PICK | cut -d '|' -f2)
+            #LOADOPTIONS=$(echo $LOADOPTIONS | sed -e 's/^ //')
+            #PICK=$(echo $PICK | cut -d '|' -f1)
+            LOADOPTIONS=${PICK##*|}
+            LOADOPTIONS=$(sed -e 's/^ //' <<< $LOADOPTIONS)
+            PICK=${PICK%%|*}
         fi
         if ! add_item_to_queue $PICK "$LOADOPTIONS"; then
             if [[ ! -f $MISSING_LIST_FILE ]]; then
@@ -1843,12 +1846,16 @@ add_item_to_queue() {
             echo "$APP Found $ONOFF" >> $QUEUELIST
             if [[ $LOADOPTIONS ]]; then
                 echo "$LOADOPTIONS" > $SBOPKGTMP/sbopkg_"$APP"_loadoptions
+            else
+                rm -f $SBOPKGTMP/sbopkg_"$APP"_loadoptions
             fi
         else
             if [[ $ONOFF == "ON" ]]; then
                 echo "$APP" >> $TMPQUEUE
                 if [[ $LOADOPTIONS ]]; then
                     echo "$LOADOPTIONS" > $SBOPKGTMP/sbopkg_"$APP"_loadoptions
+                else
+                    rm -f $SBOPKGTMP/sbopkg_"$APP"_loadoptions
                 fi
             fi
         fi
@@ -2029,6 +2036,8 @@ rsync_command() {
             echo "Importing $REPO_DESC GPG Key..."
             gpg --quiet --fetch-key http://www.slackbuilds.org/GPG-KEY
             echo "Import done."
+            echo
+            echo "***SYNC COMPLETE***"
             ;;
         *)
             echo
@@ -3106,8 +3115,8 @@ use_options() {
                             break
                         else
                             echo
-                            crunch_fmt "No saved options found.  Please make \
-                                another choice."
+                            crunch_fmt "ERROR:  No saved options found. \
+                                Please make another choice."
                             echo
                         fi
                         ;;
@@ -3119,8 +3128,8 @@ use_options() {
                             break
                         else
                             echo
-                            crunch_fmt "No queuefile options found.  Please make \
-                                another choice."
+                            crunch_fmt "ERROR:  No queuefile options found. \
+                                Please make another choice."
                             echo
                         fi
                         ;;
@@ -3821,7 +3830,7 @@ unset BUILDOPTIONS    # TODO
 #     REPO_ROOT       # Directory containing all repository mirrors
 unset HAS_NCURSES     # Set if the ncurses package is installed
 unset REPO_NAME       # Currently active repository (e.g. SBo)
-unset REPO_BRANCH     # Currently active branch (e.g. 12.2)
+unset REPO_BRANCH     # Currently active branch (e.g. 13.0)
 unset REPO_DESC       # Active branch's description
 unset REPO_TAG        # Active branch's packages' tag
 unset REPO_TOOL       # Active branch's fetch tool
@@ -3938,12 +3947,12 @@ Options are:
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
-  -v repo/branch  Set the repository/branch (e.g. "-v SBo/12.2").
+  -v repo/branch  Set the repository/branch (e.g. "-v SBo/13.0").
                   If the repository name is not specified, sbopkg will first
                   try with the default one. If no match is found, sbopkg will
                   look for the first matching branch of any repository.
-                  The default valid choices are SBo/{11.0,12.0,12.1,12.2} for
-                  the SlackBuilds.org repository, SB64/master for the
+                  The default valid choices are SBo/{11.0,12.0,12.1,12.2,13.0}
+                  for the SlackBuilds.org repository, SB64/master for the
                   builds.Slamd64.com repository and local/local for the local
                   repository).
 
@@ -4122,7 +4131,6 @@ else
     if [[ $SYNC ]]; then
         crunch_fmt "Syncing with the remote repository into $REPO_DIR."
         sync_repo
-        echo "Finished sync."
     fi
 
     if [[ -n $SEARCH ]]; then

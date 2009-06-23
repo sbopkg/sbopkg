@@ -32,13 +32,14 @@ REPO_NAME=${REPO_NAME:-SBo}.
 .TP 5
 .B REPO_BRANCH
 .br
-This option allows the user to set the default active repository branch.
-The current options are 11.0, 12.0, 12.1 and 12.2 for the SBo repository,
-master for the SB64 repositort and local for the local repository.
+This option allows the user to set the default active repository
+branch.  The current options are 11.0, 12.0, 12.1, 12.2, and 13.0 for
+the SBo repository, master for the SB64 repositort and local for the
+local repository.
 
 The default value of REPO_BRANCH is:
 .br
-REPO_BRANCH=${REPO_BRANCH:-12.2}.
+REPO_BRANCH=${REPO_BRANCH:-13.0}.
 
 .TP 5
 .B REPO_ROOT
@@ -229,3 +230,7 @@ sbopkg at all.
 
 .SH "SEE ALSO"
 .BR sbopkg (8)
+.BR README in doc/
+.BR README-queuefiles in doc/
+.BR README-renames.d in doc/
+.BR README-repos.d in doc/
