@@ -707,9 +707,8 @@ check_for_updates() {
             (( PROGRESSCOUNTER += 1 ))
             echo $(($PROGRESSCOUNTER * 100 / $NUMPKGS))
         done
-        } | progressbar "Building list of potential updates" "This may take\
-            a few moments depending on how many packages from the $REPO_DESC\
-            are installed..."
+        } | progressbar "Checking for potential updates" "This may take\
+            a few moments.  Press <ESC> to abort."
         echo >> $UPDATELIST
         echo "Potential update list complete." >> $UPDATELIST
     fi
@@ -2615,8 +2614,8 @@ remove_obsoleted_sources() {
         echo $(($PROGRESS * 100 / $NUMINFO))
     done
     sed -i "$REGEX" $SOURCES
-    } | progressbar "Searching obsolete sources" \
-        "This may take a while, so please be patient..."
+    } | progressbar "Checking for obsolete sources" \
+        "This may take a few moments.  Press <ESC> to abort."
 
     if [[ -f $PROGRESSBAR_INTERRUPTED ]]; then
         rm -f $PROGRESSBAR_INTERRUPTED $SOURCES
