@@ -1,11 +1,17 @@
 # $Id$
 
-Sbopkg queuefiles are very simple to create, maintain, and share amongst other
-users.  Each queuefile can contain a list of applications to build in order,
-from top to bottom.  If the application's name is left alone, it will default
-to 'ON,' or selected, in the sbopkg dialog menus when the queuefile is loaded.
-If the application's name is prepended with a '-' it will default to 'OFF,' or
-deselected, in the dialog menus.
+Sbopkg queuefiles are very simple to create, maintain, and share
+amongst other users.  Each queuefile can contain a list of
+applications to build in order, from top to bottom, and should be
+named with a .sqf extension.  Several sample queuefiles are provided
+in the doc/queuefiles directory.
+
+1.  Selecting ON or OFF in dialog:
+
+If the application's name is left alone, it will default to 'ON,' or
+selected, in the sbopkg dialog menus when the queuefile is loaded.  If
+the application's name is prepended with a '-' it will default to
+'OFF,' or deselected, in the dialog menus.
 
 For example, a queuefile might contain:
 
@@ -15,6 +21,8 @@ baz
 
 In this case, both 'foo' and 'baz' will appear 'ON,' or selected, in the sbopkg
 dialog menus, and 'bar' will appear 'OFF,' or deselected.
+
+2.  Recursive queuefiles:
 
 Additionally, queuefiles may be loaded recursively.  This means the user can
 have separate queuefiles for certain applications, or certain queues, and then
@@ -45,6 +53,8 @@ app1
 app2
 app3
 
+3.  Passing build options:
+
 Finally, it is possible to pass build options for an application in a
 queuefile.  This is done by using a single pipe ('|') character after the
 application name.  For example:
@@ -56,6 +66,8 @@ Only use one pipe to separate the application name and the variables.
 In case the user has saved build options individually in the dialog interface,
 and also puts build options for that same application in the queuefile, sbopkg
 will ask the user which one should be used.
+
+4.  Multiple instances.
 
 In all cases, whether loading software names more than once, or indicating
 build options in more than one queuefile, the first instance will apply.  So
