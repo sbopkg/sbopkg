@@ -1,10 +1,17 @@
 # $Id$
 
-Sbopkg queuefiles are very simple to create, maintain, and share
-amongst other users.  Each queuefile can contain a list of
-applications to build in order, from top to bottom, and should be
-named with a .sqf extension.  Several sample queuefiles are provided
-in the doc/queuefiles directory.
+Sbopkg queuefiles are very simple to create, maintain, and share amongst other
+users.  Each queuefile can contain a list of applications to build in order,
+from top to bottom, and should be named with a .sqf extension.  Several sample
+queuefiles are provided in the doc/queuefiles directory.  Additionally, the
+hope is that user-contributed queues can be shared.  To this end, the
+sbopkg.org website has a directory dedicated to maintaining copies of these
+user-contributed queuefiles.  This can be found at
+http://www.sbopkg.org/queues.  At some point, an upload form may be available.
+For now, please consider sending a copy of your queuefile to the sbopkg
+mailing list located at: http://sbopkg.org/mailman/listinfo/sbopkg-users.  All
+user-contributed queues will be kept in the queues directory on the sbopkg
+website.
 
 1.  Selecting ON or OFF in dialog:
 
