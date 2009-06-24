@@ -2843,8 +2843,8 @@ build_package() {
 
     # Cleanup
     cd $REPO_DIR/$PKGPATH
-    rm $PKGNAME.{info,SlackBuild}.build
-    rm options.build
+    rm -f $PKGNAME.{info,SlackBuild}.build
+    rm -f options.build
 
     # Let's see the result
     cd $SB_OUTPUT
