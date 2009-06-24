@@ -1929,6 +1929,7 @@ get_source () {
     # Check MD5SUM
     if [[ ! "$FAILURE" ]]; then
         rm -f $PKG.{info,SlackBuild}.build
+        rm -f options.sbopkg.build
         echo "Checking MD5SUM for \"$SRCNAME\"..."
         MD5CHK=$(md5sum "$SRCNAME" | cut -d' ' -f1)
         if [ "$MD5CHK" == $MD5SUM ]; then
@@ -1977,7 +1978,7 @@ EOF
     if [[ "$FAILURE" ]]; then
         rm -f $PKG.info.build
         rm -f $PKG.SlackBuild.build
-        rm -f $PKG.options.sbopkg.build
+        rm -f options.sbopkg.build
         if [[ "$BUILDPKGS" = 1 ]]; then
             while :; do
                 echo
@@ -2303,7 +2304,7 @@ build_package () {
     cd $LOCALREPO/$SLACKVER/$PKGPATH
     rm -f $PKG.info.build
     rm -f $PKG.SlackBuild.build
-    rm -f $PKG.options.sbopkg.build
+    rm -f options.sbopkg.build
     OUTPUT=$OLDOUTPUT
     cd $LOCALREPO/$SLACKVER
 }
@@ -2452,6 +2453,7 @@ pick_file () {
                                 ;;
                     *)          unset ANS
                                 rm -f $PKGPATH/$PKG*.build
+                                rm -f $PKGPATH/options.sbopkg.build
                                 rm -f $TMP/sbopkg_diff
                                 QUITBUILD=1
                                 return 0
@@ -2475,6 +2477,7 @@ pick_file () {
                     d* | D* ) ${PAGER:-more} $TMP/sbopkg_diff
                               ;;
                     c* | C* ) rm -f $PKGPATH/$PKG*.build
+                              rm -f $PKGPATH/options.sbopkg.build
                               rm -f $TMP/sbopkg_diff
                               cleanup
                               exit 0
@@ -2526,7 +2529,8 @@ use_options () {
                 echo
                 read ANS
                 case $ANS in
-                    y* | Y* ) cp $PKGPATH/options.sbopkg $PKGPATH/options.sbopkg.build
+                    y* | Y* ) cp $PKGPATH/options.sbopkg \
+                                  $PKGPATH/options.sbopkg.build
                               BUILDOPTIONS=$TMPOPTIONS
                               break
                     ;;
@@ -2600,11 +2604,13 @@ process_queue () {
             pick_info $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
                 rm -f $PKGPATH/$PKG*.build
+                rm -f $PKGPATH/options.sbopkg.build
                 return 0
             fi
             pick_slackbuild $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
                 rm -f $PKGPATH/$PKG*.build
+                rm -f $PKGPATH/options.sbopkg.build
                 return 0
             fi
             use_options $CHKBUILD
@@ -2626,6 +2632,7 @@ process_queue () {
                 --textbox $PRECHECKLOG 0 0
             if [ $? != 0 ]; then
                 rm -f $PKGPATH/$PKG*.build
+                rm -f $PKGPATH/options.sbopkg.build
                 rm -f $STARTQUEUE $FINALQUEUE $PRECHECKLOG $SUMMARYLOG
                 continue
             fi
@@ -2644,6 +2651,7 @@ process_queue () {
                     y* | Y* ) break
                     ;;
                     n* | N* ) rm -f $PKGPATH/$PKG*.build
+                              rm -f $PKGPATH/options.sbopkg.build
                               cleanup
                               exit 0
                     ;;
@@ -2659,11 +2667,13 @@ process_queue () {
             pick_info $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
                 rm -f $PKGPATH/$PKG*.build
+                rm -f $PKGPATH/options.sbopkg.build
                 return 0
             fi
             pick_slackbuild $CHKBUILD
             if [ "$QUITBUILD" = 1 ]; then
                 rm -f $PKGPATH/$PKG*.build
+                rm -f $PKGPATH/options.sbopkg.build
                 return 0
             fi
             use_options $CHKBUILD
