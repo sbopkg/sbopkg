@@ -2,5 +2,8 @@ Mon Jun 15 02:05:51 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * 
+  * Fix rare issue where incorrect file was upgraded; thanks to neonflux for
+    the bug report.
+  * Fix issue where custom build options may not be correctly exported.
+  * Improve cleanup after building or installing a package.
 +--------------------------+

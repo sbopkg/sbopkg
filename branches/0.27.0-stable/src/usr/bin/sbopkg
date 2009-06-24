@@ -1928,6 +1928,7 @@ get_source () {
     fi
     # Check MD5SUM
     if [[ ! "$FAILURE" ]]; then
+        rm -f $PKG.{info,SlackBuild}.build
         echo "Checking MD5SUM for \"$SRCNAME\"..."
         MD5CHK=$(md5sum "$SRCNAME" | cut -d' ' -f1)
         if [ "$MD5CHK" == $MD5SUM ]; then
@@ -1976,6 +1977,7 @@ EOF
     if [[ "$FAILURE" ]]; then
         rm -f $PKG.info.build
         rm -f $PKG.SlackBuild.build
+        rm -f $PKG.options.sbopkg.build
         if [[ "$BUILDPKGS" = 1 ]]; then
             while :; do
                 echo
@@ -2170,7 +2172,7 @@ do_install() {
         # we grep ls's output rather than have ls return a glob so 'foo'
         # doesn't match 'foo-bar'
         if ! OLDPKG=$(ls /var/log/packages/ |
-                grep -m1 "$OLDNAME-[^-]*-[^-]*-[^-]*SBo$"); then
+                grep -m1 "^$OLDNAME-[^-]*-[^-]*-[^-]*SBo$"); then
             OLDPKG=$PKG
         fi
         upgradepkg --reinstall --install-new $OLDPKG%"$PKG"
@@ -2255,7 +2257,10 @@ build_package () {
         *) return 1 ;;
     esac
     echo "Building Slackware package for $PKG..."
-    [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
+    if [[ -f options.sbopkg.build ]]; then
+          BUILDOPTIONS=$(< options.sbopkg.build)
+          [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
+    fi
     sh $PKG.SlackBuild.build
     cd $OUTPUT
     if [ ! -e *.tgz ]; then
@@ -2298,6 +2303,7 @@ build_package () {
     cd $LOCALREPO/$SLACKVER/$PKGPATH
     rm -f $PKG.info.build
     rm -f $PKG.SlackBuild.build
+    rm -f $PKG.options.sbopkg.build
     OUTPUT=$OLDOUTPUT
     cd $LOCALREPO/$SLACKVER
 }
@@ -2502,6 +2508,7 @@ use_options () {
                 found:\n\n$TMPOPTIONS\n\nWould you like to use these options \
                 for this build?")" 12 50
             if [ $? = 0 ]; then
+                cp $PKGPATH/options.sbopkg $PKGPATH/options.sbopkg.build
                 BUILDOPTIONS=$TMPOPTIONS
             else
                 unset BUILDOPTIONS
@@ -2519,9 +2526,12 @@ use_options () {
                 echo
                 read ANS
                 case $ANS in
-                    y* | Y* ) BUILDOPTIONS=$TMPOPTIONS; break
+                    y* | Y* ) cp $PKGPATH/options.sbopkg $PKGPATH/options.sbopkg.build
+                              BUILDOPTIONS=$TMPOPTIONS
+                              break
                     ;;
-                    n* | N* ) unset BUILDOPTIONS; break
+                    n* | N* ) unset BUILDOPTIONS
+                              break
                     ;;
                     * ) echo "Unknown response."
                     ;;
