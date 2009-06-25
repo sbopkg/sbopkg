@@ -2845,6 +2845,7 @@ build_package() {
             BUILDOPTIONS=$(< options.build)
             [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
         fi
+        [[ $(uname -m) == "x86_64" ]] && export ARCH=${ARCH:-x86_64}
         export OUTPUT=$SB_OUTPUT
         nice sh $PKGNAME.SlackBuild.build
     )

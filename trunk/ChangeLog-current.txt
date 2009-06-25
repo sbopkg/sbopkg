@@ -111,5 +111,9 @@ enhancements:
     bug report.
   * Add ability to pass build options in a queuefile when separated by a pipe
     character, i.e. app | FOO=yes BAR=no
+  * Fix rare issue where incorrect file was upgraded; thanks to neonflux for
+    the bug report.
+  * Fix issue where custom build options may not be correctly exported.
   * Add a 'diff' entry to the script customization menu.
+  * Add in 'uname -m' test for x86_64 and if so, set ARCH to x86_64.
 +--------------------------+
