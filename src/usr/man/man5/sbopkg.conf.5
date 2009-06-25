@@ -188,10 +188,6 @@ The default value of DIFFOPTS is:
 
 DIFFOPTS=${DIFFOPTS:--u}
 
-.SH FILES
-.TP 5
-.B /etc/sbopkg/sbopkg.conf
-
 .SH OVERRIDING ENVIRONMENTAL VARIABLES
 It is possible to set or override environmental variables and pass
 them to the SlackBuild scripts when they are built from within sbopkg.
@@ -213,6 +209,20 @@ location other than the default of /tmp.
 
 You can also export variables in sbopkg.conf that are not used by
 sbopkg at all.
+
+.SH FILES
+.TP 5
+.B /etc/sbopkg/sbopkg.conf
+\ - File to specify configuration options.
+
+.B /etc/sbopkg/renames.d/50-default
+\ - Default file that lists software in SBo repository that has been renamed.
+See the README-renames.d document in the sbopkg doc/ directory for more
+information.
+
+.B /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
+\ - Three default files for various types of sbopkg repositories.  See the
+README-repos.d document in the sbopkg doc/ directory for more information.
 
 .SH "SEE ALSO"
 .BR sbopkg (8)
