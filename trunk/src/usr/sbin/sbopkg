@@ -3413,14 +3413,12 @@ start_dialog_queue() {
     # When using cli, the -b or -i option will determine whether we build or
     # build and install.
 
-    dialog --title "Install Package(s)" --yesno \
+    dialog --title "Install Package(s)" \
+        --help-button --help-label "Cancel" --yesno \
         "$(crunch  "Would you like to install the packages as they are \
-            built?  Press <Yes> to install, <No> to build only, or <Esc> \
+            built?  Press <Yes> to install, <No> to build only, or <Cancel> \
             to exit.")" 8 50
     case $? in
-        255|-1 ) # The user pressed ESC
-            return 0
-            ;;
         0 ) # Build and install
             process_queue buildinstall
             if [[ $? == 1 ]]; then
@@ -3434,6 +3432,9 @@ start_dialog_queue() {
                 dialog --title "Error" --msgbox "$(crunch "No valid \
                     packages found.")" 8 40
             fi
+            ;;
+        * ) # Cancel, or the user pressed ESC
+            return 0
             ;;
     esac
 }
