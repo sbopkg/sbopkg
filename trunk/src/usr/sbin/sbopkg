@@ -1214,11 +1214,13 @@ customize_item() {
     while :; do
     dialog --default-item "$DEFAULTITEM" --title "$APP Customization" \
         --cancel-label "Back" --menu \
-        "Please choose an item or press <Back> to go back.\n" 15 75 4 \
+        "Please choose an item or press <Back> to go back.\n" 13 75 6 \
         "Edit SlackBuild" "Create and edit a local copy of the SlackBuild" \
         "Delete SlackBuild" "Delete the local copy of the SlackBuild" \
+        "Diff SlackBuild" "Compare the local and the original SlackBuild" \
         "Edit Info" "Create and edit a local copy of the .info file" \
         "Delete Info" "Delete the local copy of the .info file" \
+        "Diff Info" "Compare the local and the original .info file" \
         2> $SBOPKGTMP/sbopkg_custom_selection
     if [[ $? = 0 ]]; then
         DEFAULTITEM="$(< $SBOPKGTMP/sbopkg_custom_selection)"
@@ -1229,11 +1231,17 @@ customize_item() {
             "Delete SlackBuild" )
                 delete_local_file SlackBuild $SHORTPATH $APP
                 ;;
+            "Diff SlackBuild" )
+                diff_local_file SlackBuild $SHORTPATH $APP
+                ;;
             "Edit Info" )
                 edit_local_file info $SHORTPATH $APP
                 ;;
             "Delete Info" )
                 delete_local_file info $SHORTPATH $APP
+                ;;
+            "Diff Info" )
+                diff_local_file info $SHORTPATH $APP
                 ;;
         esac
     else # Cancel or ESC
@@ -2913,6 +2921,29 @@ delete_local_file() {
         rm $SHORTPATH/$APP.$FILE.sbopkg
         dialog --title "DONE" --msgbox \
             "The local copy of the $FILE file has been deleted." 8 30
+    fi
+}
+
+diff_local_file() {
+    # This function compares the local and original SlackBuild or info file.
+    # $1 = info|SlackBuild (the extension of the customizable file)
+    # $2 = application path
+    # $3 = application name
+
+    local FILE=$1
+    local SHORTPATH=$2
+    local APP=$3
+    local DIFF_FILE=$SBOPKGTMP/sbopkg_custom_diff
+
+    # FIXME should be checked on the caller side?
+    if [[ ! -e $SHORTPATH/$APP.$FILE.sbopkg ]]; then
+        dialog --title "ERROR" --msgbox \
+            "There is no local copy of the $FILE file to compare." 8 30
+    else
+        $DIFF $DIFFOPTS $SHORTPATH/$APP.$FILE{,.sbopkg} > $DIFF_FILE
+        dialog --exit-label "OK" --title "$FILE diff" \
+            --textbox $DIFF_FILE 0 0
+        rm -f $DIFF_FILE
     fi
 }
 
