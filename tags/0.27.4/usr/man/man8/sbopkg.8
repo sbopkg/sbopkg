@@ -1,0 +1,220 @@
+.TH SBOPKG 8 "February 2009" sbopkg-0.27.4 ""
+.SH NAME
+.B sbopkg
+\ - The SlackBuilds.org Package Browser
+
+.SH SYNOPSIS
+.B sbopkg
+.B [options]
+
+.SH DESCRIPTION
+Sbopkg is a command-line and dialog-based tool to interact with the
+SlackBuilds.org ("SBo") repository, a collection of third-party
+SlackBuild scripts to build Slackware packages.
+
+.SH INSTRUCTIONS
+Sbopkg usage assumes an understanding of SlackBuild scripts,
+generally, and the third-party repository SlackBuilds.org,
+specifically.  A thorough reading of http://www.slackbuilds.org/howto/
+and the pages at http://www.slackwiki.org about SlackBuild scripts is
+strongly advised.
+
+Before sbopkg can be used, a configuration file must be created at
+/etc/sbopkg/sbopkg.conf.  A sample file is provided at
+/etc/sbopkg/sbopkg.conf.new. See
+.B sbopkg.conf
+(5) for more information about the configuration file.
+
+Sbopkg can be run from the command line by simply invoking "sbopkg."
+Doing so will launch the dialog-based interface, and the menus
+provided should be fairly self-explanatory.  The main menu allows the
+user to rsync with the SlackBuilds.org repository (currently, the size
+of a local copy of the SBo repository is less than 50MB), view the
+SlackBuilds.org Changelog, check for potential updates to SBo
+packages, display the contents of the local cache directory where
+source tarballs are saved, display the permanent build log, and browse
+or search the local copy of the SBo repository.  Once the browse
+function is chosen, the user can select the category of software to
+view.  After choosing a category, the user can then view the various
+software packages available in that category within the local SBo
+repository.  Selecting a package will display another menu allowing
+the user to view the package's README, SlackBuild, .info, or
+slack-desc files.  The user can also edit the .info file and
+SlackBuild and the edited files will remain after doing an rsync.
+Additionally, if sbopkg is run with root privileges, then the user can
+choose to build a package as well using either the original SlackBuild
+or the locally-edited one, if present.  If using the dialog interface,
+and if sbopkg finds a built package for a particular piece of software
+in the OUTPUT directory, then sbopkg will automatically add a new menu
+entry allowing the user to install the package if he so choosed.
+Alternatively, the user can choose to automatically build or build and
+install individual packages or several packages in a build queue.
+Finally, if KEEPLOG is set to YES in the sbopkg.conf file then a
+permanent log of the build process is saved in /tmp/sbopkg-build-log.
+
+Alternatively, sbopkg can be run from the command line without using
+the dialog interface.  Executing "sbopkg -h" will display a list of
+options available from the command line.
+
+Certain features of sbopkg rely on outside binaries, such as a pager
+to view the text files when sbopkg is run from the comamnd line, and
+an editor to edit the .info or SlackBuild files.  The pager function
+will look to the environmental variable $PAGER and if that variable is
+not defined then it will default to 'more.'  Similarly, the edit
+function found when sbopkg is used with the dialog interface will look
+to $EDITOR and will default to 'vi' if no $EDITOR has been defined.
+If the user wants sbopkg to use another $EDITOR, such as nano, then
+adding the requisite information in ~/.bashrc, /etc/profile, or other
+similar configuration file to export $EDITOR will suffice.
+
+.SH OPTIONS
+.TP 5
+.B -b PACKAGE(s)/QUEUE(s)
+Search for and build PACKAGE(s) from the local SBo repository.  If more
+than one package is specified, they must be in quotes.  For example:
+
+#sbopkg -b "foo bar"
+
+will build foo and then bar.
+Queue names can also be specified. In that case, all the packages specified
+in the queue file will be built. In the unfortunate case a token matches both
+a queue name and a package name (i.e. the user named a queue with the name of
+a package), sbopkg will interpret it as a queue name.
+The tokens (package names or queues) are processed in the order they are
+specified on the command line, and the build order specified in the queue
+files is retained.
+If a package is specified more than once, it gets queued only the first time
+it's encountered.
+
+.TP 5
+.B -c
+Display list of installed SBo packages and potential updates.
+
+.TP 5
+.B -d DIRECTORY
+Manually specify the full path to the DIRECTORY containing the
+local SBo repository.
+
+.TP 5
+.B -e ask|continue|stop
+Specify what sbopkg should do when it encounters an error while building a
+package. Valid options are:
+
+.B ask
+: This is the default behavior, asking the user what to do;
+
+.B continue
+: Ignore the error and continue processing (act as if the user
+answered "Yes" to all questions);
+
+.B stop
+: Stop the processing (act as if the user answered "No" to all
+questions).
+
+.TP 5
+.B -f
+Override the default configuration file, which is located by
+default at /etc/sbopkg/sbopkg.conf, with another configuration
+file.
+
+.TP 5
+.B -g PACKAGE(s)
+General search for PACKAGE(s) by glob.  For example:
+
+#sbopkg -g nv
+
+will return a list of matches, such as the nvidia packages,
+konversation, and other packages with 'nv' in their name.  If more
+than one glob is specified, they must be in quotes.
+
+.TP 5
+.B -h
+Display the help.
+
+.TP 5
+.B -i PACKAGE(s)
+Search for and build and then install PACKAGE(s) from the local SBo
+repository.  If more than one package is specified, they must be in
+quotes, and the packages will be built and then installed in the
+listed order.  For example:
+
+#sbopkg -i "foo bar"
+
+will build and install foo and then build and install bar.  By
+carefully considering the order of the packages listed, the user may
+be able to build and install dependencies in the right order before
+the final application is built and installed.  Of course, given the
+nature of dependencies, this may not always be possible and so
+building dependencies like this is not really a supported feature.
+Still, when when it works, it can be helpful.
+
+Queue names are supported, too. See the explanation for the '-b' command
+for details.
+
+.TP 5
+.B -l
+Display the SBo ChangeLog.txt and quit.
+
+.TP 5
+.B -o
+List the currently installed cached source files which are deemed as
+obsolete, and optionally delete them.
+
+Source files are obsolete when no SBo script references it any more,
+which is something that can happen after rsync-ing the local
+repository.
+
+Please note that only the currently active repository is
+used to identify the obsoleted sources, so if you build packages with
+different repositories (e.g. for different Slackware versions) the
+source files only used in the "other" repository will be listed.
+
+.TP 5
+.B -p
+List installed SlackBuilds.org packages.
+
+.TP 5
+.B -q
+Enable the "quiet mode."  When this flag is specified, the output of
+some of the command-line options is minimized.
+
+.TP 5
+.B -r
+Rsync the local repository with SlackBuilds.org and quit.
+
+.TP 5
+.B -s PACKAGE(s)
+Specific search for PACKAGE(s) by PACKAGE name and, if found, display
+the README, SlackBuild, .info, and slack-desc files in that order
+using $PAGER, which defaults to 'more' as described above.   If more
+than one package is specified, they must be in quotes.  For example:
+
+#sbopkg -s "foo bar"
+
+will search for foo and then bar.
+
+.TP 5
+.B -u
+Check for an update to sbopkg itself and then quit.
+
+.TP 5
+.B -v VERSION
+Set the Slackware version to use for the matching local SBo mirror.
+Current options are 11.0, 12.0, 12.1, 12.2, and local.  See the
+.B sbopkg.conf (5)
+man page for more information about the 'local'
+repository.
+
+.SH FILES
+.B /etc/sbopkg/sbopkg.conf
+\ - File to specify configuration options.
+
+.B /etc/sbopkg/sbopkg-renames
+\ - File that lists software in SBo repository that has been renamed.
+
+.SH "SEE ALSO"
+.BR sbopkg.conf (5)
+
+.SH AUTHOR
+Chess Griffin
+<chess@chessgriffin.com>
