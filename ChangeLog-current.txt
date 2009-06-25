@@ -111,4 +111,5 @@ enhancements:
     bug report.
   * Add ability to pass build options in a queuefile when separated by a pipe
     character, i.e. app | FOO=yes BAR=no
+  * Add a 'diff' entry to the script customization menu.
 +--------------------------+
