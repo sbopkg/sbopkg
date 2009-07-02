@@ -78,11 +78,6 @@ enhancements:
     queuefiles much easier and more intuitive.
   * Add ability to load more than one queuefile at a time when building
     from command line interface.
-  * Add several new functions related to checking GPG-signed tarballs, such as
-    those that SlackBuilds.org provides.  Sbopkg will now automatically check
-    these tarballs when building or installing a package.  Additionally, there
-    are two new menu items in info_item that allow the user to check the GPG
-    signature or re-extract the GPG-signed tarball.
   * The info_item dialog now shows non-SBo installed packages and gained a
     more robust approach to finding both the installed package names and
     the available packages in $OUTPUT.
@@ -116,4 +111,6 @@ enhancements:
   * Fix issue where custom build options may not be correctly exported.
   * Add a 'diff' entry to the script customization menu.
   * Add in 'uname -m' test for x86_64 and if so, set ARCH to x86_64.
+  * Set default SBo repo to 13.0; add 13.0 repo to
+    /etc/sbopkg/repos.d/40-sbo.repo
 +--------------------------+

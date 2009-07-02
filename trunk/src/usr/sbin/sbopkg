@@ -4131,8 +4131,8 @@ else
             if [[ ${PICK_NAME:0:1} == "-" ]]; then
                 continue
             else
-                if ! grep -qx $PICK_NAME $SBOPKGTMP/sbopkg-start-queue; then
-                    echo $PICK_NAME >> $SBOPKGTMP/sbopkg-start-queue
+                if ! grep -qx $PICK_NAME $STARTQUEUE; then
+                    echo $PICK_NAME >> $STARTQUEUE
                 fi
             fi
         done < $TMPQUEUE
