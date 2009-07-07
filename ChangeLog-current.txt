@@ -113,4 +113,7 @@ enhancements:
   * Add in 'uname -m' test for x86_64 and if so, set ARCH to x86_64.
   * Set default SBo repo to 13.0; add 13.0 repo to
     /etc/sbopkg/repos.d/40-sbo.repo
+  * Add support for multiple architectures and multiple source files. This
+    makes sbopkg able to handle the new features that SlackBuilds.org admins
+	are preparing for the Slackware 13.0 release.
 +--------------------------+

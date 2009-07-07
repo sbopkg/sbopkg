@@ -2363,12 +2363,49 @@ show_readme() {
     return 0
 }
 
+read_info() {
+    # Read the info file specified in $1.
+    # This used to be a plain ". $INFO", but due to the changes required to
+    # support multiple arches and source files (both features are planned
+    # for the Slackware 13.0 release) it needs some more work.
+    # The DOWNLOAD and MD5SUM arrays will always contain the "right"
+    # (possibly ARCH-dependent) values.
+
+    local INFO=$1
+    local i DOWNLOAD_ARCH
+    local {DOWNLOAD,MD5SUM}_$ARCH
+
+    unset DOWNLOAD MD5SUM
+
+    # Parse the .info file
+    . $INFO
+    # Assign the proper entries to DOWNLOAD and MD5SUM.
+    DOWNLOAD_ARCH=$(eval echo \$DOWNLOAD_$ARCH)
+    if [[ -n $DOWNLOAD_ARCH ]]; then
+        DOWNLOAD=$DOWNLOAD_ARCH
+        MD5SUM=$(eval echo \$MD5SUM_$ARCH)
+    fi
+    # Note: on SBo pre-13.0 repositories, as well as on current non-SBo
+    # repositories, none of the above triggers. In that case, we use the
+    # provided DOWNLOAD and MD5SUM variables, which is exactly the old-style
+    # behavior.
+
+    # Convert the space-separated strings to arrays
+    DOWNLOAD=($DOWNLOAD)
+    MD5SUM=($MD5SUM)
+}
+
 get_source_names() {
     # Echo the source names for an app, given the info file.
-    # Usage: get_source_names [--all] info_file
-    #   --all   try to find all source files (i.e. also the obsolete ones)
+    # Usage: get_source_names [--all] [--placeholder] info_file
+    #   --all           try to find all source files (i.e. also the obsolete
+    #                   ones)
+    #   --placeholder   if no source file is found for a DOWNLOAD entry, a
+    #                   line containing "." is generated
+    # Note that even without --all this function can return multiple files,
+    # if the application specifies more than one in its .info file.
 
-    local SRCNAME INFO ALL CWD
+    local SRCNAME INFO ALL CWD DL PLACEHOLDER
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
@@ -2376,45 +2413,53 @@ get_source_names() {
         ALL=yes
         shift
     fi
-    INFO="$1"
-
-    . $INFO
-    SRCNAME=${DOWNLOAD##*/}
-    # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with their
-    # corresponding characters.
-    # This is done replacing '%' with '\x' and passing the string to printf.
-    if [[ $SRCNAME =~ % ]]; then
-        SRCNAME=$(printf ${SRCNAME//\%/\\x})
+    if [[ $1 == "--placeholder" ]]; then
+        PLACEHOLDER="."
+        shift
     fi
-    # The above doesn't work when the download link doesn't reference the file
-    # name explicitly. If this is the case, all we can do is guessing...
-    if [[ ! $SRCNAME ]]; then
-        # If the source has a name resembling $PRGNAM-$VERSION.tar.gz, catch
-        # it.
-        CWD=$(pwd)
-        cd $SRCDIR
-        SRCNAME=$(find . -iname $PRGNAM\*$VERSION.\* | head -n 1)
-        cd "$CWD"
-        if [[ ! $SRCNAME ]]; then
-            # We do our best with the tools we have...
-            SRCNAME=$PRGNAM-$VERSION.tar.gz
+    INFO=$1
+
+    read_info $INFO
+    for DL in "${DOWNLOAD[@]}"; do
+        SRCNAME=${DL##*/}
+        # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with
+        # their corresponding characters.
+        # This is done replacing '%' with '\x' and passing the string to
+        # printf.
+        if [[ $SRCNAME =~ % ]]; then
+            SRCNAME=$(printf ${SRCNAME//\%/\\x})
         fi
-    fi
+        # The above doesn't work when the download link doesn't reference the
+        # file name explicitly. If this is the case, all we can do is
+        # guessing...
+        if [[ ! $SRCNAME ]]; then
+            # If the source has a name resembling $PRGNAM-$VERSION.tar.gz,
+            # catch it.
+            CWD=$(pwd)
+            cd $SRCDIR
+            SRCNAME=$(find . -iname $PRGNAM\*$VERSION.\* | head -n 1)
+            cd "$CWD"
+            if [[ ! $SRCNAME ]]; then
+                # We do our best with the tools we have...
+                SRCNAME=$PRGNAM-$VERSION.tar.gz
+            fi
+        fi
 
-    # If the user asked for "all" sources, let's try to find similar names
-    if [[ $ALL ]]; then
-        # The following is based on the idea that the source name contains the
-        # version number. The expression below takes the parts before and
-        # after the version number, and replaces the version number with a
-        # regular expression matching and digit and any character present in
-        # the known version number (this is to match odd version numbers
-        # containing letters, like "svn1234", but makes it less likely to
-        # match different packages with similar names, like virtualbox-kernel
-        # and virtualbox-kernel-addons)
-        SRCNAME=${SRCNAME%%$VERSION*}[0-9$VERSION]\*${SRCNAME##*$VERSION}
-    fi
+        # If the user asked for "all" sources, let's try to find similar names
+        if [[ $ALL ]]; then
+            # The following is based on the idea that the source name contains
+            # the version number. The expression below takes the parts before
+            # and after the version number, and replaces the version number
+            # with a regular expression matching and digit and any character
+            # present in the known version number (this is to match odd
+            # version numbers containing letters, like "svn1234", but makes it
+            # less likely to match different packages with similar names, like
+            # virtualbox-kernel and virtualbox-kernel-addons)
+            SRCNAME=${SRCNAME%%$VERSION*}[0-9$VERSION]\*${SRCNAME##*$VERSION}
+        fi
 
-    ls -A $SRCDIR | grep "^${SRCNAME##*/}"
+        ls -A $SRCDIR | grep "^${SRCNAME##*/}" || echo $PLACEHOLDER
+    done
 }
 
 check_source() {
@@ -2437,16 +2482,14 @@ check_source() {
     [[ -z $SRCNAME || ! -f $SRCDIR/$SRCNAME ]] && return 1
 
     # Check MD5
-    echo "Checking MD5SUM for \"$SRCNAME\"..."
+    echo -n "  Checking MD5SUM for \"$SRCNAME\"... " | tee -a $TMPSUMMARYLOG
     MD5CHK=$(md5sum "$SRCDIR/$SRCNAME" | cut -d' ' -f1)
-    echo | tee -a $TMPSUMMARYLOG
-    echo "$PKG:" | tee -a $TMPSUMMARYLOG
     if [[ $MD5CHK == $MD5SUM ]]; then
-        echo "MD5SUM check passed." | tee -a $TMPSUMMARYLOG
+        echo "passed." | tee -a $TMPSUMMARYLOG
     else
-        echo "MD5SUM check failed!" | tee -a $TMPSUMMARYLOG
-        echo "Expected: $MD5SUM" | tee -a $TMPSUMMARYLOG
-        echo "Found:    $MD5CHK" | tee -a $TMPSUMMARYLOG
+        echo "failed!" | tee -a $TMPSUMMARYLOG
+        echo "    Expected: $MD5SUM" | tee -a $TMPSUMMARYLOG
+        echo "    Found:    $MD5CHK" | tee -a $TMPSUMMARYLOG
         # Ask the user what to do with the bad source
         while :; do
             cat << EOF
@@ -2464,21 +2507,21 @@ EOF
             case $ANS in
                 y* | Y* )
                     MD5SUM=$(tr / _ <<< "$MD5CHK")
-                    echo "Keeping the source and continuing." |
+                    echo "    Keeping the source and continuing." |
                         tee -a $TMPSUMMARYLOG
                     return 0
                     ;;
                 n* | N* )
                     rm -f "$SRCDIR/$SRCNAME"
-                    echo "Source deleted." | tee -a $TMPSUMMARYLOG
+                    echo "    Source deleted." | tee -a $TMPSUMMARYLOG
                     return 2
                     ;;
                 r* | R* )
-                    echo "Downloading again." | tee -a $TMPSUMMARYLOG
+                    echo "    Downloading again." | tee -a $TMPSUMMARYLOG
                     return 1
                     ;;
                 * )
-                    echo "Unknown response."
+                    echo "    Unknown response."
                     ;;
             esac
         done
@@ -2498,57 +2541,77 @@ get_source() {
     # 1 = failed, continue queue processing
     # 2 = failed, stop queue processing
 
-    local INFO="$1"
+    local INFO=$1
     local PKG=$(sed 's:\.info.*$::g' <<< $INFO)
     local BUILD_LOCK=$SBOPKGTMP/sbopkg_build.lck
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-    local SRCNAME DL FAILURE ANS MD5CHK
+    local SRCNAME DL_SRCNAME DL FAILURE ANS MD5CHK i CWD
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
-    . "$INFO"
-    SRCNAME=$(get_source_names "$INFO")
+    CWD=$(pwd)
+    read_info $INFO
 
-    while :; do
-        check_source $PKG $MD5SUM $SRCNAME
-        case $? in
-            0 ) # Source OK
-                break
-                ;;
-            2 ) # Abort
+    echo | tee -a $TMPSUMMARYLOG
+    echo "$PKG:" | tee -a $TMPSUMMARYLOG
+    for i in ${!MD5SUM[@]}; do
+        while :; do
+            cd "$CWD"
+            SRCNAME=$(get_source_names --placeholder $INFO)
+
+            # Put SRCNAME lines into array elements.
+            # This is a little bit involved since it has to deal with spaces
+            # inside file names.
+            # We know that we could obtain the same result faster by mangling
+            # with IFS, but the resulting code was a bit too hacky.
+            eval SRCNAME=( $(
+                while read LINE; do
+                    printf '%q ' "$LINE"
+                done <<< "$SRCNAME"
+            ) )
+
+            check_source $PKG ${MD5SUM[$i]} "${SRCNAME[$i]}"
+            case $? in
+                0 ) # Source OK
+                    rm -f "$REPO_DIR/$PKGPATH/${SRCNAME[$i]}"
+                    ln -s "$SRCDIR/${SRCNAME[$i]}" \
+                        "$REPO_DIR/$PKGPATH/${SRCNAME[$i]}"
+                    continue 2
+                    ;;
+                2 ) # Abort
+                    FAILURE=download
+                    break 2
+                    ;;
+            esac
+
+            mkdir -p $DLDIR
+            cd $DLDIR
+            wget $WGETFLAGS ${DOWNLOAD[$i]} >> $SBOPKGOUTPUT & echo "$!" >> \
+                $PIDLIST 2>> $SBOPKGOUTPUT
+            wait
+            # Source filename corrections for Virtualbox, where '?e=foo' gets
+            # appended to the filename and for calcurse, where a 'foo?' gets
+            # prepended to the filename
+            DL=$(ls -A . 2> /dev/null)
+            DL_SRCNAME=$(sed 's/?e=.*$//;s/^.*?//' <<< "$DL")
+            if [[ $DL_SRCNAME ]]; then
+                mv "$DL" "$SRCDIR/$DL_SRCNAME"
+            else
                 FAILURE=download
-                break
-                ;;
-        esac
-
-        mkdir -p $DLDIR
-        cd $DLDIR
-        wget $WGETFLAGS $DOWNLOAD >> $SBOPKGOUTPUT & echo "$!" >> \
-            $PIDLIST 2>> $SBOPKGOUTPUT
-        wait
-        # Source filename corrections for Virtualbox, where '?e=foo' gets
-        # appended to the filename and for calcurse, where a 'foo?' gets
-        # prepended to the filename
-        DL=$(ls -A . 2> /dev/null)
-        SRCNAME=$(sed 's/?e=.*$//;s/^.*?//' <<< "$DL")
-        if [[ $SRCNAME ]]; then
-            mv "$DL" "$SRCDIR/$SRCNAME"
-        else
-            FAILURE=download
-            echo >> $TMPSUMMARYLOG
-            echo "$PKG:" >> $TMPSUMMARYLOG
-            echo "Download failed." >> $TMPSUMMARYLOG
-            echo >> $TMPSUMMARYLOG
-        fi
-        cd $SRCDIR
-        rm -rf $DLDIR
-        [[ $FAILURE ]] && break
+                echo "  Download failed." >> $TMPSUMMARYLOG
+                echo >> $TMPSUMMARYLOG
+            fi
+            rm -f $REPO_DIR/$PKGPATH/"$DL_SRCNAME"
+            cd $SRCDIR
+            rm -rf $DLDIR
+            [[ $FAILURE ]] && break 2
+            ln -s "$SRCDIR/$DL_SRCNAME" "$REPO_DIR/$PKGPATH/$DL_SRCNAME"
+        done
     done
 
     cd $REPO_DIR/$PKGPATH
-    rm -f "$SRCNAME"
 
     if [[ $FAILURE ]]; then
         rm -f $PKG.{info,SlackBuild}.build
@@ -2569,8 +2632,6 @@ get_source() {
             esac
         done
         return 2
-    else
-        ln -s "$SRCDIR/$SRCNAME" "$SRCNAME"
     fi
     return 0
 }
@@ -2612,10 +2673,12 @@ remove_obsoleted_sources() {
         # Bail out if the user pressed ESC
         progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
 
-        APP_CURRSRC=$(get_source_names "$INFO")
-        if [[ $APP_CURRSRC ]]; then
-            REGEX="/^$APP_CURRSRC$/d;$REGEX"
-        fi
+        # Reading get_source_names output...
+        while read APP_CURRSRC; do
+            if [[ $APP_CURRSRC ]]; then
+                REGEX="/^$APP_CURRSRC$/d;$REGEX"
+            fi
+        done < <(get_source_names "$INFO")
 
         # Progress indicator, for the progressbar
         (( PROGRESS += 1 ))
@@ -2845,7 +2908,6 @@ build_package() {
             BUILDOPTIONS=$(< options.build)
             [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
         fi
-        [[ $(uname -m) == "x86_64" ]] && export ARCH=${ARCH:-x86_64}
         export OUTPUT=$SB_OUTPUT
         nice sh $PKGNAME.SlackBuild.build
     )
@@ -2858,8 +2920,7 @@ build_package() {
     # Let's see the result
     cd $SB_OUTPUT
     if [ ! -f *.t?z ]; then
-        echo "$PKGNAME:" >> $TMPSUMMARYLOG
-        echo "Error occurred with build.  Please check the log." \
+        echo "  Error occurred with build.  Please check the log." \
             >> $TMPSUMMARYLOG
         echo
         echo "Would you like to continue processing the rest of the"
@@ -3101,7 +3162,7 @@ use_options() {
             dialog --title "Build options" --menu "$(crunch "One or \
                 more build option files for the $OPTAPP \
                 SlackBuild were found.  Please choose which you \
-                would like to use.")" 12 50 7 \
+                would like to use.")" 12 50 3 \
                 --file $OPTLIST 2> $OPTCHOICE
             CHOICE=$?
             if [[ $CHOICE != 0 ]]; then
@@ -3280,7 +3341,7 @@ process_queue() {
             rm -f $PKGPATH/$CHKBUILD*.build
             return 0
         else
-            . $PKGPATH/$CHKBUILD.info.build
+            read_info $PKGPATH/$CHKBUILD.info.build
             echo "Using $PICKFILE .info file" >> $TMPLOG-files
         fi
         if ! pick_file SlackBuild $PKGPATH $CHKBUILD; then
@@ -3888,6 +3949,11 @@ ON_ERROR=ask
 if [[ $(id -u) != 0 ]]; then
     echo "$SCRIPT: $SCRIPT must be run by the root user.  Exiting." >&2
     exit 1
+fi
+
+# Set up ARCH
+if [[ ! $(uname -m) =~ 'i.86' ]]; then
+    export ARCH=${ARCH:-$(uname -m)}
 fi
 
 # This is the command line options and help.
