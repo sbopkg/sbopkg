@@ -6,5 +6,5 @@
 # information on this directory and how to create
 # custom repository files.
 #
-# Repo Branch Description Tag Tool Link
-local local "default local repository" _SBo "" ""
+# Repo Branch Description Tag Tool Link CheckGPG
+local local "default local repository" _SBo "" "" ""

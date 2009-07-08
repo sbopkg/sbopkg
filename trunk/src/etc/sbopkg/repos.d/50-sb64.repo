@@ -10,5 +10,5 @@
 #   suboptimal, but it's less probably blocked by firewalls and for some
 #   obscure reason checking out through http has proven more reliable here.
 #
-# Repo Branch Description Tag Tool Link
-SB64 master "Slamd64Builds master repository" _SB64 git http://builds.slamd64.com/slamd64builds.git@master
+# Repo Branch Description Tag Tool Link CheckGPG
+SB64 master "Slamd64Builds master repository" _SB64 git http://builds.slamd64.com/slamd64builds.git@master ""

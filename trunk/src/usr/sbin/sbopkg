@@ -861,9 +861,9 @@ set_repo_vars() {
     local i
 
     # Make sure we don't return old values with an invalid input
-    unset REPO_DESC REPO_TAG REPO_TOOL REPO_LINK REPO_DIR
+    unset REPO_DESC REPO_TAG REPO_TOOL REPO_LINK REPO_DIR REPO_GPG
 
-    for ((i=0; i<${#REPOSITORIES[@]}; i+=6)); do
+    for ((i=0; i<${#REPOSITORIES[@]}; i+=7)); do
         if [[ ( ${REPOSITORIES[$i]} = $REPO_NAME || $REPO_NAME = "" ) &&
                 ${REPOSITORIES[$((i + 1))]} = $REPO_BRANCH ]]; then
             REPO_NAME=${REPOSITORIES[i]}
@@ -871,6 +871,7 @@ set_repo_vars() {
             REPO_TAG=${REPOSITORIES[$((i + 3))]}
             REPO_TOOL=${REPOSITORIES[$((i + 4))]}
             REPO_LINK=${REPOSITORIES[$((i + 5))]}
+            REPO_GPG=${REPOSITORIES[$((i + 6))]}
             REPO_DIR=$REPO_ROOT/$REPO_NAME
 
             if [[ $REPO_TOOL = "rsync" || $REPO_TOOL = "git" ]]; then
@@ -887,8 +888,9 @@ set_repo_vars() {
 select_repository() {
     # Create menu and list the sbopkg-supported repositories for
     # user to choose from.
-
-    local PID
+    
+    # See comment below about dialog glitches with the PID check.
+    #local PID
 
     while :; do
         eval dialog --cancel-label "Back" --title \
@@ -896,9 +898,9 @@ select_repository() {
             --menu '"$(crunch "You are currently using sbopkg to browse a \
             local copy of the $REPO_DESC.  If you would \
             like to change it, please select another repository below or \
-            press <Back> to go back.")"' 17 60 6 \
+            press <Back> to go back.")"' 17 60 7 \
             $(
-                for ((i=0; i<${#REPOSITORIES[@]}; i+=6)); do
+                for ((i=0; i<${#REPOSITORIES[@]}; i+=7)); do
                     echo \"${REPOSITORIES[$((i+1))]} \(${REPOSITORIES[$i]}\)\"
                     echo \"${REPOSITORIES[$((i+2))]}\"
                 done
@@ -908,15 +910,16 @@ select_repository() {
         fi
         eval $(sed 's:^\(.*\) (\(.*\))$:REPO_NAME=\2;REPO_BRANCH=\1:g' \
             < $SBOPKGTMP/sbopkg_version_selection)
-        if [[ $DIAG ]]; then
-            (
-                sleep 0.2
-                dialog --infobox "Checking out..." 3 19
-            ) &
-            PID=$!
-        fi
+        # This was causing annoying glitches; comment out for now
+        #if [[ $DIAG ]]; then
+        #    (
+        #        sleep 0.2
+        #        dialog --infobox "Checking out..." 3 19
+        #    ) &
+        #    PID=$!
+        #fi
         set_repo_vars
-        [[ $PID ]] && kill -9 $PID 2> /dev/null
+        #[[ $PID ]] && kill -9 $PID 2> /dev/null
         dialog --title "Save this setting?" --defaultno --yesno \
             "$(crunch "Would you like to save this repository setting \
             in the user's $HOME/.sbopkg.conf file? (One will be created if \
@@ -1095,10 +1098,12 @@ info_item() {
                         ;;
                     "More Files" ) app_files_chooser $SHORTPATH ;;
                     Custom )
-                        check_gpg $SHORTPATH
-                        if [[ $? == 1 ]]; then
-                            RETVAL=1
-                            break
+                        if [[ ! -z $REPO_GPG ]]; then
+                            check_gpg $SHORTPATH
+                            if [[ $? == 1 ]]; then
+                                RETVAL=1
+                                break
+                            fi
                         fi
                         extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
                         if [[ $? == 1 ]]; then
@@ -1110,14 +1115,20 @@ info_item() {
                     Remove ) remove_sources_for_app $SHORTPATH/$APP.info ;;
                     Options ) add_options $APP ;;
                     "Check GPG" )
-                        check_gpg $SHORTPATH
-                        CHKRETVAL=$?
-                        if [[ $CHKRETVAL == 0 ]]; then
-                            dialog --title "OK" --msgbox "GPG check passed." \
-                                6 25
-                        elif [[ $CHKRETVAL == 1 ]]; then
-                            RETVAL=1
-                            break
+                        if [[ ! -z $REPO_GPG ]]; then
+                            echo "OK"
+                            check_gpg $SHORTPATH
+                            CHKRETVAL=$?
+                            if [[ $CHKRETVAL == 0 ]]; then
+                                dialog --title "OK" --msgbox "GPG check passed." 6 25
+                            elif [[ $CHKRETVAL == 1 ]]; then
+                                RETVAL=1
+                                break
+                            fi
+                        else
+                            dialog --title "ERROR" --msgbox "$(crunch "GPG \
+                                checks are not enabled for the $REPO_NAME \
+                                repository.")" 8 30
                         fi
                         ;;
                     Extract )
@@ -1187,7 +1198,7 @@ check_gpg() {
         return 1
     fi
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
-        dialog --title "WARNING" --yesno "$(crunch "GPG CHECK FAILED!\n\n\
+        dialog --title "WARNING" --yesno "$(crunch "GPG CHECK FAILED!\n\n \
             Would you like to delete the $GPGNAME directory and tarball \
             so you can perform a new sync?  If so, all local changes to \
             the files in the $GPGNAME directory will be lost and you will \
@@ -2482,12 +2493,13 @@ check_source() {
     [[ -z $SRCNAME || ! -f $SRCDIR/$SRCNAME ]] && return 1
 
     # Check MD5
-    echo -n "  Checking MD5SUM for \"$SRCNAME\"... " | tee -a $TMPSUMMARYLOG
+    echo "Checking MD5SUM:"
     MD5CHK=$(md5sum "$SRCDIR/$SRCNAME" | cut -d' ' -f1)
+    echo -n "  $SRCNAME ... " | tee -a $TMPSUMMARYLOG
     if [[ $MD5CHK == $MD5SUM ]]; then
-        echo "passed." | tee -a $TMPSUMMARYLOG
+        echo "OK" | tee -a $TMPSUMMARYLOG
     else
-        echo "failed!" | tee -a $TMPSUMMARYLOG
+        echo "FAILED!" | tee -a $TMPSUMMARYLOG
         echo "    Expected: $MD5SUM" | tee -a $TMPSUMMARYLOG
         echo "    Found:    $MD5CHK" | tee -a $TMPSUMMARYLOG
         # Ask the user what to do with the bad source
@@ -2556,6 +2568,7 @@ get_source() {
 
     echo | tee -a $TMPSUMMARYLOG
     echo "$PKG:" | tee -a $TMPSUMMARYLOG
+    echo "MD5SUM:" >> $TMPSUMMARYLOG
     for i in ${!MD5SUM[@]}; do
         while :; do
             cd "$CWD"
@@ -3245,12 +3258,13 @@ check_asc() {
     local GPGNAME=$(basename $CHKPKG)
     local CATEGORY=$(echo $CHKPKG | cut -d/ -f2)
 
-    if [[ ! -e $CHKPKG.tar.gz ]]; then
-        echo "GPG check skipped!  No tarball found." | tee -a $TMPLOG
-        return 0
-    fi
+    echo "GPG:" >> $TMPLOG
+    echo -n "  $GPGNAME.tar.gz ... " | tee -a $TMPLOG
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
-        echo "$GPGNAME:  GPG check failed!" | tee -a $TMPLOG
+        echo "FAILED!" | tee -a $TMPLOG
+        if [[ ! -e $CHKPKG.tar.gz && ! -e $CHKPKG.*.asc ]]; then
+            echo "  No tarball or .asc file found." | tee -a $TMPLOG
+        fi
         while :; do
             cat << EOF
 
@@ -3267,18 +3281,18 @@ EOF
             error_read ANS
             case $ANS in
                 y* | Y* )
-                    echo "Keeping $GPGNAME directory and tarball." |
+                    echo "  Keeping $GPGNAME directory and tarball." |
                         tee -a $TMPLOG
                     return 0
                     ;;
                 n* | N* )
-                    echo "Deleting $GPGNAME directory and tarball." |
+                    echo "  Deleting $GPGNAME directory and tarball." |
                         tee -a $TMPLOG
                     rm -rf $PKGPATH; rm $PKGPATH.*
                     return 1
                     ;;
                 a* | A* )
-                    echo "Aborting the build process." |
+                    echo "  Aborting the build process." |
                         tee -a $TMPLOG
                     return 1
                     ;;
@@ -3288,7 +3302,7 @@ EOF
             esac
         done
     else
-        echo "GPG check passed." >> $TMPLOG
+        echo "OK" >> $TMPLOG
     fi
     tar -C ./$CATEGORY -zxf $CHKPKG.tar.gz
     return 0
@@ -3299,50 +3313,56 @@ process_queue() {
 
     # need to check the following before uncommenting
     #local PKG PKGBUILD SINGLE PKGPATH CHKBUILD ANS
-    local CHKBUILD ANS COUNTER
+    local CHKBUILD ANS
 
     rm -f $TMPLOG $TMPBUILDLOG $TMPSUMMARYLOG $FINALQUEUE
     # Start the precheck
     echo >> $TMPLOG
-    echo "##########################################" >> $TMPLOG
-    echo "       New queue process started on" >> $TMPLOG
+    echo "###########################################" >> $TMPLOG
+    echo "       New queue process started on:" >> $TMPLOG
     echo "       $(date)" >> $TMPLOG
-    echo "##########################################" >> $TMPLOG
+    echo "###########################################" >> $TMPLOG
     echo >> $TMPLOG
-    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
-    echo "PACKAGE BUILDING/INSTALLATION PRECHECK LOG" >> $TMPLOG
+    echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
+    echo "PACKAGE BUILDING/INSTALLATION PRE-CHECK LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
+    echo >> $TMPLOG
+    echo "Queue Process:" >> $TMPLOG
     if [[ $QUEUETYPE == "buildinstall" ]]; then
-        echo "Queue process: build and install" >> $TMPLOG
+        echo "  Build and install" >> $TMPLOG
     else
-        echo "Queue process: build" >> $TMPLOG
+        echo "  Build only" >> $TMPLOG
     fi
     echo >> $TMPLOG
     echo "Checking GPG signatures.  Please be patient..."
     echo
-    COUNTER=1
     for CHKBUILD in $(< $STARTQUEUE); do
         # FIXME: This section still needs to be reviewed
         unset PKG PKGPATH PKGNAME VERSION BUILD PICKFILE FILE
-        echo "Package $COUNTER: $CHKBUILD" >> $TMPLOG
+        echo "$CHKBUILD:" >> $TMPLOG
         if ! search_package $CHKBUILD; then
             echo "$CHKBUILD not found!" >> $TMPLOG
             echo >> $TMPLOG
-            COUNTER=$((COUNTER+1))
             continue
         else
             echo $CHKBUILD >> $FINALQUEUE
         fi
-        check_asc $PKGPATH
-        if [[ $? == 1 ]]; then
-            return 0
+        if [[ ! -z $REPO_GPG ]]; then
+            check_asc $PKGPATH
+            if [[ $? == 1 ]]; then
+                return 0
+            fi
+        else
+            echo "GPG:" >> $TMPLOG
+            echo "  Not supported for the $REPO_NAME repository." >> $TMPLOG
         fi
+        echo "Files:" >> $TMPLOG-files
         if ! pick_file info $PKGPATH $CHKBUILD; then
             rm -f $PKGPATH/$CHKBUILD*.build
             return 0
         else
             read_info $PKGPATH/$CHKBUILD.info.build
-            echo "Using $PICKFILE .info file" >> $TMPLOG-files
+            echo "  Using $PICKFILE .info file" >> $TMPLOG-files
         fi
         if ! pick_file SlackBuild $PKGPATH $CHKBUILD; then
             rm -f $PKGPATH/$CHKBUILD*.build
@@ -3350,9 +3370,10 @@ process_queue() {
         else
             BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$CHKBUILD.SlackBuild.build |
                 sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
-            echo "Using $PICKFILE SlackBuild file" >> $TMPLOG-files
+            echo "  Using $PICKFILE SlackBuild file" >> $TMPLOG-files
         fi
-        echo "Found $CHKBUILD $VERSION-$BUILD" >> $TMPLOG
+        echo "Version:" >> $TMPLOG
+        echo "  Found $CHKBUILD $VERSION-$BUILD" >> $TMPLOG
         cat $TMPLOG-files >> $TMPLOG
         rm $TMPLOG-files
         use_options $PKGPATH $CHKBUILD
@@ -3361,15 +3382,15 @@ process_queue() {
             rm -f $PKGPATH/options.build
             return 0
         fi
+        echo "Build Options:" >> $TMPLOG
         if [[ $BUILDOPTIONS ]]; then
-            echo "Options: $BUILDOPTIONS" >> $TMPLOG
+            echo "  $BUILDOPTIONS" >> $TMPLOG
         else
-            echo "Options: None" >> $TMPLOG
+            echo "  None" >> $TMPLOG
         fi
         echo >> $TMPLOG
-        COUNTER=$((COUNTER+1))
     done
-    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
+    echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     if [[ ! -e $FINALQUEUE ]]; then
         return 1
     fi
@@ -3435,14 +3456,16 @@ process_queue() {
             echo "Done building package for $PKGBUILD."
             cd $SB_OUTPUT
             NEWPACKAGE=$(ls -1t *.t?z | head -n1)
-            echo "Built package: $NEWPACKAGE" >> $TMPSUMMARYLOG
+            echo "Build:" >> $TMPSUMMARYLOG
+            echo "  Package $NEWPACKAGE ... OK" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE"
             if [[ $QUEUETYPE == "buildinstall" ]]; then
                 if [[ $SB_OUTPUT/*.t?z ]]; then
                     cd $SB_OUTPUT
                     NEWPACKAGE=$(ls -1t *.t?z | head -n1)
                     install_package $SB_OUTPUT $NEWPACKAGE
-                    echo "Installed package: $NEWPACKAGE" >> $TMPSUMMARYLOG
+                    echo "Install:" >> $TMPSUMMARYLOG
+                    echo "  Package: $NEWPACKAGE ... OK" >> $TMPSUMMARYLOG
                 fi
             fi
             if [[ $SB_OUTPUT/*.t?z ]]; then
@@ -3451,7 +3474,7 @@ process_queue() {
         else
             echo >> $TMPSUMMARYLOG
             echo "$PKGBUILD:" >> $TMPSUMMARYLOG
-            echo "Not processed - build queue aborted." >> $TMPSUMMARYLOG
+            echo "  Not processed - build queue aborted." >> $TMPSUMMARYLOG
             echo >> $TMPSUMMARYLOG
         fi
         COUNTER=$((COUNTER+1))
@@ -3462,22 +3485,24 @@ process_queue() {
     fi
     rm -f $SBOPKGTMP/sbopkg_build.lck
     echo >> $TMPLOG
-    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
+    echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
+    echo >> $TMPLOG
+    echo "Queue Process:" >> $TMPLOG
     if [[ $QUEUETYPE == "buildinstall" ]]; then
-        echo "Queue process: build and install" >> $TMPLOG
+        echo "  Build and install" >> $TMPLOG
     else
-        echo "Queue process: build" >> $TMPLOG
+        echo "  Build only" >> $TMPLOG
     fi
     cat $TMPSUMMARYLOG >> $TMPLOG
     rm $TMPSUMMARYLOG
     echo >> $TMPLOG
-    echo "++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
+    echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     echo >> $TMPLOG
-    echo "##########################################" >> $TMPLOG
-    echo "          Queue process complete" >> $TMPLOG
-    echo "##########################################" >> $TMPLOG
+    echo "###########################################" >> $TMPLOG
+    echo "          Queue process complete!" >> $TMPLOG
+    echo "###########################################" >> $TMPLOG
     echo >> $TMPLOG
     cat $TMPLOG
     if [[ $DIAG ]]; then
@@ -3929,6 +3954,7 @@ unset REPO_TAG        # Active branch's packages' tag
 unset REPO_TOOL       # Active branch's fetch tool
 unset REPO_LINK       # Active branch's fetch link
 unset REPO_DIR        # Active branch's directory
+unset REPO_GPG        # Active branch's GPG checking
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER
@@ -4026,8 +4052,8 @@ while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
 $SCRIPT $SBOVER
 Usage: $SCRIPT [OPTIONS] <packagename(s)>
 Options are:
-  -b pkg/queue(s) Build the specified package(s). If one or more queues are
-                  specified, build the packages they refer to.
+  -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
+                  are specified, build the packages they refer to.
   -c              Check for updates to installed packages.
   -d localdir     Location of local copy of the repositories.
   -e error_action Specify what sbopkg is supposed to do on build errors.
