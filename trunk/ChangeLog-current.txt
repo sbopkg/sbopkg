@@ -115,5 +115,5 @@ enhancements:
     /etc/sbopkg/repos.d/40-sbo.repo
   * Add support for multiple architectures and multiple source files. This
     makes sbopkg able to handle the new features that SlackBuilds.org admins
-	are preparing for the Slackware 13.0 release.
+    are preparing for the Slackware 13.0 release.
 +--------------------------+
