@@ -888,9 +888,6 @@ set_repo_vars() {
 select_repository() {
     # Create menu and list the sbopkg-supported repositories for
     # user to choose from.
-    
-    # See comment below about dialog glitches with the PID check.
-    #local PID
 
     while :; do
         eval dialog --cancel-label "Back" --title \
@@ -910,16 +907,7 @@ select_repository() {
         fi
         eval $(sed 's:^\(.*\) (\(.*\))$:REPO_NAME=\2;REPO_BRANCH=\1:g' \
             < $SBOPKGTMP/sbopkg_version_selection)
-        # This was causing annoying glitches; comment out for now
-        #if [[ $DIAG ]]; then
-        #    (
-        #        sleep 0.2
-        #        dialog --infobox "Checking out..." 3 19
-        #    ) &
-        #    PID=$!
-        #fi
         set_repo_vars
-        #[[ $PID ]] && kill -9 $PID 2> /dev/null
         dialog --title "Save this setting?" --defaultno --yesno \
             "$(crunch "Would you like to save this repository setting \
             in the user's $HOME/.sbopkg.conf file? (One will be created if \
