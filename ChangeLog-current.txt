@@ -116,4 +116,6 @@ enhancements:
   * Add support for multiple architectures and multiple source files. This
     makes sbopkg able to handle the new features that SlackBuilds.org admins
     are preparing for the Slackware 13.0 release.
+  * Add option to retry a failed build. Thanks to Zordrak for suggesting this
+    feature.
 +--------------------------+

@@ -2884,6 +2884,7 @@ build_package() {
 
     local PKGPATH=$1
     local PKGNAME=$2
+    local RETVAL=0
 
     echo
     echo "Building $PKGNAME"
@@ -2904,48 +2905,60 @@ build_package() {
 
     # Start the actual build
     echo "Building package for $PKGNAME..."
-    (   # Run the build in a subshell, to avoid namespace pollution
-        if [[ -f options.build ]]; then
-            BUILDOPTIONS=$(< options.build)
-            [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
+    while :; do
+        (   # Run the build in a subshell, to avoid namespace pollution
+            if [[ -f options.build ]]; then
+                BUILDOPTIONS=$(< options.build)
+                [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
+            fi
+            export OUTPUT=$SB_OUTPUT
+            nice sh $PKGNAME.SlackBuild.build
+        )
+
+        # Let's see the result
+        if [ -f $SB_OUTPUT/*.t?z ]; then
+            RETVAL=0
+            break
+        else
+            echo "  Error occurred with build.  Please check the log." \
+                >> $TMPSUMMARYLOG
+            echo
+            echo "Would you like to continue processing the rest of the"
+            echo "build queue or would you like to abort?  If this failed"
+            echo "package is a dependency of another package in the queue"
+            echo "then it may not make sense to continue."
+            echo
+            echo "Press (Y)es to continue, (N)o to abort, (R)etry to try"
+            echo "to build the package again."
+            while :; do
+                error_read ANS
+                case $ANS in
+                    y* | Y* ) # Continue
+                        RETVAL=0
+                        break 2
+                        ;;
+                    n* | N* ) # Abort
+                        RETVAL=1
+                        rm -f $SBOPKGTMP/sbopkg_build.lck
+                        break 2
+                        ;;
+                    r* | R* ) # Retry
+                        continue 2
+                        ;;
+                    * ) # Huh?
+                        echo "Unknown response."
+                        ;;
+                esac
+            done
         fi
-        export OUTPUT=$SB_OUTPUT
-        nice sh $PKGNAME.SlackBuild.build
-    )
+    done
 
     # Cleanup
     cd $REPO_DIR/$PKGPATH
     rm -f $PKGNAME.{info,SlackBuild}.build
     rm -f options.build
 
-    # Let's see the result
-    cd $SB_OUTPUT
-    if [ ! -f *.t?z ]; then
-        echo "  Error occurred with build.  Please check the log." \
-            >> $TMPSUMMARYLOG
-        echo
-        echo "Would you like to continue processing the rest of the"
-        echo "build queue or would you like to abort?  If this failed"
-        echo "package is a dependency of another package in the queue"
-        echo "then it may not make sense to continue."
-        echo
-        echo "Press (Y)es to continue or (N)o to abort."
-        while :; do
-            error_read ANS
-            case $ANS in
-                y* | Y* ) # Continue
-                    return 0
-                    ;;
-                n* | N* ) # Abort
-                    rm -f $SBOPKGTMP/sbopkg_build.lck
-                    return 1
-                    ;;
-                * ) # Huh?
-                    echo "Unknown response."
-                    ;;
-            esac
-        done
-    fi
+    return $RETVAL
 }
 
 edit_local_file() {
