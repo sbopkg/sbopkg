@@ -2538,8 +2538,7 @@ get_source() {
     #
     # Return values:
     # 0 = all ok
-    # 1 = failed, continue queue processing
-    # 2 = failed, stop queue processing
+    # 1 = failed
 
     local INFO=$1
     local PKG=$(sed 's:\.info.*$::g' <<< $INFO)
@@ -2614,26 +2613,8 @@ get_source() {
 
     cd $REPO_DIR/$PKGPATH
 
-    if [[ $FAILURE ]]; then
-        rm -f $PKG.{info,SlackBuild}.build
-        rm -f options.build
-        while :; do
-            echo
-            echo "Would you like to continue processing the rest of the"
-            echo "build queue or would you like to abort?  If this failed"
-            echo "package is a dependency of another package in the queue"
-            echo "then it may not make sense to continue."
-            echo
-            echo "Press (Y)es to continue or (N)o to abort."
-            error_read ANS
-            case $ANS in
-                y* | Y* ) return 2 ;;
-                n* | N* ) rm -f $BUILD_LOCK && return 2 ;;
-                * ) echo "Unknown response." ;;
-            esac
-        done
-        return 2
-    fi
+    [[ $FAILURE ]] && return 1
+
     return 0
 }
 
@@ -2892,21 +2873,17 @@ build_package() {
     rm -rf $SB_OUTPUT
     mkdir -p $SB_OUTPUT
 
-    # Fetch the source
-    # Note that get_source() "knows" about the source cache, so this isn't
-    # necessarily a download.
     cd $REPO_DIR/$PKGPATH
-    get_source $PKGNAME.info.build
-    case $? in
-        0 ) ;;
-        1 ) return 0 ;;
-        * ) return 1 ;;
-    esac
 
     # Start the actual build
-    echo "Building package for $PKGNAME..."
     while :; do
-        (   # Run the build in a subshell, to avoid namespace pollution
+        # Fetch the sources
+        # Note that get_source() "knows" about the source cache, so this isn't
+        # necessarily a download.
+        # If the sources are successfully fetched, start the build.
+        get_source $PKGNAME.info.build && (
+            # Run the build in a subshell, to avoid namespace pollution
+            echo "Building package for $PKGNAME..."
             if [[ -f options.build ]]; then
                 BUILDOPTIONS=$(< options.build)
                 [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
