@@ -18,6 +18,7 @@ REPO_BRANCH=${REPO_BRANCH:-13.0}
 KEEPLOG=YES
 LOGFILE=$LOGDIR/sbopkg-build-log
 DEBUG=0
+CLEANUP=NO
 
 # The following variables are used by sbopkg and by the SlackBuild scripts
 # themselves.  They are exported for this reason.

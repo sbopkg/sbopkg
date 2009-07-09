@@ -118,4 +118,8 @@ enhancements:
     are preparing for the Slackware 13.0 release.
   * Add option to retry a failed build. Thanks to Zordrak for suggesting this
     feature.
+  * Add CLEANUP configuration variable, which when set to YES tells sbopkg to
+    delete the extracted sources, and all the associated "residuals" of the
+    build, as soon as the build is finished. Thanks to Marco Bonetti and
+    Gregory Tourte for the suggestion and the nice discussion.
 +--------------------------+
