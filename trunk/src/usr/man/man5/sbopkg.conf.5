@@ -127,6 +127,17 @@ The default value of LOGDIR is:
 LOGDIR=${LOGDIR:-/var/log/sbopkg}.
 
 .TP 5
+.B CLEANUP
+.br
+This option should be set to YES or NO.  When set to YES, the source
+files and the various residuals from the process of building a package
+are deleted right after the build.
+A side effect of setting CLEANUP to YES is that the TMP setting got
+from the environment or from the configuration files is ignored.
+
+The default value of CLEANUP is: NO.
+
+.TP 5
 .B DEBUG
 .br
 This option should be set to 0, 1, or 2.  DEBUG sets the default
@@ -206,6 +217,9 @@ export TMP=${TMP:-/home/sbo/tmp}
 would then set $TMP to /home/sbo/tmp for building SBo
 packages.  OUTPUT can also be changed to save compiled packages in a
 location other than the default of /tmp.
+
+Please note that if the CLEANUP variable is set to YES, the TMP setting
+is ignored.
 
 You can also export variables in sbopkg.conf that are not used by
 sbopkg at all.

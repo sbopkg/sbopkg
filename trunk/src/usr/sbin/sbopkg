@@ -30,9 +30,10 @@
 #  Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat D. Kadirov,
 #  The-spiki, David Somero, LukenShiro, Drew Ames, nille, acidchild, mancha,
 #  macavity, Zordrak, João Felipe Santos, cotterochan, necropresto, Pierre
-#  Cazenave, Mauro Giachero, The-Croupier, Wade Grant, TSquaredF, and
-#  alkos333.  This script would not be where it is without the help of these
-#  folks.  If I left anyone out, I apologize.  Thank you!
+#  Cazenave, Mauro Giachero, The-Croupier, Wade Grant, TSquaredF, alkos333,
+#  Marco Bonetti and Gregory Tourte.
+#  This script would not be where it is without the help of these folks.
+#  If I left anyone out, I apologize.  Thank you!
 #
 #set -x
 
@@ -119,9 +120,14 @@ config_check() {
         else
             unset KEEPLOG
         fi
+        if [[ $CLEANUP == [Yy][Ee][Ss] ]]; then
+            CLEANUP=1
+        else
+            unset CLEANUP
+        fi
         # Some configuration options are mandatory
         for VAR in REPO_ROOT LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME \
-            REPO_BRANCH KEEPLOG LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS \
+            REPO_BRANCH KEEPLOG CLEANUP LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS \
             WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D; do
             if [[ -z "${!VAR}" ]]; then
                 MISSING+="$VAR "
@@ -2889,7 +2895,19 @@ build_package() {
                 [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
             fi
             export OUTPUT=$SB_OUTPUT
-            nice sh $PKGNAME.SlackBuild.build
+            if [[ $CLEANUP ]]; then
+                # We want to remove all the build residuals after running the
+                # SlackBuild script. To do that reliably (i.e. without
+                # deleting too much or leaving garbage behind us), a nice
+                # approach is to use a dedicated build directory.
+                export TMP=$SBOPKGTMP/sbopkg-build-directory
+                rm -rf $TMP # Just in case
+                nice sh $PKGNAME.SlackBuild.build
+                echo "Cleaning up..."
+                rm -rf $TMP
+            else
+                nice sh $PKGNAME.SlackBuild.build
+            fi
         )
 
         # Let's see the result
@@ -3723,6 +3741,7 @@ cleanup() {
     rm -f $SBOPKGTMP/sbopkg_*
     rm -f $SBOPKGTMP/sbopkgpidlist
     rm -rf $SBOPKGTMP/sbopkg-sbooutputdir
+    rm -rf $SBOPKGTMP/sbopkg-build-directory
     rm -f $SBOPKGTMP/sbopkg-*-queue
     rm -f $SBOPKGTMP/sbopkg-tmp-*
     rm -f $PIDFILE
@@ -3933,6 +3952,8 @@ unset REPO_TOOL       # Active branch's fetch tool
 unset REPO_LINK       # Active branch's fetch link
 unset REPO_DIR        # Active branch's directory
 unset REPO_GPG        # Active branch's GPG checking
+unset CLEANUP         # If set, delete the sources & c. after the build
+unset KEEPLOG         # If set, keep a permanent build log
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER
