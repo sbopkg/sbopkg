@@ -2638,8 +2638,8 @@ remove_sources_for_app() {
     remove_files $SRCDIR "$APP sources" $APP_SOURCES OFF
 }
 
-remove_obsoleted_sources() {
-    # Remove all obsoleted sources
+remove_obsolete_sources() {
+    # Remove all obsolete sources
 
     local FIND_RESULT=$SBOPKGTMP/sbopkg_obsolete_find
     local SOURCES=$SBOPKGTMP/sbopkg_app_sources
@@ -2685,6 +2685,23 @@ remove_obsoleted_sources() {
     sed -i "s/^\(.*\)$/\"\\1\"/" $SOURCES
 
     remove_files $SRCDIR "obsolete sources" $SOURCES ON
+}
+
+remove_obsolete_packages() {
+    # Remove obsolete packages from $OUTPUT
+
+    local PACKAGES=$SBOPKGTMP/sbopkg_obsolete_packages
+    local PKG
+
+    rm -f $PACKAGES
+    ls $OUTPUT/*$REPO_TAG.t?z | while read PKG; do
+        PKG=${PKG##*/}
+        if [ ! -f /var/log/packages/${PKG%.t?z} ]; then
+            echo "$PKG" >> $PACKAGES
+        fi
+    done
+
+    remove_files $OUTPUT "obsolete packages" $PACKAGES ON
 }
 
 remove_files() {
@@ -3712,12 +3729,13 @@ utilities_menu() {
             "Currently using the $REPO_DESC." \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
-            15 69 5 \
+            14 69 6 \
             "Cache" "View the contents of the cache directory" \
             "Log" "View the permanent build log" \
             "Repository" "Select repository [ $REPO_BRANCH ($REPO_NAME) ]" \
             "Latest" "Check for an update to sbopkg"  \
-            "Obsolete" "View the obsoleted cached sources" 2> $ANSWERFILE
+            "Obsolete packages" "View obsolete packages" \
+            "Obsolete sources" "View obsolete cached sources" 2> $ANSWERFILE
 
         DEFAULTITEM=$(< $ANSWERFILE)
 
@@ -3726,7 +3744,8 @@ utilities_menu() {
             "Log" ) view_perm_log ;;
             "Repository" ) select_repository ;;
             "Latest" ) check_for_latest ;;
-            "Obsolete" ) remove_obsoleted_sources ;;
+            "Obsolete packages" ) remove_obsolete_packages ;;
+            "Obsolete sources" ) remove_obsolete_sources ;;
             *) break ;;
         esac
     done
@@ -4020,7 +4039,7 @@ while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
             CHANGELOG=1
             unset DIAG
             ;;
-        o ) # Show obsoleted sources
+        o ) # Show obsolete sources
             OBSOLETESRC=1
             unset DIAG
             ;;
@@ -4064,7 +4083,7 @@ Options are:
   -h              Display this help message.
   -i pkg/queue(s) Like '-b', but also install built packages.
   -l              Display the repo's ChangeLog.txt and then quit.
-  -o              Display the obsoleted source files and prompt for deletion.
+  -o              Display the obsolete source files and prompt for deletion.
   -p              List installed repo's packages.
   -q              Quiet some of the command-line output.
   -r              Sync the remote repository with the local mirror and then
@@ -4246,7 +4265,7 @@ else
     fi
 
     if [[ $OBSOLETESRC ]]; then
-        remove_obsoleted_sources
+        remove_obsolete_sources
     fi
 
     if [[ $GETPKGS ]]; then

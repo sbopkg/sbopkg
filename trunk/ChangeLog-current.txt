@@ -122,4 +122,6 @@ enhancements:
     delete the extracted sources, and all the associated "residuals" of the
     build, as soon as the build is finished. Thanks to Marco Bonetti and
     Gregory Tourte for the suggestion and the nice discussion.
+  * Add a function to delete obsolete (not installed) packages from $OUTPUT.
+    Thanks to alkos333 for the idea.
 +--------------------------+
