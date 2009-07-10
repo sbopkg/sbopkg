@@ -1293,7 +1293,7 @@ view_cache_dir() {
 
     ls -A $SRCDIR | sed "s/^\(.*\)$/\"\\1\"/g" \
         > $SBOPKGTMP/sbopkg_app_sources
-    remove_sources "" OFF
+    remove_files $SRCDIR "sources" $SBOPKGTMP/sbopkg_app_sources OFF
 }
 
 view_perm_log() {
@@ -2635,7 +2635,7 @@ remove_sources_for_app() {
     APP=${INFO##*/}
     APP=${APP%%.*}
     get_source_names --all "$INFO" | sed "s/^\(.*\)$/\"\\1\"/g" > $APP_SOURCES
-    remove_sources "$APP" OFF
+    remove_files $SRCDIR "$APP sources" $APP_SOURCES OFF
 }
 
 remove_obsoleted_sources() {
@@ -2684,51 +2684,54 @@ remove_obsoleted_sources() {
     # Quote file names
     sed -i "s/^\(.*\)$/\"\\1\"/" $SOURCES
 
-    remove_sources "obsolete" ON
+    remove_files $SRCDIR "obsolete sources" $SOURCES ON
 }
 
-remove_sources() {
-    # Remove all sources specified in $APP_SOURCES from $SRCDIR.
-    # The source names _must_ be quoted.
-    # $1 is the application name (used for display purposes only)
-    # $2 is either "ON" or "OFF", and is used as the default checklist status
+remove_files() {
+    # Selectively remove files, after showing a checklist of them.
+    # The file names (specified in $3) _must_ be quoted.
+    # $1 is the files path
+    # $2 is the topic (used for display purposes only, like "foo sources")
+    # $3 is a file containing the list of the files to be shown
+    # $4 is either "ON" or "OFF", and is used as the default checklist status
 
-    local APP="$1"
-    local ONOFF="$2"
-    local APP_SOURCES=$SBOPKGTMP/sbopkg_app_sources
-    local APP_SOURCES_CHECKLIST=$SBOPKGTMP/sbopkg_app_sources_checklist
-    local APP_SOURCES_DELETING=$SBOPKGTMP/sbopkg_app_sources_deleting
+    local FILESPATH="$1"
+    local TOPIC="$2"
+    local FILES="$3"
+    local ONOFF="$4"
+    local FILES_CHECKLIST=$SBOPKGTMP/sbopkg_file_removal_checklist
+    local FILES_DELETING=$SBOPKGTMP/sbopkg_file_removal_deleting
     local SRC USER_OPTS DELETE ANS DLGWIDTH
 
-    cd $SRCDIR
-    if [[ -s $APP_SOURCES ]]; then
-        sed "s/^\(.*\)$/\\1 \"\" $ONOFF/g" < $APP_SOURCES |
-            sort > $APP_SOURCES_CHECKLIST
+    cd $FILESPATH
+    if [[ -s $FILES ]]; then
+        sed "s/^\(.*\)$/\\1 \"\" $ONOFF/g" < $FILES |
+            sort > $FILES_CHECKLIST
         if [[ $DIAG ]]; then
             # Compute a reasonable dialog width
-            DLGWIDTH=$(wc -L < $APP_SOURCES_CHECKLIST)
+            DLGWIDTH=$(wc -L < $FILES_CHECKLIST)
             (( DLGWIDTH += 3 ))
             if [[ $DLGWIDTH -lt 50 ]]; then
                 DLGWIDTH=50
             fi
-            dialog --title "$(crunch "Displaying $APP sources")" \
+            dialog --title "$(crunch "Displaying $TOPIC")" \
                 --ok-label "Keep all" --extra-label "Delete selected" \
                 --cancel-label "OK" --no-cancel --extra-button \
                 --separate-output --checklist "$(crunch "Would you like to \
-                keep the $APP sources in the cache directory $SRCDIR?")"\
+                keep the $TOPIC in $FILESPATH?")"\
                 20 $DLGWIDTH 12 \
-                --file $APP_SOURCES_CHECKLIST 2> $APP_SOURCES_DELETING
+                --file $FILES_CHECKLIST 2> $FILES_DELETING
             if [[ $? == 3 ]]; then
                 DELETE=1
             fi
         else
             # Unquote file names
-            tr -d \" < $APP_SOURCES > $APP_SOURCES_DELETING
-            echo -e "[ Displaying $APP sources ]\n" |
-                cat - $APP_SOURCES_DELETING | $PAGER
+            tr -d \" < $FILES > $FILES_DELETING
+            echo -e "[ Displaying $TOPIC ]\n" |
+                cat - $FILES_DELETING | $PAGER
             while :; do
                 echo
-                echo "Do you want to delete these source files?"
+                echo "Do you want to delete these files?"
                 echo "Press (Y)es to delete or (N)o to keep them."
                 read ANS
                 case $ANS in
@@ -2738,29 +2741,28 @@ remove_sources() {
                 esac
             done
         fi
-        if [[ $DELETE && -s $APP_SOURCES_DELETING ]]; then
-            # Reading from $APP_SOURCES_DELETING...
+        if [[ $DELETE && -s $FILES_DELETING ]]; then
+            # Reading from $FILES_DELETING...
             while read SRC; do
-                rm -f $SRCDIR/"$SRC"
-            done < $APP_SOURCES_DELETING
+                rm -f $FILESPATH/"$SRC"
+            done < $FILES_DELETING
             if [[ $DIAG ]]; then
                 dialog --title "Done" --msgbox \
-                    "$(crunch "The selected $APP sources have been \
+                    "$(crunch "The selected $TOPIC have been \
                     cleared.")" 8 30
             else
-                echo "$(crunch "The $APP sources have been cleared.")"
+                echo "$(crunch "The $TOPIC have been cleared.")"
             fi
         fi
     else
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox "$(crunch "It appears there are \
-                no $APP sources in the cache directory.")" 8 30
+                no $TOPIC in $FILESPATH.")" 8 30
         else
-            echo "$(crunch "It appears there are no $APP sources in \
-                the cache directory.")"
+            echo "$(crunch "It appears there are no $TOPIC in $FILESPATH.")"
         fi
     fi
-    rm -f $APP_SOURCES{,_CHECKLIST,_DELETING}
+    rm -f $FILES{,_CHECKLIST,_DELETING}
 }
 
 add_options() {
