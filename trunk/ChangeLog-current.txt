@@ -124,4 +124,8 @@ enhancements:
     Gregory Tourte for the suggestion and the nice discussion.
   * Add a function to delete obsolete (not installed) packages from $OUTPUT.
     Thanks to alkos333 for the idea.
+  * Reorganize the queue editing functions a bit for a better user interface;
+    'view queue' now only shows the queue; new 'sort' and 'remove' queue menu
+    items now handle the editing functions; thanks to Pierre Cazenave for the
+    suggestion.
 +--------------------------+
