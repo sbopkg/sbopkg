@@ -1347,21 +1347,23 @@ sort_queue() {
     # This function sorts the build queue in $TMPQUEUE.
 
     local PARTIALSORT=$SBOPKGTMP/sbopkg_sort_tempfile
+    local TMPSORTQUEUE=$SBOPKGTMP/sbopkg-tmp-sort-queue
     local CHOICE
     local SELECTED
-    local PKGSCOUNT=$(wc -l < $TMPQUEUE)
     local DEFAULTITEM
-    local TMPSORTQUEUE=$SBOPKGTMP/sbopkg-tmp-sort-queue
 
+    empty_queue && return
+    local PKGSCOUNT=$(wc -l < $TMPQUEUE)
     cp $TMPQUEUE $TMPSORTQUEUE
     while :; do
         dialog --title "Sort Queue" --ok-label "Up" \
             --extra-button --extra-label "Down" \
             --cancel-label "OK" \
-            --help-button --help-label "Cancel" \
+            --help-button --help-label "Reverse" \
             --default-item "$DEFAULTITEM" \
             --menu "$(crunch "Use the <Up/Down> buttons to sort the queue \
-            items, press <OK> when done, or press <Cancel> to abort \
+            items, press <Reverse> to reverse the queue items, press \
+            <OK> when done, or press <ESC> to abort \
             changes.")" 30 50 14 \
             $(nl $TMPSORTQUEUE | rev | cut -d" " -f3 | rev) \
             2> $SBOPKGTMP/sbopkg-ans-sort
@@ -1401,6 +1403,10 @@ sort_queue() {
                     $PARTIALSORT
                 mv $PARTIALSORT $TMPSORTQUEUE
                 DEFAULTITEM=$(($SELECTED+1))
+                continue
+                ;;
+            2 ) tac $TMPSORTQUEUE > $PARTIALSORT
+                mv $PARTIALSORT $TMPSORTQUEUE
                 continue
                 ;;
             * ) # Cancel or ESC
@@ -1682,7 +1688,7 @@ save_user_queue() {
     done
 }
 
-edit_build_queue() {
+remove_from_queue() {
     # This function deletes items in the build queue.
 
     local ANSQUEUE=$SBOPKGTMP/sbopkg-ans-queue
@@ -1700,7 +1706,7 @@ edit_build_queue() {
         if [[ $(wc -w < $REMOVEQUEUE) -eq 0 ]]; then
             echo '"" "The queue is empty."' > $REMOVEQUEUE
         fi
-        dialog --title "Edit Build Queue" --ok-label "Delete" \
+        dialog --title "Remove From Build Queue" --ok-label "Delete" \
             --extra-button --extra-label "Clear" --help-button \
             --help-label "Done" --cancel-label "Cancel" \
             --menu "$(crunch "The following packages are currently in \
@@ -1887,21 +1893,19 @@ view_queue() {
     # Returns 0 if the user choose OK, nonzero otherwise
 
     local ANSQUEUE=$SBOPKGTMP/sbopkg-ans-queue
-    local REVERSEDQUEUE=$SBOPKGTMP/sbopkg-reversed-queue
     local WORKINGQUEUE=$SBOPKGTMP/sbopkg-working-queue
 
     empty_queue && return 1
     while :; do
         dialog --title "Viewing Build Queue" --separate-output \
-            --extra-button --extra-label "Reverse" \
-            --help-button --help-label "Back" --cancel-label "Sort" \
-            --checklist "$(crunch "The following packages are currently \
+            --cancel-label "Back" --checklist "$(crunch "The \
+            following packages are currently \
             in the build queue.  Please note that when the build queue \
             is processed, the packages selected below will be built, and \
             optionally installed, in the order listed from top to \
             bottom.\n\nPlease select or unselect those packages you wish \
             to keep in the build queue and then press <OK> to continue \
-            or press <Cancel> to exit.")" 30 50 8 \
+            or press <Back> to go back.")" 30 50 8 \
             --file $TMPQUEUE 2> $ANSQUEUE
         case $? in # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
             0)
@@ -1917,15 +1921,6 @@ view_queue() {
                 done < $TMPQUEUE
                 mv $WORKINGQUEUE $TMPQUEUE
                 return 0
-                ;;
-            1)
-                sort_queue $TMPQUEUE
-                continue
-                ;;
-            3)
-                tac $TMPQUEUE > $REVERSEDQUEUE
-                mv $REVERSEDQUEUE $TMPQUEUE
-                continue
                 ;;
             *) # Cancel or ESC
                 rm -f $ANSQUEUE
@@ -3686,11 +3681,12 @@ queue_menu() {
             "Currently using the $REPO_DESC." \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "Choose one of the following or press <Back> to go back.\n" \
-            15 60 8 \
+            15 60 9 \
             "View" "View the current build queue" \
+            "Sort" "Sort items in build queue" \
+            "Remove" "Remove items in build queue" \
             "Load" "Load a saved build queue" \
             "Save" "Save the current build queue" \
-            "Edit" "Edit the current build queue" \
             "Rename" "Rename a saved build queue" \
             "Delete" "Delete a saved build queue" \
             "Add" "Add all installed packages to the queue" \
@@ -3699,16 +3695,15 @@ queue_menu() {
         DEFAULTITEM=$(< $ANSWERFILE)
 
         case "$DEFAULTITEM" in
-            "View") #empty_queue && return
-                    view_queue ;;
+            "View") view_queue ;;
+            "Sort") sort_queue ;;
+            "Remove") remove_from_queue ;;
             "Load") load_user_queue ;;
             "Save") save_user_queue ;;
-            "Edit") edit_build_queue ;;
             "Rename") rename_user_queue ;;
             "Delete") delete_user_queue ;;
             "Add") add_all_to_queue ;;
-            "Process") #empty_queue && continue
-                       view_queue || continue
+            "Process") view_queue || continue
                        cp $SBOPKGTMP/sbopkg-ans-queue $STARTQUEUE
                        start_dialog_queue ;;
             *) break ;;
