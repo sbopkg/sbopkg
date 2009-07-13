@@ -4153,7 +4153,7 @@ set_repo_vars
 if [[ $? -ne 0 ]] ; then
     echo "Unknown repository name -- \"$CUSTOMVER\"" >&2
     echo "Valid options are:" >&2
-    for ((i=0; i<${#REPOSITORIES[@]}; i+=6)); do
+    for ((i=0; i<${#REPOSITORIES[@]}; i+=7)); do
         echo -en "${REPOSITORIES[$i]}/${REPOSITORIES[(($i + 1))]}\\t" >&2
         echo "(${REPOSITORIES[(($i + 2))]})" >&2
     done
