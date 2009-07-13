@@ -111,30 +111,21 @@ config_check() {
         echo "$SCRIPT: No $SBOPKG_CONF or ~/.sbopkg.conf was found." 1>&2
         echo "Please create at least one of them and run $SCRIPT again." 1>&2
         exit 1
-    else
-        [[ -e $SBOPKG_CONF ]] && . $SBOPKG_CONF
-        [[ -e $HOME/.sbopkg.conf ]] && . $HOME/.sbopkg.conf
+    fi
 
-        if [[ $KEEPLOG == [Yy][Ee][Ss] ]]; then
-            KEEPLOG=1
-        else
-            unset KEEPLOG
+    [[ -e $SBOPKG_CONF ]] && . $SBOPKG_CONF
+    [[ -e $HOME/.sbopkg.conf ]] && . $HOME/.sbopkg.conf
+
+    # Some configuration options are mandatory
+    for VAR in REPO_ROOT LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME \
+        REPO_BRANCH KEEPLOG CLEANUP LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS \
+        WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D; do
+        if [[ -z "${!VAR}" ]]; then
+            MISSING+="$VAR "
         fi
-        if [[ $CLEANUP == [Yy][Ee][Ss] ]]; then
-            CLEANUP=1
-        else
-            unset CLEANUP
-        fi
-        # Some configuration options are mandatory
-        for VAR in REPO_ROOT LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME \
-            REPO_BRANCH KEEPLOG CLEANUP LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS \
-            WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D; do
-            if [[ -z "${!VAR}" ]]; then
-                MISSING+="$VAR "
-            fi
-        done
-        if [[ "$MISSING" ]]; then
-            cat << EOF
+    done
+    if [[ "$MISSING" ]]; then
+        cat << EOF
 
 ERROR
 $SCRIPT: Can't find a value for variable(s):
@@ -149,12 +140,19 @@ man page for more details.
 Please correct this error and run $SCRIPT again.
 
 EOF
-           exit 1
-        fi
-        if [[ $DEBUG -ne 0 && $DEBUG -ne 1 && $DEBUG -ne 2 ]]; then
-            echo "The \$DEBUG variable must be set to 0, 1, or 2." 1>&2
-            exit 1
-        fi
+       exit 1
+    fi
+    if [[ $DEBUG -ne 0 && $DEBUG -ne 1 && $DEBUG -ne 2 ]]; then
+        echo "The \$DEBUG variable must be set to 0, 1, or 2." 1>&2
+        exit 1
+    fi
+
+    # Convert some YES/NO variables into 'set/unset' ones.
+    if [[ $KEEPLOG == [Nn][Oo] ]]; then
+        unset KEEPLOG
+    fi
+    if [[ $CLEANUP == [Nn][Oo] ]]; then
+        unset CLEANUP
     fi
 
     # Make sure there are no unexpected files in $SBOPKGTMP
