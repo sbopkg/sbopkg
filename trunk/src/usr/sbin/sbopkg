@@ -2598,13 +2598,13 @@ get_source() {
             DL=$(ls -A . 2> /dev/null)
             DL_SRCNAME=$(sed 's/?e=.*$//;s/^.*?//' <<< "$DL")
             if [[ $DL_SRCNAME ]]; then
+                rm -f $REPO_DIR/$PKGPATH/"$DL_SRCNAME"
                 mv "$DL" "$SRCDIR/$DL_SRCNAME"
             else
                 FAILURE=download
                 echo "  Download failed." >> $TMPSUMMARYLOG
                 echo >> $TMPSUMMARYLOG
             fi
-            rm -f $REPO_DIR/$PKGPATH/"$DL_SRCNAME"
             cd $SRCDIR
             rm -rf $DLDIR
             [[ $FAILURE ]] && break 2
