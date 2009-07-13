@@ -1096,11 +1096,11 @@ info_item() {
                                 RETVAL=1
                                 break
                             fi
-                        fi
-                        extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
-                        if [[ $? == 1 ]]; then
-                            RETVAL=1
-                            break
+                            extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
+                            if [[ $? == 1 ]]; then
+                                RETVAL=1
+                                break
+                            fi
                         fi
                         customize_item
                         ;;
@@ -1124,13 +1124,19 @@ info_item() {
                         fi
                         ;;
                     Extract )
-                        extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
-                        if [[ $? == 0 ]]; then
-                            dialog --title "Done" --msgbox "$(crunch "The \
-                                tarball has been extracted.")" 8 30
+                        if [[ ! -z $REPO_GPG ]]; then
+                            extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
+                            if [[ $? == 0 ]]; then
+                                dialog --title "Done" --msgbox "$(crunch "The \
+                                    tarball has been extracted.")" 8 30
+                            else
+                                RETVAL=1
+                                break
+                            fi
                         else
-                            RETVAL=1
-                            break
+                            dialog --title "ERROR" --msgbox "$(crunch "GPG \
+                                tarballs are not available for the $REPO_NAME \
+                                repository.")" 8 30
                         fi
                         ;;
                     Queue ) add_item_to_queue $APP ;;
@@ -2931,6 +2937,7 @@ build_package() {
             echo "  Error occurred with build.  Please check the log." \
                 >> $TMPSUMMARYLOG
             echo
+            echo "$PKGNAME:"
             echo "Would you like to continue processing the rest of the"
             echo "build queue or would you like to abort?  If this failed"
             echo "package is a dependency of another package in the queue"
