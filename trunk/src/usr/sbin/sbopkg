@@ -2877,9 +2877,10 @@ build_package() {
     # $1 = the package path
     # $2 = the package name
     # Returns:
-    # 0 if the program built successfully, or if the user asked to ignore
-    #   an error;
-    # 1 in case of problems.
+    # 0 if the program built successfully;
+    # 1 if the build failed but the user asked to continue the queue
+    #   processing
+    # 2 if the build failed and the user asked to stop the queue processing
     # When processing a queue, the caller should continue processing the
     # queue items if build_package returns 0, and stop if it returns 1.
 
@@ -2943,11 +2944,11 @@ build_package() {
                 error_read ANS
                 case $ANS in
                     y* | Y* ) # Continue
-                        RETVAL=0
+                        RETVAL=1
                         break 2
                         ;;
                     n* | N* ) # Abort
-                        RETVAL=1
+                        RETVAL=2
                         rm -f $SBOPKGTMP/sbopkg_build.lck
                         break 2
                         ;;
