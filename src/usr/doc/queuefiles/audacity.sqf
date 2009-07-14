@@ -1,5 +1,5 @@
 # Sbopkg queuefile for Audacity.
-# Tested on Slackware 12.2
+# Tested on Slackware 13.0
 # Created by Chess Griffin
 #
 # Note: soundtouch and twolame are optional, and require tweaking the
