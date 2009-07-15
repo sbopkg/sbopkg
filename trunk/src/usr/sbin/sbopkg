@@ -922,8 +922,10 @@ select_repository() {
             break
         fi
         if [[ -e $HOME/.sbopkg.conf ]]; then
+            sed -i '/^REPO_NAME=.*$/d' $HOME/.sbopkg.conf
             sed -i '/^REPO_BRANCH=.*$/d' $HOME/.sbopkg.conf
         fi
+        echo "REPO_NAME=$REPO_NAME" >> $HOME/.sbopkg.conf
         echo "REPO_BRANCH=$REPO_BRANCH" >> $HOME/.sbopkg.conf
         break
     done
