@@ -2490,7 +2490,7 @@ check_source() {
     # Check MD5
     echo "Checking MD5SUM:"
     MD5CHK=$(md5sum "$SRCDIR/$SRCNAME" | cut -d' ' -f1)
-    echo -n "  $SRCNAME ... " | tee -a $TMPSUMMARYLOG
+    echo -n "  MD5SUM check for $SRCNAME ... " | tee -a $TMPSUMMARYLOG
     if [[ $MD5CHK == $MD5SUM ]]; then
         echo "OK" | tee -a $TMPSUMMARYLOG
     else
@@ -2562,7 +2562,6 @@ get_source() {
 
     echo | tee -a $TMPSUMMARYLOG
     echo "$PKG:" | tee -a $TMPSUMMARYLOG
-    echo "MD5SUM:" >> $TMPSUMMARYLOG
     for i in ${!MD5SUM[@]}; do
         while :; do
             cd "$CWD"
@@ -3276,8 +3275,7 @@ check_asc() {
     local GPGNAME=$(basename $CHKPKG)
     local CATEGORY=$(echo $CHKPKG | cut -d/ -f2)
 
-    echo "GPG:" >> $TMPLOG
-    echo -n "  $GPGNAME.tar.gz ... " | tee -a $TMPLOG
+    echo -n "  Checking GPG for $GPGNAME.tar.gz ... " | tee -a $TMPLOG
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
         echo "FAILED!" | tee -a $TMPLOG
         if [[ ! -e $CHKPKG.tar.gz && ! -e $CHKPKG.*.asc ]]; then
@@ -3344,8 +3342,7 @@ process_queue() {
     echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     echo "PACKAGE BUILDING/INSTALLATION PRE-CHECK LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
-    echo >> $TMPLOG
-    echo "Queue Process:" >> $TMPLOG
+    echo -n "Queue Process:" >> $TMPLOG
     if [[ $QUEUETYPE == "buildinstall" ]]; then
         echo "  Build and install" >> $TMPLOG
     else
@@ -3371,10 +3368,9 @@ process_queue() {
                 return 0
             fi
         else
-            echo "GPG:" >> $TMPLOG
-            echo "  Not supported for the $REPO_NAME repository." >> $TMPLOG
+            echo -n "  GPG checks not supported for the " >> $TMPLOG
+            echo "$REPO_NAME repository." >> $TMPLOG
         fi
-        echo "Files:" >> $TMPLOG-files
         if ! pick_file info $PKGPATH $CHKBUILD; then
             rm -f $PKGPATH/$CHKBUILD*.build
             return 0
@@ -3390,8 +3386,7 @@ process_queue() {
                 sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
             echo "  Using $PICKFILE SlackBuild file" >> $TMPLOG-files
         fi
-        echo "Version:" >> $TMPLOG
-        echo "  Found $CHKBUILD $VERSION-$BUILD" >> $TMPLOG
+        echo "  Processing $CHKBUILD $VERSION-$BUILD" >> $TMPLOG
         cat $TMPLOG-files >> $TMPLOG
         rm $TMPLOG-files
         use_options $PKGPATH $CHKBUILD
@@ -3400,11 +3395,10 @@ process_queue() {
             rm -f $PKGPATH/options.build
             return 0
         fi
-        echo "Build Options:" >> $TMPLOG
         if [[ $BUILDOPTIONS ]]; then
             echo "  $BUILDOPTIONS" >> $TMPLOG
         else
-            echo "  None" >> $TMPLOG
+            echo "  No build options selected." >> $TMPLOG
         fi
         echo >> $TMPLOG
     done
@@ -3474,16 +3468,14 @@ process_queue() {
             echo "Done building package for $PKGBUILD."
             cd $SB_OUTPUT
             NEWPACKAGE=$(ls -1t *.t?z | head -n1)
-            echo "Build:" >> $TMPSUMMARYLOG
-            echo "  Package $NEWPACKAGE ... OK" >> $TMPSUMMARYLOG
+            echo "  Building package $NEWPACKAGE ... OK" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE"
             if [[ $QUEUETYPE == "buildinstall" ]]; then
                 if [[ $SB_OUTPUT/*.t?z ]]; then
                     cd $SB_OUTPUT
                     NEWPACKAGE=$(ls -1t *.t?z | head -n1)
                     install_package $SB_OUTPUT $NEWPACKAGE
-                    echo "Install:" >> $TMPSUMMARYLOG
-                    echo "  Package: $NEWPACKAGE ... OK" >> $TMPSUMMARYLOG
+                    echo "  Installing package $NEWPACKAGE ... OK" >> $TMPSUMMARYLOG
                 fi
             fi
             if [[ $SB_OUTPUT/*.t?z ]]; then
@@ -3506,8 +3498,7 @@ process_queue() {
     echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
-    echo >> $TMPLOG
-    echo "Queue Process:" >> $TMPLOG
+    echo -n "Queue Process:" >> $TMPLOG
     if [[ $QUEUETYPE == "buildinstall" ]]; then
         echo "  Build and install" >> $TMPLOG
     else
