@@ -13,7 +13,7 @@ is compound of the following seven fields:
 
 1.  REPOSITORY (a _short_ name identifying the repository)
 2.  BRANCH (a _short_ name identifying the branch of that repository)
-3.  DESCRIPTION (a <50 chars description, which _must_be_double_quoted_)
+3.  DESCRIPTION (a <50 chars description, which _must_be_quoted_)
 4.  TAG (the packages' tag)
 5.  TOOL (rsync, git or "", is the tool able to check out the repository/branch)
 6.  LINK (the tool-dependent link to the branch)
@@ -35,5 +35,5 @@ still be present).  CHECKGPG format can be "GPG" if the repo supports GPG
 checking, or "" (which also must be present) if the repo does not support GPG
 checks.
 
-Lines _containing_ # are ignored when parsing the files.  Lines containing a
-single quote (') or backslashes (\) are not allowed.
+Lines _containing_ # are ignored when parsing the files.  Lines containing
+backslashes (\) are not allowed.
