@@ -181,11 +181,66 @@ EOF
     fi
 
     # Load the repositories data
-    eval REPOSITORIES=( $(cat $SBOPKG_REPOS_D/*.repo | grep -v '#' |
-        sed 's:":\\":g' | xargs echo) )
+    load_repositories || exit 1
 
     # Check for ncurses
     [[ -x /usr/bin/tput ]] && HAS_NCURSES=1
+}
+
+load_repositories() {
+    # Fill the REPOSITORIES array with the data from the .repo files
+
+    local FILE LINE i
+    local TMPARRAY
+    local ERROR
+
+    for FILE in $SBOPKG_REPOS_D/*.repo; do
+        # Reading from $FILE...
+        while read LINE; do
+            grep -q '#' <<< "$LINE" && continue
+            eval TMPARRAY=( "$LINE" )
+            [[ ${#TMPARRAY[@]} -eq 0 ]] && continue;
+            # Sanity checks
+            [[ ! ${TMPARRAY[6]} =~ '^GPG$|^$' ]] && ERROR="gpg"
+            [[ ! ${TMPARRAY[4]} =~ '^rsync$|^git$|^$' ]] && ERROR="tool"
+            [[ ${#TMPARRAY[@]} -ne $REPOS_FIELDS ]] && ERROR="fields"
+            [[ -n $ERROR ]] && break 2
+            # Add the record to REPOSITORIES
+            for i in ${!TMPARRAY[@]}; do
+                REPOSITORIES[${#REPOSITORIES[@]}]="${TMPARRAY[$i]}"
+            done
+        done < $FILE
+    done
+
+    if [[ -n $ERROR ]]; then
+            cat <<EOF
+ERROR
+$SCRIPT: Invalid repository descriptor
+
+Line
+  $LINE
+of
+  $FILE
+EOF
+
+        case $ERROR in
+            'fields' )
+                crunch_fmt "doesn't contain the right number of fields\
+                    ($REPOS_FIELDS)."
+                ;;
+            'tool' )
+                crunch_fmt "specifies an unknown fetching tool\
+                    (${TMPARRAY[4]})."
+                ;;
+            'gpg' )
+                crunch_fmt "specifies an unknown signature checker\
+                    (${TMPARRAY[6]})."
+                ;;
+        esac
+        return 1
+    fi
+
+    return 0
 }
 
 ck_dir() {
@@ -867,7 +922,7 @@ set_repo_vars() {
     # Make sure we don't return old values with an invalid input
     unset REPO_DESC REPO_TAG REPO_TOOL REPO_LINK REPO_DIR REPO_GPG
 
-    for ((i=0; i<${#REPOSITORIES[@]}; i+=7)); do
+    for ((i=0; i<${#REPOSITORIES[@]}; i+=$REPOS_FIELDS)); do
         if [[ ( ${REPOSITORIES[$i]} = $REPO_NAME || $REPO_NAME = "" ) &&
                 ${REPOSITORIES[$((i + 1))]} = $REPO_BRANCH ]]; then
             REPO_NAME=${REPOSITORIES[i]}
@@ -901,7 +956,7 @@ select_repository() {
             like to change it, please select another repository below or \
             press <Back> to go back.")"' 17 60 7 \
             $(
-                for ((i=0; i<${#REPOSITORIES[@]}; i+=7)); do
+                for ((i=0; i<${#REPOSITORIES[@]}; i+=$REPOS_FIELDS)); do
                     echo \"${REPOSITORIES[$((i+1))]} \(${REPOSITORIES[$i]}\)\"
                     echo \"${REPOSITORIES[$((i+2))]}\"
                 done
@@ -3955,6 +4010,7 @@ unset BUILDOPTIONS    # TODO
 #     SBOPKG_CONF     # Configuration file
 #     REPO_ROOT       # Directory containing all repository mirrors
 unset HAS_NCURSES     # Set if the ncurses package is installed
+unset REPOS_FIELDS    # Number of fields for each repository entry
 unset REPO_NAME       # Currently active repository (e.g. SBo)
 unset REPO_BRANCH     # Currently active branch (e.g. 13.0)
 unset REPO_DESC       # Active branch's description
@@ -3980,6 +4036,7 @@ REV="$Revision$"
 SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
 DIAG=1
 ON_ERROR=ask
+REPOS_FIELDS=7
 
 # Make sure we are root.
 if [[ $(id -u) != 0 ]]; then
@@ -4149,7 +4206,7 @@ set_repo_vars
 if [[ $? -ne 0 ]] ; then
     echo "Unknown repository name -- \"$CUSTOMVER\"" >&2
     echo "Valid options are:" >&2
-    for ((i=0; i<${#REPOSITORIES[@]}; i+=7)); do
+    for ((i=0; i<${#REPOSITORIES[@]}; i+=$REPOS_FIELDS)); do
         echo -en "${REPOSITORIES[$i]}/${REPOSITORIES[(($i + 1))]}\\t" >&2
         echo "(${REPOSITORIES[(($i + 2))]})" >&2
     done
