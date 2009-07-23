@@ -1665,7 +1665,7 @@ save_user_queue() {
             2> $USERQUEUE
         if [[ $? == 0 ]]; then
             if [[ ! -s $USERQUEUE ]]; then
-                break
+                continue
             fi
             USERQUEUE_NAME="$(< $USERQUEUE)"
             DEFAULT="${USERQUEUE_NAME##*/}"
