@@ -40,24 +40,11 @@
 dialog_refresh_workaround() {
     # Dialog has refresh problems on some terminals (currently known are some
     # rxvt-based terminals and screen sessions), preventing correct dialogs
-    # rendering.  This function enables a workaround, consisting of a
-    # background task sending SIGWINCH to any new dialog instance.  Despite
-    # being probably harmless on "good" terminals, this function should really
-    # be called only on problematic ones.
+    # rendering.
+    # It turns out that forcing TERM=xterm-color "fixes" at least most of the
+    # issues, so work around them this way.
 
-    DIALOG_REFRESH_WORKAROUND_SBOPKG_PID=$$
-
-    (   # The background task runs in a separate shell
-        OLDDIALOGS=
-        while [[ $(ps h --pid $DIALOG_REFRESH_WORKAROUND_SBOPKG_PID) ]]; do
-            DIALOGS=$(pgrep -x "^dialog$")
-            if [[ "$DIALOGS" != "$OLDDIALOGS" ]]; then
-                [[ "$DIALOGS" ]] && kill -WINCH $DIALOGS
-                OLDDIALOGS="$DIALOGS"
-            fi
-            sleep 0.3
-        done
-    ) &
+    export TERM=xterm-color
 }
 
 crunch() {
