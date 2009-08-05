@@ -161,6 +161,15 @@ Queuefile names are supported, too. See the explanation for the '-b'
 command for details.
 
 .TP 5
+.B -k
+When used together with -b or -i, this option tells sbopkg to skip
+(i.e. don't build) any package it finds to be already installed.
+
+Please note that only a name comparison is performed, so when this
+option is specified sbopkg will also omit the build of different
+versions of installed packages.
+
+.TP 5
 .B -l
 Display the SBo ChangeLog.txt and quit.
 

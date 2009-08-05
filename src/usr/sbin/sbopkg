@@ -1908,33 +1908,22 @@ add_item_to_queue() {
     if grep -q "^$APP " $TMPQUEUE 2> /dev/null; then
         : # it's the same app and version so toss it
     else
-        if [[ $DIAG ]]; then
-            INSTALLED=$(ls -1 /var/log/packages |
-                grep "$APP-[^-]*-[^-]*-[^-]*$REPO_TAG\$")
-            if [[ -n $INSTALLED ]]; then
-                VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
-                # NOTE: When changing, see the uncheck_installed() comment
-                echo "$APP \"Installed $VERSION\" $ONOFF" >> $TMPQUEUE
-                echo "$APP \"Installed $VERSION\" $ONOFF" >> $QUEUELIST
-            else
-                # NOTE: When changing, see the uncheck_installed() comment
-                echo "$APP New $ONOFF" >> $TMPQUEUE
-                echo "$APP New $ONOFF" >> $QUEUELIST
-            fi
-            if [[ $LOADOPTIONS ]]; then
-                echo "$LOADOPTIONS" > $SBOPKGTMP/sbopkg_"$APP"_loadoptions
-            else
-                rm -f $SBOPKGTMP/sbopkg_"$APP"_loadoptions
-            fi
+        INSTALLED=$(ls -1 /var/log/packages |
+            grep "$APP-[^-]*-[^-]*-[^-]*$REPO_TAG\$")
+        if [[ -n $INSTALLED ]]; then
+            VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
+            # NOTE: When changing, see the uncheck_installed() comment
+            echo "$APP \"Installed $VERSION\" $ONOFF" >> $TMPQUEUE
+            echo "$APP \"Installed $VERSION\" $ONOFF" >> $QUEUELIST
         else
-            if [[ $ONOFF == "ON" ]]; then
-                echo "$APP" >> $TMPQUEUE
-                if [[ $LOADOPTIONS ]]; then
-                    echo "$LOADOPTIONS" > $SBOPKGTMP/sbopkg_"$APP"_loadoptions
-                else
-                    rm -f $SBOPKGTMP/sbopkg_"$APP"_loadoptions
-                fi
-            fi
+            # NOTE: When changing, see the uncheck_installed() comment
+            echo "$APP New $ONOFF" >> $TMPQUEUE
+            echo "$APP New $ONOFF" >> $QUEUELIST
+        fi
+        if [[ $LOADOPTIONS ]]; then
+            echo "$LOADOPTIONS" > $SBOPKGTMP/sbopkg_"$APP"_loadoptions
+        else
+            rm -f $SBOPKGTMP/sbopkg_"$APP"_loadoptions
         fi
     fi
     # Only display this if we are not loading a queue; otherwise getting this
@@ -4041,7 +4030,7 @@ unset CLEANUP         # If set, delete the sources & c. after the build
 unset KEEPLOG         # If set, keep a permanent build log
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
-unset RSYNC SEARCH UPDATE VERSION CUSTOMVER
+unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED
 
 SCRIPT=${0##*/}
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
@@ -4068,7 +4057,7 @@ if [[ ! $(uname -m) =~ 'i.86' ]]; then
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
+while getopts ":b:cd:e:f:g:hi:klopqrs:uv:" OPT; do
     case $OPT in
         b ) # Build
             BFLAG=1
@@ -4098,6 +4087,10 @@ while getopts ":b:cd:e:f:g:hi:lopqrs:uv:" OPT; do
             IFLAG=1
             TYPE="buildinstall"
             BUILD="$OPTARG"
+            unset DIAG
+            ;;
+        k ) # Skip installed packages
+            SKIP_INSTALLED=1
             unset DIAG
             ;;
         l ) # Show SBo ChangeLog
@@ -4147,6 +4140,7 @@ Options are:
   -g package(s)   General search for packages matching string.
   -h              Display this help message.
   -i pkg/queue(s) Like '-b', but also install built packages.
+  -k              Skip installed packages when building.
   -l              Display the repo's ChangeLog.txt and then quit.
   -o              Display the obsolete source files and prompt for deletion.
   -p              List installed repo's packages.
@@ -4264,7 +4258,7 @@ else
                         q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sqf
                                   break
                                   ;;
-                        p* | P* ) echo $PKGBUILD >> $TMPQUEUE
+                        p* | P* ) add_item_to_queue $PKGBUILD
                                   break
                                   ;;
                         a* | A* ) cleanup
@@ -4278,10 +4272,7 @@ else
                     # Add an entire queue
                     parse_queue $QUEUEDIR/$PKGBUILD.sqf
                 else
-                    if search_package $PKGBUILD; then
-                        # Add a single package
-                        echo $PKGBUILD >> $TMPQUEUE
-                    else
+                    if ! add_item_to_queue $PKGBUILD; then
                         crunch_fmt "Queuefile or package $PKGBUILD not found\
                             - skipping."
                         echo
@@ -4299,13 +4290,17 @@ else
             cleanup
             exit 1
         fi
+        # Skip installed packages
+        if [[ $SKIP_INSTALLED ]]; then
+            uncheck_installed $TMPQUEUE
+        fi
         # Reading from $TMPQUEUE...
         while read PICK; do
             if can_skip_line $PICK; then
                 continue
             fi
             PICK_NAME=${PICK%% *}
-            if [[ ${PICK_NAME:0:1} == "-" ]]; then
+            if [[ ${PICK: -3} == "OFF" ]]; then
                 continue
             else
                 if ! grep -qx $PICK_NAME $STARTQUEUE; then
@@ -4316,7 +4311,7 @@ else
         rm -f $TMPQUEUE
         process_queue $TYPE
         if [[ $? == 1 ]]; then
-            echo "No valid packages found.  Exiting."
+            echo "No valid packages found, or no packages to build.  Exiting."
             exit 1
         fi
     fi
