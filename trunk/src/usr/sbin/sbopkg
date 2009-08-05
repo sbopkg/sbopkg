@@ -1961,7 +1961,7 @@ view_queue() {
             optionally installed, in the order listed from top to \
             bottom.\n\nPlease select or unselect those packages you wish \
             to keep in the build queue and then press <OK> to continue \
-            or press <Back> to go back.")" 30 50 8 \
+            or press <Back> to go back.")" 30 50 14 \
             --file $TMPQUEUE 2> $ANSQUEUE
         case $? in # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
             0)
@@ -3726,7 +3726,7 @@ queue_menu() {
             "Currently using the $REPO_DESC." \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "Choose one of the following or press <Back> to go back.\n" \
-            15 60 9 \
+            16 60 9 \
             "View" "View the current build queue" \
             "Sort" "Sort items in build queue" \
             "Remove" "Remove items in build queue" \
