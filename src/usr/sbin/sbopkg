@@ -3368,7 +3368,7 @@ EOF
             esac
         done
     else
-        echo "OK" >> $TMPLOG
+        echo "OK" | tee -a $TMPLOG
     fi
     tar -C ./$CATEGORY -zxf $CHKPKG.tar.gz
     return 0
