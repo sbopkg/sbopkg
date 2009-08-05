@@ -724,6 +724,7 @@ check_for_updates() {
                     echo "  Repo version: " \
                         $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
                         >> $UPDATELIST
+                    # NOTE: When changing, see the uncheck_installed() comment
                     echo "$NAME \"Installed $PKG_VER\" ON" >> \
                         $SBOPKGTMP/sbopkg-update-queue
                 elif [[ $UPDATED -eq -1 ]]; then
@@ -1912,9 +1913,11 @@ add_item_to_queue() {
                 grep "$APP-[^-]*-[^-]*-[^-]*$REPO_TAG\$")
             if [[ -n $INSTALLED ]]; then
                 VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
+                # NOTE: When changing, see the uncheck_installed() comment
                 echo "$APP \"Installed $VERSION\" $ONOFF" >> $TMPQUEUE
                 echo "$APP \"Installed $VERSION\" $ONOFF" >> $QUEUELIST
             else
+                # NOTE: When changing, see the uncheck_installed() comment
                 echo "$APP New $ONOFF" >> $TMPQUEUE
                 echo "$APP New $ONOFF" >> $QUEUELIST
             fi
@@ -1944,16 +1947,31 @@ add_item_to_queue() {
     return 0
 }
 
+uncheck_installed() {
+    # This function unchecks the installed items in a given queue.
+    # $1 = the queue file.
+    # NOTE: This function uses the second field (New/Installed foo) to
+    # work, so we should be careful when changing its format.
+
+    local QUEUEFILE=$1
+
+    sed -i 's:^\([^ ]* .*Installed.*\)[^ ]*$:\1OFF:' $QUEUEFILE
+}
+
 view_queue() {
     # This function displays the contents of the build queue.
     # Returns 0 if the user choose OK, nonzero otherwise
 
     local ANSQUEUE=$SBOPKGTMP/sbopkg-ans-queue
     local WORKINGQUEUE=$SBOPKGTMP/sbopkg-working-queue
+    local ORIGINALQUEUE=$SBOPKGTMP/sbopkg-original-queue
+    local CHOICE
 
     empty_queue && return 1
+    cp $TMPQUEUE $ORIGINALQUEUE
     while :; do
         dialog --title "Viewing Build Queue" --separate-output \
+            --extra-button --extra-label "Uncheck installed" \
             --cancel-label "Back" --checklist "$(crunch "The \
             following packages are currently \
             in the build queue.  Please note that when the build queue \
@@ -1961,31 +1979,36 @@ view_queue() {
             optionally installed, in the order listed from top to \
             bottom.\n\nPlease select or unselect those packages you wish \
             to keep in the build queue and then press <OK> to continue \
-            or press <Back> to go back.")" 30 50 14 \
+            or press <Back> to go back.")" 30 70 14 \
             --file $TMPQUEUE 2> $ANSQUEUE
-        case $? in # 0 = OK, 1 = Sort, 2 = Cancel, 3 = Reverse
-            0)
-                rm -f $WORKINGQUEUE
-                # Reading from $TMPQUEUE...
-                while read PICK; do
-                    TESTAPP="${PICK// */}"
-                    if grep -qx "$TESTAPP" $ANSQUEUE; then
-                        sed 's/OFF/ON/' <<< "$PICK" >> $WORKINGQUEUE
-                    else
-                        sed 's/ON/OFF/' <<< "$PICK" >> $WORKINGQUEUE
-                    fi
-                done < $TMPQUEUE
-                mv $WORKINGQUEUE $TMPQUEUE
+        CHOICE=$?
+
+        rm -f $WORKINGQUEUE
+        # Reading from $TMPQUEUE...
+        while read PICK; do
+            TESTAPP="${PICK// */}"
+            if grep -qx "$TESTAPP" $ANSQUEUE; then
+                sed 's/OFF$/ON/' <<< "$PICK" >> $WORKINGQUEUE
+            else
+                sed 's/ON$/OFF/' <<< "$PICK" >> $WORKINGQUEUE
+            fi
+        done < $TMPQUEUE
+        mv $WORKINGQUEUE $TMPQUEUE
+
+        case $CHOICE in # 0 = OK, 3 = Uncheck installed
+            0) # OK
                 return 0
                 ;;
+            3) # Uncheck installed
+                uncheck_installed $TMPQUEUE
+                ;;
             *) # Cancel or ESC
-                rm -f $ANSQUEUE
-                break
+                mv $ORIGINALQUEUE $TMPQUEUE
+                rm -f $WORKINGQUEUE $ANSQUEUE
+                return 1
                 ;;
         esac
     done
-    rm -f $WORKINGQUEUE
-    return 1
 }
 
 add_all_to_queue() {
