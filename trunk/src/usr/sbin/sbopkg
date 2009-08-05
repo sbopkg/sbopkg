@@ -724,7 +724,7 @@ check_for_updates() {
                     echo "  Repo version: " \
                         $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
                         >> $UPDATELIST
-                    echo "$NAME Found ON" >> \
+                    echo "$NAME \"Installed $PKG_VER\" ON" >> \
                         $SBOPKGTMP/sbopkg-update-queue
                 elif [[ $UPDATED -eq -1 ]]; then
                     if [[ $DEBUG -ge 1 ]]; then
@@ -1413,7 +1413,7 @@ sort_queue() {
             items, press <Reverse> to reverse the queue items, press \
             <OK> when done, or press <ESC> to abort \
             changes.")" 30 50 14 \
-            $(nl $TMPSORTQUEUE | rev | cut -d" " -f3 | rev) \
+            $(nl $TMPSORTQUEUE | sed 's:^ *\([0-9]* *[^ ]*\) .*$:\1:') \
             2> $SBOPKGTMP/sbopkg-ans-sort
         CHOICE=$?
         SELECTED=$(< $SBOPKGTMP/sbopkg-ans-sort)
@@ -1663,8 +1663,8 @@ save_user_queue() {
     rm -f $SAVEQUEUE
     # Reading from $TMPQUEUE...
     [[ -s $TMPQUEUE ]] && while read PICK; do
-        SAVENAME=$(echo $PICK | cut -d ' ' -f1)
-        SAVEONOFF=$(echo $PICK | cut -d ' ' -f3)
+        SAVENAME=$(cut -d ' ' -f1 <<< "$PICK")
+        SAVEONOFF=$(sed 's:^.* \([^ ]*\)$:\1:' <<< "$PICK")
         if [[ $SAVEONOFF =~ [oO][nN] ]]; then
             echo $SAVENAME >> $SAVEQUEUE
         else
@@ -1875,7 +1875,7 @@ add_item_to_queue() {
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
     local QUEUELIST=$SBOPKGTMP/sbopkg_queue_list
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
-    local FILE ONOFF
+    local FILE ONOFF VERSION INSTALLED
 
     # This next if is for legacy queuefiles with $APP $VERSION$BUILD $ONOFF
     if [[ $3 =~ "[Oo][Ff][Ff]" ]]; then
@@ -1908,8 +1908,16 @@ add_item_to_queue() {
         : # it's the same app and version so toss it
     else
         if [[ $DIAG ]]; then
-            echo "$APP Found $ONOFF" >> $TMPQUEUE
-            echo "$APP Found $ONOFF" >> $QUEUELIST
+            INSTALLED=$(ls -1 /var/log/packages |
+                grep "$APP-[^-]*-[^-]*-[^-]*$REPO_TAG\$")
+            if [[ -n $INSTALLED ]]; then
+                VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
+                echo "$APP \"Installed $VERSION\" $ONOFF" >> $TMPQUEUE
+                echo "$APP \"Installed $VERSION\" $ONOFF" >> $QUEUELIST
+            else
+                echo "$APP New $ONOFF" >> $TMPQUEUE
+                echo "$APP New $ONOFF" >> $QUEUELIST
+            fi
             if [[ $LOADOPTIONS ]]; then
                 echo "$LOADOPTIONS" > $SBOPKGTMP/sbopkg_"$APP"_loadoptions
             else
