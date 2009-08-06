@@ -130,6 +130,8 @@ enhancements:
     suggestion.
   * Add dialog notification of whether a queued package is installed.
   * Add a dialog option to automatically uncheck installed packages from the
-    active queue, together with a command line option that automatically skips
-    such packages when building with -b or -i.
+    active queue, together with a command line option -k that automatically
+    skips such packages when building with -b or -i.
+  * Add ability to 'invert' all selected/deselected in the clear cache and
+    obsolete sources and packages dialogs; thanks to dive for the suggestion.
 +--------------------------+

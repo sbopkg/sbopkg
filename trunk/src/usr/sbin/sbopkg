@@ -2766,6 +2766,29 @@ remove_obsolete_packages() {
     remove_files $OUTPUT "obsolete packages" $PACKAGES ON
 }
 
+reverse_choices() {
+    # Reverses ON or OFF setting in a file for dialog purposes.
+    # $1 is the file
+
+    local REVERSE_FILE="$1"
+    local TMPREVERSE=$SBOPKGTMP/sbopkg_tmp_reverse
+    local PICK ONOFF
+
+    rm -f $TMPREVERSE
+    # Reading from $REVERSE_FILE
+    while read PICK; do
+        ONOFF=$(sed 's:^.* \([^ ]*\)$:\1:' <<< "$PICK")
+        if [[  $ONOFF =~ [oO][nN] ]]; then
+            PICK=${PICK/%[oO][nN]/OFF}
+            echo $PICK >> $TMPREVERSE
+        else
+            PICK=${PICK/%[oO][fF][fF]/ON}
+            echo $PICK >> $TMPREVERSE
+        fi
+    done < $REVERSE_FILE
+    mv $TMPREVERSE $REVERSE_FILE
+}
+
 remove_files() {
     # Selectively remove files, after showing a checklist of them.
     # The file names (specified in $3) _must_ be quoted.
@@ -2780,29 +2803,39 @@ remove_files() {
     local ONOFF="$4"
     local FILES_CHECKLIST=$SBOPKGTMP/sbopkg_file_removal_checklist
     local FILES_DELETING=$SBOPKGTMP/sbopkg_file_removal_deleting
-    local SRC USER_OPTS DELETE ANS DLGWIDTH
+    local SRC USER_OPTS DELETE ANS DLGWIDTH CHOICE
 
     cd $FILESPATH
     if [[ -s $FILES ]]; then
         sed "s/^\(.*\)$/\\1 \"\" $ONOFF/g" < $FILES |
             sort > $FILES_CHECKLIST
         if [[ $DIAG ]]; then
-            # Compute a reasonable dialog width
-            DLGWIDTH=$(wc -L < $FILES_CHECKLIST)
-            (( DLGWIDTH += 3 ))
-            if [[ $DLGWIDTH -lt 50 ]]; then
-                DLGWIDTH=50
-            fi
-            dialog --title "$(crunch "Displaying $TOPIC")" \
-                --ok-label "Keep all" --extra-label "Delete selected" \
-                --cancel-label "OK" --no-cancel --extra-button \
-                --separate-output --checklist "$(crunch "Would you like to \
-                keep the $TOPIC in $FILESPATH?")"\
-                20 $DLGWIDTH 12 \
-                --file $FILES_CHECKLIST 2> $FILES_DELETING
-            if [[ $? == 3 ]]; then
-                DELETE=1
-            fi
+            while :; do
+                dialog --title "$(crunch "Displaying $TOPIC")" \
+                    --ok-label "Ok" --extra-label "Delete selected" \
+                    --cancel-label "Invert all" --extra-button \
+                    --separate-output --checklist "$(crunch "Would you like \
+                    to keep the $TOPIC in $FILESPATH?")"\
+                    20 60 12 \
+                    --file $FILES_CHECKLIST 2> $FILES_DELETING
+                CHOICE=$? # 0=Ok, 1=Invert all, 3=Delete
+                case $CHOICE in
+                    255|-1) # ESC
+                        rm -f $FILES_CHECKLIST $FILES_DELETING
+                        return 0
+                        ;;
+                    0)
+                        return 0
+                        ;;
+                    1)
+                        reverse_choices $FILES_CHECKLIST
+                        ;;
+                    3)
+                        DELETE=1
+                        break
+                        ;;
+                esac
+            done
         else
             # Unquote file names
             tr -d \" < $FILES > $FILES_DELETING
