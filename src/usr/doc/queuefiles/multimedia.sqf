@@ -29,8 +29,10 @@ vobcopy
 libquicktime
 transcode | MJPEGTOOLS=yes
 mplayer-codecs-all
-# 13.0 includes the next but lacks libdvdcss support.  Rebuild for CSS.
-mplayer
+# 13.0 includes the next and should be ok for dvd reading since Slackware now
+# includes libdvdread.  However, uncomment if you wish to rebuild against
+# libdvdcss.
+#mplayer
 flash-player-plugin
 kino | QUICKTIME=yes
 avidemux | QT=yes
