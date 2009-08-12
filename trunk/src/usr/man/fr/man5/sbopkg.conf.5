@@ -1,7 +1,7 @@
-.TH SBOPKG.CONF 5 "Février 2009" sbopkg-0.27.0 ""
+.TH SBOPKG.CONF 5 "Juin 2009" sbopkg-0.30.0beta ""
 .SH NAME
 .B sbopkg.conf
-\- Fichier de Configuration pour sbopkg
+\- Fichier de Configuration de sbopkg
 
 .SH DESCRIPTION
 
@@ -13,47 +13,43 @@ packages Slackware. Un fichier exemple est fourni par
 /etc/sbopkg/sbopkg.conf.new.
 
 Voici les différentes options de configuration\ :
+.TP 5
+.B REPO_NAME
+.br
+Cette option permet à l'utilisateur de choisir le dépôt à utiliser.
+Les possibilités sont SBo, SB64 et local.
+Le choix "local" correspond à un dépôt géré par l'utilisateur et 
+dont la structure est identique à celle de SlackBuilds.org. 
+NOTE\ : toutes les variables préfixées par REPO_ sont touchées par 
+les fichiers de dépôt gérés dans le répertoire /etc/sbopkg/repos.d. 
+Lire le fichier README-repos.d dans le répertoire /doc de sbopkg.
+
+La valeur par défaut de REPO_NAME est\ :
+.br
+REPO_NAME=${REPO_NAME:-SBo}.
 
 .TP 5
-.B RSYNCMIRROR
+.B REPO_BRANCH
 .br
-Cette option permet à l'utilisateur de définir le miroir de 
-synchronisation du dépôt SBo que sbopkg utilisera.
+Cette option permet à l'utilisateur de définir la branche active 
+par défaut du dépôt. Les valeurs possibles sont 11.0, 12.0, 12.1, 
+12.2 et 13.0 pour le dépôt SBo\ ; master pour SB64 et local pour 
+le dépôt local.
 
-La valeur par défaut de RSYNCMIRROR est\ :
+La valeur par défaut de REPO_BRANCH est\ :
 .br
-slackbuilds.org::slackbuilds.
-
-.TP 5
-.B SLACKVER
-.br
-Cette option permet à l'utilisateur de définir la version de 
-Slackware qu'il veut synchroniser avec le dépôt SBo correspondant. Les 
-valeurs possibles sont 11.0, 12.0, 12.1, 12.2 et local. L'option 
-"local" permet à l'utilisateur de maintenir un dépôt local de la 
-même manière que le dépôt SBo et de le gérer avec sbopkg. Le dépôt 
-local doit être au même niveau de répertoire que celui de SBo. Par 
-exemple, si $LOCALREPO (voir ci-dessous) est /home/sbo, le dépôt SBo 
-de la Slacware 12.2 doit être /home/sbo/12.2 et le dépôt local sera 
-/home/sbo/local. L'arborescence des répertoires sous /local doit aussi 
-être semblable à celle de SBo, incluant des catégories, mais ce ne 
-sont pas obligatoirement les mêmes catégories que celles de SBo, 
-par exemple : /home/sbo/local/macategorie/monappli.
-
-La valeur par défaut de SLACKVER est\ :
-.br
-SLACKVER=${SLACKVER:-12.2}.
+REPO_BRANCH=${REPO_BRANCH:-13.0}.
 
 .TP 5
-.B LOCALREPO
+.B REPO_ROOT
 .br
-Cette option permet à l'utilisateur de choisir l'emplacement du 
-miroir local synchronisé avec le dépôt SBo. Actuellement, la taille 
-d'une copie locale du dépôt SBo est inférieure à 50MB.
+Cette option permet à l'utilisateur de définir l'emplacement du 
+miroir local des dépôts externes. Actuellement la taille d'une copie 
+locale du dépôt SBo est inférieure à 50MB.
 
-La valeur par défaut de LOCALREPO est :
+La valeur par défaut de REPO_ROOT est\ :
 .br
-export LOCALREPO=${LOCALREPO:-/home/sbo}.
+REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}.
 
 .TP 5
 .B SRCDIR
@@ -63,15 +59,25 @@ contiendra la sauvegarde des sources téléchargées.
 
 La valeur par défaut de SRCDIR est\ :
 .br
-export SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
+SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
+
+.TP 5
+.B SBOPKGTMP
+.br
+Cette option indique le répertoire dans lequel certains fichiers 
+de travail seront sauvegardés temporairement.
+
+La valeur par défaut de SBOPKGTMP est\ :
+.br
+SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}.
 
 .TP 5
 .B TMP
 .br
-Cette option indique le répertoire dans lequel certains fichiers 
-de travail seront sauvegardés temporairement. TMP doit être exporté 
-car il est aussi utilisé par les SlackBuilds SBo. La valeur 
-par défaut de TMP est donc la même que dans les scripts de SlackBuildS SBO.
+Cette option définit le répertoire dans lequel seront sauvegardés les 
+paquets construits. TMP doit être exporté car il est aussi utilisé par les 
+SlackBuilds SBo. Remarquez que la valeur par défaut de TMP est donc 
+identique à celle des SlackBuildS SBO.
 
 La valeur par défaut de TMP est\ :
 .br
@@ -89,6 +95,7 @@ La valeur par défaut de OUTPUT est\ :
 .br
 export OUTPUT=${OUTPUT:-/tmp}.
 
+
 .TP 5
 .B QUEUEDIR
 .br
@@ -97,7 +104,7 @@ files d'attente sauvegardées.
 
 La valeur par défaut de QUEUEDIR est\ :
 .br
-QUEUEDIR=$TMP/queues.
+QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}.
 
 .TP 5
 .B KEEPLOG
@@ -107,17 +114,30 @@ l'utilisateur de conserver un journal permanent des paquets qui sont
 construits avec sbopkg pour pouvoir revenir en arrière, revoir la 
 construction et les erreurs éventuelles après avoir quitté sbopkg. 
 Si la valeur est YES, ce journal est sauvegardé à l'emplacement 
-$TMP/sbopkg-build-log.
+$LOGDIR/sbopkg-build-log.
 
 La valeur par défaut de KEEPLOG est\ : YES.
 
 .TP 5
-.B LOGFILE
+.B LOGDIR
 .br
 Cette option définit l'emplacement du journal de sbopkg si l'option 
 KEEPLOG est à YES (voir le paragraphe précédent)
 
-La valeur par défaut de LOGFILE is: $TMP/sbopkg-build-log.
+La valeur par défaut de LOGDIR est\ : 
+.br
+LOGDIR=${LOGDIR:-/var/log/sbopkg}.
+
+.TP 5
+.B CLEANUP
+.br
+Cette option doit être définie à YES ou NO. Définie à YES, les fichiers 
+source et les divers éléments restant après la construction d'un paquet 
+seront effacés immédiatement après la construction.
+Définir CLEANUP à YES aura aussi pour effet d'ignorer la valeur de TMP 
+définie via les variables d'environnement ou le fichier de configuration.
+
+La valeur par défaut de CLEANUP est\ : NO
 
 .TP 5
 .B DEBUG
@@ -128,12 +148,8 @@ les paquets pouvant être mis à jour sont montrés. C'était la sortie par
 défaut avant l'utilisation de la variable DEBUG. Si DEBUG vaut 1, sont 
 montrés les paquets qui peuvent être mis à jour, les paquets qui ne sont 
 pas dans le dépôt et les paquets qui sont plus neufs que ceux du dépôt. 
-Modifier la valeur de DEBUG à 1 peut aider si la liste des mises à jour 
-parait incompléte. Si DEBUG vaut 2 (la valeur la plus élevée), en plus 
-des résultats du niveau 1, la liste des mises à jour affiche chaque paquet 
-SBo installé, même s'il n'y a pas de mise à jour, ainsi que d'autres 
-informations de débogage utiles pour corriger des erreurs. Le niveau 2 ne 
-devrait être utilisé que pour envoyer un rapport de bogue des mises à jour.
+Modifier la valeur de DEBUG à 1 peut être utile si la liste des mises à 
+jour parait incompléte. 
 
 La valeur par défaut de DEBUG est\ : 0.
 
@@ -144,7 +160,7 @@ Rsync est utilisé par sbopkg pour dupliquer le dépôt de SlackBuilds.org.
 Cette option permet à l'utilisateur d'ajuster les indicateurs (options) 
 de Rsync utilisés par sbopkg. Les utilisateurs sont mis en garde contre 
 toute modification des valeurs par défaut de ces indicateurs, 
-de nouvelles valeurs peuvent fonctionner ou non.
+de nouvelles valeurs peuvant fonctionner ou non.
 Note\ : la commande rsync de sbopkg utilise déjà les indicateurs --archive, 
 --delete, --no-owner, et --exclude, il n'est donc pas nécessaire de les 
 ajouter dans les options de RSYNCFLAGS. Modifier ces options par défaut 
@@ -159,7 +175,7 @@ Wget est utilisé par sbopkg pour télécharger les sources des paquets
 à compiler. Cette option permet à l'utilisateur d'ajuster les indicateurs 
 (options) de wget utilisés par sbopkg. Les utilisateurs sont mis en garde 
 contre toute modification des valeurs par défaut de ces indicateurs, 
-de nouvelles valeurs peuvent fonctionner ou non.
+de nouvelles valeurs peuvant fonctionner ou non.
 Note\ : sbopkg utilise déjà l'option -O de wget, il n'est donc pas nécessaire 
 de le rajouter dans les options de WGETFLAGS. Modifier ces options par défaut 
 n'est pas conseillé.
@@ -172,7 +188,7 @@ La valeur par défaut de WGETFLAGS est\ :
 .B DIFF
 .br
 Cette option permet à l'utilisateur de définir le programme de 
-comparaison à utiliser quand sbopkg doit montrer les différences 
+comparaison à utiliser quand sbopkg doit afficher les différences 
 entre fichiers.
 
 La valeur par défaut de DIFF est\ :
@@ -190,9 +206,6 @@ La valeur par défaut de DIFFOPTS est\ :
 
 DIFFOPTS=${DIFFOPTS:--u}
 
-.SH FILES
-.TP 5
-.B /etc/sbopkg/sbopkg.conf
 
 .SH ENVIRONMENT
 Il est possible de définir ou de redéfinir des variables d'environnement 
@@ -202,36 +215,52 @@ le fichier sbopkg.conf\ :
 
 export TMP=${TMP:-/tmp/SBo}
 
-Ceci définit la valeur de $TMP pour les besoins de sbopkg (c-a-d l'endroit 
-où sbopkg conserve son journal) et pour la construction des paquets 
-par sbopkg (c'est déjà la valeur par défaut dans les SlackBuilds SBo. 
+Ceci définit la valeur de $TMP pour la construction des paquets 
+par sbopkg (c'est déjà la valeur par défaut dans les SlackBuilds SBo). 
 Puisque cette variable est exportée, elle peut être modifiée à la fois 
 pour sbopkg et pour la construction des paquets SBo. Par exemple, 
 modifier cette ligne pour\ :
+
 export TMP=${TMP:-/home/sbo/tmp}
 
-définit $TMP comme /home/sbo/tmp pour sbopkg et pour la construcion 
+définit $TMP comme /home/sbo/tmp pour la construcion 
 des paquets. OUTPUT peut aussi être modifié pour sauvegarder les 
 paquets compilés dans un autre emplacement que celui par défaut, /tmp.
+
+Se souvenir que si la variable CLEANUP vaut YES, la configuration de TMP 
+n'est pas prise en compte.
 
 Il est possible également, d'exporter dans sbopkg.conf des variables 
 qui ne sont aucunement utilisées par sbopkg.
 
-Comme on peut le constater, avec juste quelques modifications, il est 
-possible d'obtenir une zone complétement séparée à l'intention de SBo 
--- le dépôt dans /home/sbo, le répertoire $TMP dans /home/sbo/tmp, 
-le cache pour les sources dans /home/sbo/cache et le répertoire 
-$OUTPUT pour sauvegarder les paquets compilés dans /home/sbo/packages.
+.SH FILES
+.B /etc/sbopkg/sbopkg.conf
+\ - Fichier qui contient les options de configuration.
+
+.B /etc/sbopkg/renames.d/50-default
+\ - Fichier contenant la liste des logiciels du dépôt SBo qui ont été renommés. 
+Lire le fichier README-renames.d dans le répertoire /doc de sbopkg pour 
+plus d'information.
+
+.B /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
+\ - Trois fichiers par défaut pour les différents types de dépôts de sbopkg. 
+Lire le fichier README-repos.d dans le répertoire /doc de sbopkg pour 
+plus d'information.
+
 
 .SH "VOIR AUSSI"
 .BR sbopkg (8)
+.BR doc/README
+.BR doc/README-queuefiles
+.BR doc/README-renames.d
+.BR doc/README-repos.d
+.BR doc/queuefiles/*
 
 .SH TRADUCTION
 
 Ce document est une traduction réalisée par M.C Collilieux 
-<http://mcclinews.free.fr/> le 14\ mars\ 2009.
-
+<http://mcclinews.free.fr/> le 11\ août\ 2009.
+N'hésitez pas à signaler au traducteur, toute erreur dans cette 
+page de manuel.
 La version anglaise la plus à jour de ce document est toujours 
 consultable via la commande\ : «\ \fBLANG=en\ man\ 5\ sbopkg.conf\fR\ ».
-N'hésitez pas à signaler à l'auteur ou au traducteur, selon le cas, toute 
-erreur dans cette page de manuel.
