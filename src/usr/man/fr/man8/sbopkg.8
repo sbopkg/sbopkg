@@ -1,4 +1,4 @@
-.TH SBOPKG 8 "Juin 2009" sbopkg-0.30.0beta ""
+.TH SBOPKG 8 "août 2009" sbopkg-SVN ""
 .SH NAME
 .B sbopkg
 \ - Le navigateur de paquets SlackBuilds.org
@@ -166,6 +166,16 @@ Les noms de file d'attente sont aussi acceptés. Pour plus de détails,
 se reporter à l'explication de la commande "-b".
 
 .TP 5
+.B -k
+Quand on l'utilise avec -b ou -i, cette option demande à sbopkg 
+de passer (c-a-d ne pas construire) tout paquet qui serait déjà 
+installé.
+
+À noter que celà se réalise avec une simple comparaison de nom, donc 
+quand on utilise cette option, sbopkg ne s'occupe pas des différences 
+de version.
+
+.TP 5
 .B -l
 Affiche le fichier ChangeLog.txt de SBo et quitte le programme.
 
@@ -257,7 +267,7 @@ Chess Griffin
 
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<http://mcclinews.free.fr/> le 10\ août\ 2009.
+<http://mcclinews.free.fr/> le 12\ août\ 2009.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 
