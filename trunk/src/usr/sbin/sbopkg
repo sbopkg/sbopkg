@@ -2315,7 +2315,8 @@ gen_search_package() {
         fi
     else
         if [[ $DIAG ]]; then
-            dialog --title "ERROR" --msgbox "No match for $PKG found" 8 30
+            dialog --title "Not Found" --msgbox "No match for $PKG found"\
+                8 30
         else
             echo "$SCRIPT: No match for $PKG found." >&2
         fi
