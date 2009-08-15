@@ -1,4 +1,4 @@
-Tue Jul 14 22:08:49 UTC 2009
+Sat Aug 15 05:01:23 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -134,4 +134,5 @@ enhancements:
     skips such packages when building with -b or -i.
   * Add ability to 'invert' all selected/deselected in the clear cache and
     obsolete sources and packages dialogs; thanks to dive for the suggestion.
+  * Update French man pages.  Thanks to Marie-Claude Collilieux.
 +--------------------------+
