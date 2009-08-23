@@ -1968,7 +1968,7 @@ view_queue() {
             optionally installed, in the order listed from top to \
             bottom.\n\nPlease select or unselect those packages you wish \
             to keep in the build queue and then press <OK> to continue \
-            or press <Back> to go back.")" 30 70 14 \
+            or press <Back> to go back.")" 30 70 9 \
             --file $TMPQUEUE 2> $ANSQUEUE
         CHOICE=$?
 
