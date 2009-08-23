@@ -1,4 +1,4 @@
-Sun Aug 23 16:06:39 UTC 2009
+Sun Aug 23 21:09:01 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -105,14 +105,15 @@ enhancements:
     but serious case of removing the wrong package; thanks to NaCl for the
     bug report.
   * Add ability to pass build options in a queuefile when separated by a pipe
-    character, i.e. app | FOO=yes BAR=no
+    character, i.e. app | FOO=yes BAR=no means app will be built with FOO and
+    BAR build options set as indicated.
   * Fix rare issue where incorrect file was upgraded; thanks to neonflux for
     the bug report.
   * Fix issue where custom build options may not be correctly exported.
   * Add a 'diff' entry to the script customization menu.
   * Add in 'uname -m' test for x86_64 and if so, set ARCH to x86_64.
   * Set default SBo repo to 13.0; add 13.0 repo to
-    /etc/sbopkg/repos.d/40-sbo.repo
+    /etc/sbopkg/repos.d/40-sbo.repo.
   * Add support for multiple architectures and multiple source files. This
     makes sbopkg able to handle the new features that SlackBuilds.org admins
     are preparing for the Slackware 13.0 release.
@@ -134,5 +135,4 @@ enhancements:
     skips such packages when building with -b or -i.
   * Add ability to 'invert' all selected/deselected in the clear cache and
     obsolete sources and packages dialogs; thanks to dive for the suggestion.
-  * Update French man pages.  Thanks to Marie-Claude Collilieux.
 +--------------------------+
