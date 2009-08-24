@@ -1,4 +1,4 @@
-# $Id$
+# $Id: README-queuefiles 651 2009-06-23 02:23:17Z chess.griffin $
 
 Sbopkg queuefiles are very simple to create, maintain, and share amongst other
 users.  Each queuefile can contain a list of applications to build in order,

@@ -1,4 +1,4 @@
-# $Id$
+# $Id: README-renames.d 555 2009-05-08 21:47:18Z chess.griffin $
 
 The /etc/sbopkg/renames.d directory is the directory that holds files
 associated with renamed software in the SlackBuilds.org repository.  The
