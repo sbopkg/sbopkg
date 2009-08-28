@@ -143,8 +143,8 @@ EOF
     fi
 
     # Make sure there are no unexpected files in $SBOPKGTMP
-    if [[ -n $(find $SBOPKGTMP -maxdepth 1 -not -name sbopkg\* 2> \
-            /dev/null) ]]; then
+    if [[ -n $(find $SBOPKGTMP -mindepth 1 -maxdepth 1 -not -name sbopkg\* \
+            2> /dev/null) ]]; then
         cat << EOF
 
 ERROR

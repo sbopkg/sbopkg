@@ -3,5 +3,7 @@ Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
   * Fix the updates code for the 13.0 repo.
+  * Fix the $SBOPKGTMP sanity check. Thanks to Ken Roberts for raising the
+    issue.
   * Update the renames file.
 +--------------------------+
