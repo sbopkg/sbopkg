@@ -1,4 +1,4 @@
-# $Id$
+# $Id: README-repos.d 689 2009-07-23 16:40:05Z mauro.giachero $
 
 In sbopkg parlance, a "repository" is a local or remote service used as a
 source of scripts.  For example, slackbuilds.org is a repository.  The
