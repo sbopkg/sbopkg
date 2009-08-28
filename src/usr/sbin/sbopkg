@@ -667,7 +667,16 @@ check_for_updates() {
                 # This is harmless, and the proper cleanup is performed in
                 # Step 4.
                 VERSION_EXPRESSION=$(tac $NEWSB | grep -m1 \$OUTPUT/ |
-                    cut -d\$ -f2- | cut -d- -f2- | rev | cut -d- -f3- | rev)
+                    sed 's/[^$]*$\(.*\)$/\1/;
+                        s/:-//;
+                        s/^[^-]*-\(.*\)-[^-]*-[^-]*/\1/')
+                    # Explanation of the above 'sed':
+                    # - take from the first $ on (cuts "makepkg" with its
+                    #   options, if present
+                    # - drop ':-', which is not present in any 12.2 script
+                    #   but is in every 13.0 script (${PKGTYPE:-tgz})
+                    # - narrow the thing a bit deleting everything before
+                    #   the first dash or after the penultimate one.
                 echo "echo $VERSION_EXPRESSION" > $VERSION_FILE
 
                 # Step 2 - find the used variables and their expressions
