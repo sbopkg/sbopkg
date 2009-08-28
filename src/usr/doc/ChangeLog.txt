@@ -1,3 +1,13 @@
+Fri Aug 28 17:34:35 UTC 2009
+Sbopkg 0.30.1 released.  This version contains the following fixes and
+enhancements:
+
+  * Fix the updates code for the 13.0 repo; thanks to everybody who
+    contacted us about this issue.
+  * Fix the $SBOPKGTMP sanity check. Thanks to Ken Roberts for raising the
+    issue.
+  * Update the renames file.
++--------------------------+
 Mon Aug 24 17:28:48 UTC 2009
 Sbopkg 0.30.0 released.  This version contains the following fixes and
 enhancements:
