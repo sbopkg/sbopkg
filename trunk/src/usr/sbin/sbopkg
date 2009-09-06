@@ -1332,7 +1332,7 @@ browse_categories() {
     while :; do
         dialog --default-item "$DEFAULTITEM" --cancel-label "Back" \
             --title "Choose a category" --backtitle \
-            "Currently using the $REPO_DESC." \
+            "$(eval echo $BACKTITLE)" \
             --menu "Please select a category or press <Back> to go back." \
             23 70 15 --file $SBOPKGTMP/sbopkg_category_list \
             2> $SBOPKGTMP/sbopkg_category_manual_selection
@@ -2273,8 +2273,7 @@ gen_search_package() {
                 # The default item can be "". In that case, dialog defaults to
                 # the first item.
                 dialog --title "Matches for $PKG in $CATEGORY" \
-                    --backtitle "$(crunch "Currently using the \
-                    $REPO_DESC.")" \
+                    --backtitle "$(eval echo $BACKTITLE)" \
                     --default-item "$SRCHPICK" --extra-button \
                     --cancel-label "Back" \
                     --help-button --help-label "Main Menu" \
@@ -3778,7 +3777,7 @@ queue_menu() {
 
     while :; do
         dialog --title "Build Queue Menu" --backtitle \
-            "Currently using the $REPO_DESC." \
+            "$(eval echo $BACKTITLE)" \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "Choose one of the following or press <Back> to go back.\n" \
             16 60 9 \
@@ -3821,7 +3820,7 @@ utilities_menu() {
 
     while :; do
         dialog --title "Utilities Menu" --backtitle \
-            "Currently using the $REPO_DESC." \
+            "$(eval echo $BACKTITLE)" \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
             14 69 6 \
@@ -3994,8 +3993,7 @@ main_menu() {
     while :; do
         dialog --cancel-label "Exit" --default-item "$DEFAULTITEM" --title \
             "SlackBuilds.org Package Browser (sbopkg version $SBOVER)" \
-            --backtitle \
-            "Currently using the $REPO_DESC." \
+            --backtitle "$(eval echo $BACKTITLE)" \
             --menu \
             "\nChoose one of the following or press <Exit> to exit.\n" \
             17 69 8 \
@@ -4097,6 +4095,14 @@ fi
 # Set up ARCH
 if [[ ! $(uname -m) =~ 'i.86' ]]; then
     export ARCH=${ARCH:-$(uname -m)}
+fi
+
+# Set up BACKTITLE
+if [[ -n $ARCH ]]; then
+    BACKTITLE='Browsing the $REPO_DESC.  \$ARCH is set to $ARCH.'
+else
+    BACKTITLE="$(crunch "Browsing the $REPO_DEC.  Using default \$ARCH \
+    in SlackBuild scripts.")"
 fi
 
 # This is the command line options and help.

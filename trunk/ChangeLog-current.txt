@@ -1,6 +1,7 @@
-Fri Aug 28 17:46:26 UTC 2009
+Sun Sep  6 04:10:58 UTC 2009
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * 
+  * Fix typo in 50-default renames file.
+  * Add $ARCH information in dialog backtitles.
 +--------------------------+
