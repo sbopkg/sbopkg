@@ -4101,7 +4101,7 @@ fi
 if [[ -n $ARCH ]]; then
     BACKTITLE='Browsing the $REPO_DESC.  \$ARCH is set to $ARCH.'
 else
-    BACKTITLE="$(crunch "Browsing the $REPO_DEC.  Using default \$ARCH \
+    BACKTITLE="$(crunch "Browsing the $REPO_DESC.  Using default \$ARCH \
     in SlackBuild scripts.")"
 fi
 
