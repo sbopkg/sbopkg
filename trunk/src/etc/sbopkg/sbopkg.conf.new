@@ -32,6 +32,6 @@ export OUTPUT=${OUTPUT:-/tmp}
 # uses the -O options so there is no need to add that either.  In general,
 # it is not recommended that users change these default values.
 RSYNCFLAGS="--verbose --timeout=10"
-WGETFLAGS="--continue --progress=bar --timeout=15 --tries=5"
+WGETFLAGS="--continue --progress=bar:force --timeout=15 --tries=5"
 DIFF=${DIFF:-diff}
 DIFFOPTS=${DIFFOPTS:--u}
