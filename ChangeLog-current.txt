@@ -4,4 +4,7 @@ enhancements:
 
   * Fix typo in 50-default renames file.
   * Add $ARCH information in dialog backtitles.
+  * Add ":force" to sbopkg.conf WGETFLAGS --progress=bar to correctly
+    display the wget progress bar; thanks to happyslacker for nudging me on
+    this issue again.
 +--------------------------+

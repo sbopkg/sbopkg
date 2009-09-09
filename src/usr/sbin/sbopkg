@@ -645,18 +645,8 @@ check_for_updates() {
 
             # Extract the new package version
             if [[ ! -z $NEWSB ]]; then
-                NEWARCH=$(egrep -m1 "^ARCH" $NEWSB | sed '
-                    s/\([^\t #]*\)[\t #].*/\1/
-                    s/[^=]*=//
-                    s/"//g
-                    s/\${[^-]*-\(.*\)}/\1/
-                    s/\$.*/unknown/
-                ')
-                NEWBUILD=$(egrep -m1 "^BUILD" $NEWSB | sed '
-                    s/^.*[=-]//
-                    s/"//g
-                    s/[ #}\t].*$//g
-                ')
+                eval $(echo -n NEW; grep -m1 ^ARCH= $NEWSB)
+                eval $(echo -n NEW; grep -m1 ^BUILD= $NEWSB)
 
                 # Step 1 - find the version expression
                 # This looks for the last instance of $OUTPUT.
@@ -1058,18 +1048,8 @@ info_item() {
     SHORTPATH=$REPO_DIR/$CATEGORY/$APP
     CURVERSION=$(grep VERSION $SHORTPATH/$APP.info |
         cut -d= -f2 | sed s/\"//g)
-    CURARCH=$(egrep -m1 "^ARCH" $SHORTPATH/$APP.SlackBuild | sed '
-        s/\([^\t #]*\)[\t #].*/\1/
-        s/[^=]*=//
-        s/"//g
-        s/\${[^-]*-\(.*\)}/\1/
-        s/\$.*/unknown/
-    ')
-    CURBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$APP.SlackBuild | sed '
-        s/^.*[=-]//
-        s/"//g
-        s/[ #}\t].*$//g
-    ')
+    eval $(echo -n CUR; grep -m1 ^ARCH= $SHORTPATH/$APP.SlackBuild)
+    eval $(echo -n CUR; grep -m1 ^BUILD= $SHORTPATH/$APP.SlackBuild)
     while :; do
         INSTALLEDPACKAGE=$(ls /var/log/packages |
             egrep "^($APP|$OLDPKG)-[^-]*-[^-]*-[^-]*\$")
