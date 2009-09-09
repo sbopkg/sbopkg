@@ -3,6 +3,8 @@ Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
   * Fix typo in 50-default renames file.
+  * Fix the "Uncheck installed" feature. The code apparently worked fine even
+    without the fix. Spotted by slakmagik.
   * Add $ARCH information in dialog backtitles.
   * Add ":force" to sbopkg.conf WGETFLAGS --progress=bar to correctly
     display the wget progress bar; thanks to happyslacker for nudging me on
