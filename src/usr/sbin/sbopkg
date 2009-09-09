@@ -1953,7 +1953,7 @@ uncheck_installed() {
 
     local QUEUEFILE=$1
 
-    sed -i 's:^\([^ ]* .*Installed.*\)[^ ]*$:\1OFF:' $QUEUEFILE
+    sed -i 's:^\([^ ]* .*Installed.* \)[^ ]\+$:\1OFF:' $QUEUEFILE
 }
 
 view_queue() {
