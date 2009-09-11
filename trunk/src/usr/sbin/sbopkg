@@ -407,19 +407,29 @@ EOF
 get_sbo_packages() {
     # Get a list of SBo packages.
 
-    local PKGS FILE
     local SBOPKGLIST=$SBOPKGTMP/sbopkg_pkglist
+    local REMOVELIST=$SBOPKGTMP/sbopkg_removelist
+    local CONFIRMLIST=$SBOPKGTMP/sbopkg_confirmlist
 
     rm -f $SBOPKGLIST
-    cd /var/log/packages
-    PKGS=$(ls *$REPO_TAG* 2> /dev/null)
-    for FILE in $PKGS; do
-        echo $FILE >> $SBOPKGLIST
-    done
+    find /var/log/packages -type f -name "*$REPO_TAG" \
+        -printf "%P\n" | sort > $SBOPKGLIST
     if [[ -f $SBOPKGLIST ]]; then
         if [[ $DIAG ]]; then
-            dialog --title "Installed $REPO_NAME Packages" --textbox \
-                $SBOPKGLIST 20 65
+            sed -i 's/$/ "" OFF/' $SBOPKGLIST
+            dialog --separate-output --title "Installed $REPO_NAME Packages" --checklist \
+                "Check any packages you wish to uninstall" 20 65 13 \
+                --file $SBOPKGLIST 2> $REMOVELIST
+            if [[ -s $REMOVELIST ]]; then
+                sed 's/$/ "" ON/' $REMOVELIST > $CONFIRMLIST
+                dialog --defaultno --title "Removepkg confirmation" \
+                    --checklist "Remove the following packages?" 20 65 13 \
+                    --file $CONFIRMLIST 2> $REMOVELIST
+                if [[ $? == 0 ]]; then
+                    removepkg $(tr -d \" < $REMOVELIST)
+                    read -n1 -p "Press any key to continue."
+                fi
+            fi
         else
             $PAGER $SBOPKGLIST
         fi
@@ -430,6 +440,7 @@ get_sbo_packages() {
                 installed.")" 8 40
         fi
     fi
+    rm -f $SBOPKGLIST $REMOVELIST $CONFIRMLIST
 }
 
 progressbar_cli() {
@@ -3999,7 +4010,7 @@ main_menu() {
             17 69 8 \
             "Sync" "Sync with the remote repository" \
             "ChangeLog" "View the ChangeLog" \
-            "Packages" "List installed $REPO_NAME packages" \
+            "Packages" "List/uninstall installed $REPO_NAME packages" \
             "Updates" "List potential updates to installed $REPO_NAME packages" \
             "Browse" "Browse the active repository" \
             "Search" "Search the active repository" \

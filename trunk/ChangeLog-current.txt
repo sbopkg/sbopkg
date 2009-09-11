@@ -11,4 +11,6 @@ enhancements:
     this issue again.
   * Fix an issue with the build options dialog menu where selecting 'None'
     would not work; thanks to happyslacker for the bug report.
+  * Add the ability to uninstall SBo packages from the dialog interface that
+    lists installed packages. Thanks to pokipoki08 for the suggestion.
 +--------------------------+
