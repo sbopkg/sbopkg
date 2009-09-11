@@ -413,8 +413,8 @@ get_sbo_packages() {
 
     rm -f $SBOPKGLIST
     find /var/log/packages -type f -name "*$REPO_TAG" \
-        -printf "%P\n" | sort > $SBOPKGLIST
-    if [[ -f $SBOPKGLIST ]]; then
+        -printf "%P\n" 2> /dev/null | sort > $SBOPKGLIST
+    if [[ -s $SBOPKGLIST ]]; then
         if [[ $DIAG ]]; then
             sed -i 's/$/ "" OFF/' $SBOPKGLIST
             dialog --separate-output --title "Installed $REPO_NAME Packages" --checklist \
