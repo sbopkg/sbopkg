@@ -4109,11 +4109,11 @@ if [[ ! $(uname -m) =~ 'i.86' ]]; then
 fi
 
 # Set up BACKTITLE
+BACKTITLE='Browsing the $REPO_DESC. '
 if [[ -n $ARCH ]]; then
-    BACKTITLE='Browsing the $REPO_DESC.  \$ARCH is set to $ARCH.'
+    BACKTITLE+='\$ARCH is set to $ARCH.'
 else
-    BACKTITLE="$(crunch "Browsing the $REPO_DESC.  Using default \$ARCH \
-    in SlackBuild scripts.")"
+    BACKTITLE+='Using default \$ARCH in SlackBuild scripts.'
 fi
 
 # This is the command line options and help.
