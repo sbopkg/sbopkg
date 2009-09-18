@@ -188,8 +188,11 @@ load_repositories() {
             eval TMPARRAY=( "$LINE" )
             [[ ${#TMPARRAY[@]} -eq 0 ]] && continue;
             # Sanity checks
-            [[ ! ${TMPARRAY[6]} =~ '^GPG$|^$' ]] && ERROR="gpg"
-            [[ ! ${TMPARRAY[4]} =~ '^rsync$|^git$|^$' ]] && ERROR="tool"
+            # these two assignments work around a bash3-4 incompatibility
+            local GPG='^GPG$|^$'
+            local RSYNC='^rsync$|^git$|^$'
+            [[ ! ${TMPARRAY[6]} =~ $GPG ]] && ERROR="gpg"
+            [[ ! ${TMPARRAY[4]} =~ $RSYNC ]] && ERROR="tool"
             [[ ${#TMPARRAY[@]} -ne $REPOS_FIELDS ]] && ERROR="fields"
             [[ -n $ERROR ]] && break 2
             # Add the record to REPOSITORIES
@@ -1899,7 +1902,7 @@ add_item_to_queue() {
     local FILE ONOFF VERSION INSTALLED
 
     # This next if is for legacy queuefiles with $APP $VERSION$BUILD $ONOFF
-    if [[ $3 =~ "[Oo][Ff][Ff]" ]]; then
+    if [[ $3 =~ [Oo][Ff][Ff] ]]; then
           APP=-$APP
     fi
     if [[ ${APP:0:1} == "-" ]]; then
@@ -2294,14 +2297,12 @@ gen_search_package() {
                     go back.")" 22 70 14 --file \
                     $SEARCH_RESULTS 2> $SEARCH_CHOICE
                 CHOICE=$?
-                if [[ $CHOICE =~ '^(1|255|-1)$' ]]; then
+                case $CHOICE in
                     # Back or ESC
-                    break
-                elif [[ $CHOICE == 2 ]]; then
+                    1 | 255 | -1 ) break ;;
                     # Main Menu
-                    RETVAL=1
-                    break
-                fi
+                    2 ) RETVAL=1; break ;;
+                esac
                 SRCHPICK="$(< $SEARCH_CHOICE)"
                 if [[ $CATEGORY == '*' ]]; then
                     SRCHCAT="${SRCHPICK%%/*}"
@@ -3949,7 +3950,7 @@ main_search() {
             SEARCH_TERM=$(< $TERM_FILE)
             # I can't make sure every input makes sense, but I can at least
             # clear out this area of (fairly improbable) glitches
-            if [[ $SEARCH_TERM =~ "^[\\\.\*\^\$\[\{\(\)\+\?\|]$" ]]; then
+            if [[ $SEARCH_TERM =~ ^[\\\.\*\^\$\[\{\(\)\+\?\|]$ ]]; then
                 dialog --msgbox "$(crunch "If you are searching for the \
                     literal character '$SEARCH_TERM', then you will need to \
                     escape it with a backslash like '\\\\$SEARCH_TERM'.\n\nIf\
@@ -4104,7 +4105,7 @@ if [[ $(id -u) != 0 ]]; then
 fi
 
 # Set up ARCH
-if [[ ! $(uname -m) =~ 'i.86' ]]; then
+if [[ ! $(uname -m) =~ i.86 ]]; then
     export ARCH=${ARCH:-$(uname -m)}
 fi
 
@@ -4260,7 +4261,7 @@ TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
 
 # Change $REPO_BRANCH (and optinally REPO_NAME) if set manually using cli -v
 if [[ $VERSION ]]; then
-    if [[ $CUSTOMVER =~ '.*/.*' ]]; then
+    if [[ $CUSTOMVER =~ .*/.* ]]; then
         # The user specified repository/branch
         eval $(sed 's:^\(.*\)/\(.*\)$:REPO_NAME=\1;REPO_BRANCH=\2:g' \
             <<< $CUSTOMVER)
@@ -4292,7 +4293,7 @@ directory_checks
 pid_check
 
 if [[ $DIAG ]]; then
-    if [[ $TERM =~ "^rxvt.*" || $TERM =~ "^screen.*" ]]; then
+    if [[ $TERM =~ ^rxvt.* || $TERM =~ ^screen.* ]]; then
         dialog_refresh_workaround
     fi
     main_menu

@@ -13,4 +13,8 @@ enhancements:
     would not work; thanks to happyslacker for the bug report.
   * Add the ability to uninstall SBo packages from the dialog interface that
     lists installed packages. Thanks to pokipoki08 for the suggestion.
+  * Fix an incompatibility regarding the way bash 3.1, 3.2, and 4.0 handle the
+    RHS of [[ commands using the =~ operator which broke the repo file
+    validation, among other things. Thanks to SiegeX, Zmyrgel, and BCarey for
+    the reports and suggestions.
 +--------------------------+
