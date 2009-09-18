@@ -170,8 +170,8 @@ Please make sure your patches conform to these stylistic points:
         echo "Success"
     fi
 
-  In the latter case, having 'FGH; then' at the same indent level as the echo is
-  ambiguous.  On the other hand:
+  In the latter case, having 'FGH; then' at the same indent level as the echo
+  is ambiguous.  On the other hand:
 
     APP=$(grep foo \
         really/long/path/to/file)
@@ -223,6 +223,10 @@ Please make sure your patches conform to these stylistic points:
 
     if [[ $DIAG ]]; then
 
-* For indices, use FILE and DIR instead of 'f' and 'd'.  However, 'i' is OK as a
-  counter since that is fairly universal.
+* For indices, use FILE and DIR instead of 'f' and 'd'.  However, 'i' is OK as
+  a counter since that is fairly universal.
 
+* When deciding whether or not to use the =~ operator in [[ commands, make
+  sure that they work across bash 3.1, 3.2, and 4.0. This means the regexes
+  must be unquoted for bash >=3.2 and still work in bash 3.1 (i.e., no
+  'foo|bar' expressions).
