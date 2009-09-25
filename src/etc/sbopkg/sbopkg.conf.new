@@ -20,6 +20,11 @@ LOGFILE=$LOGDIR/sbopkg-build-log
 DEBUG=0
 CLEANUP=NO
 
+# Set this to YES to allow multiple instances of sbopkg to run.
+# Please read the sbopkg.conf(5) man page before doing so
+# (otherwise, don't even think about submitting a problem report).
+ALLOW_MULTI=NO
+
 # The following variables are used by sbopkg and by the SlackBuild scripts
 # themselves.  They are exported for this reason.
 export TMP=${TMP:-/tmp/SBo}

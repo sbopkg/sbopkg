@@ -139,6 +139,40 @@ from the environment or from the configuration files is ignored.
 The default value of CLEANUP is: NO.
 
 .TP 5
+.B ALLOW_MULTI
+.br
+When set to YES, this option allows the user to run multiple instances
+of sbopkg.
+
+Please understand that this option is provided for convenience, but
+given the number of potential issues you can face when enabling this
+(and we aren't going to try to work around users doing silly things),
+you should consider working with ALLOW_MULTI=YES as an EXPERIMENTAL
+UNSUPPORTED feature. If you encounter problems, please try to make sure
+these aren't caused by yourself doing improper things.
+
+For reference, these are some of the things you shouldn't do with this
+option enabled:
+.RS 6
+.IP \[bu] 2
+run an ALLOW_MULTI=NO instance together with one or more having
+ALLOW_MULTI=YES
+.IP \[bu]
+sync a repository when another instance is using it
+.IP \[bu]
+change the branch of a git repository when another instance is using it
+(you can do this with rsync -- i.e. SlackBuild.org -- repos)
+.IP \[bu]
+simultaneously build or install the same package from different instances
+.IP \[bu]
+save a queue file while using it from another instance
+.RE
+
+.RS 5
+There can be more unsafe situations we haven't thought about. Take care.
+.RE
+
+.TP 5
 .B DEBUG
 .br
 This option should be set to 0, 1, or 2.  DEBUG sets the default
