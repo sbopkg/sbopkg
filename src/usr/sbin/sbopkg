@@ -135,15 +135,9 @@ EOF
     fi
 
     # Convert some YES/NO variables into 'set/unset' ones.
-    if [[ $KEEPLOG == [Nn][Oo] ]]; then
-        unset KEEPLOG
-    fi
-    if [[ $CLEANUP == [Nn][Oo] ]]; then
-        unset CLEANUP
-    fi
-    if [[ $ALLOW_MULTI == [Nn][Oo] ]]; then
-        unset ALLOW_MULTI
-    fi
+    yesno_to_setunset KEEPLOG
+    yesno_to_setunset CLEANUP
+    yesno_to_setunset ALLOW_MULTI
 
     # If multiple instances of sbopkg are allowed, they need their own
     # private $SBOPKGTMP.
@@ -188,6 +182,35 @@ EOF
 
     # Check for ncurses
     [[ -x /usr/bin/tput ]] && HAS_NCURSES=1
+}
+
+yesno_to_setunset() {
+    # Convert a yes/no variable to a set/unset one.
+    # $1 = variable name
+    # If the variable value is different from "yes" and "no" (case
+    # insensitive) spit an error message and exit.
+
+    # Note: $(eval echo \$$1) is the value of the variable (remember that
+    # $1 is the variable _name_).
+
+    if [[ $(eval echo \$$1) == [Nn][Oo] ]]; then
+        unset $1
+    elif [[ $(eval echo \$$1) != [Yy][Ee][Ss] ]]; then
+        cat <<EOF
+
+ERROR
+$SCRIPT: Unexpected value in $1
+
+The configuration variable $1 is expected to be set to either YES or NO
+(case insensitive). Its current value instead is $(eval echo \$$1).
+
+Please fix this error by setting the appropriate value in
+/etc/sbopkg/sbopkg.conf and/or in ~/.sbopkg.conf
+and restart $SCRIPT.
+
+EOF
+        exit 1
+    fi
 }
 
 load_repositories() {
