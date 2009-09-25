@@ -20,4 +20,5 @@ enhancements:
   * Add the ability to run multiple sbopkg instances simultaneously. This has
     been suggested many times in the past. Users should read the sbopkg.conf
     man page before using this option (which is disabled by default).
+  * Be more strict validating YES/NO configuration variables.
 +--------------------------+
