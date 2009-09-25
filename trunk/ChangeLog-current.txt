@@ -17,4 +17,7 @@ enhancements:
     RHS of [[ commands using the =~ operator which broke the repo file
     validation, among other things. Thanks to SiegeX, Zmyrgel, and BCarey for
     the reports and suggestions.
+  * Add the ability to run multiple sbopkg instances simultaneously. This has
+    been suggested many times in the past. Users should read the sbopkg.conf
+    man page before using this option (which is disabled by default).
 +--------------------------+
