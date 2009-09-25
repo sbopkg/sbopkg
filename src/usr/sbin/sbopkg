@@ -4168,9 +4168,9 @@ fi
 # Set up BACKTITLE
 BACKTITLE='Browsing the $REPO_DESC. '
 if [[ -n $ARCH ]]; then
-    BACKTITLE+='\$ARCH is set to $ARCH.'
+    BACKTITLE+='ARCH: $ARCH'
 else
-    BACKTITLE+='Using default \$ARCH in SlackBuild scripts.'
+    BACKTITLE+='ARCH: unset'
 fi
 
 # This is the command line options and help.
