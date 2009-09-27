@@ -21,4 +21,6 @@ enhancements:
     been suggested many times in the past. Users should read the sbopkg.conf
     man page before using this option (which is disabled by default).
   * Be more strict validating YES/NO configuration variables.
+  * Add a KNOWN_ISSUES file - if you encounter a bug, check this file before
+    reporting it to see if it's known and if there's a workaround.
 +--------------------------+
