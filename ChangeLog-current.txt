@@ -23,4 +23,7 @@ enhancements:
   * Be more strict validating YES/NO configuration variables.
   * Add a KNOWN_ISSUES file - if you encounter a bug, check this file before
     reporting it to see if it's known and if there's a workaround.
+  * Modify sspm to be root-only and change the default checkout location. In
+    case it isn't obvious, this means the checkout will be root-owned if it
+    isn't already.
 +--------------------------+

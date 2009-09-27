@@ -6,10 +6,8 @@
 script=${0##*/}
 
 # USER-MODIFIABLE VARIABLES
-# this needs to be where the checked out svn directory is. The 'sbopkg' part
-# is 'sbopkg-read-only' if doing a default checkout and is the only thing that
-# is likely to need changing.
-repo="/home/slackbuilds/sbopkg"
+# this needs to be where the checked out svn directory is.
+repo="/tmp/sbopkg-read-only"
 remote_repo="http://sbopkg.googlecode.com/svn/trunk/"
 export OUTPUT="${OUTPUT:-/tmp}"
 
@@ -46,10 +44,16 @@ while getopts :bis opt; do
     esac
 done
 
+# Make sure we are root.
+if (( $(id -u) != 0 )); then
+    echo "$script: $script must be run by the root user." 1>&2
+    exit 1
+fi
+
 if [[ $sync == yes ]]; then
-    if [ -w $repo/.. ]; then
+    if [[ -w $repo ]] || [[ ! -e $repo && -w ${repo%/*} ]]; then
         svn checkout $remote_repo $repo ||
-            ( echo "$script: checkout failed" 1>&2; exit 1 )
+            { echo "$script: checkout failed" 1>&2; exit 1; }
     else
         printf "$script: $repo is not writable.\n" 1>&2
         printf "Change your privileges or the value of the \"repo\" " 1>&2
@@ -79,32 +83,28 @@ if [[ $build == yes || $inst == yes ]]; then
         exit 1
     fi
 
-    # technically, you only need to be root to install the packages and not to
-    # build them, but standard slackbuilds don't build as unprivileged user
-    # anyway
     output_pkg=$OUTPUT/sbopkg-$VERSION-noarch-1_cng.tgz
-    su -c "(
-        if [[ $build == yes ]]; then
-            cd $repo
-            if [ -d sbopkg-$VERSION ] || [ -d root-tools ]; then
-                echo \"$script: director(y|ies) exist\" 1>&2; exit 1
-            fi
-            cp -r src sbopkg-$VERSION
-            cp -r tools root-tools
-            tar --exclude='*.svn*' --exclude='*.rej' \
-                -czvf $repo/root-tools/sbopkg-$VERSION.tar.gz sbopkg-$VERSION
-            cd $repo/root-tools
-            sh sbopkg.SlackBuild
-            cd $repo
-            rm -rf root-tools
-            rm -rf sbopkg-$VERSION
+    if [[ $build == yes ]]; then
+        cd $repo
+        if [ -d sbopkg-$VERSION ] || [ -d root-tools ]; then
+            echo "$script: director(y|ies) exist" 1>&2; exit 1
         fi
-        if [[ $inst == yes ]]; then
-            if [ -r $output_pkg ]; then
-                upgradepkg --install-new --reinstall $output_pkg
-            else
-                echo \"$script: $output_pkg not found.\" 1>&2; exit 1
-            fi
+        cp -r src sbopkg-$VERSION
+        cp -r tools root-tools
+        tar --exclude='*.svn*' --exclude='*.rej' \
+            --exclude='*~' --exclude='tags' \
+            -czvf $repo/root-tools/sbopkg-$VERSION.tar.gz sbopkg-$VERSION
+        cd $repo/root-tools
+        sh sbopkg.SlackBuild
+        cd $repo
+        rm -rf root-tools
+        rm -rf sbopkg-$VERSION
+    fi
+    if [[ $inst == yes ]]; then
+        if [ -r $output_pkg ]; then
+            upgradepkg --install-new --reinstall $output_pkg
+        else
+            echo "$script: $output_pkg not found." 1>&2; exit 1
         fi
-    )"
+    fi
 fi
