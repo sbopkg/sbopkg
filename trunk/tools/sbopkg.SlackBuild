@@ -18,8 +18,8 @@ TMP=${TMP:-/tmp/build}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
-DOCS="ChangeLog.txt HACKING README TODO README-repos.d README-renames.d \
-README-queuefiles queuefiles/"
+DOCS="ChangeLog.txt HACKING KNOWN_ISSUES README README-queuefiles \
+README-renames.d README-repos.d TODO queuefiles/"
 
 set -e # Exit on most errors
 
