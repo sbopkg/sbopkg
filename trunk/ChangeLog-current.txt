@@ -28,4 +28,7 @@ enhancements:
     isn't already.
   * Fix cosmetic bug where ARCH and BUILD were not displaying correctly in
     list of updates on x86_64.
+  * Add a dialog and cli option to show all READMEs for the queued packages.
+    This can come handy to do "final checks" on the active queue before
+    starting the build process.
 +--------------------------+
