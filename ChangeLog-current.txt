@@ -33,4 +33,5 @@ enhancements:
     starting the build process.
   * Reworked the options selection menu to avoid seeing only a truncated set
     of the actual options.
+  * Work around build issues caused by custom LC_COLLATE values.
 +--------------------------+
