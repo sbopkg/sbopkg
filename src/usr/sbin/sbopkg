@@ -1888,7 +1888,7 @@ parse_queue() {
             PICK=${PICK%%|*}
         fi
         if ! add_item_to_queue $PICK "$LOADOPTIONS"; then
-            if [[ ! -f $MISSING_LIST_FILE ]]; then
+            if [[ ! -s $MISSING_LIST_FILE ]]; then
                 cat > $MISSING_LIST_FILE <<EOF
 
 The following packages cannot be found
@@ -2004,7 +2004,8 @@ view_queue() {
     cp $TMPQUEUE $ORIGINALQUEUE
     while :; do
         dialog --title "Viewing Build Queue" --separate-output \
-            --extra-button --extra-label "Uncheck installed" \
+            --extra-button --extra-label "View READMEs" \
+            --help-button --help-label "Clear inst'd" --help-status \
             --cancel-label "Back" --checklist "$(crunch "The \
             following packages are currently \
             in the build queue.  Please note that when the build queue \
@@ -2012,9 +2013,12 @@ view_queue() {
             optionally installed, in the order listed from top to \
             bottom.\n\nPlease select or unselect those packages you wish \
             to keep in the build queue and then press <OK> to continue \
-            or press <Back> to go back.")" 30 70 9 \
+            or press <Back> to go back.")" 23 70 9 \
             --file $TMPQUEUE 2> $ANSQUEUE
         CHOICE=$?
+
+        # Strip that damn "HELP " text when choosing the HELP dialog button
+        [[ $CHOICE -eq 2 ]] && sed -i 's:^HELP ::g' $ANSQUEUE
 
         rm -f $WORKINGQUEUE
         # Reading from $TMPQUEUE...
@@ -2028,12 +2032,15 @@ view_queue() {
         done < $TMPQUEUE
         mv $WORKINGQUEUE $TMPQUEUE
 
-        case $CHOICE in # 0 = OK, 3 = Uncheck installed
+        case $CHOICE in
             0) # OK
                 return 0
                 ;;
-            3) # Uncheck installed
+            2) # Uncheck installed
                 uncheck_installed $TMPQUEUE
+                ;;
+            3) # View READMEs
+                view_queue_readmes
                 ;;
             *) # Cancel or ESC
                 mv $ORIGINALQUEUE $TMPQUEUE
@@ -2042,6 +2049,79 @@ view_queue() {
                 ;;
         esac
     done
+}
+
+view_queue_readmes() {
+    # Show a list of all README files for the queued (TMPQUEUE) packages.
+
+    local READMES_FILE=$SBOPKGTMP/sbopkg-all-readmes
+    local HEAD_FILE=$SBOPKGTMP/sbopkg-all-readmes-head
+    local REPORT_FILE=$SBOPKGTMP/sbopkg-all-readmes-report
+    local NAME ONOFF
+    local PICK READMES
+
+    READMES=$(find $REPO_DIR -name README)
+
+    echo -e "The active queue is:\n" > $HEAD_FILE
+
+    while read PICK; do
+        NAME=${PICK/ *}
+        ONOFF=${PICK/* }
+
+        if [[ $ONOFF =~ [Oo][Nn] ]]; then
+            echo $NAME >> $HEAD_FILE
+        else
+            echo "$NAME (DISABLED)" >> $HEAD_FILE
+        fi
+
+        echo >> $READMES_FILE
+        echo >> $READMES_FILE
+        tin_text $NAME >> $READMES_FILE
+        echo >> $READMES_FILE
+        cat $(grep /$NAME/README\$ <<< "$READMES") >> $READMES_FILE
+    done < $TMPQUEUE
+
+    tin_text "$(< $HEAD_FILE)" > $REPORT_FILE
+    cat $READMES_FILE >> $REPORT_FILE
+
+    if [[ $DIAG ]]; then
+        dialog --exit-label "OK" --title "READMEs for the queued packages" \
+            --textbox $REPORT_FILE 0 0
+    else
+        $PAGER $REPORT_FILE
+    fi
+
+    rm $READMES_FILE $REPORT_FILE $HEAD_FILE
+}
+
+tin_text() {
+    # Print $1 in a nice ASCII box like:
+    # +---------+
+    # | foo bar |
+    # | baz     |
+    # +---------+
+
+    local TEXT="$1"
+    local MAXLEN=0 NLINES=0
+    local LINE
+    local HLINE
+
+    # Find the maximum line length and the number of lines
+    while read LINE; do
+        if [[ $MAXLEN -lt ${#LINE} ]]; then
+            MAXLEN=${#LINE}
+        fi
+        ((NLINES++))
+    done <<< "$TEXT"
+
+    # Print the box
+    printf -vHLINE "%${MAXLEN}s" ""
+    printf -vHLINE "%s" "${HLINE// /-}"
+    echo "+-$HLINE-+"
+    while read LINE; do
+        printf "| %-${MAXLEN}s |\n" "$LINE"
+    done <<< "$TEXT"
+    echo "+-$HLINE-+"
 }
 
 add_all_to_queue() {
@@ -4123,7 +4203,7 @@ unset KEEPLOG         # If set, keep a permanent build log
 unset ALLOW_MULTI     # If set, allow more that one instance of sbopkg running
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
-unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED
+unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED PREVIEW_READMES
 
 SCRIPT=${0##*/}
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
@@ -4158,7 +4238,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:e:f:g:hi:klopqrs:uv:" OPT; do
+while getopts ":b:cd:e:f:g:hi:klopqrRs:uv:" OPT; do
     case $OPT in
         b ) # Build
             BFLAG=1
@@ -4210,8 +4290,12 @@ while getopts ":b:cd:e:f:g:hi:klopqrs:uv:" OPT; do
             QUIET=1
             unset DIAG
             ;;
-        r ) # sync with the remote repository
+        r ) # Sync with the remote repository
             SYNC=1
+            unset DIAG
+            ;;
+        R ) # Preview the READMEs before building
+            PREVIEW_READMES=1
             unset DIAG
             ;;
         s ) # Name search
@@ -4248,6 +4332,7 @@ Options are:
   -q              Quiet some of the command-line output.
   -r              Sync the remote repository with the local mirror and then
                   quit.
+  -R              Preview the READMEs before starting the build process.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
@@ -4340,8 +4425,12 @@ if [[ $DIAG ]]; then
     cleanup
 else
     if [[ $BUILD ]]; then
+        MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
+        MISSING_SINGLE_FILE=$SBOPKGTMP/sbopkg_add_item_missing
         > $SBOPKGTMP/sbopkg-start-queue
         > $SBOPKGTMP/sbopkg_user_queue.lck
+        > $MISSING_LIST_FILE
+        > $MISSING_SINGLE_FILE
         for PKGBUILD in $BUILD; do
             if [[ ${PKGBUILD:(-4)} == ".sqf" ]]; then
                 parse_queue $QUEUEDIR/$PKGBUILD
@@ -4375,16 +4464,26 @@ else
                 else
                     if ! add_item_to_queue $PKGBUILD; then
                         crunch_fmt "Queuefile or package $PKGBUILD not found\
-                            - skipping."
+                            - skipping." >> $MISSING_SINGLE_FILE
                         echo
                     fi
                 fi
             fi
         done
         rm $SBOPKGTMP/sbopkg_user_queue.lck
-        MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
-        if [[ -f $MISSING_LIST_FILE ]]; then
+        if [[ -s $MISSING_LIST_FILE || -s $MISSING_SINGLE_FILE ]]; then
             cat $MISSING_LIST_FILE
+            cat $MISSING_SINGLE_FILE
+            echo
+            echo "OK to continue processing?"
+            while :; do
+                error_read ANS
+                case $ANS in
+                    y* | Y* ) break ;;
+                    n* | N* ) cleanup; exit 1 ;;
+                    * ) echo "Unknown response." ;;
+                esac
+            done
         fi
         if [[ ! -e $TMPQUEUE ]]; then
             echo "No valid queuefile or package name given.  Exiting."
@@ -4394,6 +4493,20 @@ else
         # Skip installed packages
         if [[ $SKIP_INSTALLED ]]; then
             uncheck_installed $TMPQUEUE
+        fi
+        # Preview READMEs
+        if [[ $PREVIEW_READMES ]]; then
+            view_queue_readmes
+            echo
+            echo "OK to continue processing?"
+            while :; do
+                read ANS
+                case $ANS in
+                    y* | Y* ) break ;;
+                    n* | N* ) cleanup; exit 1 ;;
+                    * ) echo "Unknown response." ;;
+                esac
+            done
         fi
         # Reading from $TMPQUEUE...
         while read PICK; do
