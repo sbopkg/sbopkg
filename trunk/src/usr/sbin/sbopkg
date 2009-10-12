@@ -2047,6 +2047,7 @@ view_queue() {
 add_all_to_queue() {
     # This function adds all currently installed repo packages to the
     # build queue.
+
     local SBOPKGLIST=$SBOPKGTMP/sbopkg_pkglist
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local TMPQUEUE_BACKUP=$SBOPKGTMP/sbopkg_addall_backup
@@ -4119,6 +4120,7 @@ unset REPO_DIR        # Active branch's directory
 unset REPO_GPG        # Active branch's GPG checking
 unset CLEANUP         # If set, delete the sources & c. after the build
 unset KEEPLOG         # If set, keep a permanent build log
+unset ALLOW_MULTI     # If set, allow more that one instance of sbopkg running
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED
