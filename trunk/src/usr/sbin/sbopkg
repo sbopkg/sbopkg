@@ -3133,6 +3133,11 @@ build_package() {
                 [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
             fi
             export OUTPUT=$SB_OUTPUT
+            # Custom LC_COLLATE settings can break scripts (since some
+            # expressions, like [A-Z], don't behave as expected -- for
+            # example, LC_COLLATE=fr_FR expands it to AbBcC..zZ).
+            # See also the comment in /etc/profile.d/lang.sh
+            export LC_COLLATE=C
             if [[ $CLEANUP ]]; then
                 # We want to remove all the build residuals after running the
                 # SlackBuild script. To do that reliably (i.e. without
