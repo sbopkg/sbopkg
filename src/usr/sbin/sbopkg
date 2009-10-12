@@ -3305,7 +3305,7 @@ pick_file() {
                 dialog --title "Choose $PKG $FILE file" --menu \
                     "$(crunch "A local $FILE file for $PKG was found in \
                     addition to the original file. Which one \
-                    would you like to use?")" 11 60 3 \
+                    would you like to use?")" 12 60 3 \
                     "Local" "Use the local $FILE" \
                     "Original" "Use the original $FILE" \
                     "Diff" "View a diff of the two" \
@@ -3387,7 +3387,7 @@ use_options() {
     local OPTAPP=$2
     local OPTCHOICE=$SBOPKGTMP/sbopkg_options_choice
     local OPTLIST=$SBOPKGTMP/sbopkg_options_list
-    local TMPOPTIONS LDOPTIONS CHOICE
+    local TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG
 
     # By default (i.e. no options.sbopkg file) there are no build options.
     unset BUILDOPTIONS
@@ -3397,33 +3397,38 @@ use_options() {
     if [[ -f $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions ]]; then
         LDOPTIONS=$(< $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions)
     fi
+    rm -f $PKGPATH/options.build
     if [[ $TMPOPTIONS || $LDOPTIONS ]]; then
         if [[ $DIAG ]]; then
             rm -f $OPTLIST $OPTCHOICE
-            echo "None \"Build with no options\"" >> $OPTLIST
+            echo 'None "Build with no options"' >> $OPTLIST
             if [[ $TMPOPTIONS ]]; then
-                echo "\"$TMPOPTIONS\" \"Saved options\"" >> $OPTLIST
+                echo 'Saved "Build with your saved options"' >> $OPTLIST
+                OPTIONS_MSG="\nSaved options:\n$TMPOPTIONS\n"
             fi
             if [[ $LDOPTIONS ]]; then
-                echo "\"$LDOPTIONS\" \"Queuefile options\"" >> $OPTLIST
+                echo 'Queuefile "Build with the queuefile options"' \
+                    >> $OPTLIST
+                OPTIONS_MSG+="\nQueuefile options:\n$LDOPTIONS\n"
             fi
-            dialog --title "Build options" --menu "$(crunch "One or \
+            dialog --title 'Build options' --menu "$(crunch "One or \
                 more build option files for the $OPTAPP \
-                SlackBuild were found.  Please choose which you \
-                would like to use.")" 12 50 3 \
+                SlackBuild were found.\n$OPTIONS_MSG\nPlease choose \
+                whether to use them.")" 0 0 0 \
                 --file $OPTLIST 2> $OPTCHOICE
             CHOICE=$?
             if [[ $CHOICE != 0 ]]; then
                 rm -f $OPTLIST $OPTCHOICE
                 return 1
             else
-                if [[ $(< $OPTCHOICE) == "None" ]]; then
-                    rm -f $OPTLIST $OPTCHOICE
-                else
-                    cp "$OPTCHOICE" $PKGPATH/options.build
-                    BUILDOPTIONS=$(< "$OPTCHOICE")
-                    rm -f $OPTLIST $OPTCHOICE
+                if [[ $(< $OPTCHOICE) == 'Saved' ]]; then
+                    echo "$TMPOPTIONS" > $PKGPATH/options.build
+                    BUILDOPTIONS="$TMPOPTIONS"
+                elif [[ $(< $OPTCHOICE) == 'Queuefile' ]]; then
+                    echo "$LDOPTIONS" > $PKGPATH/options.build
+                    BUILDOPTIONS="$LDOPTIONS"
                 fi
+                rm -f $OPTLIST $OPTCHOICE
              fi
         else
             while :; do

@@ -31,4 +31,6 @@ enhancements:
   * Add a dialog and cli option to show all READMEs for the queued packages.
     This can come handy to do "final checks" on the active queue before
     starting the build process.
+  * Reworked the options selection menu to avoid seeing only a truncated set
+    of the actual options.
 +--------------------------+
