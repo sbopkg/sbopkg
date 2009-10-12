@@ -32,6 +32,7 @@ enhancements:
     This can come handy to do "final checks" on the active queue before
     starting the build process.
   * Reworked the options selection menu to avoid seeing only a truncated set
-    of the actual options.
+    of the actual options; thanks to Erik Hanson for the bug report.
   * Work around build issues caused by custom LC_COLLATE values.
+  * Add tint=tint2 to /etc/sbopkg/renames.d/50-default file.
 +--------------------------+
