@@ -2615,7 +2615,7 @@ get_source_names() {
         SRCNAME=${DL##*/}
         # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with
         # their corresponding characters.
-        # This is done replacing '%' with '\x' and passing the string to
+        # This is done by replacing '%' with '\x' and passing the string to
         # printf.
         if [[ $SRCNAME =~ % ]]; then
             SRCNAME=$(printf ${SRCNAME//\%/\\x})
@@ -2651,6 +2651,9 @@ get_source_names() {
             SRCNAME=${SRCNAME%%$VERSION*}[0-9$VERSION]\*${SRCNAME##*$VERSION}
         fi
 
+        # This isn't just 'ls -A $SRCDIR/${SRCNAME##*/} 2> /dev/null' because
+        # we want only the basename - though we could 'cd' first or 'basename'
+        # after, rather than grepping.
         ls -A $SRCDIR | grep "^${SRCNAME##*/}" || echo $PLACEHOLDER
     done
 }
@@ -2739,7 +2742,7 @@ get_source() {
     # 1 = failed
 
     local INFO=$1
-    local PKG=$(sed 's:\.info.*$::g' <<< $INFO)
+    local PKG=${INFO%.info.build}
     local BUILD_LOCK=$SBOPKGTMP/sbopkg_build.lck
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local PIDLIST=$SBOPKGTMP/sbopkgpidlist
@@ -2798,10 +2801,10 @@ get_source() {
                 $TMPSUMMARYLOG
                 echo >> $TMPSUMMARYLOG
             fi
+            DL=$(ls -A . 2> /dev/null)
             # Source filename corrections for Virtualbox, where '?e=foo' gets
             # appended to the filename and for calcurse, where a 'foo?' gets
             # prepended to the filename
-            DL=$(ls -A . 2> /dev/null)
             DL_SRCNAME=$(sed 's/?e=.*$//;s/^.*?//' <<< "$DL")
             if [[ $DL_SRCNAME ]]; then
                 # if we have *anything* in here, then we did a download. We
@@ -3141,6 +3144,7 @@ build_package() {
     cd $REPO_DIR/$PKGPATH
 
     # Start the actual build
+    # We loop here to enable a 'retry' if anything goes wrong with the build
     while :; do
         # Fetch the sources
         # Note that get_source() "knows" about the source cache, so this isn't
@@ -3575,11 +3579,12 @@ EOF
 
 process_queue() {
     local QUEUETYPE=$1 # build|buildinstall
-
     # need to check the following before uncommenting
     #local PKG PKGBUILD SINGLE PKGPATH CHKBUILD ANS
     local CHKBUILD ANS
 
+    # The first (and largest) of three sections in this function is a precheck
+    # section.
     rm -f $TMPLOG $TMPBUILDLOG $TMPSUMMARYLOG $FINALQUEUE
     # Start the precheck
     echo >> $TMPLOG
@@ -3612,8 +3617,7 @@ process_queue() {
             echo $CHKBUILD >> $FINALQUEUE
         fi
         if [[ ! -z $REPO_GPG ]]; then
-            check_asc $PKGPATH
-            if [[ $? == 1 ]]; then
+            if ! check_asc $PKGPATH; then
                 return 0
             fi
         else
@@ -3631,15 +3635,13 @@ process_queue() {
             rm -f $PKGPATH/$CHKBUILD*.build
             return 0
         else
-            BUILD=$(egrep -m1 "^BUILD" $PKGPATH/$CHKBUILD.SlackBuild.build |
-                sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
+            eval $(grep -m1 "^BUILD" $PKGPATH/$CHKBUILD.SlackBuild.build)
             echo "  Using $PICKFILE SlackBuild file" >> $TMPLOG-files
         fi
         echo "  Processing $CHKBUILD $VERSION-$BUILD" >> $TMPLOG
         cat $TMPLOG-files >> $TMPLOG
         rm $TMPLOG-files
-        use_options $PKGPATH $CHKBUILD
-        if [[ $? == 1 ]]; then
+        if ! use_options $PKGPATH $CHKBUILD; then
             rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
             rm -f $PKGPATH/options.build
             return 0
@@ -3696,15 +3698,17 @@ process_queue() {
         cat $TMPLOG >> $LOGFILE
     fi
     rm $TMPLOG
+
     # Okay, precheck done, now start the actual queue processing (build or
     # build+install)
     > $SBOPKGTMP/sbopkg_build.lck
-    COUNTER=1
     for PKGBUILD in $(< $FINALQUEUE); do
         if ! search_package $PKGBUILD; then
             echo "$PKGBUILD not found!" >> $TMPLOG
             continue
         fi
+        # We test for the lockfile because it may be removed in
+        # build_package() when we call that
         if [[ -f $SBOPKGTMP/sbopkg_build.lck ]]; then
             set -o pipefail
             build_package $PKGPATH $PKGBUILD 2>&1 | tee -a $TMPBUILDLOG
@@ -3722,7 +3726,8 @@ process_queue() {
             if [[ -f $NEWPACKAGE ]]; then
                 if [[ $QUEUETYPE == "buildinstall" ]]; then
                     install_package $SB_OUTPUT $NEWPACKAGE
-                    echo "  Installing package $NEWPACKAGE ... OK" >> $TMPSUMMARYLOG
+                    echo "  Installing package $NEWPACKAGE ... OK" >> \
+                        $TMPSUMMARYLOG
                 fi
                 mv $NEWPACKAGE $OUTPUT
             fi
@@ -3732,8 +3737,9 @@ process_queue() {
             echo "  Not processed - build queue aborted." >> $TMPSUMMARYLOG
             echo >> $TMPSUMMARYLOG
         fi
-        COUNTER=$((COUNTER+1))
     done
+
+    # Done with the main work - now handle some logging and user interaction.
     if [[ $KEEPLOG ]]; then
         cat $TMPBUILDLOG >> $LOGFILE
         rm $TMPBUILDLOG
@@ -4545,7 +4551,7 @@ else
                 continue
             fi
             PICK_NAME=${PICK%% *}
-            if [[ ${PICK: -3} == "OFF" ]]; then
+            if [[ ${PICK:(-3)} == "OFF" ]]; then
                 continue
             else
                 if ! grep -qx $PICK_NAME $STARTQUEUE; then
