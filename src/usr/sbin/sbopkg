@@ -2621,9 +2621,11 @@ get_source_names() {
             SRCNAME=$(printf ${SRCNAME//\%/\\x})
         fi
         # The above doesn't work when the download link doesn't reference the
-        # file name explicitly. If this is the case, all we can do is
-        # guessing...
-        if [[ ! $SRCNAME ]]; then
+        # file name either explicitly or correctly. If this is the case, our
+        # SRCNAME doesn't correspond to a file, and all we can do is guess
+        # from the file that was downloaded and/or the name of the package.
+        if [[ -n $NO_DL_LOOP && ! -f $(readlink $SRCNAME) &&
+                ${#DOWNLOAD[@]} == 1 ]]; then
             # If the source has a name resembling $PRGNAM-$VERSION.tar.gz,
             # catch it.
             CWD=$(pwd)
@@ -2670,7 +2672,11 @@ check_source() {
 
     # If there's no known source name, or if it doesn't exist, it has to be
     # downloaded...
-    [[ -z $SRCNAME || ! -f $SRCDIR/$SRCNAME ]] && return 1
+    if [[ -f $SRCDIR/$SRCNAME ]]; then
+        unset NO_DL_LOOP
+    else
+        return 1
+    fi
 
     # Check MD5
     echo "Checking MD5SUM:"
@@ -2766,10 +2772,13 @@ get_source() {
             check_source $PKG ${MD5SUM[$i]} "${SRCNAME[$i]}"
             case $? in
                 0 ) # Source OK
-                    rm -f "$REPO_DIR/$PKGPATH/${SRCNAME[$i]}"
-                    ln -s "$SRCDIR/${SRCNAME[$i]}" \
+                    # FIXME: I think this one can be deleted - just continue 2
+                    # on 0
+                    ln -sf "$SRCDIR/${SRCNAME[$i]}" \
                         "$REPO_DIR/$PKGPATH/${SRCNAME[$i]}"
                     continue 2
+                    ;;
+                1 ) # Fall through and (re)try below
                     ;;
                 2 ) # Abort
                     FAILURE=download
@@ -2779,16 +2788,26 @@ get_source() {
 
             mkdir -p $DLDIR
             cd $DLDIR
-            wget $WGETFLAGS ${DOWNLOAD[$i]} >> $SBOPKGOUTPUT & echo "$!" >> \
-                $PIDLIST 2>> $SBOPKGOUTPUT
-            wait
+            if [[ -z $NO_DL_LOOP ]]; then
+                wget $WGETFLAGS ${DOWNLOAD[$i]} >> \
+                    $SBOPKGOUTPUT & echo "$!" >> $PIDLIST 2>> $SBOPKGOUTPUT
+                wait
+            else
+                FAILURE=loop
+                echo "  Download failed. Please report this as a bug." >> \
+                $TMPSUMMARYLOG
+                echo >> $TMPSUMMARYLOG
+            fi
             # Source filename corrections for Virtualbox, where '?e=foo' gets
             # appended to the filename and for calcurse, where a 'foo?' gets
             # prepended to the filename
             DL=$(ls -A . 2> /dev/null)
             DL_SRCNAME=$(sed 's/?e=.*$//;s/^.*?//' <<< "$DL")
             if [[ $DL_SRCNAME ]]; then
-                rm -f $REPO_DIR/$PKGPATH/"$DL_SRCNAME"
+                # if we have *anything* in here, then we did a download. We
+                # may not know what to do with it, but we don't need to get it
+                # again. We only need to succeed or fail once.
+                NO_DL_LOOP=1
                 mv "$DL" "$SRCDIR/$DL_SRCNAME"
             else
                 FAILURE=download
@@ -2798,7 +2817,9 @@ get_source() {
             cd $SRCDIR
             rm -rf $DLDIR
             [[ $FAILURE ]] && break 2
-            ln -s "$SRCDIR/$DL_SRCNAME" "$REPO_DIR/$PKGPATH/$DL_SRCNAME"
+            # this is required so we make a link as soon as we have the source
+            # and don't enter the guessing code in get_source_names()
+            ln -sf "$SRCDIR/$DL_SRCNAME" "$REPO_DIR/$PKGPATH/$DL_SRCNAME"
         done
     done
 
