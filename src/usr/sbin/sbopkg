@@ -777,9 +777,7 @@ check_for_updates() {
                     echo "  Repo version: " \
                         $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
                         >> $UPDATELIST
-                    # NOTE: When changing, see the uncheck_installed() comment
-                    echo "$NAME \"Installed $PKG_VER\" ON" >> \
-                        $SBOPKGTMP/sbopkg-update-queue
+                    echo "$NAME" >> $SBOPKGTMP/sbopkg-update-queue
                 elif [[ $UPDATED -eq -1 ]]; then
                     if [[ $DEBUG -ge 1 ]]; then
                         echo $NAME: >> $UPDATELIST
@@ -1972,8 +1970,7 @@ add_item_to_queue() {
     fi
     # Only display this if we are not loading a queue; otherwise getting this
     # after each app was added to the queue may get annoying.
-    if [[ ! -e $USERQUEUE_LOCK &&
-            ! -e $UPDATEQUEUE ]]; then
+    if [[ ! -e $USERQUEUE_LOCK ]]; then
         dialog --title "Done" --msgbox "$(crunch "$APP has been added to \
             the build queue.")" 8 40
     fi
@@ -4136,6 +4133,7 @@ main_updates() {
 
     local APP VERSIONBUILD ONOFF PICK
     local UPDATES_QUEUE=$SBOPKGTMP/sbopkg-update-queue
+    local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
 
     rm -f $UPDATES_QUEUE
     check_for_updates
@@ -4144,8 +4142,9 @@ main_updates() {
             "$(crunch "Would you like to add the flagged updates to \
             the build queue?")" 8 35
         if [[ $? == 0 ]]; then
-            cat $UPDATES_QUEUE >> $TMPQUEUE
-            rm -f $UPDATES_QUEUE
+            touch $USERQUEUE_LOCK
+            parse_queue $UPDATES_QUEUE
+            rm -f $UPDATES_QUEUE $USERQUEUE_LOCK
             dialog --title "Done" --msgbox "$(crunch "The flagged \
                 updates have been added to the build queue.")" 8 30
         fi
