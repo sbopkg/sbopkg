@@ -35,6 +35,10 @@ enhancements:
     of the actual options; thanks to Erik Hanson for the bug report.
   * Work around build issues caused by custom LC_COLLATE values.
   * Add tint=tint2 to /etc/sbopkg/renames.d/50-default file.
+  * Prevent an infinite download loop by modifying get_source() and
+    check_source(); make sure that we do try to guess about the file name in a
+    DOWNLOAD/filename mismatch but only when we absolutely have to, by
+    modifying get_source_names(). Thanks to godling for noticing the problem.
   * The 'check for updates' function now always lists apparent downgrades,
     since it sometimes can mistakenly classify an upgrade as a downgrade
     (e.g. version 1.0.1 looks older than 1.0-rc2 to sbopkg). The apparent
