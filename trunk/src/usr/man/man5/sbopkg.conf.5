@@ -177,11 +177,11 @@ There can be more unsafe situations we haven't thought about. Take care.
 .br
 This option should be set to 0, 1, or 2.  DEBUG sets the default
 debugging level for the update list feature of sbopkg.  When DEBUG is
-set to 0, then only potential updated packages are listed.  This was
-the default output prior to the DEBUG variable.  When DEBUG is set to
-1, then potential updates plus packages not in the repo and packages
-that are newer than the repo are listed.  Changing DEBUG to 1 may be
-helpful if it appears the updatelist might be missing an update.
+set to 0, then only potential updated (or downgraded) packages are listed.
+When DEBUG is set to 1, then potential updates plus packages not in the
+repo and packages that are newer than the repo are listed.  When DEBUG is
+set to 2, all non-updated packages are also listed. Changing DEBUG to 1 or
+2 may be helpful if it appears the updatelist might be missing an update.
 
 The default value of DEBUG is: 0.
 
