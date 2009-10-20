@@ -779,15 +779,23 @@ check_for_updates() {
                         >> $UPDATELIST
                     echo "$NAME" >> $SBOPKGTMP/sbopkg-update-queue
                 elif [[ $UPDATED -eq -1 ]]; then
-                    if [[ $DEBUG -ge 1 ]]; then
-                        echo $NAME: >> $UPDATELIST
-                        echo "  INSTALLED PACKAGE IS NEWER THAN REPO" \
-                            >> $UPDATELIST
-                        echo "  Installed version: " $CURPKG >> $UPDATELIST
-                        echo "  Repo version: " \
-                            $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
-                            >> $UPDATELIST
-                    fi
+                    echo $NAME: >> $UPDATELIST
+                    echo "  INSTALLED PACKAGE IS NEWER THAN REPO" \
+                        >> $UPDATELIST
+                    echo "  Installed version: " $CURPKG >> $UPDATELIST
+                    echo "  Repo version: " \
+                        $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
+                        >> $UPDATELIST
+                    echo "-$NAME" >> $SBOPKGTMP/sbopkg-update-queue
+                elif [[ $PKG_VER != $NEWVER ]]; then
+                    echo $NAME: >> $UPDATELIST
+                    echo "  UNCLASSIFIED VERSION CHANGE" \
+                        >> $UPDATELIST
+                    echo "  Installed version: " $CURPKG >> $UPDATELIST
+                    echo "  Repo version: " \
+                        $NAME-$NEWVER-$NEWARCH-${NEWBUILD}$REPO_TAG \
+                        >> $UPDATELIST
+                    echo "-$NAME" >> $SBOPKGTMP/sbopkg-update-queue
                 else
                     if [[ $DEBUG -eq 2 ]]; then
                         echo $NAME: >> $UPDATELIST
@@ -4140,7 +4148,8 @@ main_updates() {
     if [[ -f $UPDATES_QUEUE ]]; then
         dialog --title "Add Updates to Queue?" --yesno \
             "$(crunch "Would you like to add the flagged updates to \
-            the build queue?")" 8 35
+            the build queue?\\n\\nApparent downgrades will be added to the \
+            queue but will be kept disabled.")" 9 50
         if [[ $? == 0 ]]; then
             touch $USERQUEUE_LOCK
             parse_queue $UPDATES_QUEUE
