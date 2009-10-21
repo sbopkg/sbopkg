@@ -874,10 +874,10 @@ updates_compare_versions() {
     for ((i=1; i<=$COUNT; i++)); do
         eval LEFT=\$$i
         eval RIGHT=\${$(($i + $COUNT))}
-        if [[ $LEFT -lt $RIGHT ]]; then
+        if [[ 10#$LEFT -lt 10#$RIGHT ]]; then
             RESULT=1
             break
-        elif [[ $LEFT -gt $RIGHT ]]; then
+        elif [[ 10#$LEFT -gt 10#$RIGHT ]]; then
             RESULT=-1
             break
         fi
