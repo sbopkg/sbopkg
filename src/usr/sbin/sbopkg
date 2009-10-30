@@ -698,6 +698,7 @@ check_for_updates() {
 
             # Extract the new package version
             if [[ ! -z $NEWSB ]]; then
+                unset ARCH BUILD
                 eval NEW$(grep -m1 ^ARCH= $NEWSB)
                 eval NEW$(grep -m1 ^BUILD= $NEWSB)
                 [[ -z $NEWARCH ]] && NEWARCH=unknown
@@ -3640,6 +3641,7 @@ process_queue() {
             rm -f $PKGPATH/$CHKBUILD*.build
             return 0
         else
+            unset BUILD
             eval $(grep -m1 "^BUILD" $PKGPATH/$CHKBUILD.SlackBuild.build)
             echo "  Using $PICKFILE SlackBuild file" >> $TMPLOG-files
         fi
