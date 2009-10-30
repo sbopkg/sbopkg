@@ -4246,6 +4246,7 @@ unset REPO_GPG        # Active branch's GPG checking
 unset CLEANUP         # If set, delete the sources & c. after the build
 unset KEEPLOG         # If set, keep a permanent build log
 unset ALLOW_MULTI     # If set, allow more that one instance of sbopkg running
+unset BUILDLIST       # List of packages to build/install (from CLI)
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED PREVIEW_READMES
@@ -4288,7 +4289,7 @@ while getopts ":b:cd:e:f:g:hi:klopqrRs:uv:" OPT; do
         b ) # Build
             BFLAG=1
             TYPE="build"
-            BUILD="$OPTARG"
+            BUILDLIST="$OPTARG"
             unset DIAG
             ;;
         c ) # Check for updates to installed SBo packages
@@ -4312,7 +4313,7 @@ while getopts ":b:cd:e:f:g:hi:klopqrRs:uv:" OPT; do
         i ) # Build and install
             IFLAG=1
             TYPE="buildinstall"
-            BUILD="$OPTARG"
+            BUILDLIST="$OPTARG"
             unset DIAG
             ;;
         k ) # Skip installed packages
@@ -4469,14 +4470,14 @@ if [[ $DIAG ]]; then
     main_menu
     cleanup
 else
-    if [[ $BUILD ]]; then
+    if [[ $BUILDLIST ]]; then
         MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
         MISSING_SINGLE_FILE=$SBOPKGTMP/sbopkg_add_item_missing
         > $SBOPKGTMP/sbopkg-start-queue
         > $SBOPKGTMP/sbopkg_user_queue.lck
         > $MISSING_LIST_FILE
         > $MISSING_SINGLE_FILE
-        for PKGBUILD in $BUILD; do
+        for PKGBUILD in $BUILDLIST; do
             if [[ ${PKGBUILD:(-4)} == ".sqf" ]]; then
                 parse_queue $QUEUEDIR/$PKGBUILD
                 continue
