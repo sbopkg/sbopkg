@@ -1,3 +1,49 @@
+Sun Nov  1 02:54:29 UTC 2009
+Sbopkg 0.31.0 released.  This version contains the following fixes and
+enhancements:
+
+  * Fix typo in 50-default renames file.
+  * Fix the "Uncheck installed" feature. The code apparently worked fine even
+    without the fix. Spotted by slakmagik.
+  * Add $ARCH information in dialog backtitles.
+  * Add ":force" to sbopkg.conf WGETFLAGS --progress=bar to correctly
+    display the wget progress bar; thanks to happyslacker for nudging me on
+    this issue again.
+  * Fix an issue with the build options dialog menu where selecting 'None'
+    would not work; thanks to happyslacker for the bug report.
+  * Add the ability to uninstall SBo packages from the dialog interface that
+    lists installed packages. Thanks to pokipoki08 for the suggestion.
+  * Fix an incompatibility regarding the way bash 3.1, 3.2, and 4.0 handle the
+    RHS of [[ commands using the =~ operator which broke the repo file
+    validation, among other things. Thanks to SiegeX, Zmyrgel, and BCarey for
+    the reports and suggestions.
+  * Add the ability to run multiple sbopkg instances simultaneously. This has
+    been suggested many times in the past. Users should read the sbopkg.conf
+    man page before using this option (which is disabled by default).
+  * Be more strict validating YES/NO configuration variables.
+  * Add a KNOWN_ISSUES file - if you encounter a bug, check this file before
+    reporting it to see if it's known and if there's a workaround.
+  * Modify sspm to be root-only and change the default checkout location. In
+    case it isn't obvious, this means the checkout will be root-owned if it
+    isn't already.
+  * Fix cosmetic bug where ARCH and BUILD were not displaying correctly in
+    list of updates on x86_64.
+  * Add a dialog and cli option to show all READMEs for the queued packages.
+    This can come handy to do "final checks" on the active queue before
+    starting the build process.
+  * Reworked the options selection menu to avoid seeing only a truncated set
+    of the actual options; thanks to Erik Hanson for the bug report.
+  * Work around build issues caused by custom LC_COLLATE values.
+  * Add tint=tint2 to /etc/sbopkg/renames.d/50-default file.
+  * Prevent an infinite download loop by modifying get_source() and
+    check_source(); make sure that we do try to guess about the file name in a
+    DOWNLOAD/filename mismatch but only when we absolutely have to, by
+    modifying get_source_names(). Thanks to godling for noticing the problem.
+  * The 'check for updates' function now always lists apparent downgrades,
+    since it sometimes can mistakenly classify an upgrade as a downgrade
+    (e.g. version 1.0.1 looks older than 1.0-rc2 to sbopkg). The apparent
+    downgrades are added to the queue but are disabled by default.
++--------------------------+
 Fri Aug 28 17:34:35 UTC 2009
 Sbopkg 0.30.1 released.  This version contains the following fixes and
 enhancements:
