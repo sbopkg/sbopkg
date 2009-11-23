@@ -25,3 +25,4 @@ tinyerp-server=openerp-server
 # I wonder if this is going to cause problems to 12.2 users -- mg
 lyx_qt4=lyx
 tint=tint2
+Miro=miro
