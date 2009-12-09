@@ -2569,7 +2569,7 @@ read_info() {
     # (possibly ARCH-dependent) values.
 
     local INFO=$1
-    local i DOWNLOAD_ARCH
+    local i DOWNLOAD_ARCH DLSAVE MDSAVE ANS
     local {DOWNLOAD,MD5SUM}_$ARCH
 
     unset DOWNLOAD MD5SUM
@@ -2579,6 +2579,8 @@ read_info() {
     # Assign the proper entries to DOWNLOAD and MD5SUM.
     DOWNLOAD_ARCH=$(eval echo \$DOWNLOAD_$ARCH)
     if [[ -n $DOWNLOAD_ARCH ]]; then
+        DLSAVE=$DOWNLOAD
+        MDSAVE=$MD5SUM
         DOWNLOAD=$DOWNLOAD_ARCH
         MD5SUM=$(eval echo \$MD5SUM_$ARCH)
     fi
@@ -2586,6 +2588,48 @@ read_info() {
     # repositories, none of the above triggers. In that case, we use the
     # provided DOWNLOAD and MD5SUM variables, which is exactly the old-style
     # behavior.
+
+    # This next bit is called in process_queue and is here to test if the
+    # package is marked UNSUPPORTED or UNTESTED and ask the user what he wants
+    # to do.  If the user chooses to proceed, then the valid DOWNLOAD and
+    # MD5SUM lines from the .info file are tacked on to the end of the
+    # *.info.build file.  This way, when read_info is called elsewhere, like
+    # in get_source via build_package, the newly tacked-on lines will provide
+    # the 'correct' DOWNLOAD and MD5SUM values.  This is more or less a
+    # band aid until the multiple read_info invocations can be addressed.
+
+    if [[ $2 == --check_buildable ]]; then
+        if [[ $DOWNLOAD == "UNSUPPORTED" || $DOWNLOAD == "UNTESTED" ]]; then
+            while :; do
+                echo
+                crunch_fmt "$PRGNAM:  This package is marked UNSUPPORTED \
+                    or UNTESTED and may not build successfully on your \
+                    architecture. Do you want to try and proceed anyway or \
+                    do you want to skip it?"
+                echo
+                echo "Press (Y)es to proceed or (N)o to skip."
+                read ANS
+                case $ANS in
+                    y* | Y* )
+                        break
+                        ;;
+                    n* | N* )
+                        return 1
+                        ;;
+                    * )
+                        echo "Unknown response."
+                        ;;
+                esac
+            done
+            if [[ $ARCH != "x86_64" ]]; then
+                echo "DOWNLOAD=\"$DOWNLOAD_x86_64\"" >> $INFO
+                echo "MD5SUM=\"$MD5SUM_x86_64\"" >> $INFO
+            else
+                echo "DOWNLOAD_$ARCH=\"$DLSAVE\"" >> $INFO
+                echo "MD5SUM_$ARCH=\"$MDSAVE\"" >> $INFO
+            fi
+        fi
+    fi
 
     # Convert the space-separated strings to arrays
     DOWNLOAD=($DOWNLOAD)
@@ -3714,6 +3758,16 @@ process_queue() {
             echo "$PKGBUILD not found!" >> $TMPLOG
             continue
         fi
+        read_info $PKGPATH/$PKGBUILD.info.build --check_buildable
+        if [[ $? != 0 ]]; then
+            echo >> $TMPSUMMARYLOG
+            echo "$PKGBUILD:" >> $TMPSUMMARYLOG
+            echo "  Marked as UNSUPPORTED/UNTESTED. Skipping." \
+                >> $TMPSUMMARYLOG
+            rm -f $PKGPATH/$PKGBUILD.{info,SlackBuild}.build
+            rm -f $PKGPATH/$PKGBUILD/options.build
+            continue
+        fi
         # We test for the lockfile because it may be removed in
         # build_package() when we call that
         if [[ -f $SBOPKGTMP/sbopkg_build.lck ]]; then
@@ -3748,8 +3802,8 @@ process_queue() {
 
     # Done with the main work - now handle some logging and user interaction.
     if [[ $KEEPLOG ]]; then
-        cat $TMPBUILDLOG >> $LOGFILE
-        rm $TMPBUILDLOG
+        cat $TMPBUILDLOG >> $LOGFILE 2>/dev/null
+        rm -f $TMPBUILDLOG
     fi
     rm -f $SBOPKGTMP/sbopkg_build.lck
     echo >> $TMPLOG
