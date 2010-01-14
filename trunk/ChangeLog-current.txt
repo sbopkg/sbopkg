@@ -1,6 +1,8 @@
-Sun Nov  1 03:01:37 UTC 2009
+Thu Jan 14 02:51:32 UTC 2010
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * 
+  * Add several renames to 50-default renames file.
+  * Add support for UNSUPPORTED/UNTESTED packages in the SBo repo; thanks to
+    artourter for the bug report.
 +--------------------------+

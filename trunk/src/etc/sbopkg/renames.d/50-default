@@ -26,3 +26,6 @@ tinyerp-server=openerp-server
 lyx_qt4=lyx
 tint=tint2
 Miro=miro
+X11-haskell=haskell-X11
+openvas-server=openvas-scanner
+chardet=python2-chardet
