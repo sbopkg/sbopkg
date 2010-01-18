@@ -984,6 +984,10 @@ set_repo_vars() {
             if [[ $REPO_TOOL = "rsync" || $REPO_TOOL = "git" ]]; then
                 checkout_${REPO_TOOL}_branch
             fi
+
+            # If the user specified a custom tag, use that one instead.
+            [[ -n $TAG ]] && REPO_TAG=$TAG
+
             return 0
         fi
     done
