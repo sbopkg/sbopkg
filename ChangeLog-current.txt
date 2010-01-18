@@ -5,4 +5,5 @@ enhancements:
   * Add several renames to 50-default renames file.
   * Add support for UNSUPPORTED/UNTESTED packages in the SBo repo; thanks to
     artourter for the bug report.
+  * Honor the TAG exported by the user.
 +--------------------------+
