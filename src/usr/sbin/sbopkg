@@ -2524,7 +2524,7 @@ string_search() {
         SRCHPKG=${PICKED##*/}
 
         case $BUTTON in
-            0)
+            0) # OK
                 echo $SRCHPKG > $ITEM_SELECTION
                 if ! info_item; then
                     rm -f $PICKED_FILE $MENU_FILE $CAT_SELECTION \
@@ -2532,7 +2532,7 @@ string_search() {
                     return 1
                 fi
                 ;;
-            3)
+            3) # Add to Queue
                 SHORTPATH=$REPO_DIR/$SRCHCAT/$SRCHPKG
                 RVERSION=$(grep VERSION $SHORTPATH/$SRCHPKG.info |
                     cut -d= -f2 | sed s/\"//g)
@@ -2541,7 +2541,7 @@ string_search() {
                 add_item_to_queue $SRCHPKG
                 continue
                 ;;
-            *)
+            *) # Back, etc.
                 rm -f $PICKED_FILE $MENU_FILE $CAT_SELECTION $ITEM_SELECTION
                 return 0
             ;;
@@ -2666,7 +2666,10 @@ get_source_names() {
 
     read_info $INFO
     for DL in "${DOWNLOAD[@]}"; do
-        SRCNAME=${DL##*/}
+        # remove the '/download' from any SRCNAME that ends that way rather
+        # than in the actual tarball
+        SRCNAME=${DL//%\/download}
+        SRCNAME=${SRCNAME##*/}
         # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with
         # their corresponding characters.
         # This is done by replacing '%' with '\x' and passing the string to
@@ -2678,7 +2681,7 @@ get_source_names() {
         # file name either explicitly or correctly. If this is the case, our
         # SRCNAME doesn't correspond to a file, and all we can do is guess
         # from the file that was downloaded and/or the name of the package.
-        if [[ -n $NO_DL_LOOP && ! -f $(readlink $SRCNAME) &&
+        if [[ -n $NO_DL_LOOP && ! -f $(readlink "$SRCNAME") &&
                 ${#DOWNLOAD[@]} == 1 ]]; then
             # If the source has a name resembling $PRGNAM-$VERSION.tar.gz,
             # catch it.
@@ -2694,21 +2697,44 @@ get_source_names() {
 
         # If the user asked for "all" sources, let's try to find similar names
         if [[ $ALL ]]; then
-            # The following is based on the idea that the source name contains
-            # the version number. The expression below takes the parts before
-            # and after the version number, and replaces the version number
-            # with a regular expression matching and digit and any character
-            # present in the known version number (this is to match odd
-            # version numbers containing letters, like "svn1234", but makes it
-            # less likely to match different packages with similar names, like
-            # virtualbox-kernel and virtualbox-kernel-addons)
-            SRCNAME=${SRCNAME%%$VERSION*}[0-9$VERSION]\*${SRCNAME##*$VERSION}
+            # The following is based on the idea that, if the source name
+            # contains the version number, the expression below takes the
+            # parts before and after the version number, and replaces the
+            # version number with a regular expression matching a digit and
+            # any character present in the known version number (this is to
+            # match odd version numbers containing letters, like "svn1234",
+            # but makes it less likely to match different packages with
+            # similar names, like virtualbox-kernel and
+            # virtualbox-kernel-addons). If the source name does not contain
+            # the version number, we leave SRCNAME alone, though this means
+            # that when the user is using the remove sources functionality
+            # they can only remove the source one at a time, starting with the
+            # most recent.
+            #
+            # The flash conditional is based on the fact that the source names
+            # of the flash player plugin (which are different on different
+            # arches) don't contain the version number. The grep (rather than
+            # egrep) is due to a grep having already been used below and this
+            # having fewer potential side effects - this should eventually get
+            # a proper fix rather than this ad hockery.
+            if grep -q \
+                '\(install_\|lib\)flash_\?player.*\.tar\.gz' <<< $SRCNAME; then
+                SRCNAME='\(install_\|lib\)flash_\?player.*\.tar\.gz'
+            elif [[ $SRCNAME =~ $VERSION ]]; then
+                SRCNAME=${SRCNAME%%$VERSION*}[0-9$VERSION]\*${SRCNAME##*$VERSION}
+            fi
         fi
 
         # This isn't just 'ls -A $SRCDIR/${SRCNAME##*/} 2> /dev/null' because
         # we want only the basename - though we could 'cd' first or 'basename'
-        # after, rather than grepping.
-        ls -A $SRCDIR | grep "^${SRCNAME##*/}" || echo $PLACEHOLDER
+        # after, rather than grepping. And the conditionals ensure that we
+        # only return PLACEHOLDER when we don't have any other results and
+        # PLACEHOLDER is actually called for and set.
+        if ! ls -A $SRCDIR | grep "^${SRCNAME##*/}"; then
+            if [[ $PLACEHOLDER ]]; then
+                echo $PLACEHOLDER
+            fi
+        fi
     done
 }
 
@@ -2897,7 +2923,7 @@ remove_sources_for_app() {
 
     APP=${INFO##*/}
     APP=${APP%%.*}
-    get_source_names --all "$INFO" | sed "s/^\(.*\)$/\"\\1\"/g" > $APP_SOURCES
+    get_source_names --all "$INFO" | sed 's/.*/"&"/' > $APP_SOURCES
     remove_files $SRCDIR "$APP sources" $APP_SOURCES OFF
 }
 
