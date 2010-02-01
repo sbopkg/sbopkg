@@ -3,5 +3,6 @@
 # Created by Chess Griffin
 
 wv
-@gnome-print
+-goffice
+-gnome-vfs
 abiword
