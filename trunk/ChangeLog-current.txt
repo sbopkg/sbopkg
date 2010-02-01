@@ -6,4 +6,8 @@ enhancements:
   * Add support for UNSUPPORTED/UNTESTED packages in the SBo repo; thanks to
     artourter for the bug report.
   * Honor the TAG exported by the user.
+  * Fix issue where delete sources in package info item menu did not work in
+    some cases; thanks to artourter for the report, thanks to slakmagik for
+    the hard work in fixing this and thanks to Mauro for the review and
+    suggestions.
 +--------------------------+
