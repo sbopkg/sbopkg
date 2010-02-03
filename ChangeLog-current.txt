@@ -14,4 +14,6 @@ enhancements:
     is useful, for example, if you have some SBo/sbopkg directories on a
     temporary filesystem and don't want to be bothered with repeated directory
     creation prompts. Thanks to agikhan for the report.
+  * Address an issue where sbopkg could sometimes pick an older package to
+    present for installation rather than the most recent one.
 +--------------------------+

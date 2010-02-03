@@ -1147,7 +1147,7 @@ info_item() {
         if [[ -z $CURPACKAGE ]]; then
             unset MENUPACKAGE
         else
-            CURPACKAGE=$(head -n 1 <<< "$CURPACKAGE")
+            CURPACKAGE=$(tail -n 1 <<< "$CURPACKAGE")
             MENUPACKAGE="Install $CURPACKAGE"
         fi
         if [[ -z $INSTALLEDPACKAGE ]]; then
