@@ -13,6 +13,8 @@ Slackware packages.  A sample file is provided at
 /etc/sbopkg/sbopkg.conf.new.  Also, please see a note below about
 $ARCH.
 
+Boolean options are case-insensitive.
+
 The different configuration options are:
 
 .TP 5
@@ -184,6 +186,18 @@ set to 2, all non-updated packages are also listed. Changing DEBUG to 1 or
 2 may be helpful if it appears the updatelist might be missing an update.
 
 The default value of DEBUG is: 0.
+
+.TP 5
+.B MKDIR_PROMPT
+.br
+This option may be set to YES or NO. When set to YES, sbopkg will prompt
+for confirmation before changing the filesystem by creating its
+directories. If you do not wish to be prompted (for instance, if you
+have some of the directories on a temporary filesystem and don't wish to
+be prompted for confirmation each time the filesystem is reinitialized)
+you can set this to NO.
+
+The default value of MKDIR_PROMPT is: YES.
 
 .TP 5
 .B RSYNCFLAGS

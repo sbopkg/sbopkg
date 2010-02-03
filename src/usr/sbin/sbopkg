@@ -138,6 +138,7 @@ EOF
     yesno_to_setunset KEEPLOG
     yesno_to_setunset CLEANUP
     yesno_to_setunset ALLOW_MULTI
+    yesno_to_setunset MKDIR_PROMPT
 
     # If multiple instances of sbopkg are allowed, they need their own
     # private $SBOPKGTMP.
@@ -283,11 +284,15 @@ ck_dir() {
 
     # Try to create the specified folder
     if [[ ! -d $DIR ]]; then
-        echo
-        crunch_fmt "$MSG"
-        echo
-        read -n1 -sep "Press any key to continue or Ctrl-C to exit."
-        mkdir -p $DIR 2> /dev/null && echo "Directory created." || ERROR=1
+        if [[ $MKDIR_PROMPT ]]; then
+            echo
+            crunch_fmt "$MSG"
+            echo
+            read -n1 -sep "Press any key to continue or Ctrl-C to exit."
+            mkdir -p $DIR 2> /dev/null && echo "Directory created." || ERROR=1
+        else
+            mkdir -p $DIR 2> /dev/null || ERROR=1
+        fi
     fi
 
     # Try to create a file in the specified folder
