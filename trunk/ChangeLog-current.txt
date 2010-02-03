@@ -10,4 +10,8 @@ enhancements:
     some cases; thanks to artourter for the report, thanks to slakmagik for
     the hard work in fixing this and thanks to Mauro for the review and
     suggestions.
+  * Add the ability to skip the prompts for sbopkg's directory creations. This
+    is useful, for example, if you have some SBo/sbopkg directories on a
+    temporary filesystem and don't want to be bothered with repeated directory
+    creation prompts. Thanks to agikhan for the report.
 +--------------------------+

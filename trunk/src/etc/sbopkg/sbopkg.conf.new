@@ -19,6 +19,7 @@ KEEPLOG=YES
 LOGFILE=$LOGDIR/sbopkg-build-log
 DEBUG=0
 CLEANUP=NO
+MKDIR_PROMPT=YES
 
 # Set this to YES to allow multiple instances of sbopkg to run.
 # Please read the sbopkg.conf(5) man page before doing so
