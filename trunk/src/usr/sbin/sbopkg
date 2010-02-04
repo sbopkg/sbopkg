@@ -3919,15 +3919,13 @@ check_for_latest() {
     # by Eric Hameleers which you can find at
     # http://www.slackware.com/~alien.  Thanks, Eric!
 
-    local ORIGSCR=http://www.sbopkg.org/version.php
+    local ORIGSCR=http://www.sbopkg.org/currentversion
     local CVRS=$SBOVER
     local NVRS=$(wget -T 10 -q -O - $ORIGSCR)
-    local NEWPKG=http://www.sbopkg.org/pkg.php
+    local NEWPKG=http://www.sbopkg.org/currentpackage
     local NEWSBOPKG=$(wget -T 10 -q -O - $NEWPKG)
-    # FIXME do we really want a googlecode reference here?
-    # I suggest a new pkg2.php containing the full download path, or to set up
-    # a sbopkg.org link bouncing to googlecode.
-    local NEWDLPKG=http://sbopkg.googlecode.com/files/$NEWSBOPKG
+    local NEWDL=http://www.sbopkg.org/currentdownload
+    local NEWDLPKG=$(wget -T 10 -q -O - $NEWDL)
     local SBOPKGUP MSG ANS
 
     if [[ -z $CVRS || -z $NVRS ]]; then
