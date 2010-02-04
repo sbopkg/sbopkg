@@ -1,11 +1,12 @@
-Thu Jan 14 02:51:32 UTC 2010
+Thu Feb  4 00:07:59 UTC 2010
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
   * Add several renames to 50-default renames file.
   * Add support for UNSUPPORTED/UNTESTED packages in the SBo repo; thanks to
     artourter for the bug report.
-  * Honor the TAG exported by the user.
+  * Honor the TAG exported by the user; thanks to Matteo Bernardini for the
+    feature request.
   * Fix issue where delete sources in package info item menu did not work in
     some cases; thanks to artourter for the report, thanks to slakmagik for
     the hard work in fixing this and thanks to Mauro for the review and
@@ -15,5 +16,8 @@ enhancements:
     temporary filesystem and don't want to be bothered with repeated directory
     creation prompts. Thanks to agikhan for the report.
   * Address an issue where sbopkg could sometimes pick an older package to
-    present for installation rather than the most recent one.
+    present for installation rather than the most recent one; thanks to
+    artourter for the report.
+  * Modify links in check_for_latest() function to use new sbopkg.org
+    redirects.
 +--------------------------+
