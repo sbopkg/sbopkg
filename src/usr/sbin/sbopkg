@@ -2889,8 +2889,9 @@ get_source() {
             DL=$(ls -A . 2> /dev/null)
             # Source filename corrections for Virtualbox, where '?e=foo' gets
             # appended to the filename and for calcurse, where a 'foo?' gets
-            # prepended to the filename
-            DL_SRCNAME=$(sed 's/?e=.*$//;s/^.*?//' <<< "$DL")
+            # prepended to the filename - and for a potential issue with trac
+            # URLs
+            DL_SRCNAME=$(sed 's/?e=.*$//;s/?format=.*$//;s/^.*?//' <<< "$DL")
             if [[ $DL_SRCNAME ]]; then
                 # if we have *anything* in here, then we did a download. We
                 # may not know what to do with it, but we don't need to get it
