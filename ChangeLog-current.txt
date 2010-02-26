@@ -1,4 +1,4 @@
-Thu Feb  4 00:07:59 UTC 2010
+Fri Feb 26 13:45:20 UTC 2010
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
@@ -24,4 +24,5 @@ enhancements:
     version of some packages (e.g. google-chrome, whose version is discovered
     looking into the source package which can be missing). Thanks to alkos333
     for the bug report.
+  * Add ability to temporarily change $ARCH in the 'options' submenu.
 +--------------------------+
