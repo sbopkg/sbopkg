@@ -3244,6 +3244,14 @@ build_package() {
     # Start the actual build
     # We loop here to enable a 'retry' if anything goes wrong with the build
     while :; do
+        # Populate BUILDOPTIONS with any found options.build.  This has to
+        # occur outside the subshell below in order to populate $ARCH with any
+        # a user-added $ARCH option.  We will fall back to whatever $ARCH is
+        # set to originally after the build.
+        if [[ -f options.build ]]; then
+            BUILDOPTIONS=$(< options.build)
+            [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
+        fi
         # Fetch the sources
         # Note that get_source() "knows" about the source cache, so this isn't
         # necessarily a download.
@@ -3251,10 +3259,6 @@ build_package() {
         get_source $PKGNAME.info.build && (
             # Run the build in a subshell, to avoid namespace pollution
             echo "Building package for $PKGNAME..."
-            if [[ -f options.build ]]; then
-                BUILDOPTIONS=$(< options.build)
-                [[ $BUILDOPTIONS ]] && eval "export $BUILDOPTIONS"
-            fi
             export OUTPUT=$SB_OUTPUT
             # Custom LC_COLLATE settings can break scripts (since some
             # expressions, like [A-Z], don't behave as expected -- for
