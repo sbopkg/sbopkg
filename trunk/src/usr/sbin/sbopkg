@@ -2872,8 +2872,6 @@ get_source() {
             check_source $PKG ${MD5SUM[$i]} "${SRCNAME[$i]}"
             case $? in
                 0 ) # Source OK
-                    # FIXME: I think this one can be deleted - just continue 2
-                    # on 0
                     ln -sf "$SRCDIR/${SRCNAME[$i]}" \
                         "$REPO_DIR/$PKGPATH/${SRCNAME[$i]}"
                     continue 2
@@ -3681,8 +3679,6 @@ EOF
 
 process_queue() {
     local QUEUETYPE=$1 # build|buildinstall
-    # need to check the following before uncommenting
-    #local PKG PKGBUILD SINGLE PKGPATH CHKBUILD ANS
     local CHKBUILD ANS
 
     # The first (and largest) of three sections in this function is a precheck
@@ -3708,7 +3704,6 @@ process_queue() {
     echo "Checking GPG signatures.  Please be patient..."
     echo
     for CHKBUILD in $(< $STARTQUEUE); do
-        # FIXME: This section still needs to be reviewed
         unset PKG PKGPATH PKGNAME VERSION BUILD PICKFILE FILE
         echo "$CHKBUILD:" >> $TMPLOG
         if ! search_package $CHKBUILD; then
@@ -4386,7 +4381,7 @@ BACKTITLE='Browsing the $REPO_DESC. '
 if [[ -n $ARCH ]]; then
     BACKTITLE+='ARCH: $ARCH'
 else
-    BACKTITLE+='ARCH: unset'
+    BACKTITLE+='ARCH: default'
 fi
 
 # This is the command line options and help.
