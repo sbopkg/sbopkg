@@ -637,6 +637,7 @@ check_for_updates() {
     # Giachero for this much-improved update code and related functions!
 
     local TEMPFILE=$SBOPKGTMP/sbopkg_updates_tempfile
+    local ERRORMSG=$SBOPKGTMP/sbopkg_updates_errormsg
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
     local UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
@@ -657,7 +658,7 @@ check_for_updates() {
     # Check to see if there are any updates to installed SBo pkgs.
     check_if_repo_exists
     UPDATELIST=$SBOPKGTMP/sbopkg_updatelist
-    rm -f $UPDATELIST
+    rm -f $UPDATELIST $ERRORMSG
     cd /var/log/packages
     PKGS=$(ls *$REPO_TAG 2> /dev/null)
     NUMPKGS=$(wc -w <<< "$PKGS")
@@ -737,19 +738,20 @@ check_for_updates() {
 
                 # Step 3 - reverse the file order
                 # Because dependencies must be first...
-                tac $VERSION_FILE > $TEMPFILE
+                tac $VERSION_FILE >> $TEMPFILE
                 mv $TEMPFILE $VERSION_FILE
 
                 # Step 4 - let's get the version number!
                 # Also, strip any residual program name token.
-                NEWVER=$(sh $VERSION_FILE | rev | cut -d- -f1 | rev)
+                NEWVER=$(sh $VERSION_FILE 2> $ERRORMSG | sed 's/.*-//g')
                 rm -f $VERSION_FILE
 
                 # Step 5 - fixup braindead cases
                 # Sometimes the above doesn't work -- see cpan2tgz for 12.1
                 # In that case, let's trust the .info file...
-                if [[ -z $NEWVER ]]; then
-                    NEWINFO=$(echo $NEWSB | rev | cut -d. -f2- | rev).info
+                [[ -z $NEWVER ]] && echo "Empty version!" >> $ERRORMSG
+                if [[ $(< $ERRORMSG) ]]; then
+                    NEWINFO=$(sed 's/\.SlackBuild$/\.info/g' <<< "$NEWSB")
                     NEWVER=$(grep "^VERSION" $NEWINFO | cut -d\" -f2)
                 fi
 
@@ -808,12 +810,17 @@ check_for_updates() {
                         echo "  No update." >> $UPDATELIST
                     fi
                 fi
+                if [[ $(< $ERRORMSG) ]]; then
+                    echo "  Note: repo version not obtainable by" \
+                        "standard method, may be inaccurate." >> $UPDATELIST
+                fi
             else
                 if [[ $DEBUG -ge 1 ]]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  Not in the repository." >> $UPDATELIST
                 fi
             fi
+            rm -f $ERRORMSG
 
             # Progress indicator, for the progressbar
             (( PROGRESSCOUNTER += 1 ))
@@ -1542,9 +1549,9 @@ queue_dir_lister() {
         -maxdepth 1 | sed -e 's/.sqf//' | sort > $QFM
     if [[ -z $(< $QFM) ]]; then
         if [[ $DIAG ]]; then
-            rm -f $QFM
             dialog --title "ERROR" --msgbox "$(crunch "The queue directory \
                 $QUEUEDIR is empty.")" 8 30
+            rm -f $QFM
             return 1
         fi
     fi

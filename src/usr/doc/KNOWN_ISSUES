@@ -15,3 +15,13 @@ tools it uses:
   Details: http://code.google.com/p/sbopkg/issues/detail?id=30
 
   Workaround: use dialog's own exit methods - its buttons, escape, ^C, etc.
+
+* when checking for updates, for some packages Sbopkg may tell you
+  "Note: repo version not obtainable by standard method, may be inaccurate.".
+  This happens with packages whose version is very difficult/impossible to
+  determine without actually building the package -- one example of this at
+  the time of writing is the google-chrome package, whose version is picked
+  from the source archive itself. In these cases sbopkg falls back to trusting
+  the .info file, and warns the user about it.
+
+  Workaround: none needed

@@ -20,4 +20,8 @@ enhancements:
     artourter for the report.
   * Modify links in check_for_latest() function to use new sbopkg.org
     redirects.
+  * Prevent sbopkg from spitting error messages when trying to determine the
+    version of some packages (e.g. google-chrome, whose version is discovered
+    looking into the source package which can be missing). Thanks to alkos333
+    for the bug report.
 +--------------------------+
