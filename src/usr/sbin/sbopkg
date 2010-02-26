@@ -1536,15 +1536,18 @@ queue_dir_lister() {
     local QFS=$SBOPKGTMP/sbopkg_queue_files_selection
     local QFM=$SBOPKGTMP/sbopkg_queue_files_menu
 
-    if [[ -z $(ls -A $QUEUEDIR/*.sqf 2> /dev/null) ]]; then
+    # Note: the trailing slash ensures that this works fine even if $QUEUEDIR
+    # is a symlink to the actual repository.
+    find $QUEUEDIR/ -type f -name '*.sqf' -printf "\"%P\" \"\" off\n" \
+        -maxdepth 1 | sed -e 's/.sqf//' | sort > $QFM
+    if [[ -z $(< $QFM) ]]; then
         if [[ $DIAG ]]; then
+            rm -f $QFM
             dialog --title "ERROR" --msgbox "$(crunch "The queue directory \
                 $QUEUEDIR is empty.")" 8 30
-            continue
+            return 1
         fi
     fi
-    find $QUEUEDIR -type f -name '*.sqf' -printf "\"%P\" \"\" off\n" \
-        | sed -e 's/.sqf//' | sort > $QFM
     # The --default item doesn't work on deletions and renames (because the
     # variable expands to a no-longer existing file) but you can't give it an
     # index argument, unfortunately
@@ -1554,9 +1557,11 @@ queue_dir_lister() {
         # unset this so there's no left over junk and the loop from the
         # calling functions doesn't kick in when this returns to them
         unset USERQUEUE
-        return 0
+    else
+        USERQUEUE=( $(< $QFS) )
     fi
-    USERQUEUE=( $(< $QFS) )
+    rm -f $QFM $QFS
+    return 0
 }
 
 can_skip_line() {
@@ -1583,7 +1588,7 @@ load_user_queue() {
 
     queue_dir_lister "Load Queue" "$(crunch "Select the queue(s) you \
         wish to load and choose <OK> or choose <Back> to \
-        leave this menu.")"
+        leave this menu.")" || return 1
 
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
         FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
@@ -1612,7 +1617,7 @@ delete_user_queue() {
 
     queue_dir_lister "Delete Queue" "$(crunch "Select the queue(s) you \
         wish to delete and choose <OK> or choose <Back> to \
-        leave this menu.")"
+        leave this menu.")" || return 1
 
     for ((i=0; i<${#USERQUEUE[*]}; i++)); do
         FILE=$QUEUEDIR/${USERQUEUE[$i]//'"'/}
@@ -1653,7 +1658,7 @@ rename_user_queue() {
 
     queue_dir_lister "Rename Queue" "$(crunch "Select the queue(s) you \
         wish to rename and choose <OK> or choose <Back> to \
-        leave this menu.")"
+        leave this menu.")" || return 1
 
     # I have to assign to this because I shrink the array later
     COUNTER=${#USERQUEUE[*]}
