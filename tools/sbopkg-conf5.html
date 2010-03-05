@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of SBOPKG.CONF</TITLE>
 </HEAD><BODY>
 <H1>SBOPKG.CONF</H1>
-Section:  (5)<BR>Updated: June 2009<BR><A HREF="#index">Index</A>
+Section:  (5)<BR>Updated: February 2010<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -25,6 +25,8 @@ repository, a collection of third-party SlackBuild scripts to build
 Slackware packages.  A sample file is provided at
 /etc/sbopkg/sbopkg.conf.new.  Also, please see a note below about
 $ARCH.
+<P>
+Boolean options are case-insensitive.
 <P>
 The different configuration options are:
 <P>
@@ -238,6 +240,20 @@ set to 2, all non-updated packages are also listed. Changing DEBUG to 1 or
 <P>
 The default value of DEBUG is: 0.
 <P>
+<DT><B>MKDIR_PROMPT</B>
+
+<DD>
+<BR>
+
+This option may be set to YES or NO. When set to YES, sbopkg will prompt
+for confirmation before changing the filesystem by creating its
+directories. If you do not wish to be prompted (for instance, if you
+have some of the directories on a temporary filesystem and don't wish to
+be prompted for confirmation each time the filesystem is reinitialized)
+you can set this to NO.
+<P>
+The default value of MKDIR_PROMPT is: YES.
+<P>
 <DT><B>RSYNCFLAGS</B>
 
 <DD>
@@ -390,6 +406,6 @@ README-repos.d document in the sbopkg doc/ directory for more information.
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 03:24:28 GMT, February 01, 2010
+Time: 21:44:48 GMT, March 05, 2010
 </BODY>
 </HTML>
