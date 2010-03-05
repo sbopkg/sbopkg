@@ -1,0 +1,27 @@
+The following are the known user-visible issues in sbopkg or upstream in the
+tools it uses:
+
+* in dialog '--inputbox' widgets (the boxes the user types text into) the
+  left/right arrows do not navigate in a button context. (They do navigate in
+  an editing context.) This does not seem to be an sbopkg issue.
+
+  Workaround: navigate with up/down arrows or tab/shift-tab
+
+* if dialog is run in a terminal emulator and the user exits using the
+  window manager's 'close' (or equivalent) button/command, dialog may hang,
+  using full CPU capacity and have to be killed. This does not seem to be an
+  sbopkg issue.
+
+  Details: http://code.google.com/p/sbopkg/issues/detail?id=30
+
+  Workaround: use dialog's own exit methods - its buttons, escape, ^C, etc.
+
+* when checking for updates, for some packages Sbopkg may tell you
+  "Note: repo version not obtainable by standard method, may be inaccurate.".
+  This happens with packages whose version is very difficult/impossible to
+  determine without actually building the package -- one example of this at
+  the time of writing is the google-chrome package, whose version is picked
+  from the source archive itself. In these cases sbopkg falls back to trusting
+  the .info file, and warns the user about it.
+
+  Workaround: none needed
