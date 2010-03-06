@@ -2949,6 +2949,7 @@ remove_obsolete_sources() {
     local FIND_RESULT=$SBOPKGTMP/sbopkg_obsolete_find
     local SOURCES=$SBOPKGTMP/sbopkg_app_sources
     local PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
+    local GSNFILE=$SBOPKGTMP/sbopkg-get_source_names-output
     local PROGRESS=0
     local NUMINFO
     local INFO APP_CURRSRC REGEX
@@ -2967,11 +2968,12 @@ remove_obsolete_sources() {
         progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
 
         # Reading get_source_names output...
+        get_source_names "$INFO" > $GSNFILE
         while read APP_CURRSRC; do
             if [[ $APP_CURRSRC ]]; then
                 REGEX="/^$APP_CURRSRC$/d;$REGEX"
             fi
-        done < <(get_source_names "$INFO")
+        done < $GSNFILE
 
         # Progress indicator, for the progressbar
         (( PROGRESS += 1 ))
