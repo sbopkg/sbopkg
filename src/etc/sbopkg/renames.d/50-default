@@ -29,3 +29,6 @@ Miro=miro
 X11-haskell=haskell-X11
 openvas-server=openvas-scanner
 chardet=python2-chardet
+Archive-Zip=perl-Archive-Zip
+ng-spice=ngspice
+snes9x_gtk=snes9x
