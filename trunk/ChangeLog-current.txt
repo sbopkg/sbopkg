@@ -2,6 +2,9 @@ Fri Mar  5 21:46:41 UTC 2010
 Sbopkg 0.XX.X released.  This version contains the following fixes and
 enhancements:
 
-  * 
+  * Addressed an apparent bash 4.1 bug that causes the 'obsolete sources'
+    function to break.
+  * Addressed issue 44 where hitting ^C during the download of part of a queue
+    and restarting the queue could result in a download failure.
 +--------------------------+
 

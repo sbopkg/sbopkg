@@ -2886,6 +2886,8 @@ get_source() {
 
             mkdir -p $DLDIR
             cd $DLDIR
+            find $DLDIR -type f | xargs rm
+
             if [[ -z $NO_DL_LOOP ]]; then
                 wget $WGETFLAGS ${DOWNLOAD[$i]} >> \
                     $SBOPKGOUTPUT & echo "$!" >> $PIDLIST 2>> $SBOPKGOUTPUT
