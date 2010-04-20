@@ -6,5 +6,7 @@ enhancements:
     function to break.
   * Addressed issue 44 where hitting ^C during the download of part of a queue
     and restarting the queue could result in a download failure.
+  * Changed the menu order of the "Build options" dialog to default to using
+    "Saved" options rather than "None".
 +--------------------------+
 
