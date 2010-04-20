@@ -1908,11 +1908,8 @@ parse_queue() {
         fi
         unset LOADOPTIONS
         if grep -q "|" <<< $PICK; then
-            #LOADOPTIONS=$(echo $PICK | cut -d '|' -f2)
-            #LOADOPTIONS=$(echo $LOADOPTIONS | sed -e 's/^ //')
-            #PICK=$(echo $PICK | cut -d '|' -f1)
             LOADOPTIONS=${PICK##*|}
-            LOADOPTIONS=$(sed -e 's/^ //' <<< $LOADOPTIONS)
+            LOADOPTIONS=${LOADOPTIONS/# /}
             PICK=${PICK%%|*}
         fi
         if ! add_item_to_queue $PICK "$LOADOPTIONS"; then
@@ -1931,11 +1928,13 @@ EOF
 }
 
 add_item_to_queue() {
-    # This function takes one argument: APP.  When loading a userqueue, some
-    # APPS may have a '-' or a '@' as the first character, which means to set
-    # the APP to 'OFF' in the dialog menu, or to recursively load another
-    # queuefile, respectively.  If an APP is found in the repo, then add it to
-    # TMPQUEUE.
+    # This function takes up to two arguments: a required APP and an optional
+    # LOADOPTIONS.  When loading a userqueue, some APPs may have a '-' or a
+    # '@' as the first character, which means to set the APP to 'OFF' in the
+    # dialog menu, or to recursively load another queuefile, respectively.  If
+    # an APP is found in the repo, then add it to TMPQUEUE. LOADOPTIONS may be
+    # supplied when parsing a queuefile or similar and are eventually passed
+    # on to the SlackBuild.
 
     # If an obsolete name is used, add_item_to_queue() automatically retrieves
     # and uses the current name.
@@ -2951,7 +2950,7 @@ remove_obsolete_sources() {
     local FIND_RESULT=$SBOPKGTMP/sbopkg_obsolete_find
     local SOURCES=$SBOPKGTMP/sbopkg_app_sources
     local PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
-    local GSNFILE=$SBOPKGTMP/sbopkg-get_source_names-output
+    local GSNFILE=$SBOPKGTMP/sbopkg_get_source_names-output
     local PROGRESS=0
     local NUMINFO
     local INFO APP_CURRSRC REGEX
@@ -3535,11 +3534,11 @@ use_options() {
     if [[ $TMPOPTIONS || $LDOPTIONS ]]; then
         if [[ $DIAG ]]; then
             rm -f $OPTLIST $OPTCHOICE
-            echo 'None "Build with no options"' >> $OPTLIST
             if [[ $TMPOPTIONS ]]; then
                 echo 'Saved "Build with your saved options"' >> $OPTLIST
                 OPTIONS_MSG="\nSaved options:\n$TMPOPTIONS\n"
             fi
+            echo 'None "Build with no options"' >> $OPTLIST
             if [[ $LDOPTIONS ]]; then
                 echo 'Queuefile "Build with the queuefile options"' \
                     >> $OPTLIST
@@ -4535,7 +4534,7 @@ SBOPKGOUTPUT=$SBOPKGTMP/sbopkg_output
 TMPBUILDLOG=$SBOPKGTMP/sbopkg-tmp-buildlog
 TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
 
-# Change $REPO_BRANCH (and optinally REPO_NAME) if set manually using cli -v
+# Change $REPO_BRANCH (and optionally REPO_NAME) if set manually using cli -v
 if [[ $VERSION ]]; then
     if [[ $CUSTOMVER =~ .*/.* ]]; then
         # The user specified repository/branch
