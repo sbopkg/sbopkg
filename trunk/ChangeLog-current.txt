@@ -5,8 +5,11 @@ enhancements:
   * Addressed an apparent bash 4.1 bug that causes the 'obsolete sources'
     function to break.
   * Addressed issue 44 where hitting ^C during the download of part of a queue
-    and restarting the queue could result in a download failure.
+    and restarting the queue could result in a download failure. Thanks to
+    slava18 for the report.
   * Changed the menu order of the "Build options" dialog to default to using
     "Saved" options rather than "None".
+  * Fixed issue 45 where packages with '+' in the name were not properly
+    detected in some cases. Thanks to skalkoto for the report.
 +--------------------------+
 
