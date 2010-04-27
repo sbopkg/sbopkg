@@ -1129,8 +1129,10 @@ info_item() {
     eval CUR$(grep -m1 ^BUILD= $SHORTPATH/$APP.SlackBuild)
     [[ -z $CURARCH ]] && CURARCH=unknown
     while :; do
+        # we use GNU grep extensions rather than egrep to avoid issues with
+        # the '+' metacharacter which can be found in package names
         INSTALLEDPACKAGE=$(ls /var/log/packages |
-            egrep "^($APP|$OLDPKG)-[^-]*-[^-]*-[^-]*\$")
+            grep "^\($APP\|$OLDPKG\)-[^-]*-[^-]*-[^-]*\$")
         # Only get the first package (not that the same package should be
         # installed more than once on a sane system...)
         INSTALLEDPACKAGE=$(head -n 1 <<< "$INSTALLEDPACKAGE")
@@ -2397,7 +2399,6 @@ gen_search_package() {
         -iwholename "./$CATEGORY/*$PKG*" -printf "%P\n" | sort)
     local NAME DESC CHOICE
     local SRCHPICK SRCHCAT SRCHPKG
-    local SHORTPATH RVERSION RBUILD
 
     if [[ $RESULTS ]]; then
         if [[ $DIAG ]]; then
@@ -2439,11 +2440,6 @@ gen_search_package() {
                 fi
                 echo $SRCHCAT > $CAT_SELECTION
                 SRCHPKG="${SRCHPICK##*/}"
-                SHORTPATH=$REPO_DIR/$SRCHCAT/$SRCHPKG
-                RVERSION=$(grep VERSION $SHORTPATH/$SRCHPKG.info |
-                    cut -d= -f2 | sed s/\"//g)
-                RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$SRCHPKG.SlackBuild |
-                    sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
                 if [[ $CHOICE == 0 ]]; then
                     echo $SRCHPKG > $ITEM_SELECTION
                     cd $REPO_DIR
@@ -2549,11 +2545,6 @@ string_search() {
                 fi
                 ;;
             3) # Add to Queue
-                SHORTPATH=$REPO_DIR/$SRCHCAT/$SRCHPKG
-                RVERSION=$(grep VERSION $SHORTPATH/$SRCHPKG.info |
-                    cut -d= -f2 | sed s/\"//g)
-                RBUILD=$(egrep -m1 "^BUILD" $SHORTPATH/$SRCHPKG.SlackBuild |
-                    sed -e 's/^.*[=-]//;s/\"//;s/[ #}\t].*$//g;s/\"//g')
                 add_item_to_queue $SRCHPKG
                 continue
                 ;;
