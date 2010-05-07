@@ -2874,9 +2874,9 @@ get_source() {
                     ;;
             esac
 
+            rm -rf $DLDIR
             mkdir -p $DLDIR
             cd $DLDIR
-            find $DLDIR -type f | xargs rm
 
             if [[ -z $NO_DL_LOOP ]]; then
                 wget $WGETFLAGS ${DOWNLOAD[$i]} >> \
@@ -3049,7 +3049,7 @@ remove_files() {
         if [[ $DIAG ]]; then
             while :; do
                 dialog --title "$(crunch "Displaying $TOPIC")" \
-                    --ok-label "Ok" --extra-label "Delete selected" \
+                    --ok-label "OK" --extra-label "Delete selected" \
                     --cancel-label "Invert all" --extra-button \
                     --separate-output --checklist "$(crunch "Would you like \
                     to keep the $TOPIC in $FILESPATH?")"\
