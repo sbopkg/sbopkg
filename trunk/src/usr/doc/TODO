@@ -22,7 +22,5 @@ Sbopkg TODO (in no particular order)
   sbopkg using xdialog.  I don't know how compatible dialog is with xdialog so
   if there was breakage, I would not want to really address it as being able
   to use xdialog is not important to me.  I prefer dialog anyway.
-* Perhaps make the MD5SUM check a variable that a user can turn off?
-* Maybe find a way to run more than once instance for -b building.
 * More error checking.
 * General code cleanups.

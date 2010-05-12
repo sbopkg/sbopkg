@@ -14,7 +14,7 @@ SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}
 # Non-directory variables:
 REPO_NAME=${REPO_NAME:-SBo}
-REPO_BRANCH=${REPO_BRANCH:-13.0}
+REPO_BRANCH=${REPO_BRANCH:-13.1}
 KEEPLOG=YES
 LOGFILE=$LOGDIR/sbopkg-build-log
 DEBUG=0
