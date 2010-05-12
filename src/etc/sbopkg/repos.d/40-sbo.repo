@@ -7,6 +7,7 @@
 # custom repository files.
 #
 # Repo Branch Description Tag Tool Link CheckGPG
+SBo 13.1 "SBo repository for Slackware 13.1" _SBo rsync slackbuilds.org::slackbuilds/13.1 GPG
 SBo 13.0 "SBo repository for Slackware 13.0" _SBo rsync slackbuilds.org::slackbuilds/13.0 GPG
 SBo 12.2 "SBo repository for Slackware 12.2" _SBo rsync slackbuilds.org::slackbuilds/12.2 GPG
 SBo 12.1 "SBo repository for Slackware 12.1" _SBo rsync slackbuilds.org::slackbuilds/12.1 GPG

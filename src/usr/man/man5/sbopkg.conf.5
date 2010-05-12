@@ -1,4 +1,4 @@
-.TH SBOPKG.CONF 5 "February 2010" sbopkg-SVN ""
+.TH SBOPKG.CONF 5 "May 2010" sbopkg-SVN ""
 .SH NAME
 .B sbopkg.conf
 \- Configuration file for sbopkg
@@ -36,13 +36,13 @@ REPO_NAME=${REPO_NAME:-SBo}.
 .B REPO_BRANCH
 .br
 This option allows the user to set the default active repository
-branch.  The current options are 11.0, 12.0, 12.1, 12.2, and 13.0 for
-the SBo repository, master for the SB64 repositort and local for the
-local repository.
+branch.  The current options are 11.0, 12.0, 12.1, 12.2, 13.0, and
+13.1 for the SBo repository and local for the local repository.  The
+Slamd64Builds repository is 'master' but is not officially supported.
 
 The default value of REPO_BRANCH is:
 .br
-REPO_BRANCH=${REPO_BRANCH:-13.0}.
+REPO_BRANCH=${REPO_BRANCH:-13.1}.
 
 .TP 5
 .B REPO_ROOT
@@ -226,7 +226,7 @@ these default options is not recommended.
 
 The default value of WGETFLAGS is:
 .br
-"--continue --progress-bar --timeout=15 --tries=5".
+"--continue --progress-bar:force --timeout=15 --tries=5".
 
 .TP 5
 .B DIFF

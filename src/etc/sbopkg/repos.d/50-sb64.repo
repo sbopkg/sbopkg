@@ -11,4 +11,4 @@
 #   obscure reason checking out through http has proven more reliable here.
 #
 # Repo Branch Description Tag Tool Link CheckGPG
-SB64 master "Slamd64Builds master repository" _SB64 git http://builds.slamd64.com/slamd64builds.git@master ""
+SB64 master "UNSUPPORTED Slamd64Builds repository" _SB64 git http://builds.slamd64.com/slamd64builds.git@master ""
