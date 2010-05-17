@@ -1,4 +1,5 @@
 # $Id$
+# vim:set ft=:
 
 The /etc/sbopkg/renames.d directory is the directory that holds files
 associated with renamed software in the SlackBuilds.org repository.  The

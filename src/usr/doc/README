@@ -1,4 +1,5 @@
 # $Id$
+# vim:set ft=:
 
 Sbopkg README
 Copyright 2007-2010 Chess Griffin <chess@chessgriffin.com>
@@ -7,14 +8,15 @@ Homepage:  http://www.sbopkg.org
 
 ABOUT
 
-Sbopkg is a command-line and dialog-based tool to synchronize with the
-SlackBuilds.org ("SBo") repository, a collection of third-party SlackBuild
-scripts to build Slackware packages.  Sbopkg can also synchronize with certain
-third-party repositories or access a locally-maintained repository.
+Sbopkg (pronounced s-b-o-package) is a command-line and dialog-based tool to
+synchronize with the SlackBuilds.org ("SBo") repository, a collection of
+third-party SlackBuild scripts to build Slackware packages.  Sbopkg can also
+synchronize with certain third-party repositories or access a
+locally-maintained repository.
 
 Sbopkg will allow the user to create, synchronize, search, and browse a copy
 of the active repository (currently, the size of a local copy of the SBo
-repository is less than 50MB), read the ChangeLog (if available), list the
+repository is about 70MB), read the ChangeLog (if available), list the
 installed SBo packages, display potential updates to SlackBuilds.org packages,
 view the README, SlackBuild, .info, and slack-desc files for each package, and
 make manual edits to a copy of the original .info or SlackBuild files.  Sbopkg
@@ -41,18 +43,20 @@ Sbopkg comes with two man pages:  sbopkg.conf(5) and sbopkg(8).  These
 man pages are kept up-to-date with functional changes in the script
 itself, so they are a good source of information on how to use sbopkg.
 
-If the man pages are not sufficient, please consider joining the
-sbopkg mailing list and posting your question there.  There is also an
-IRC channel for sbopkg.  Information on all of these resources is on
-the project's website at http://www.sbopkg.org - click the "Docs/Help"
-tab.
+If the man pages are not sufficient, please consider joining the sbopkg
+mailing list and posting your question there.  You should be able to
+subscribe by sending mail to sbopkg-users-request@sbopkg.org whose body
+is 'subscribe your-email@address-here'. There is also an IRC channel for
+sbopkg on Freenode at #sbopkg.  Further information on all of these
+resources is on the project's website at http://www.sbopkg.org - click
+the "Docs/Help" tab.
 
 CONTRIBUTORS
 
-I welcome bug reports, suggestions, patches, or feature requests.
+We welcome bug reports, suggestions, patches, or feature requests.
 Please post any of these to the Issue tracker (kind of like a
 Bugzilla) on the project's Google page (click the Issues tab) at
-http://code.google.com/p/sbopkg so I can keep track of them.  There
+http://code.google.com/p/sbopkg so we can keep track of them.  There
 have been many contributors so far, and they are all mentioned near
 the top of the sbopkg script itself.  Thanks to everyone who has
 helped make this script better.
