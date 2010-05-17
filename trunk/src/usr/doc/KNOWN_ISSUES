@@ -6,6 +6,8 @@ tools it uses:
   an editing context.) This does not seem to be an sbopkg issue.
 
   Workaround: navigate with up/down arrows or tab/shift-tab
+  Note: there is a newer dialog version available which fixes this issue, but
+  we encourage users to stick with the dialog Slackware ships.
 
 * if dialog is run in a terminal emulator and the user exits using the
   window manager's 'close' (or equivalent) button/command, dialog may hang,

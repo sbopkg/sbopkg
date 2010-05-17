@@ -11,5 +11,7 @@ enhancements:
     "Saved" options rather than "None".
   * Fixed issue 45 where packages with '+' in the name were not properly
     detected in some cases. Thanks to skalkoto for the report.
+  * Miscellaneous tweaks in preparation for release and to bring in line with
+    Slackware 13.1.
 +--------------------------+
 

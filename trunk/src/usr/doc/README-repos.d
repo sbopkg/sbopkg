@@ -1,4 +1,5 @@
 # $Id$
+# vim:set ft=:
 
 In sbopkg parlance, a "repository" is a local or remote service used as a
 source of scripts.  For example, slackbuilds.org is a repository.  The
