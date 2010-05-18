@@ -15,5 +15,8 @@ enhancements:
     Slackware 13.1.
   * Added a help item to the main menu of the dialog interface with pointers
     to documentation and other resources.
+  * Added an option to print the version of sbopkg. We try not to change the
+    meaning of flags but note that this does change what was the '-v' flag to
+    '-V' and now uses '-v' for its customary 'version' purpose.
 +--------------------------+
 

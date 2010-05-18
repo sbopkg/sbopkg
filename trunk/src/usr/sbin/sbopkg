@@ -4391,7 +4391,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:e:f:g:hi:klopqrRs:uv:" OPT; do
+while getopts ":b:cd:e:f:g:hi:klopqrRs:uV:v" OPT; do
     case $OPT in
         b ) # Build
             BFLAG=1
@@ -4459,7 +4459,11 @@ while getopts ":b:cd:e:f:g:hi:klopqrRs:uv:" OPT; do
             UPDATE=1
             unset DIAG
             ;;
-        v ) # Set repository
+        v ) # print version
+            echo $SBOVER
+            exit
+            ;;
+        V ) # Set repository
             VERSION=1
             CUSTOMVER="$OPTARG"
             ;;
@@ -4489,7 +4493,8 @@ Options are:
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
-  -v repo/branch  Set the repository/branch (e.g. "-v SBo/13.0").
+  -v              Print sbopkg's version on stdout.
+  -V repo/branch  Set the repository/branch (e.g. "-v SBo/13.0").
                   If the repository name is not specified, sbopkg will first
                   try with the default one. If no match is found, sbopkg will
                   look for the first matching branch of any repository.
