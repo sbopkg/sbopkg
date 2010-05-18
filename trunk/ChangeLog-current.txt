@@ -13,5 +13,7 @@ enhancements:
     detected in some cases. Thanks to skalkoto for the report.
   * Miscellaneous tweaks in preparation for release and to bring in line with
     Slackware 13.1.
+  * Added a help item to the main menu of the dialog interface with pointers
+    to documentation and other resources.
 +--------------------------+
 

@@ -4255,6 +4255,15 @@ main_updates() {
     fi
 }
 
+help_item() {
+    dialog --msgbox "$(crunch "For help with sbopkg, please read \
+        the manual pages sbopkg(8) and sbopkg.conf(5), the files in \
+        /usr/doc/sbopkg-$SBOVER/, join the mailing list at \
+        http://sbopkg.org/mailman/listinfo/sbopkg-users, or join #sbopkg \
+        on freenode. If you've found a bug please report it to \
+        http://code.google.com/p/sbopkg/issues/list.")" 10 70
+}
+
 main_menu() {
     # This is the main dialog menu.
 
@@ -4267,7 +4276,7 @@ main_menu() {
             --backtitle "$(eval echo $BACKTITLE)" \
             --menu \
             "\nChoose one of the following or press <Exit> to exit.\n" \
-            17 69 8 \
+            17 69 9 \
             "Sync" "Sync with the remote repository" \
             "ChangeLog" "View the ChangeLog" \
             "Packages" "List/uninstall installed $REPO_NAME packages" \
@@ -4275,7 +4284,8 @@ main_menu() {
             "Browse" "Browse the active repository" \
             "Search" "Search the active repository" \
             "Queue" "Manage the build queue" \
-            "Utilities" "Go to the utilities menu" 2> $ANSWER_FILE
+            "Utilities" "Go to the utilities menu" \
+            "Help" "Where to get sbopkg help" 2> $ANSWER_FILE
 
         DEFAULTITEM=$(< $ANSWER_FILE)
 
@@ -4296,6 +4306,8 @@ main_menu() {
                 utilities_menu ;;
             "Queue" )
                 queue_menu ;;
+            "Help" )
+                help_item ;;
             * ) # Exit or ESC
                 save_user_queue --end
                 clear
