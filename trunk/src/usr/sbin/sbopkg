@@ -1008,6 +1008,14 @@ set_repo_vars() {
     return 1
 }
 
+list_repos() {
+    echo "Valid options are:" >&2
+    for ((i=0; i<${#REPOSITORIES[@]}; i+=$REPOS_FIELDS)); do
+        echo -en "${REPOSITORIES[$i]}/${REPOSITORIES[(($i + 1))]}\\t" >&2
+        echo "(${REPOSITORIES[(($i + 2))]})" >&2
+    done
+}
+
 select_repository() {
     # Create menu and list the sbopkg-supported repositories for
     # user to choose from.
@@ -4494,14 +4502,10 @@ Options are:
                   display package information.
   -u              Check for an update to sbopkg.
   -v              Print sbopkg's version on stdout.
-  -V repo/branch  Set the repository/branch (e.g. "-v SBo/13.0").
-                  If the repository name is not specified, sbopkg will first
-                  try with the default one. If no match is found, sbopkg will
-                  look for the first matching branch of any repository.
-                  The default valid choices are SBo/{11.0,12.0,12.1,12.2,13.0}
-                  for the SlackBuilds.org repository, SB64/master for the
-                  builds.Slamd64.com repository and local/local for the local
-                  repository).
+  -V repo/branch  Set the repository/branch. The repo is optional and, if
+                  not given, sbopkg will try to make the best match,
+                  starting with the default repo. For a list of valid repos,
+                  issue '-V ?'
 
 Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2")
 EOF
@@ -4544,6 +4548,10 @@ TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
 
 # Change $REPO_BRANCH (and optionally REPO_NAME) if set manually using cli -v
 if [[ $VERSION ]]; then
+    if [[ $CUSTOMVER == ? ]]; then
+        list_repos
+        exit 0
+    fi
     if [[ $CUSTOMVER =~ .*/.* ]]; then
         # The user specified repository/branch
         eval $(sed 's:^\(.*\)/\(.*\)$:REPO_NAME=\1;REPO_BRANCH=\2:g' \
@@ -4561,11 +4569,7 @@ fi
 set_repo_vars
 if [[ $? -ne 0 ]] ; then
     echo "Unknown repository name -- \"$CUSTOMVER\"" >&2
-    echo "Valid options are:" >&2
-    for ((i=0; i<${#REPOSITORIES[@]}; i+=$REPOS_FIELDS)); do
-        echo -en "${REPOSITORIES[$i]}/${REPOSITORIES[(($i + 1))]}\\t" >&2
-        echo "(${REPOSITORIES[(($i + 2))]})" >&2
-    done
+    list_repos
     exit 1
 fi
 

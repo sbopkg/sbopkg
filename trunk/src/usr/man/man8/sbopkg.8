@@ -228,13 +228,11 @@ will search for foo and then bar.
 Check for an update to sbopkg itself and then quit.
 
 .TP 5
-.B -V VERSION
+.B -V REPO/BRANCH
 Set the repository and branch to use.
 
-The currently supported repositories are SBo and local. Inside these,
-the supported branches are 11.0, 12.0, 12.1, 12.2, 13.0, and 13.1 for
-SBo and local for local.  The Slamd64Builds repository is 'master'
-but is not officially supported.
+For a list of valid versions, invoke sbopkg as 
+.BR "sbopkg -V ?" .
 See the
 .B sbopkg.conf (5)
 man page for more information about the 'local' repository.
