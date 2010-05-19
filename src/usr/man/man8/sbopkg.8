@@ -228,7 +228,7 @@ will search for foo and then bar.
 Check for an update to sbopkg itself and then quit.
 
 .TP 5
-.B -v VERSION
+.B -V VERSION
 Set the repository and branch to use.
 
 The currently supported repositories are SBo and local. Inside these,
@@ -243,6 +243,10 @@ The VERSION format is repository/branch (e.g. SBo/13.1). If the repository is
 omitted, sbopkg will first look for the specified branch in the default
 repository. If that attempt fails, sbopkg will look for the first matching
 branch in any repository.
+
+.TP 5
+.B -v
+Prints the current version of sbopkg on stdout.
 
 .SH FILES
 .B /etc/sbopkg/sbopkg.conf
