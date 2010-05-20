@@ -2691,6 +2691,9 @@ get_source_names() {
         # than in the actual tarball
         SRCNAME=${DL//%\/download}
         SRCNAME=${SRCNAME##*/}
+        # this is actually so that calcurse will make it to
+        # remove_obsolete_sources()
+        SRCNAME=$(sed 's/?e=.*$//;s/?format=.*$//;s/^.*?//' <<< "$SRCNAME")
         # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with
         # their corresponding characters.
         # This is done by replacing '%' with '\x' and passing the string to
@@ -3543,12 +3546,12 @@ use_options() {
                 echo 'Saved "Build with your saved options"' >> $OPTLIST
                 OPTIONS_MSG="\nSaved options:\n$TMPOPTIONS\n"
             fi
-            echo 'None "Build with no options"' >> $OPTLIST
             if [[ $LDOPTIONS ]]; then
                 echo 'Queuefile "Build with the queuefile options"' \
                     >> $OPTLIST
                 OPTIONS_MSG+="\nQueuefile options:\n$LDOPTIONS\n"
             fi
+            echo 'None "Build with no options"' >> $OPTLIST
             dialog --title 'Build options' --menu "$(crunch "One or \
                 more build option files for the $OPTAPP \
                 SlackBuild were found.\n$OPTIONS_MSG\nPlease choose \
