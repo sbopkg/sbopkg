@@ -30,7 +30,7 @@ tools it uses:
 
 * while you are free to set PAGER to any value you like, be aware that some
   pagers and settings may cause unexpected behavior. An example is if paging
-  less than a screenful of output from the obsolete packages option - the
+  less than a screenful of output from the uninstalled packages option - the
   default pager 'more' will exit, displaying the packages and a prompt. 'less'
   may prompt for exit and clear its output on exit. Setting the environment
   variable LESS to include the F and X options will make less behave more like
