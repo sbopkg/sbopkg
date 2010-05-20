@@ -17,8 +17,11 @@ enhancements:
     to documentation and other resources.
   * Added an option to print the version of sbopkg. We try not to change the
     meaning of flags but note that this does change what was the '-v' flag to
-    '-V' and now uses '-v' for its customary 'version' purpose.
+    '-V' and now uses '-v' for its customary 'version' purpose. Note that the
+    new -V flag now accepts a '?' argument (sbopkg -V ?) which will display
+    the list of valid repositories.
   * Tweak the logic re determining ARCH and modify some ARCH-related
     evals and conditionals in check_for_updates and info_item.
+  * Fixed a bug which could result in some sources being missed when checking
+    for obsolete sources.
 +--------------------------+
-
