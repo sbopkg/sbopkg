@@ -704,9 +704,12 @@ check_for_updates() {
 
             # Extract the new package version
             if [[ ! -z $NEWSB ]]; then
-                unset ARCH BUILD
-                eval NEW$(grep -m1 ^ARCH= $NEWSB)
-                eval NEW$(grep -m1 ^BUILD= $NEWSB)
+                unset BUILD
+                eval NEW$(grep -m1 ^ARCH= $NEWSB) 2>/dev/null
+                if [[ $NEWARCH != "noarch" ]]; then
+                   NEWARCH=$ARCH
+                fi
+                eval NEW$(grep -m1 ^BUILD= $NEWSB) 2>/dev/null
                 [[ -z $NEWARCH ]] && NEWARCH=unknown
 
                 # Step 1 - find the version expression
@@ -1133,7 +1136,10 @@ info_item() {
     SHORTPATH=$REPO_DIR/$CATEGORY/$APP
     CURVERSION=$(grep VERSION $SHORTPATH/$APP.info |
         cut -d= -f2 | sed s/\"//g)
-    eval CUR$(grep -m1 ^ARCH= $SHORTPATH/$APP.SlackBuild)
+    eval CUR$(grep -m1 ^ARCH= $SHORTPATH/$APP.SlackBuild) 2>/dev/null
+    if [[ $CURARCH != "noarch" ]]; then
+        CURARCH=$ARCH
+    fi
     eval CUR$(grep -m1 ^BUILD= $SHORTPATH/$APP.SlackBuild)
     [[ -z $CURARCH ]] && CURARCH=unknown
     while :; do
@@ -4385,9 +4391,16 @@ if [[ $(id -u) != 0 ]]; then
     exit 1
 fi
 
-# Set up ARCH
-if [[ ! $(uname -m) =~ i.86 ]]; then
-    export ARCH=${ARCH:-$(uname -m)}
+# Set up ARCH - borrowed from SBo SlackBuild template
+# Automatically determine the architecture we're building on:
+if [[ -z "$ARCH" ]]; then
+    case "$( uname -m )" in
+        i?86) export ARCH=i486 ;;
+        arm*) export ARCH=arm ;;
+        # Unless $ARCH is already set, use uname -m for all other
+        # archs:
+        *) export ARCH=$( uname -m ) ;;
+    esac
 fi
 
 # Set up BACKTITLE
