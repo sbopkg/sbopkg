@@ -3003,10 +3003,10 @@ remove_obsolete_sources() {
     remove_files $SRCDIR "obsolete sources" $SOURCES ON
 }
 
-remove_obsolete_packages() {
-    # Remove obsolete packages from $OUTPUT
+remove_uninstalled_packages() {
+    # Remove uninstalled packages from $OUTPUT
 
-    local PACKAGES=$SBOPKGTMP/sbopkg_obsolete_packages
+    local PACKAGES=$SBOPKGTMP/sbopkg_uninstalled_packages
     local PKG
 
     rm -f $PACKAGES
@@ -3017,7 +3017,7 @@ remove_obsolete_packages() {
         fi
     done
 
-    remove_files $OUTPUT "obsolete packages" $PACKAGES ON
+    remove_files $OUTPUT "uninstalled packages" $PACKAGES ON
 }
 
 reverse_choices() {
@@ -3097,10 +3097,8 @@ remove_files() {
                 cat - $FILES_DELETING | $PAGER
             while :; do
                 echo
-                echo "Do you want to delete these files?"
-                echo "Press (Y)es to delete or (N)o to keep them."
-                read ANS
-                case $ANS in
+                read -n1 -ep "Do you want to delete these files? [y/n] "
+                case $REPLY in
                     n* | N* ) break ;;
                     y* | Y* ) DELETE=1; break ;;
                     * ) echo "Unknown response." ;;
@@ -3115,9 +3113,9 @@ remove_files() {
             if [[ $DIAG ]]; then
                 dialog --title "Done" --msgbox \
                     "$(crunch "The selected $TOPIC have been \
-                    cleared.")" 8 30
+                    deleted.")" 7 35
             else
-                echo "$(crunch "The $TOPIC have been cleared.")"
+                echo "$(crunch "The $TOPIC have been deleted.")"
             fi
         fi
     else
@@ -4096,7 +4094,7 @@ utilities_menu() {
             "Log" "View the permanent build log" \
             "Repository" "Select repository [ $REPO_BRANCH ($REPO_NAME) ]" \
             "Latest" "Check for an update to sbopkg"  \
-            "Obsolete packages" "View obsolete packages" \
+            "Uninstalled packages" "View uninstalled packages" \
             "Obsolete sources" "View obsolete cached sources" 2> $ANSWERFILE
 
         DEFAULTITEM=$(< $ANSWERFILE)
@@ -4106,7 +4104,7 @@ utilities_menu() {
             "Log" ) view_perm_log ;;
             "Repository" ) select_repository ;;
             "Latest" ) check_for_latest ;;
-            "Obsolete packages" ) remove_obsolete_packages ;;
+            "Uninstalled packages" ) remove_uninstalled_packages ;;
             "Obsolete sources" ) remove_obsolete_sources ;;
             *) break ;;
         esac
@@ -4374,6 +4372,7 @@ unset BUILDLIST       # List of packages to build/install (from CLI)
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED PREVIEW_READMES
+unset UNINSTPKG
 
 SCRIPT=${0##*/}
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
@@ -4415,7 +4414,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:e:f:g:hi:klopqrRs:uV:v" OPT; do
+while getopts ":b:cd:e:f:g:hi:klOopqrRs:uV:v" OPT; do
     case $OPT in
         b ) # Build
             BFLAG=1
@@ -4453,6 +4452,10 @@ while getopts ":b:cd:e:f:g:hi:klopqrRs:uV:v" OPT; do
             ;;
         l ) # Show SBo ChangeLog
             CHANGELOG=1
+            unset DIAG
+            ;;
+        O ) # Show uninstalled packages
+            UNINSTPKG=1
             unset DIAG
             ;;
         o ) # Show obsolete sources
@@ -4508,7 +4511,8 @@ Options are:
   -i pkg/queue(s) Like '-b', but also install built packages.
   -k              Skip installed packages when building.
   -l              Display the repo's ChangeLog.txt and then quit.
-  -o              Display the obsolete source files and prompt for deletion.
+  -O              Display the uninstalled package files & prompt for deletion.
+  -o              Display the obsolete source files & prompt for deletion.
   -p              List installed repo's packages.
   -q              Quiet some of the command-line output.
   -r              Sync the remote repository with the local mirror and then
@@ -4714,6 +4718,10 @@ else
 
     if [[ $CHANGELOG ]]; then
         show_changelog
+    fi
+
+    if [[ $UNINSTPKG ]]; then
+        remove_uninstalled_packages
     fi
 
     if [[ $OBSOLETESRC ]]; then
