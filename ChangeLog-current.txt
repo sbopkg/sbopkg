@@ -24,7 +24,7 @@ enhancements:
     evals and conditionals in check_for_updates and info_item.
   * Fixed a bug which could result in some sources being missed when checking
     for obsolete sources.
-  * Added a command line option '-O' to access the 'remove uninstalled
+  * Added a command line option '-P' to access the 'remove uninstalled
     packages' function which had previously only been accessible from the
     dialog interface.
 +--------------------------+

@@ -4414,7 +4414,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:e:f:g:hi:klOopqrRs:uV:v" OPT; do
+while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
     case $OPT in
         b ) # Build
             BFLAG=1
@@ -4454,12 +4454,12 @@ while getopts ":b:cd:e:f:g:hi:klOopqrRs:uV:v" OPT; do
             CHANGELOG=1
             unset DIAG
             ;;
-        O ) # Show uninstalled packages
-            UNINSTPKG=1
-            unset DIAG
-            ;;
         o ) # Show obsolete sources
             OBSOLETESRC=1
+            unset DIAG
+            ;;
+        P ) # Show uninstalled packages
+            UNINSTPKG=1
             unset DIAG
             ;;
         p ) # List installed SBo packages
@@ -4511,9 +4511,9 @@ Options are:
   -i pkg/queue(s) Like '-b', but also install built packages.
   -k              Skip installed packages when building.
   -l              Display the repo's ChangeLog.txt and then quit.
-  -O              Display the uninstalled package files & prompt for deletion.
   -o              Display the obsolete source files & prompt for deletion.
-  -p              List installed repo's packages.
+  -P              List uninstalled cached package files & prompt for deletion.
+  -p              List installed packages from active repo.
   -q              Quiet some of the command-line output.
   -r              Sync the remote repository with the local mirror and then
                   quit.
