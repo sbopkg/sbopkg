@@ -38,3 +38,9 @@ tools it uses:
   of configuration.
 
   Workaround: pager-specific
+
+* a few SlackBuild scripts in the slackbuilds.org repo have a source download
+  that is only available through an https download.  By default, sbopkg will
+  not be able to download these sources.
+
+  Workaround: add --no-check-certificate to WGETFLAGS in sbopkg.conf
