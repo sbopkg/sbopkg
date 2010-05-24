@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of SBOPKG.CONF</TITLE>
 </HEAD><BODY>
 <H1>SBOPKG.CONF</H1>
-Section:  (5)<BR>Updated: February 2010<BR><A HREF="#index">Index</A>
+Section:  (5)<BR>Updated: May 2010<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -55,14 +55,14 @@ REPO_NAME=${REPO_NAME:-SBo}.
 <BR>
 
 This option allows the user to set the default active repository
-branch.  The current options are 11.0, 12.0, 12.1, 12.2, and 13.0 for
-the SBo repository, master for the SB64 repositort and local for the
-local repository.
+branch.  The current options are 11.0, 12.0, 12.1, 12.2, 13.0, and
+13.1 for the SBo repository and local for the local repository.  The
+Slamd64Builds repository is 'master' but is not officially supported.
 <P>
 The default value of REPO_BRANCH is:
 <BR>
 
-REPO_BRANCH=${REPO_BRANCH:-13.0}.
+REPO_BRANCH=${REPO_BRANCH:-13.1}.
 <P>
 <DT><B>REPO_ROOT</B>
 
@@ -286,7 +286,7 @@ these default options is not recommended.
 The default value of WGETFLAGS is:
 <BR>
 
-&quot;--continue --progress-bar --timeout=15 --tries=5&quot;.
+&quot;--continue --progress-bar:force --timeout=15 --tries=5&quot;.
 <P>
 <DT><B>DIFF</B>
 
@@ -406,6 +406,6 @@ README-repos.d document in the sbopkg doc/ directory for more information.
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 21:44:48 GMT, March 05, 2010
+Time: 20:55:24 GMT, May 24, 2010
 </BODY>
 </HTML>
