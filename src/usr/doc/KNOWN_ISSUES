@@ -18,7 +18,7 @@ tools it uses:
 
   Workaround: use dialog's own exit methods - its buttons, escape, ^C, etc.
 
-* when checking for updates, for some packages Sbopkg may tell you
+* when checking for updates, for some packages sbopkg may tell you
   "Note: repo version not obtainable by standard method, may be inaccurate.".
   This happens with packages whose version is very difficult/impossible to
   determine without actually building the package -- one example of this at
@@ -44,3 +44,10 @@ tools it uses:
   not be able to download these sources.
 
   Workaround: add --no-check-certificate to WGETFLAGS in sbopkg.conf
+
+* certain packages build kernel modules and need to (re)set the ARCH to 'x86'
+  on i?86 (32-bit) systems which may result in packages with 'x86' as the ARCH
+  in the file name, while sbopkg will display the specific ARCH of your system
+  (or the ARCH you've set) in certain cases, such as in widget titles.
+
+  Workaround: none needed
