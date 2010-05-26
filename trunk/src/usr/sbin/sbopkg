@@ -4397,7 +4397,7 @@ fi
 # Automatically determine the architecture we're building on:
 if [[ -z "$ARCH" ]]; then
     case "$( uname -m )" in
-        i?86) export ARCH=i486 ;;
+        i?86) ARCH=i486 ;;
         arm*) export ARCH=arm ;;
         # Unless $ARCH is already set, use uname -m for all other
         # archs:
