@@ -1029,7 +1029,7 @@ select_repository() {
             --menu '"$(crunch "You are currently using sbopkg to browse a \
             local copy of the $REPO_DESC.  If you would \
             like to change it, please select another repository below or \
-            press <Back> to go back.")"' 17 60 7 \
+            press <Back> to go back.")"' 19 60 9 \
             $(
                 for ((i=0; i<${#REPOSITORIES[@]}; i+=$REPOS_FIELDS)); do
                     echo \"${REPOSITORIES[$((i+1))]} \(${REPOSITORIES[$i]}\)\"
