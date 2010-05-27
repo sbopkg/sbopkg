@@ -1,3 +1,14 @@
+Thu May 27 18:13:59 UTC 2010
+Sbopkg 0.31.1 released.  This version contains the following fixes and
+enhancements:
+
+  * The ARCH assignment was modified to accord with the latest SBo SlackBuild
+    template.
+  * Tweaked widgets in select_repository() (no or less scrolling) and
+    load_user_queue() (better button) and modified check_gpg() to not disrupt
+    the dialog interface with gpg output
+  * Revised the KNOWN_ISSUES file and other documentation
++--------------------------+
 Mon May 24 20:53:43 UTC 2010
 Sbopkg 0.33.0 released.  This version contains the following fixes and
 enhancements:

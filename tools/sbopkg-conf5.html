@@ -342,20 +342,21 @@ You can also export variables in sbopkg.conf that are not used by
 sbopkg at all.
 <P>
 <A NAME="lbAE">&nbsp;</A>
-<H2>ABOUT $ARCH</H2>
+<H2>ABOUT THE ARCH VARIABLE</H2>
 
-You may be wondering why $ARCH is not a configuration setting in the
-sbopkg.conf file.  The reason is that it does not have to be.  First, sbopkg
-does some checking (using 'uname -m') to determine what the system's
-architecture is.  If the architecture is x86_64, then sbopkg automatically
-sets ARCH=x86_64.  If the architecture is not x86_64, then sbopkg will inherit
-any $ARCH settings in the environment.  This means, the user can add, for
+You may be wondering why ARCH is not a configuration setting in the
+default sbopkg.conf file. The reason is that it does not have to be. If ARCH
+is not set, sbopkg does some checking (using 'uname -m') to determine what the
+system's architecture is. If the architecture is x86, x86_64, or arm*, then
+sbopkg automatically sets ARCH to i486, x86_64, or arm, respectively. If ARCH
+is set, sbopkg will inherit that setting. This means the user can add, for
 example, 'export ARCH=i686' in their .bashrc or similar file, or the user can
 also execute something in the root terminal like 'export ARCH=i686 &amp;&amp; sbopkg'.
 The user can also manually add it to their sbopkg.conf file if they wish.
-Finally, if $ARCH is not set by the user and sbopkg does not detect an x86_64
-system, then $ARCH will default to whatever $ARCH is set to in the SlackBuild
-scripts.
+Finally, if ARCH is not set by the user and sbopkg does not detect one of the
+previously mentioned architectures, then ARCH will be set by whatever is in
+the SlackBuild scripts. Note that the SlackBuild may, in certain instances,
+discard or override previous ARCH settings if this is required for the build.
 <P>
 <A NAME="lbAF">&nbsp;</A>
 <H2>FILES</H2>
@@ -398,7 +399,7 @@ README-repos.d document in the sbopkg doc/ directory for more information.
 <DT><A HREF="#lbAB">NAME</A><DD>
 <DT><A HREF="#lbAC">DESCRIPTION</A><DD>
 <DT><A HREF="#lbAD">OVERRIDING ENVIRONMENTAL VARIABLES</A><DD>
-<DT><A HREF="#lbAE">ABOUT $ARCH</A><DD>
+<DT><A HREF="#lbAE">ABOUT THE ARCH VARIABLE</A><DD>
 <DT><A HREF="#lbAF">FILES</A><DD>
 <DT><A HREF="#lbAG">SEE ALSO</A><DD>
 </DL>
@@ -406,6 +407,6 @@ README-repos.d document in the sbopkg doc/ directory for more information.
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 20:55:24 GMT, May 24, 2010
+Time: 18:31:58 GMT, May 27, 2010
 </BODY>
 </HTML>
