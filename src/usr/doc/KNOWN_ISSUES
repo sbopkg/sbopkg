@@ -51,3 +51,10 @@ tools it uses:
   (or the ARCH you've set) in certain cases, such as in widget titles.
 
   Workaround: none needed
+
+* when using sbopkg to sync to SBo git repositories (which is possible but
+  unsupported) unexpected results may occur. See
+    http://code.google.com/p/sbopkg/issues/detail?id=47
+    http://sbopkg.org/pipermail/sbopkg-users/2010-May/000477.html
+
+  Workaround: see above links

@@ -1323,7 +1323,7 @@ check_gpg() {
             $GPGNAME tarball found.")" 8 40
         return 1
     fi
-    if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
+    if ! gpg --verify $CHKPKG.*.asc &> /dev/null 2>&1; then
         dialog --title "WARNING" --yesno "$(crunch "GPG CHECK FAILED!\n\n \
             Would you like to delete the $GPGNAME directory and tarball \
             so you can perform a new sync?  If so, all local changes to \
@@ -1622,8 +1622,8 @@ load_user_queue() {
             echo "Reading the queuefile, please be patient..."
             parse_queue $FILE
             if [[ -f $MISSING_LIST_FILE ]]; then
-                dialog --title "Packages not found" --textbox \
-                    $MISSING_LIST_FILE 0 0
+                dialog --title "Packages not found" \
+                    --exit-label OK --textbox $MISSING_LIST_FILE 0 0
             fi
             LAST_USER_QUEUE_ON_DISK=$FILE
             rm -f $USERQUEUE_LOCK $MISSING_LIST_FILE
