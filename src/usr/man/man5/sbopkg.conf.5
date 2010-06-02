@@ -1,8 +1,11 @@
+.\"=====================================================================
 .TH SBOPKG.CONF 5 "May 2010" sbopkg-SVN ""
+.\"=====================================================================
 .SH NAME
 .B sbopkg.conf
 \- Configuration file for sbopkg
 
+.\"=====================================================================
 .SH DESCRIPTION
 
 The sbopkg.conf file contains configuration settings for
@@ -17,6 +20,7 @@ Boolean options are case-insensitive.
 
 The different configuration options are:
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B REPO_NAME
 .br
@@ -32,6 +36,7 @@ The default value of REPO_NAME is:
 .br
 REPO_NAME=${REPO_NAME:-SBo}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B REPO_BRANCH
 .br
@@ -44,6 +49,7 @@ The default value of REPO_BRANCH is:
 .br
 REPO_BRANCH=${REPO_BRANCH:-13.1}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B REPO_ROOT
 .br
@@ -55,6 +61,7 @@ The default value of REPO_ROOT is:
 .br
 REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B SRCDIR
 .br
@@ -65,6 +72,7 @@ The default value of SRCDIR is:
 .br
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B SBOPKGTMP
 .br
@@ -75,6 +83,7 @@ The default value of SBOPKGTMP is:
 .br
 SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B TMP
 .br
@@ -86,6 +95,7 @@ The default value of TMP is:
 .br
 export TMP=${TMP:-/tmp/SBo}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B OUTPUT
 .br
@@ -98,6 +108,7 @@ The default value of OUTPUT is:
 .br
 export OUTPUT=${OUTPUT:-/tmp}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B QUEUEDIR
 .br
@@ -108,6 +119,7 @@ The default value of QUEUEDIR is:
 .br
 QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B KEEPLOG
 .br
@@ -119,6 +131,7 @@ $LOGDIR/sbopkg-build-log.
 
 The default value of KEEPLOG is: YES.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B LOGDIR
 .br
@@ -129,6 +142,7 @@ The default value of LOGDIR is:
 .br
 LOGDIR=${LOGDIR:-/var/log/sbopkg}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B CLEANUP
 .br
@@ -140,6 +154,7 @@ from the environment or from the configuration files is ignored.
 
 The default value of CLEANUP is: NO.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B ALLOW_MULTI
 .br
@@ -174,6 +189,7 @@ save a queue file while using it from another instance
 There can be more unsafe situations we haven't thought about. Take care.
 .RE
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B DEBUG
 .br
@@ -187,6 +203,7 @@ set to 2, all non-updated packages are also listed. Changing DEBUG to 1 or
 
 The default value of DEBUG is: 0.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B MKDIR_PROMPT
 .br
@@ -199,6 +216,7 @@ you can set this to NO.
 
 The default value of MKDIR_PROMPT is: YES.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B RSYNCFLAGS
 .br
@@ -213,6 +231,7 @@ recommended.
 
 The default value of RSYNCFLAGS is: "--timeout=10 --verbose".
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B WGETFLAGS
 .br
@@ -228,6 +247,7 @@ The default value of WGETFLAGS is:
 .br
 "--continue --progress-bar:force --timeout=15 --tries=5".
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B DIFF
 .br
@@ -238,6 +258,7 @@ The default value of DIFF is:
 .br
 DIFF=${DIFF:-diff}.
 
+.\"---------------------------------------------------------------------
 .TP 5
 .B DIFFOPTS
 .br
@@ -248,6 +269,7 @@ The default value of DIFFOPTS is:
 
 DIFFOPTS=${DIFFOPTS:--u}
 
+.\"=====================================================================
 .SH OVERRIDING ENVIRONMENTAL VARIABLES
 It is possible to set or override environmental variables and pass
 them to the SlackBuild scripts when they are built from within sbopkg.
@@ -273,6 +295,7 @@ is ignored.
 You can also export variables in sbopkg.conf that are not used by
 sbopkg at all.
 
+.\"=====================================================================
 .SH ABOUT THE ARCH VARIABLE
 You may be wondering why ARCH is not a configuration setting in the
 default sbopkg.conf file. The reason is that it does not have to be. If ARCH
@@ -288,6 +311,7 @@ previously mentioned architectures, then ARCH will be set by whatever is in
 the SlackBuild scripts. Note that the SlackBuild may, in certain instances,
 discard or override previous ARCH settings if this is required for the build.
 
+.\"=====================================================================
 .SH FILES
 .B /etc/sbopkg/sbopkg.conf
 \ - File to specify configuration options.
@@ -301,6 +325,7 @@ information.
 \ - Three default files for various types of sbopkg repositories.  See the
 README-repos.d document in the sbopkg doc/ directory for more information.
 
+.\"=====================================================================
 .SH "SEE ALSO"
 .BR sbopkg (8)
 .BR doc/README
@@ -308,3 +333,4 @@ README-repos.d document in the sbopkg doc/ directory for more information.
 .BR doc/README-renames.d
 .BR doc/README-repos.d
 .BR doc/queuefiles/*
+.\" vim:set tw=72:
