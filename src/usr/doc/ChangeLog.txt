@@ -1,5 +1,5 @@
 Thu May 27 18:13:59 UTC 2010
-Sbopkg 0.31.1 released.  This version contains the following fixes and
+Sbopkg 0.33.1 released.  This version contains the following fixes and
 enhancements:
 
   * The ARCH assignment was modified to accord with the latest SBo SlackBuild
