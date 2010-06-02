@@ -241,3 +241,4 @@ Manual Page Style Guidelines
   with commented lines of minus (-) signs.
 * Leave no blank lines in the file. E.g., .PP will often serve under .SH and
   .IP under .TP.
+* Wrap lines at 72 columns and begin all sentences on new lines.
