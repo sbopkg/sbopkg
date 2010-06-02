@@ -105,7 +105,7 @@ The default assignment is:
 \fCCLEANUP=NO\fP
 .\"---------------------------------------------------------------------
 .TP
-.B DEBUG
+.B DEBUG_UPDATES
 Enumeration.
 .IP
 This option should be set to
@@ -113,7 +113,7 @@ This option should be set to
 .BR 1 ,
 or
 .BR 2 .
-.B DEBUG
+.B DEBUG_UPDATES
 sets the default debugging level for the update list feature of
 .BR sbopkg .
 When set to
@@ -127,7 +127,7 @@ When set to
 .BR 2 ,
 all non-updated packages are also listed.
 Changing
-.B DEBUG
+.B DEBUG_UPDATES
 to
 .B 1
 or
@@ -136,7 +136,7 @@ may be helpful if it appears the updatelist might be missing an update.
 .IP
 The default assignment is:
 .IP
-\fCDEBUG=0\fP
+\fCDEBUG_UPDATES={$DEBUG_UPDATES:-0}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFF
