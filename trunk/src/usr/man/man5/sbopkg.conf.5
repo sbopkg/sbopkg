@@ -18,9 +18,8 @@ Boolean options are case-insensitive.
 .PP
 The different configuration options are:
 .\"---------------------------------------------------------------------
-.TP 5
+.TP 3
 .B REPO_NAME
-.br
 This option allows the user to choose the repository to use.
 The default options are SBo, SB64 and local.
 The 'local' choice corresponds to a user-maintained repository whose
@@ -30,12 +29,11 @@ maintained in /etc/sbopkg/repos.d.
 Please see the README-repos.d document in the sbopkg /doc directory.
 .IP
 The default value of REPO_NAME is:
-.br
+.IP
 REPO_NAME=${REPO_NAME:-SBo}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B REPO_BRANCH
-.br
 This option allows the user to set the default active repository branch.
 The current options are 11.0, 12.0, 12.1, 12.2, 13.0, and 13.1 for the
 SBo repository and local for the local repository.
@@ -43,44 +41,40 @@ The Slamd64Builds repository is 'master' but is not officially
 supported.
 .IP
 The default value of REPO_BRANCH is:
-.br
+.IP
 REPO_BRANCH=${REPO_BRANCH:-13.1}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B REPO_ROOT
-.br
 This option allows the user to set the location of the local mirrors of
 the remote repositories.
 Currently, the size of a local copy of the SBo repository is less than
 50MB.
 .IP
 The default value of REPO_ROOT is:
-.br
+.IP
 REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B SRCDIR
-.br
 This option contains the location of the cache directory where source
 downloads will be saved.
 .IP
 The default value of SRCDIR is:
-.br
+.IP
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B SBOPKGTMP
-.br
 This option sets the default directory where certain working files are
 saved on a temporary basis.
 .IP
 The default value of SBOPKGTMP is:
-.br
+.IP
 SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B TMP
-.br
 This option sets the default directory where built packages should be
 stored.
 TMP must be exported as it is used by the SlackBuilds.
@@ -88,12 +82,11 @@ Also note that the default value of TMP is the same as in the SBo
 SlackBuild scripts.
 .IP
 The default value of TMP is:
-.br
+.IP
 export TMP=${TMP:-/tmp/SBo}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B OUTPUT
-.br
 This option sets the default directory where compiled packages are
 saved.
 OUTPUT must be exported as it is also used by the SBo SlackBuilds.
@@ -101,22 +94,20 @@ Also note that the default value of OUTPUT is therefore the same as in
 the SBo SlackBuilds.
 .IP
 The default value of OUTPUT is:
-.br
+.IP
 export OUTPUT=${OUTPUT:-/tmp}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B QUEUEDIR
-.br
 This option defines the directory under which saved queue files will be
 kept.
 .IP
 The default value of QUEUEDIR is:
-.br
+.IP
 QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B KEEPLOG
-.br
 This option should be set to YES or NO.
 This option allows the user to choose whether to keep a permanent log of
 packages that are built with sbopkg in order to go back and review the
@@ -125,19 +116,17 @@ If set to YES, this permanent log is saved at $LOGDIR/sbopkg-build-log.
 .IP
 The default value of KEEPLOG is: YES.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B LOGDIR
-.br
 This option sets the location for the sbopkg permanent log if KEEPLOG is
 set to YES (see previous paragraph).
 .IP
 The default value of LOGDIR is:
-.br
+.IP
 LOGDIR=${LOGDIR:-/var/log/sbopkg}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B CLEANUP
-.br
 This option should be set to YES or NO.
 When set to YES, the source files and the various residuals from the
 process of building a package are deleted right after the build.
@@ -146,9 +135,8 @@ the environment or from the configuration files is ignored.
 .IP
 The default value of CLEANUP is: NO.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B ALLOW_MULTI
-.br
 When set to YES, this option allows the user to run multiple instances
 of sbopkg.
 .IP
@@ -181,9 +169,8 @@ save a queue file while using it from another instance
 There can be more unsafe situations we haven't thought about.
 Take care.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B DEBUG
-.br
 This option should be set to 0, 1, or 2.
 DEBUG sets the default debugging level for the update list feature of
 sbopkg.
@@ -197,9 +184,8 @@ might be missing an update.
 .IP
 The default value of DEBUG is: 0.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B MKDIR_PROMPT
-.br
 This option may be set to YES or NO.
 When set to YES, sbopkg will prompt for confirmation before changing the
 filesystem by creating its directories.
@@ -210,9 +196,8 @@ to NO.
 .IP
 The default value of MKDIR_PROMPT is: YES.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B RSYNCFLAGS
-.br
 Rsync is used by sbopkg to mirror the SlackBuilds.org repository.
 This option allows the user to manually tweak the rsync flags (options)
 that are used by sbopkg.
@@ -225,9 +210,8 @@ Changing these default options is not recommended.
 .IP
 The default value of RSYNCFLAGS is: "--timeout=10 --verbose".
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B WGETFLAGS
-.br
 Wget is used by sbopkg to download the source files for package
 building.
 This option allows the user to manually tweak the wget flags (options)
@@ -239,27 +223,25 @@ no need to add that to the WGETFLAGS option.
 Changing these default options is not recommended.
 .IP
 The default value of WGETFLAGS is:
-.br
+.IP
 "--continue --progress-bar:force --timeout=15 --tries=5".
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B DIFF
-.br
 This option allows the user to set which diff program to use when sbopkg
 displays differences between edited files.
 .IP
 The default value of DIFF is:
-.br
+.IP
 DIFF=${DIFF:-diff}.
 .\"---------------------------------------------------------------------
-.TP 5
+.TP
 .B DIFFOPTS
-.br
 This option allows the user to set which options are used by the $DIFF
 program when sbopkg displays differences between edited files.
 .IP
 The default value of DIFFOPTS is:
-.br
+.IP
 DIFFOPTS=${DIFFOPTS:--u}
 .\"=====================================================================
 .SH OVERRIDING ENVIRONMENTAL VARIABLES
