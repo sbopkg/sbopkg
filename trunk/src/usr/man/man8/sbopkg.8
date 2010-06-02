@@ -18,13 +18,13 @@ packages.
 .\"---------------------------------------------------------------------
 .SS Instructions
 .B Sbopkg
-usage assumes an understanding of SlackBuild scripts, generally, and the
-third-party repository SlackBuilds.org, specifically.
+usage assumes an understanding of SlackBuilds, generally, and the
+third-party SBo repository, specifically.
 A thorough reading of
 .I http://www.slackbuilds.org/howto/
 and the pages at
 .I http://www.slackwiki.org
-about SlackBuild scripts is strongly advised.
+about SlackBuilds is strongly advised.
 .PP
 In order for
 .B sbopkg
@@ -39,15 +39,15 @@ See
 for more information about the configuration file.
 .PP
 .B Sbopkg
-must be run as the root user (since the SlackBuild scripts at
-SlackBuilds.org are written with the intention of being run as root).
+must be run as the root user (since the SBo SlackBuilds are written with
+the intention of being run as root).
 Furthermore, using the
 .B \-
 option with
 .B su
 is strongly encouraged.
-The reason is that some SlackBuild scripts rely on certain tools that
-are only available in root's
+The reason is that some SlackBuilds rely on certain tools that are only
+available in root's
 .B PATH
 when the scripts in
 .I /etc/profile.d
@@ -60,19 +60,19 @@ In any event, invoking
 .B sbopkg
 with no arguments (or with just
 .BR \-d ,
-.B \-f
+.BR \-f ,
 or
 .BR \-V )
 will launch the
 .BR dialog -based
 interface, and the menus provided should be fairly self-explanatory.
-The main menu allows the user to synchronize with the SlackBuilds.org
-repository.
+.PP
+The main menu allows the user to synchronize with the SBo repository.
 This is the first step to take (after configuration) with a new install
 of
 .BR sbopkg .
 Currently, the size of a local copy of the SBo repository is about 70MB.
-The main menu also allows the user to view the SlackBuilds.org
+The main menu also allows the user to view the SBo
 .IR ChangeLog ,
 check for potential updates to SBo packages, display the contents of the
 local cache directory where source tarballs are saved, display the
@@ -113,8 +113,10 @@ Alternatively, the user can choose to automatically build, or both build
 and install, individual packages or several packages in a build queue.
 Finally, if
 .B KEEPLOG
-is set to YES in the
-.B sbopkg.conf
+is set to
+.B YES
+in the
+.I sbopkg.conf
 file then a permanent log of the build process is saved.
 See
 .BR sbopkg.conf (5)
@@ -129,7 +131,9 @@ Alternatively,
 can be run from the command line without using the
 .B dialog
 interface.
-See the OPTIONS section for the available command line options.
+See the
+.B OPTIONS
+section for the available command line options.
 .PP
 .B Sbopkg
 also has the capability of loading, saving, and using user-created
@@ -212,7 +216,7 @@ time it is encountered.
 .\"---------------------------------------------------------------------
 .TP
 .B \-c
-Display list of installed SBo packages and potential updates.
+Display a list of installed SBo packages and potential updates.
 .\"---------------------------------------------------------------------
 .TP
 .BI \-d " DIRECTORY"
@@ -221,7 +225,7 @@ Manually specify the full path to the
 containing the local SBo repository.
 .\"---------------------------------------------------------------------
 .TP
-.B \-e \fBask\fR|\fBcontinue\fR|\fBstop
+.B \-e ask\fR|\fPcontinue\fR|\fPstop
 Specify what
 .B sbopkg
 should do when it encounters an error while building a package.
@@ -241,7 +245,8 @@ Stop the processing (act as if the user answered ``No'' to all questions).
 .BI \-f " FILE"
 Override the default configuration file,
 .IR /etc/sbopkg/sbopkg.conf ,
-with another configuration file.
+with
+.IR FILE .
 .\"---------------------------------------------------------------------
 .TP
 .BI \-g " PACKAGE(s)"
@@ -313,8 +318,12 @@ and quit.
 List the currently installed cached source files which are deemed
 obsolete, and optionally delete them.
 .IP
-Source files are obsolete when no SBo script references it any more,
-which is something that can happen after syncing the local repository.
+Source files are obsolete when no
+.I .info
+file's
+.B DOWNLOAD
+field(s) reference it any more, which is something that can happen after
+syncing the local repository.
 .IP
 Please note that only the currently active repository is used to
 identify the obsolete sources, so if the user builds packages with
@@ -328,7 +337,7 @@ system and optionally delete them.
 .\"---------------------------------------------------------------------
 .TP
 .B \-p
-List installed SlackBuilds.org packages.
+List installed SBo packages.
 .\"---------------------------------------------------------------------
 .TP
 .B \-q
@@ -337,15 +346,15 @@ When this flag is specified, the output of some of the command-line
 options is minimized.
 .\"---------------------------------------------------------------------
 .TP
-.B \-r
-Rsync the local repository with SlackBuilds.org and quit.
-.\"---------------------------------------------------------------------
-.TP
 .B \-R
 Show all the
 .I README
 files of the queued packages before starting the build.
 This is useful when the user wants to make a final check.
+.\"---------------------------------------------------------------------
+.TP
+.B \-r
+``Rsync'' the local repository with SBo and quit.
 .\"---------------------------------------------------------------------
 .TP
 .BI \-s " PACKAGE(s)"
@@ -393,7 +402,7 @@ as
 .RS
 .IP
 .nf
-\fCsbopkg -V ?\fP
+\fC# sbopkg -V ?\fP
 .fi
 .RE
 .IP

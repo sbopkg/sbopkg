@@ -33,7 +33,8 @@ Boolean.
 When set to
 .BR YES ,
 this option allows the user to run multiple instances of
-.BR sbopkg .
+.B sbopkg
+simultaneously.
 .IP
 Please understand that this option is provided for convenience, but
 given the number of potential issues you can face when enabling this
@@ -170,11 +171,11 @@ Boolean.
 This option allows the user to choose whether to keep a permanent log of
 packages that are built with
 .B sbopkg
-in order to go back and review the build, and any errors, after exiting
-.BR sbopkg .
+in order to review the builds for historical or troubleshooting
+purposes.
 See
 .B LOGFILE
-for where this log is.
+for the location of this log.
 .IP
 The default assignment is:
 .IP
@@ -250,7 +251,7 @@ files and can also be listed by issuing
 .RS
 .IP
 .nf
-\fCsbopkg -V ?\fP
+\fC# sbopkg -V ?\fP
 .fi
 .RE
 .IP
@@ -267,8 +268,7 @@ See
 .B REPO_BRANCH
 for how to get an enumeration of standard values.
 The ``local'' choice corresponds to a user-maintained repository whose
-structure must be the same as the one used by SlackBuilds.org, in the
-sense of a
+structure must be the same as the one used by SBo, in the sense of a
 .I category/package/files
 hierarchy.
 Note: all of the
@@ -277,7 +277,9 @@ variables are affected by the repository files maintained in
 .I /etc/sbopkg/repos.d.
 Please see the
 .I README-repos.d
-document in the sbopkg documentation directory.
+document in the
+.B sbopkg
+documentation directory.
 .IP
 The default assignment is:
 .IP
@@ -302,7 +304,7 @@ Command options.
 .B Rsync
 is used by
 .B sbopkg
-to mirror the SlackBuilds.org repository.
+to mirror the SBo repository.
 This option allows the user to manually tweak the
 .B rsync
 flags (options) that are used by
@@ -414,14 +416,14 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .SS Overriding Environmental Variables
 It is possible to set or override environmental variables and pass them
-to the SlackBuild scripts when they are built from within
+to the SlackBuilds when they are built from within
 .BR sbopkg .
 This is already demonstrated in the following example line (and others
 like it) in the
 .I sbopkg.conf
 file:
-.PP
 .RS
+.PP
 .nf
 \fCexport TMP=${TMP:-/tmp/SBo}\fP
 .fi
@@ -439,8 +441,8 @@ Since this variable is exported, it could be changed for both
 and for building SBo packages within
 .BR sbopkg .
 For example, changing this line so it reads:
-.PP
 .RS
+.PP
 .nf
 \fCexport TMP=${TMP:-/home/sbo/tmp}\fP
 .fi
@@ -457,7 +459,7 @@ as
 .RS
 .PP
 .nf
-\fCexport TMP=foo; sbopkg\fP
+\fC# export TMP=foo; sbopkg\fP
 .fi
 .RE
 .PP
@@ -505,7 +507,7 @@ root terminal like
 .RS
 .PP
 .nf
-\fCexport ARCH=i686; sbopkg\fP
+\fC# export ARCH=i686; sbopkg\fP
 .fi
 .RE
 .PP
@@ -518,7 +520,7 @@ is not set by the user and
 .B sbopkg
 does not detect one of the previously mentioned architectures, then
 .B ARCH
-will be set by whatever is in the SlackBuild scripts.
+will be set by whatever is in the SlackBuilds.
 Note that the SlackBuild may, in certain instances, discard or override
 previous
 .B ARCH
@@ -534,7 +536,9 @@ Default file that lists software in the SBo repository that has been
 renamed.
 See the
 .I README-renames.d
-document in the sbopkg documentation directory for more information.
+document in the
+.B sbopkg
+documentation directory for more information.
 .TP
 .I /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
 Three default files for various types of
