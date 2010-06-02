@@ -8,7 +8,6 @@
 # be exported, if desired.
 # Directory variables
 REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}
-LOGDIR=${LOGDIR:-/var/log/sbopkg}
 QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}
@@ -16,7 +15,7 @@ SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}
 REPO_NAME=${REPO_NAME:-SBo}
 REPO_BRANCH=${REPO_BRANCH:-13.1}
 KEEPLOG=YES
-LOGFILE=$LOGDIR/sbopkg-build-log
+LOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}
 DEBUG=0
 CLEANUP=NO
 MKDIR_PROMPT=YES
