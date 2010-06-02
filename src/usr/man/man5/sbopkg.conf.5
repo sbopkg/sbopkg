@@ -28,9 +28,9 @@ NOTE: all of the REPO_* variables are affected by the repository files
 maintained in /etc/sbopkg/repos.d.
 Please see the README-repos.d document in the sbopkg /doc directory.
 .IP
-The default value of REPO_NAME is:
+The default assignment is:
 .IP
-REPO_NAME=${REPO_NAME:-SBo}.
+\fCREPO_NAME=${REPO_NAME:-SBo}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_BRANCH
@@ -38,9 +38,9 @@ This option allows the user to set the default active repository branch.
 The current options are listed in the default repos.d/* files and can
 also be listed by issuing 'sbopkg -V ?'.
 .IP
-The default value of REPO_BRANCH is:
+The default assignment is:
 .IP
-REPO_BRANCH=${REPO_BRANCH:-13.1}.
+\fCREPO_BRANCH=${REPO_BRANCH:-13.1}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_ROOT
@@ -48,27 +48,27 @@ This option allows the user to set the location of the local mirrors of
 the remote repositories.
 Currently, the size of a local copy of the SBo repository is about 70MB.
 .IP
-The default value of REPO_ROOT is:
+The default assignment is:
 .IP
-REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}.
+\fCREPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B SRCDIR
 This option contains the location of the cache directory where source
 downloads will be saved.
 .IP
-The default value of SRCDIR is:
+The default assignment is:
 .IP
-SRCDIR=${SRCDIR:-/var/cache/sbopkg}.
+\fCSRCDIR=${SRCDIR:-/var/cache/sbopkg}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B SBOPKGTMP
 This option sets the default directory where certain working files are
 saved on a temporary basis.
 .IP
-The default value of SBOPKGTMP is:
+The default assignment is:
 .IP
-SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}.
+\fCSBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B TMP
@@ -81,9 +81,9 @@ scripts.
 Also note that if the CLEANUP variable is set to YES, any custom TMP
 setting is ignored.
 .IP
-The default value of TMP is:
+The default assignment is:
 .IP
-export TMP=${TMP:-/tmp/SBo}.
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B OUTPUT
@@ -93,18 +93,18 @@ OUTPUT must be exported as it is also used by the SBo SlackBuilds.
 Also note that the default value of OUTPUT is therefore the same as in
 the SBo SlackBuilds.
 .IP
-The default value of OUTPUT is:
+The default assignment is:
 .IP
-export OUTPUT=${OUTPUT:-/tmp}.
+\fCexport OUTPUT=${OUTPUT:-/tmp}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B QUEUEDIR
 This option defines the directory under which saved queue files will be
 kept.
 .IP
-The default value of QUEUEDIR is:
+The default assignment is:
 .IP
-QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}.
+\fCQUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B KEEPLOG
@@ -114,16 +114,18 @@ packages that are built with sbopkg in order to go back and review the
 build, and any errors, after exiting sbopkg.
 If set to YES, this permanent log is saved at $LOGDIR/sbopkg-build-log.
 .IP
-The default value of KEEPLOG is: YES.
+The default assignment is:
+.IP
+\fCKEEPLOG=YES\fP
 .\"---------------------------------------------------------------------
 .TP
 .B LOGDIR
 This option sets the location for the sbopkg permanent log if KEEPLOG is
 set to YES.
 .IP
-The default value of LOGDIR is:
+The default assignment is:
 .IP
-LOGDIR=${LOGDIR:-/var/log/sbopkg}.
+\fCLOGDIR=${LOGDIR:-/var/log/sbopkg}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B CLEANUP
@@ -135,7 +137,9 @@ completed package are left in $SRCDIR and $OUTPUT.
 A side effect of setting CLEANUP to YES is that TMP is set to an
 internal value and any other TMP setting is ignored.
 .IP
-The default value of CLEANUP is: NO.
+The default assignment is:
+.IP
+\fCCLEANUP=NO\fP
 .\"---------------------------------------------------------------------
 .TP
 .B ALLOW_MULTI
@@ -177,7 +181,9 @@ save a queue file while using it from another instance
 There can be more unsafe situations we haven't thought about.
 Take care.
 .IP
-The default value of ALLOW_MULTI is: NO.
+The default assignment is:
+.IP
+\fCALLOW_MULTI=NO\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DEBUG
@@ -192,7 +198,9 @@ When DEBUG is set to 2, all non-updated packages are also listed.
 Changing DEBUG to 1 or 2 may be helpful if it appears the updatelist
 might be missing an update.
 .IP
-The default value of DEBUG is: 0.
+The default assignment is:
+.IP
+\fCDEBUG=0\fP
 .\"---------------------------------------------------------------------
 .TP
 .B MKDIR_PROMPT
@@ -204,7 +212,9 @@ directories on a temporary filesystem and don't wish to be prompted for
 confirmation each time the filesystem is reinitialized) you can set this
 to NO.
 .IP
-The default value of MKDIR_PROMPT is: YES.
+The default assignment is:
+.IP
+\fCMKDIR_PROMPT=YES\fP
 .\"---------------------------------------------------------------------
 .TP
 .B RSYNCFLAGS
@@ -218,7 +228,9 @@ Note: the rsync command in sbopkg already uses the --archive, --delete,
 RSYNCFLAGS option.
 Changing these default options is not recommended.
 .IP
-The default value of RSYNCFLAGS is: "--timeout=10 --verbose".
+The default assignment is:
+.IP
+\fCRSYNCFLAGS="--verbose --timeout=10"\fP
 .\"---------------------------------------------------------------------
 .TP
 .B WGETFLAGS
@@ -232,27 +244,27 @@ Note: the wget command in sbopkg already uses the -O flag, so there is
 no need to add that to the WGETFLAGS option.
 Changing these default options is not recommended.
 .IP
-The default value of WGETFLAGS is:
+The default assignment is:
 .IP
-"--continue --progress-bar:force --timeout=15 --tries=5".
+\fCWGETFLAGS="--continue --progress=bar:force --timeout=15 --tries=5"\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFF
 This option allows the user to set which diff program to use when sbopkg
 displays differences between edited files.
 .IP
-The default value of DIFF is:
+The default assignment is:
 .IP
-DIFF=${DIFF:-diff}.
+\fCDIFF=${DIFF:-diff}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFFOPTS
 This option allows the user to set which options are used by the $DIFF
 program when sbopkg displays differences between edited files.
 .IP
-The default value of DIFFOPTS is:
+The default assignment is:
 .IP
-DIFFOPTS=${DIFFOPTS:--u}
+\fCDIFFOPTS=${DIFFOPTS:--u}\fP
 .\"=====================================================================
 .SH NOTES
 .\"---------------------------------------------------------------------
