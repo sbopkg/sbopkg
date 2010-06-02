@@ -19,30 +19,43 @@ and the third-party repository SlackBuilds.org, specifically.
 A thorough reading of http://www.slackbuilds.org/howto/ and the pages at
 http://www.slackwiki.org about SlackBuild scripts is strongly advised.
 .PP
-Before sbopkg can be used, a configuration file must be created at
+In order for sbopkg to be used, a configuration file must exist at
 /etc/sbopkg/sbopkg.conf.
-A sample file is provided at /etc/sbopkg/sbopkg.conf.new.
+An initial install will provide the user with an /etc/sbopkg/sbopkg.conf
+while upgrades will add an /etc/sbopkg/sbopkg.conf.new which may be
+merged with or replace the older version.
 See
 .BR sbopkg.conf (5)
 for more information about the configuration file.
 .PP
-Sbopkg can be run from the command line by simply invoking "sbopkg."
 Sbopkg must be run as the root user (since the SlackBuild scripts at
 SlackBuilds.org are written with the intention of being run as root).
 Furthermore, using 'su -' instead of 'su' is strongly encouraged.
 The reason is that some SlackBuild scripts rely on certain tools that
-are only available in root's PATH when root's PATH is inherited (i.e.
-texmf to build man pages) and root's PATH is not inherited when only
-using 'su'.
-In any evnet, invoking 'sbopkg' from the command line will launch the
-dialog-based interface, and the menus provided should be fairly
-self-explanatory.
-The main menu allows the user to rsync with the SlackBuilds.org
-repository (currently, the size of a local copy of the SBo repository is
-less than 50MB), view the SlackBuilds.org Changelog, check for potential
-updates to SBo packages, display the contents of the local cache
-directory where source tarballs are saved, display the permanent build
-log, and browse or search the local copy of the SBo repository.
+are only available in root's PATH when the scripts in /etc/profile.d
+have been run (i.e., texmf to build man pages), which is only done for
+login shells, or otherwise require a 'truer' root environment than that
+given by only 'su'.
+In any event, invoking
+.B sbopkg
+with no arguments (or with just
+.BR -d ,
+.B -f
+or
+.BR -V )
+will launch the dialog-based interface, and the menus provided should be
+fairly self-explanatory.
+The main menu allows the user to synchronize with the SlackBuilds.org
+repository.
+This is the first step to take (after configuration) with a new install
+of
+.BR sbopkg .
+Currently, the size of a local copy of the SBo repository is about 70MB.
+The main menu also allows the user to view the SlackBuilds.org
+ChangeLog, check for potential updates to SBo packages, display the
+contents of the local cache directory where source tarballs are saved,
+display the permanent build log, and browse or search the local copy of
+the SBo repository.
 Once the browse function is chosen, the user can select the category of
 software to view.
 After choosing a category, the user can then view the various software
@@ -56,16 +69,16 @@ either the original SlackBuild or the locally-edited one, if present.
 If using the dialog interface, and if sbopkg finds a built package for a
 particular piece of software in the OUTPUT directory, then sbopkg will
 automatically add a new menu entry allowing the user to install the
-package if he so chose.
+package if he so chooses.
 Alternatively, the user can choose to automatically build or build and
 install individual packages or several packages in a build queue.
 Finally, if KEEPLOG is set to YES in the sbopkg.conf file then a
-permanent log of the build process is saved in /tmp/sbopkg-build-log.
+permanent log of the build process is saved to wherever LOGFILE is set
+to in that same file.
 .PP
 Alternatively, sbopkg can be run from the command line without using the
 dialog interface.
-Executing "sbopkg -h" will display a list of options available from the
-command line.
+See below for the available command line options.
 .PP
 Sbopkg also has the capability of loading, saving, and using
 user-created queuefiles.
@@ -76,7 +89,7 @@ application is selected, or "ON."
 This can be changed by inserting a "-" in front of the application name
 in the queuefile.
 Also, queuefiles can reference other queuefiles when the first character
-is a "@".
+is an "@".
 See the readme-queuefiles document in the doc/ directory for more
 information.
 .PP
@@ -100,13 +113,13 @@ Search for and build PACKAGE(s) from the local SBo repository.
 If more than one package is specified, they must be in quotes.
 For example:
 .IP
-#sbopkg -b "foo bar"
+# sbopkg -b "foo bar"
 .IP
 will build foo and then bar.
 Queuefile names can also be specified.
 In that case, all the packages specified in the queuefile will be built.
 In the unfortunate case a token matches both a queuefile name and a
-package name (i.e. the user named a queuefile with the name of a
+package name (i.e., the user named a queuefile with the name of a
 package), sbopkg will ask the user which one should be used.
 The tokens (package names or queuefiles) are processed in the order they
 are specified on the command line, and the build order specified in the
@@ -129,28 +142,27 @@ Specify what sbopkg should do when it encounters an error while building
 a package.
 Valid options are:
 .IP
-.B ask
-: This is the default behavior, asking the user what to do;
+.BR ask :
+This is the default behavior, asking the user what to do.
 .IP
-.B continue
-: Ignore the error and continue processing (act as if the user answered
-"Yes" to all questions);
+.BR continue :
+Ignore the error and continue processing (act as if the user answered
+"Yes" to all questions).
 .IP
-.B stop
-: Stop the processing (act as if the user answered "No" to all
-questions).
+.BR stop :
+Stop the processing (act as if the user answered "No" to all questions).
 .\"---------------------------------------------------------------------
 .TP
 .BI \-f " FILE"
-Override the default configuration file, which is located by default at
-/etc/sbopkg/sbopkg.conf, with another configuration file.
+Override the default configuration file, /etc/sbopkg/sbopkg.conf, with
+another configuration file.
 .\"---------------------------------------------------------------------
 .TP
 .BI \-g " PACKAGE(s)"
 General search for PACKAGE(s) by glob.
 For example:
 .IP
-#sbopkg -g nv
+# sbopkg -g nv
 .IP
 will return a list of matches, such as the nvidia packages,
 konversation, and other packages with 'nv' in their name.
@@ -161,14 +173,13 @@ If more than one glob is specified, they must be in quotes.
 Display the help.
 .\"---------------------------------------------------------------------
 .TP
-.BI \-i " PACKAGE(s)"
-Search for and build and then install PACKAGE(s) from the local SBo
-repository.
+.BI \-i " PACKAGE(s)/QUEUE(s)"
+Build and install PACKAGE(s) from the local SBo repository.
 If more than one package is specified, they must be in quotes, and the
 packages will be built and then installed in the listed order.
 For example:
 .IP
-#sbopkg -i "foo bar"
+# sbopkg -i "foo bar"
 .IP
 will build and install foo and then build and install bar.
 By carefully considering the order of the packages listed, the user may
@@ -184,8 +195,8 @@ See the explanation for the '-b' command for details.
 .\"---------------------------------------------------------------------
 .TP
 .B \-k
-When used together with -b or -i, this option tells sbopkg to skip (i.e.
-don't build) any package it finds to be already installed.
+When used together with -b or -i, this option tells sbopkg to skip
+(i.e., don't build) any package it finds to be already installed.
 .IP
 Please note that only a name comparison is performed, so when this
 option is specified sbopkg will also omit the build of different
@@ -193,20 +204,20 @@ versions of installed packages.
 .\"---------------------------------------------------------------------
 .TP
 .B \-l
-Display the SBo ChangeLog.txt and quit.
+Display the SBo ChangeLog and quit.
 .\"---------------------------------------------------------------------
 .TP
 .B \-o
-List the currently installed cached source files which are deemed as
+List the currently installed cached source files which are deemed
 obsolete, and optionally delete them.
 .IP
 Source files are obsolete when no SBo script references it any more,
 which is something that can happen after rsync-ing the local repository.
 .IP
 Please note that only the currently active repository is used to
-identify the obsoleted sources, so if you build packages with different
-repositories (e.g. for different Slackware versions) the source files
-only used in the "other" repository will be listed.
+identify the obsolete sources, so if the user builds packages with
+different repositories (e.g., for different Slackware versions) the
+source files only used in the "other" repository will be listed.
 .\"---------------------------------------------------------------------
 .TP
 .B \-P
@@ -231,7 +242,7 @@ Rsync the local repository with SlackBuilds.org and quit.
 .B \-R
 Show all the README files of the queued packages before starting the
 build.
-This is useful when you want to make a final check.
+This is useful when the user wants to make a final check.
 .\"---------------------------------------------------------------------
 .TP
 .BI \-s " PACKAGE(s)"
@@ -241,7 +252,7 @@ $PAGER, which defaults to 'more' as described above.
 If more than one package is specified, they must be in quotes.
 For example:
 .IP
-#sbopkg -s "foo bar"
+# sbopkg -s "foo bar"
 .IP
 will search for foo and then bar.
 .\"---------------------------------------------------------------------
@@ -250,7 +261,7 @@ will search for foo and then bar.
 Check for an update to sbopkg itself and then quit.
 .\"---------------------------------------------------------------------
 .TP
-.BI \-V " REPO/BRANCH"
+.BI \-V " VERSION"
 Set the repository and branch to use.
 .IP
 For a list of valid versions, invoke sbopkg as
@@ -259,7 +270,7 @@ See the
 .BR sbopkg.conf (5)
 man page for more information about the 'local' repository.
 .IP
-The VERSION format is repository/branch (e.g. SBo/13.1).
+The VERSION format is repository/branch (e.g., SBo/13.1).
 If the repository is omitted, sbopkg will first look for the specified
 branch in the default repository.
 If that attempt fails, sbopkg will look for the first matching branch in
@@ -272,10 +283,10 @@ Prints the current version of sbopkg on stdout.
 .SH FILES
 .TP 5
 .I /etc/sbopkg/sbopkg.conf
-File to specify configuration options.
+Default system-wide file to specify configuration options.
 .TP
 .I /etc/sbopkg/renames.d/50-default
-Default file that lists software in SBo repository that has been
+Default file that lists software in the SBo repositories that has been
 renamed.
 See the README-renames.d document in the sbopkg doc/ directory for more
 information.
@@ -288,7 +299,11 @@ information.
 .\" Make the release process handle a DOCDIR here? But the files from
 .\" the official tarball go here.
 .SH SEE ALSO
+.BR dialog (1),
+.BR more (1),
+.BR rsync (1),
 .BR sbopkg.conf (5),
+.BR vi (1),
 .IR /usr/doc/sbopkg-SVN/*
 .\"=====================================================================
 .SH AUTHOR

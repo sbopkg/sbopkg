@@ -22,7 +22,8 @@ The different configuration options are:
 This option allows the user to choose the repository to use.
 The default options are SBo, SB64 and local.
 The 'local' choice corresponds to a user-maintained repository whose
-structure must be the same as the one used by SlackBuilds.org.
+structure must be the same as the one used by SlackBuilds.org, in the
+sense of a category/package/files hierarchy.
 NOTE: all of the REPO_* variables are affected by the repository files
 maintained in /etc/sbopkg/repos.d.
 Please see the README-repos.d document in the sbopkg /doc directory.
@@ -34,10 +35,8 @@ REPO_NAME=${REPO_NAME:-SBo}.
 .TP
 .B REPO_BRANCH
 This option allows the user to set the default active repository branch.
-The current options are 11.0, 12.0, 12.1, 12.2, 13.0, and 13.1 for the
-SBo repository and local for the local repository.
-The Slamd64Builds repository is 'master' but is not officially
-supported.
+The current options are listed in the default repos.d/* files and can
+also be listed by issuing 'sbopkg -V ?'.
 .IP
 The default value of REPO_BRANCH is:
 .IP
@@ -47,8 +46,7 @@ REPO_BRANCH=${REPO_BRANCH:-13.1}.
 .B REPO_ROOT
 This option allows the user to set the location of the local mirrors of
 the remote repositories.
-Currently, the size of a local copy of the SBo repository is less than
-50MB.
+Currently, the size of a local copy of the SBo repository is about 70MB.
 .IP
 The default value of REPO_ROOT is:
 .IP
@@ -77,8 +75,11 @@ SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}.
 This option sets the default directory where built packages should be
 stored.
 TMP must be exported as it is used by the SlackBuilds.
-Also note that the default value of TMP is the same as in the SBo
-SlackBuild scripts.
+Note that the default value of TMP is the same as in the SBo SlackBuild
+scripts.
+.IP
+Also note that if the CLEANUP variable is set to YES, any custom TMP
+setting is ignored.
 .IP
 The default value of TMP is:
 .IP
@@ -118,7 +119,7 @@ The default value of KEEPLOG is: YES.
 .TP
 .B LOGDIR
 This option sets the location for the sbopkg permanent log if KEEPLOG is
-set to YES (see previous paragraph).
+set to YES.
 .IP
 The default value of LOGDIR is:
 .IP
@@ -127,15 +128,18 @@ LOGDIR=${LOGDIR:-/var/log/sbopkg}.
 .TP
 .B CLEANUP
 This option should be set to YES or NO.
-When set to YES, the source files and the various residuals from the
-process of building a package are deleted right after the build.
-A side effect of setting CLEANUP to YES is that the TMP setting got from
-the environment or from the configuration files is ignored.
+When set to YES, the unpacked source files and package tree in $TMP are
+deleted right after the build, though the downloaded source archive and
+completed package are left in $SRCDIR and $OUTPUT.
+.IP
+A side effect of setting CLEANUP to YES is that TMP is set to an
+internal value and any other TMP setting is ignored.
 .IP
 The default value of CLEANUP is: NO.
 .\"---------------------------------------------------------------------
 .TP
 .B ALLOW_MULTI
+This option should be set to YES or NO.
 When set to YES, this option allows the user to run multiple instances
 of sbopkg.
 .IP
@@ -160,7 +164,7 @@ sync a repository when another instance is using it
 .TP
 \(bu
 change the branch of a git repository when another instance is using it
-(you can do this with rsync -- i.e. SlackBuild.org -- repos)
+(you can do this with rsync -- i.e., SlackBuild.org -- repos)
 .TP
 \(bu
 simultaneously build or install the same package from different
@@ -172,6 +176,8 @@ save a queue file while using it from another instance
 .IP
 There can be more unsafe situations we haven't thought about.
 Take care.
+.IP
+The default value of ALLOW_MULTI is: NO.
 .\"---------------------------------------------------------------------
 .TP
 .B DEBUG
@@ -270,9 +276,6 @@ would then set TMP to /home/sbo/tmp for building SBo packages.
 OUTPUT can also be changed to save compiled packages in a location other
 than the default of /tmp.
 .PP
-Please note that if the CLEANUP variable is set to YES, the TMP setting
-is ignored.
-.PP
 You can also export variables in sbopkg.conf that are not used by sbopkg
 at all.
 .\"---------------------------------------------------------------------
@@ -315,6 +318,10 @@ information.
 .\" Make the release process handle a DOCDIR here? But the files from
 .\" the official tarball go here.
 .SH SEE ALSO
+.BR diff (1),
+.BR rsync (1),
 .BR sbopkg (8),
+.BR uname (1),
+.BR wget (1),
 .IR /usr/doc/sbopkg-SVN/*
 .\" vim:set tw=72:
