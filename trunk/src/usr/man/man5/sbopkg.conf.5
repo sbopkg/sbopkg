@@ -5,29 +5,39 @@
 sbopkg.conf \- configuration file for sbopkg
 .\"=====================================================================
 .SH DESCRIPTION
-The sbopkg.conf file contains configuration settings for
+The
+.I sbopkg.conf
+file contains configuration settings for
 .BR sbopkg (8),
-a tool for interacting with the SlackBuilds.org ("SBo") repository, a
+a tool for interacting with the SlackBuilds.org (``SBo'') repository, a
 collection of third-party SlackBuild scripts to build Slackware
 packages.
-A sample file is provided at /etc/sbopkg/sbopkg.conf.new.
-Also, please see a note below about ARCH.
+The default configuration file is installed at
+.IR /etc/sbopkg/sbopkg.conf .
+Also, please see the subsection below about
+.BR ARCH .
 .PP
-Boolean options are case-insensitive.
+All boolean options require a
+.B YES
+or a
+.B NO
+without regard to case. All path values must be full.
 .PP
-The different configuration options are:
+The default configuration options are:
 .\"---------------------------------------------------------------------
 .TP 3
 .B ALLOW_MULTI
-This option should be set to YES or NO.
-When set to YES, this option allows the user to run multiple instances
-of sbopkg.
+Boolean.
+.IP
+When set to
+.BR YES ,
+this option allows the user to run multiple instances of
+.BR sbopkg .
 .IP
 Please understand that this option is provided for convenience, but
 given the number of potential issues you can face when enabling this
 (and we aren't going to try to work around users doing silly things),
-you should consider working with ALLOW_MULTI=YES as an EXPERIMENTAL
-UNSUPPORTED feature.
+you should consider this an EXPERIMENTAL UNSUPPORTED feature.
 If you encounter problems, please try to make sure these aren't caused
 by yourself doing improper things.
 .IP
@@ -36,15 +46,18 @@ option enabled:
 .RS 5
 .TP 3
 \(bu
-run an ALLOW_MULTI=NO instance together with one or more having
-ALLOW_MULTI=YES
+run instances with a mixture of
+.B YES
+and
+.B NO
+settings
 .TP
 \(bu
 sync a repository when another instance is using it
 .TP
 \(bu
 change the branch of a git repository when another instance is using it
-(you can do this with rsync -- i.e., SlackBuild.org -- repos)
+(this caveat does not apply to rsync repositories)
 .TP
 \(bu
 simultaneously build or install the same package from different
@@ -63,13 +76,27 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B CLEANUP
-This option should be set to YES or NO.
-When set to YES, the unpacked source files and package tree in $TMP are
-deleted right after the build, though the downloaded source archive and
-completed package are left in $SRCDIR and $OUTPUT.
+Boolean.
 .IP
-A side effect of setting CLEANUP to YES is that TMP is set to an
-internal value and any other TMP setting is ignored.
+When set to
+.BR YES ,
+the unpacked source files and package tree in
+.I $TMP
+are deleted right after the build, though the downloaded source archive
+and completed package are left in
+.I $SRCDIR
+and
+.IR $OUTPUT .
+.IP
+A side effect of setting
+.B CLEANUP
+to
+.B YES
+is that
+.B TMP
+is set to an internal value and any other
+.B TMP
+setting is ignored.
 .IP
 The default assignment is:
 .IP
@@ -77,16 +104,33 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B DEBUG
-This option should be set to 0, 1, or 2.
-DEBUG sets the default debugging level for the update list feature of
-sbopkg.
-When DEBUG is set to 0, then only potential updated (or downgraded)
-packages are listed.
-When DEBUG is set to 1, then potential updates plus packages not in the
-repo and packages that are newer than the repo are listed.
-When DEBUG is set to 2, all non-updated packages are also listed.
-Changing DEBUG to 1 or 2 may be helpful if it appears the updatelist
-might be missing an update.
+Enumeration.
+.IP
+This option should be set to
+.BR 0 ,
+.BR 1 ,
+or
+.BR 2 .
+.B DEBUG
+sets the default debugging level for the update list feature of
+.BR sbopkg .
+When set to
+.BR 0 ,
+only potential updated (or downgraded) packages are listed.
+When set to
+.BR 1 ,
+potential updates plus packages not in the repo and packages that are
+newer than the repo are listed.
+When set to
+.BR 2 ,
+all non-updated packages are also listed.
+Changing
+.B DEBUG
+to
+.B 1
+or
+.B 2
+may be helpful if it appears the updatelist might be missing an update.
 .IP
 The default assignment is:
 .IP
@@ -94,7 +138,10 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B DIFF
-This option allows the user to set which diff program to use when sbopkg
+Command.
+.IP
+This option allows the user to set which diff program to use when
+.B sbopkg
 displays differences between edited files.
 .IP
 The default assignment is:
@@ -103,8 +150,13 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B DIFFOPTS
-This option allows the user to set which options are used by the $DIFF
-program when sbopkg displays differences between edited files.
+Command options.
+.IP
+This option allows the user to set which options are used by the
+.I $DIFF
+program when
+.B sbopkg
+displays differences between edited files.
 .IP
 The default assignment is:
 .IP
@@ -112,11 +164,16 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B KEEPLOG
-This option should be set to YES or NO.
+Boolean.
+.IP
 This option allows the user to choose whether to keep a permanent log of
-packages that are built with sbopkg in order to go back and review the
-build, and any errors, after exiting sbopkg.
-If set to YES, this permanent log is saved at $LOGDIR/sbopkg-build-log.
+packages that are built with
+.B sbopkg
+in order to go back and review the build, and any errors, after exiting
+.BR sbopkg .
+See
+.B LOGFILE
+for where this log is.
 .IP
 The default assignment is:
 .IP
@@ -124,8 +181,12 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B LOGFILE
-This option (which must be set to a full path) sets the name for the
-build log if KEEPLOG is set to YES.
+Path.
+.IP
+This option sets the name for the build log if
+.B KEEPLOG
+is set to
+.BR YES .
 .IP
 The default assignment is:
 .IP
@@ -133,13 +194,18 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B MKDIR_PROMPT
-This option may be set to YES or NO.
-When set to YES, sbopkg will prompt for confirmation before changing the
-filesystem by creating its directories.
+Boolean.
+.IP
+When set to
+.BR YES ,
+.B sbopkg
+will prompt for confirmation before changing the filesystem by creating
+its directories.
 If you do not wish to be prompted (for instance, if you have some of the
 directories on a temporary filesystem and don't wish to be prompted for
 confirmation each time the filesystem is reinitialized) you can set this
-to NO.
+to
+.BR NO .
 .IP
 The default assignment is:
 .IP
@@ -147,11 +213,15 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B OUTPUT
+Path.
+.IP
 This option sets the default directory where compiled packages are
 saved.
-OUTPUT must be exported as it is also used by the SBo SlackBuilds.
-Also note that the default value of OUTPUT is therefore the same as in
-the SBo SlackBuilds.
+.B OUTPUT
+must be exported as it is also used by the SBo SlackBuilds.
+Note that the default value of
+.B OUTPUT
+is therefore the same as in the SBo SlackBuilds.
 .IP
 The default assignment is:
 .IP
@@ -159,6 +229,8 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B QUEUEDIR
+Path.
+.IP
 This option defines the directory under which saved queue files will be
 kept.
 .IP
@@ -168,9 +240,18 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_BRANCH
+Enumeration.
+.IP
 This option allows the user to set the default active repository branch.
-The current options are listed in the default repos.d/* files and can
-also be listed by issuing 'sbopkg -V ?'.
+The current standard values are listed in the default
+.I repos.d/*
+files and can also be listed by issuing
+.RS
+.IP
+.nf
+\fCsbopkg -V ?\fP
+.fi
+.RE
 .IP
 The default assignment is:
 .IP
@@ -178,14 +259,24 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_NAME
+Enumeration.
+.IP
 This option allows the user to choose the repository to use.
-The default options are SBo, SB64 and local.
-The 'local' choice corresponds to a user-maintained repository whose
+See
+.B REPO_BRANCH
+for how to get an enumeration of standard values.
+The ``local'' choice corresponds to a user-maintained repository whose
 structure must be the same as the one used by SlackBuilds.org, in the
-sense of a category/package/files hierarchy.
-NOTE: all of the REPO_* variables are affected by the repository files
-maintained in /etc/sbopkg/repos.d.
-Please see the README-repos.d document in the sbopkg /doc directory.
+sense of a
+.I category/package/files
+hierarchy.
+Note: all of the
+.B REPO_*
+variables are affected by the repository files maintained in
+.I /etc/sbopkg/repos.d.
+Please see the
+.I README-repos.d
+document in the sbopkg documentation directory.
 .IP
 The default assignment is:
 .IP
@@ -193,6 +284,8 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_ROOT
+Path.
+.IP
 This option allows the user to set the location of the local mirrors of
 the remote repositories.
 Currently, the size of a local copy of the SBo repository is about 70MB.
@@ -203,15 +296,35 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B RSYNCFLAGS
-Rsync is used by sbopkg to mirror the SlackBuilds.org repository.
-This option allows the user to manually tweak the rsync flags (options)
-that are used by sbopkg.
+Command options.
+.IP
+.B Rsync
+is used by
+.B sbopkg
+to mirror the SlackBuilds.org repository.
+This option allows the user to manually tweak the
+.B rsync
+flags (options) that are used by
+.BR sbopkg .
 Users are cautioned against making any changes to the default values
 since new flags may or may not work.
-Note: the rsync command in sbopkg already uses the --archive, --delete,
---no-owner, and --exclude flags, so there is no need to add them to the
-RSYNCFLAGS option.
-Changing these default options is not recommended.
+Note: the
+.B rsync
+command in
+.B sbopkg
+already uses the
+.BR \-\-archive ,
+.BR \-\-delete ,
+.BR \-\-no-owner ,
+and
+.B \-\-exclude
+flags, so there is no need to add them to the
+.B RSYNCFLAGS
+option.
+Changing those internal default options is not recommended.
+However,
+.B \-\-timeout
+is a useful option to play with if getting syncing errors.
 .IP
 The default assignment is:
 .IP
@@ -219,8 +332,12 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B SBOPKGTMP
-This option sets the default directory where certain working files are
-saved on a temporary basis.
+Path.
+.IP
+This option sets the default directory where certain working files
+specific to
+.B sbopkg
+are saved on a temporary basis.
 .IP
 The default assignment is:
 .IP
@@ -228,6 +345,8 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B SRCDIR
+Path.
+.IP
 This option contains the location of the cache directory where source
 downloads will be saved.
 .IP
@@ -237,13 +356,21 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B TMP
-This option sets the default directory where built packages should be
-stored.
-TMP must be exported as it is used by the SlackBuilds.
-Note that the default value of TMP is the same as in the SBo SlackBuild
-scripts.
+Path.
 .IP
-Also note that if the CLEANUP variable is set to YES, any custom TMP
+This option sets the default directory where built packages are saved.
+.B TMP
+must be exported as it is also used by the SBo SlackBuilds.
+Note that the default value of
+.B TMP
+is therefore the same as in the SBo SlackBuilds.
+.IP
+Also note that if the
+.B CLEANUP
+variable is set to
+.BR YES ,
+any custom
+.B TMP
 setting is ignored.
 .IP
 The default assignment is:
@@ -252,15 +379,31 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .TP
 .B WGETFLAGS
-Wget is used by sbopkg to download the source files for package
-building.
-This option allows the user to manually tweak the wget flags (options)
-that are used by sbopkg.
+Command options.
+.IP
+.B Wget
+is used by
+.B sbopkg
+to download the source files for package building.
+This option allows the user to manually tweak the
+.B wget
+flags (options) that are used by
+.BR sbopkg .
 Users are cautioned against making any changes to the default values
 since new flags may or may not work.
-Note: the wget command in sbopkg already uses the -O flag, so there is
-no need to add that to the WGETFLAGS option.
-Changing these default options is not recommended.
+Note: the
+.B wget
+command in
+.B sbopkg
+already uses the
+.B \-O
+flag, so there is no need to add that to the
+.B WGETFLAGS
+option.
+Changing most of these default options is not recommended.
+However,
+.B \-\-timeout
+is a useful option to play with if getting download errors.
 .IP
 The default assignment is:
 .IP
@@ -270,46 +413,115 @@ The default assignment is:
 .\"---------------------------------------------------------------------
 .SS Overriding Environmental Variables
 It is possible to set or override environmental variables and pass them
-to the SlackBuild scripts when they are built from within sbopkg.
-This is already demonstrated in the following line in the sbopkg.conf
+to the SlackBuild scripts when they are built from within
+.BR sbopkg .
+This is already demonstrated in the following example line (and others
+like it) in the
+.I sbopkg.conf
 file:
 .PP
-export TMP=${TMP:-/tmp/SBo}
+.RS
+.nf
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
+.fi
+.RE
 .PP
-This sets TMP to /tmp/SBo for building SBo packages within sbopkg (which
-is currently the default for SBo SlackBuilds already).
-Since this variable is exported, it could be changed for both sbopkg and
-for building SBo packages within sbopkg.
+This sets
+.B TMP
+to
+.I /tmp/SBo
+for building SBo packages within
+.B sbopkg
+(which is currently the default for SBo SlackBuilds already).
+Since this variable is exported, it could be changed for both
+.B sbopkg
+and for building SBo packages within
+.BR sbopkg .
 For example, changing this line so it reads:
 .PP
-export TMP=${TMP:-/home/sbo/tmp}
+.RS
+.nf
+\fCexport TMP=${TMP:-/home/sbo/tmp}\fP
+.fi
+.RE
 .PP
-would then set TMP to /home/sbo/tmp for building SBo packages.
-OUTPUT can also be changed to save compiled packages in a location other
-than the default of /tmp.
+would then set
+.B TMP
+to
+.I /home/sbo/tmp
+for building SBo packages and still allow it to be overridden at runtime
+by invoking
+.B sbopkg
+as
+.RS
 .PP
-You can also export variables in sbopkg.conf that are not used by sbopkg
+.nf
+\fCexport TMP=foo; sbopkg\fP
+.fi
+.RE
+.PP
+.B OUTPUT
+can also be changed to save compiled packages in a location other than
+the default of
+.IR /tmp .
+.PP
+You can also export variables in
+.I sbopkg.conf
+that are not used by
+.B sbopkg
 at all.
 .\"---------------------------------------------------------------------
 .SS About the ARCH Variable
-You may be wondering why ARCH is not a configuration setting in the
-default sbopkg.conf file.
+You may be wondering why
+.B ARCH
+is not a configuration setting in the default
+.I sbopkg.conf
+file.
 The reason is that it does not have to be.
-If ARCH is not set, sbopkg does some checking (using 'uname -m') to
-determine what the system's architecture is.
-If the architecture is x86, x86_64, or arm*, then sbopkg automatically
-sets ARCH to i486, x86_64, or arm, respectively.
-If ARCH is set, sbopkg will inherit that setting.
-This means the user can add, for example, 'export ARCH=i686' in their
-\&.bashrc or similar file, or the user can also execute something in the
-root terminal like 'export ARCH=i686 && sbopkg'.
-The user can also manually add it to their sbopkg.conf file if they
-wish.
-Finally, if ARCH is not set by the user and sbopkg does not detect one
-of the previously mentioned architectures, then ARCH will be set by
-whatever is in the SlackBuild scripts.
+If
+.B ARCH
+is not set,
+.B sbopkg
+does some checking (using the output of
+.BR "uname \-m" )
+to determine what the system's architecture is.
+If the architecture is x86, x86_64, or arm*, then
+.B sbopkg
+automatically sets
+.B ARCH
+to i486, x86_64, or arm, respectively.
+If
+.B ARCH
+is set,
+.B sbopkg
+will inherit that setting.
+This means the user can add, for example,
+.B export ARCH=i686
+in their
+.I .bashrc
+or similar file, or the user can also execute something in the
+root terminal like
+.RS
+.PP
+.nf
+\fCexport ARCH=i686; sbopkg\fP
+.fi
+.RE
+.PP
+The user can also manually add it to their
+.I sbopkg.conf
+file if they wish.
+Finally, if
+.B ARCH
+is not set by the user and
+.B sbopkg
+does not detect one of the previously mentioned architectures, then
+.B ARCH
+will be set by whatever is in the SlackBuild scripts.
 Note that the SlackBuild may, in certain instances, discard or override
-previous ARCH settings if this is required for the build.
+previous
+.B ARCH
+settings if this is required for the build.
 .\"=====================================================================
 .SH FILES
 .TP 3
@@ -317,15 +529,31 @@ previous ARCH settings if this is required for the build.
 File to specify configuration options.
 .TP
 .I /etc/sbopkg/renames.d/50-default
-Default file that lists software in SBo repository that has been
+Default file that lists software in the SBo repository that has been
 renamed.
-See the README-renames.d document in the sbopkg doc/ directory for more
-information.
+See the
+.I README-renames.d
+document in the sbopkg documentation directory for more information.
 .TP
 .I /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
-Three default files for various types of sbopkg repositories.
-See the README-repos.d document in the sbopkg doc/ directory for more
-information.
+Three default files for various types of
+.B sbopkg
+repositories.
+See the
+.I README-repos.d
+document in the
+.B sbopkg
+documentation directory for more information.
+.\"=====================================================================
+.SH AUTHORS
+Chess Griffin
+<chess@chessgriffin.com>
+.PP
+Mauro Giachero
+<mauro.giachero@gmail.com>
+.PP
+slakmagik
+<slakmagik@gmail.com>
 .\"=====================================================================
 .\" Make the release process handle a DOCDIR here? But the files from
 .\" the official tarball go here.

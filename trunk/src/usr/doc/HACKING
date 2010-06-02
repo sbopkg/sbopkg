@@ -257,3 +257,24 @@ Manual Page Style Guidelines
 * Try to be as specific as conveniently possible, where 'convenient' means to
   generalize wherever constant updates might be necessary and such
   generalization wouldn't compromise clarity and accuracy.
+* Italicize filenames, URLs, replaceable terms (including references to
+  unspecified variable values ($VARs).
+* Embolden variables (when used literally rather than replaceably), option
+  values, programs, program flags, and all references to sbopkg itself.
+* Use `` and '' for double-quotes so groff does the fancy stuff for ps output.
+* Make all option dashes in the form \- (or \-\-) unless in a code example.
+* .EX doesn't seem to be very well supported or necessarily what is wanted -
+  code examples can be done with the following cookie-cutter code:
+    .RS
+    .IP \" or .PP or whatever's appropriate
+    .nf
+    \fCline_of_code\fP
+    .fi
+    .RE
+  If inline, at least embolden them so they're set off in ascii overstrike
+  output.
+* Start configuration file option sections with a statement of type, a
+  description, and the following cookie-cutter code:
+    The default assignment is:
+    .IP
+    \fCdefault_assignment\fP
