@@ -237,8 +237,8 @@ Manual Page Style Guidelines
 ----------------------------
 
 * Separate all text header and section header requests with commented lines of
-  equal (=) signs. Separate all tagged paragraphs that serve as subsections
-  with commented lines of minus (-) signs.
+  equal (=) signs. Separate all subsections and tagged paragraphs that serve
+  as subsections with commented lines of minus (-) signs.
 * Leave no blank lines in the file. E.g., .PP will often serve under .SH and
   .IP under .TP.
 * Wrap lines at 72 columns and begin all sentences on new lines.
@@ -250,3 +250,10 @@ Manual Page Style Guidelines
 * Add options as .TP 5 (or current default), with \- and bold options,
   followed by italic replaceable arguments to those options or bold literal
   arguments, if any.
+* Refer to the user as 'the user' rather than 'you'.
+* Collect all referenced programs (unless used purely as an example) in the
+  SEE ALSO section. (The SEE ALSO section is not *limited* to referenced
+  programs, however.)
+* Try to be as specific as conveniently possible, where 'convenient' means to
+  generalize wherever constant updates might be necessary and such
+  generalization wouldn't compromise clarity and accuracy.
