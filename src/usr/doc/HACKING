@@ -242,3 +242,11 @@ Manual Page Style Guidelines
 * Leave no blank lines in the file. E.g., .PP will often serve under .SH and
   .IP under .TP.
 * Wrap lines at 72 columns and begin all sentences on new lines.
+* If variables are being used in the sense of their value, use $VAL but if
+  they are being used in reference to themselves, use VAR.
+* Where sensible, try to make .TPs have a consistent indent.
+* Try to use standard headers where possible, filing other information
+  under subsections of the relevant section header.
+* Add options as .TP 5 (or current default), with \- and bold options,
+  followed by italic replaceable arguments to those options or bold literal
+  arguments, if any.

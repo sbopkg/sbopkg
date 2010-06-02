@@ -2,17 +2,16 @@
 .TH SBOPKG.CONF 5 "May 2010" sbopkg-SVN ""
 .\"=====================================================================
 .SH NAME
-.B sbopkg.conf
-\- Configuration file for sbopkg
+sbopkg.conf \- configuration file for sbopkg
 .\"=====================================================================
 .SH DESCRIPTION
 The sbopkg.conf file contains configuration settings for
-.B sbopkg
-(8), a tool for interacting with the SlackBuilds.org ("SBo") repository,
-a collection of third-party SlackBuild scripts to build Slackware
+.BR sbopkg (8),
+a tool for interacting with the SlackBuilds.org ("SBo") repository, a
+collection of third-party SlackBuild scripts to build Slackware
 packages.
 A sample file is provided at /etc/sbopkg/sbopkg.conf.new.
-Also, please see a note below about $ARCH.
+Also, please see a note below about ARCH.
 .PP
 Boolean options are case-insensitive.
 .PP
@@ -150,19 +149,24 @@ by yourself doing improper things.
 .IP
 For reference, these are some of the things you shouldn't do with this
 option enabled:
-.RS 6
-.IP \[bu] 2
+.RS 5
+.TP 3
+\(bu
 run an ALLOW_MULTI=NO instance together with one or more having
 ALLOW_MULTI=YES
-.IP \[bu]
+.TP
+\(bu
 sync a repository when another instance is using it
-.IP \[bu]
+.TP
+\(bu
 change the branch of a git repository when another instance is using it
 (you can do this with rsync -- i.e. SlackBuild.org -- repos)
-.IP \[bu]
+.TP
+\(bu
 simultaneously build or install the same package from different
 instances
-.IP \[bu]
+.TP
+\(bu
 save a queue file while using it from another instance
 .RE
 .IP
@@ -244,7 +248,9 @@ The default value of DIFFOPTS is:
 .IP
 DIFFOPTS=${DIFFOPTS:--u}
 .\"=====================================================================
-.SH OVERRIDING ENVIRONMENTAL VARIABLES
+.SH NOTES
+.\"---------------------------------------------------------------------
+.SS Overriding Environmental Variables
 It is possible to set or override environmental variables and pass them
 to the SlackBuild scripts when they are built from within sbopkg.
 This is already demonstrated in the following line in the sbopkg.conf
@@ -252,15 +258,15 @@ file:
 .PP
 export TMP=${TMP:-/tmp/SBo}
 .PP
-This sets $TMP to /tmp/SBo for building SBo packages within sbopkg
-(which is currently the default for SBo SlackBuilds already).
+This sets TMP to /tmp/SBo for building SBo packages within sbopkg (which
+is currently the default for SBo SlackBuilds already).
 Since this variable is exported, it could be changed for both sbopkg and
 for building SBo packages within sbopkg.
 For example, changing this line so it reads:
 .PP
 export TMP=${TMP:-/home/sbo/tmp}
 .PP
-would then set $TMP to /home/sbo/tmp for building SBo packages.
+would then set TMP to /home/sbo/tmp for building SBo packages.
 OUTPUT can also be changed to save compiled packages in a location other
 than the default of /tmp.
 .PP
@@ -269,8 +275,8 @@ is ignored.
 .PP
 You can also export variables in sbopkg.conf that are not used by sbopkg
 at all.
-.\"=====================================================================
-.SH ABOUT THE ARCH VARIABLE
+.\"---------------------------------------------------------------------
+.SS About the ARCH Variable
 You may be wondering why ARCH is not a configuration setting in the
 default sbopkg.conf file.
 The reason is that it does not have to be.
@@ -291,25 +297,24 @@ Note that the SlackBuild may, in certain instances, discard or override
 previous ARCH settings if this is required for the build.
 .\"=====================================================================
 .SH FILES
-.B /etc/sbopkg/sbopkg.conf
-\ - File to specify configuration options.
-.PP
-.B /etc/sbopkg/renames.d/50-default
-\ - Default file that lists software in SBo repository that has been
+.TP 3
+.I /etc/sbopkg/sbopkg.conf
+File to specify configuration options.
+.TP
+.I /etc/sbopkg/renames.d/50-default
+Default file that lists software in SBo repository that has been
 renamed.
 See the README-renames.d document in the sbopkg doc/ directory for more
 information.
-.PP
-.B /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
-\ - Three default files for various types of sbopkg repositories.
+.TP
+.I /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
+Three default files for various types of sbopkg repositories.
 See the README-repos.d document in the sbopkg doc/ directory for more
 information.
 .\"=====================================================================
-.SH "SEE ALSO"
-.BR sbopkg (8)
-.BR doc/README
-.BR doc/README-queuefiles
-.BR doc/README-renames.d
-.BR doc/README-repos.d
-.BR doc/queuefiles/*
+.\" Make the release process handle a DOCDIR here? But the files from
+.\" the official tarball go here.
+.SH SEE ALSO
+.BR sbopkg (8),
+.IR /usr/doc/sbopkg-SVN/*
 .\" vim:set tw=72:
