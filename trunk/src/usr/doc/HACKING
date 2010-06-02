@@ -239,3 +239,5 @@ Manual Page Style Guidelines
 * Separate all text header and section header requests with commented lines of
   equal (=) signs. Separate all tagged paragraphs that serve as subsections
   with commented lines of minus (-) signs.
+* Leave no blank lines in the file. E.g., .PP will often serve under .SH and
+  .IP under .TP.
