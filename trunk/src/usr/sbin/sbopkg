@@ -104,7 +104,7 @@ config_check() {
     [[ -e $HOME/.sbopkg.conf ]] && . $HOME/.sbopkg.conf
 
     # Some configuration options are mandatory
-    for VAR in REPO_ROOT LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME \
+    for VAR in REPO_ROOT QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME \
         REPO_BRANCH KEEPLOG CLEANUP LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS \
         WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D ALLOW_MULTI; do
         if [[ -z "${!VAR}" ]]; then
@@ -131,6 +131,11 @@ EOF
     fi
     if [[ $DEBUG -ne 0 && $DEBUG -ne 1 && $DEBUG -ne 2 ]]; then
         echo "The \$DEBUG variable must be set to 0, 1, or 2." 1>&2
+        exit 1
+    fi
+
+    if [[ $LOGFILE != /* ]]; then
+        echo "The LOGFILE variable must be set to a full path." 1>&2
         exit 1
     fi
 
@@ -329,8 +334,8 @@ directory_checks() {
     ck_dir $REPO_DIR \
         "Creating local repository directory $REPO_DIR for the \
             script mirror."
-    ck_dir $LOGDIR \
-        "Creating log directory $LOGDIR."
+    ck_dir ${LOGFILE%/*} \
+        "Creating log directory ${LOGFILE%/*}."
     ck_dir $QUEUEDIR \
         "Creating queues directory $QUEUEDIR."
     ck_dir $SRCDIR \

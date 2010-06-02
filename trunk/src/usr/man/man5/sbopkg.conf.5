@@ -123,13 +123,13 @@ The default assignment is:
 \fCKEEPLOG=YES\fP
 .\"---------------------------------------------------------------------
 .TP
-.B LOGDIR
-This option sets the location for the sbopkg permanent log if KEEPLOG is
-set to YES.
+.B LOGFILE
+This option (which must be set to a full path) sets the name for the
+build log if KEEPLOG is set to YES.
 .IP
 The default assignment is:
 .IP
-\fCLOGDIR=${LOGDIR:-/var/log/sbopkg}\fP
+\fCLOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B MKDIR_PROMPT
