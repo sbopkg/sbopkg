@@ -63,6 +63,12 @@ crunch_fmt() {
     echo -e "$@" | tr -s ' ' | fmt -78
 }
 
+unknown_response() {
+    # This is to produce the error message for bad read input
+
+    crunch_fmt "$SCRIPT: ${FUNCNAME[1]}: Unknown response: \"$REPLY\"."
+}
+
 split_pkg_name() {
     # This function takes a string in the Slackware format NAME-VER-ARCH-BUILD
     # (with an optional TAG) and splits the string into those respective
@@ -2581,7 +2587,7 @@ read_info() {
     # (possibly ARCH-dependent) values.
 
     local INFO=$1
-    local i DOWNLOAD_ARCH DLSAVE MDSAVE ANS
+    local i DOWNLOAD_ARCH DLSAVE MDSAVE REPLY
     local {DOWNLOAD,MD5SUM}_$ARCH
 
     unset DOWNLOAD MD5SUM
@@ -2620,17 +2626,11 @@ read_info() {
                     do you want to skip it?"
                 echo
                 echo "Press (Y)es to proceed or (N)o to skip."
-                read ANS
-                case $ANS in
-                    y* | Y* )
-                        break
-                        ;;
-                    n* | N* )
-                        return 1
-                        ;;
-                    * )
-                        echo "Unknown response."
-                        ;;
+                read
+                case $REPLY in
+                    y* | Y* ) break ;;
+                    n* | N* ) return 1 ;;
+                    * ) unknown_response ;;
                 esac
             done
             if [[ $ARCH != "x86_64" ]]; then
@@ -2762,7 +2762,7 @@ check_source() {
     local PKG=$1
     local MD5SUM="$2"
     local SRCNAME="$3"
-    local MD5CHK ANS
+    local MD5CHK REPLY
 
     # If there's no known source name, or if it doesn't exist, it has to be
     # downloaded...
@@ -2795,8 +2795,8 @@ You can choose among the following options:
  - (R)etry download and continue the build process.
 Your choice?
 EOF
-            error_read ANS
-            case $ANS in
+            error_read
+            case $REPLY in
                 y* | Y* )
                     MD5SUM=$(tr / _ <<< "$MD5CHK")
                     echo "    Keeping the source and continuing." |
@@ -2813,7 +2813,7 @@ EOF
                     return 1
                     ;;
                 * )
-                    echo "    Unknown response."
+                    unknown_response
                     ;;
             esac
         done
@@ -2838,7 +2838,7 @@ get_source() {
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-    local SRCNAME DL_SRCNAME DL FAILURE ANS MD5CHK i CWD
+    local SRCNAME DL_SRCNAME DL FAILURE MD5CHK i CWD
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
@@ -3044,7 +3044,7 @@ remove_files() {
     local ONOFF="$4"
     local FILES_CHECKLIST=$SBOPKGTMP/sbopkg_file_removal_checklist
     local FILES_DELETING=$SBOPKGTMP/sbopkg_file_removal_deleting
-    local SRC USER_OPTS DELETE ANS DLGWIDTH CHOICE
+    local SRC USER_OPTS DELETE DLGWIDTH CHOICE REPLY
 
     cd $FILESPATH
     if [[ -s $FILES ]]; then
@@ -3088,7 +3088,7 @@ remove_files() {
                 case $REPLY in
                     n* | N* ) break ;;
                     y* | Y* ) DELETE=1; break ;;
-                    * ) echo "Unknown response." ;;
+                    * ) unknown_response ;;
                 esac
             done
         fi
@@ -3174,6 +3174,7 @@ install_package() {
     local INSTPKG=$2
     local OWNER=$(stat -c %U $INSTDIR/$INSTPKG)
     local GROUP=$(stat -c %G $INSTDIR/$INSTPKG)
+    local REPLY
 
     if [[ $OWNER != root && $GROUP != root ]]; then
         crunch_fmt "WARNING:  The file $INSTPKG is not set with root:root \
@@ -3183,11 +3184,11 @@ install_package() {
         ls -l $INSTDIR/$INSTPKG
         echo
         echo "Press (Y)es to proceed or (N)o to abort."
-        read ANS
-        case $ANS in
+        read
+        case $REPLY in
             y* | Y* ) echo "Proceeding..." ;;
             n* | N* ) echo "Aborting..."; return 0 ;;
-            * ) echo "Unknown response."; break ;;
+            * ) unknown_response; break ;;
         esac
     fi
     do_install $INSTDIR/$INSTPKG
@@ -3207,6 +3208,11 @@ error_read() {
         ask) read $1; return ;;
         stop) eval $1=No; echo -n "No " ;;
         cont*) eval $1=Yes; echo -n "Yes " ;;
+        *)
+            crunch_fmt "$SCRIPT: ${FUNCNAME[0]}: this shouldn't happen. \
+                Please file a bug report which includes this line."
+            exit 1
+            ;;
     esac
     echo "(as specified with '-e')"
 }
@@ -3226,6 +3232,7 @@ build_package() {
     local PKGPATH=$1
     local PKGNAME=$2
     local RETVAL=0
+    local REPLY
 
     echo
     echo "Building $PKGNAME"
@@ -3291,8 +3298,8 @@ build_package() {
             echo "Press (Y)es to continue, (N)o to abort, (R)etry to try"
             echo "to build the package again."
             while :; do
-                error_read ANS
-                case $ANS in
+                error_read
+                case $REPLY in
                     y* | Y* ) # Continue
                         RETVAL=1
                         break 2
@@ -3306,7 +3313,7 @@ build_package() {
                         continue 2
                         ;;
                     * ) # Huh?
-                        echo "Unknown response."
+                        unknown_response
                         ;;
                 esac
             done
@@ -3399,7 +3406,7 @@ pick_file() {
     local PKGPATH=$2
     local PKG=$3
     PICKFILE=original
-    local ANS ITEM
+    local ITEM ANS REPLY
 
     rm -f $SBOPKGTMP/sbopkg_file_selection $SBOPKGTMP/sbopkg_diff
     # FIXME slakmagik, what's going on here?
@@ -3466,8 +3473,8 @@ pick_file() {
                 echo "Which one would you like to use?"
                 echo
                 crunch_fmt "(O)riginal, (L)ocal, (D)iff, (C)ancel:"
-                read ANS
-                case $ANS in
+                read
+                case $REPLY in
                     o* | O* )
                         PICKFILE="original"
                         break
@@ -3485,7 +3492,7 @@ pick_file() {
                         return 1
                         ;;
                     * ) # Huh?
-                        echo "Unknown response."
+                        unknown_response
                         ;;
                 esac
             done
@@ -3513,7 +3520,7 @@ use_options() {
     local OPTAPP=$2
     local OPTCHOICE=$SBOPKGTMP/sbopkg_options_choice
     local OPTLIST=$SBOPKGTMP/sbopkg_options_list
-    local TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG
+    local TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG REPLY
 
     # By default (i.e. no options.sbopkg file) there are no build options.
     unset BUILDOPTIONS
@@ -3574,8 +3581,8 @@ use_options() {
                 echo
                 crunch_fmt "Please choose (N)one, (S)aved, (Q)ueuefile, \
                     or (A)bort"
-                read ANS
-                case $ANS in
+                read
+                case $REPLY in
                     n* | N* )
                         break
                         ;;
@@ -3608,7 +3615,7 @@ use_options() {
                         return 1
                         ;;
                     * )
-                        echo "Unknown response."
+                        unknown_response
                         echo
                         ;;
                 esac
@@ -3623,6 +3630,7 @@ check_asc() {
     local CHKPKG=$1
     local GPGNAME=$(basename $CHKPKG)
     local CATEGORY=$(echo $CHKPKG | cut -d/ -f2)
+    local REPLY
 
     echo -n "  Checking GPG for $GPGNAME.tar.gz ... " | tee -a $TMPLOG
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
@@ -3643,8 +3651,8 @@ You can choose among the following options:
  - (A)bort the build process without deleting anything.
 Your choice?
 EOF
-            error_read ANS
-            case $ANS in
+            error_read
+            case $REPLY in
                 y* | Y* )
                     echo "  Keeping $GPGNAME directory and tarball." |
                         tee -a $TMPLOG
@@ -3662,7 +3670,7 @@ EOF
                     return 1
                     ;;
                 * )
-                    echo "Unknown response."
+                    unknown_response
                     ;;
             esac
         done
@@ -3675,7 +3683,7 @@ EOF
 
 process_queue() {
     local QUEUETYPE=$1 # build|buildinstall
-    local CHKBUILD ANS
+    local CHKBUILD REPLY
 
     # The first (and largest) of three sections in this function is a precheck
     # section.
@@ -3771,8 +3779,8 @@ process_queue() {
                 the process."
             echo
             echo "Press (Y)es to proceed or (N)o to quit."
-            read ANS
-            case $ANS in
+            read
+            case $REPLY in
                 y* | Y* )
                     break
                     ;;
@@ -3782,7 +3790,7 @@ process_queue() {
                     return 0
                     ;;
                 * )
-                    echo "Unknown response."
+                    unknown_response
                     ;;
             esac
         done
@@ -3934,7 +3942,7 @@ check_for_latest() {
     local NEWSBOPKG=$(wget -T 10 -q -O - $NEWPKG)
     local NEWDL=http://www.sbopkg.org/currentdownload
     local NEWDLPKG=$(wget -T 10 -q -O - $NEWDL)
-    local SBOPKGUP MSG ANS
+    local SBOPKGUP MSG REPLY
 
     if [[ -z $CVRS || -z $NVRS ]]; then
         if [[ -z $NVRS ]]; then
@@ -3986,11 +3994,11 @@ check_for_latest() {
         crunch_fmt "$MSG"
         if [[ $SBOPKGUP ]]; then
             while :; do
-                read ANS
-                case $ANS in
+                read
+                case $REPLY in
                     y* | Y* ) break ;;
                     n* | N* ) return 0 ;;
-                    * ) echo "Unknown response." ;;
+                    * ) unknown_response ;;
                 esac
             done
         fi
@@ -4540,6 +4548,8 @@ if [[ $ON_ERROR != ask && \
     echo "Unknown -e specifier -- \"$ON_ERROR\"" >&2
     echo "Valid values are: ask (default), continue, stop" >&2
     exit 1
+else
+    readonly ON_ERROR
 fi
 
 # Check for a good config file and set initial variables
@@ -4612,8 +4622,8 @@ else
                 echo
                 echo "Please enter (Q)ueuefile, (P)ackage, or (A)bort:"
                 while :; do
-                    read ANS
-                    case $ANS in
+                    read
+                    case $REPLY in
                         q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sqf
                                   break
                                   ;;
@@ -4623,7 +4633,7 @@ else
                         a* | A* ) cleanup
                                   exit 1
                                   ;;
-                        * ) echo "Unknown response." ;;
+                        * ) unknown_response ;;
                     esac
                 done
             else
@@ -4646,11 +4656,11 @@ else
             echo
             echo "OK to continue processing?"
             while :; do
-                error_read ANS
-                case $ANS in
+                error_read
+                case $REPLY in
                     y* | Y* ) break ;;
                     n* | N* ) cleanup; exit 1 ;;
-                    * ) echo "Unknown response." ;;
+                    * ) unknown_response ;;
                 esac
             done
         fi
@@ -4669,11 +4679,11 @@ else
             echo
             echo "OK to continue processing?"
             while :; do
-                read ANS
-                case $ANS in
+                read
+                case $REPLY in
                     y* | Y* ) break ;;
                     n* | N* ) cleanup; exit 1 ;;
-                    * ) echo "Unknown response." ;;
+                    * ) unknown_response ;;
                 esac
             done
         fi
