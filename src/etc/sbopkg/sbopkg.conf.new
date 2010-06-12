@@ -6,37 +6,37 @@
 
 # The following are variables used by sbopkg.  Any of these variables could
 # be exported, if desired.
-# Directory variables
+
+# Path variables
 REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}
 QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}
-# Non-directory variables:
+
+# Other variables:
 REPO_NAME=${REPO_NAME:-SBo}
 REPO_BRANCH=${REPO_BRANCH:-13.1}
-KEEPLOG=YES
+KEEPLOG=${KEEPLOG:-YES}
 LOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}
-DEBUG_UPDATES={$DEBUG_UPDATES:-0}
-CLEANUP=NO
-MKDIR_PROMPT=YES
+DEBUG_UPDATES=${DEBUG_UPDATES:-0}
+CLEANUP=${CLEANUP:-NO}
+MKDIR_PROMPT=${MKDIR_PROMPT:-YES}
 
-# Set this to YES to allow multiple instances of sbopkg to run.
-# Please read the sbopkg.conf(5) man page before doing so
-# (otherwise, don't even think about submitting a problem report).
-ALLOW_MULTI=NO
+# The following variable determines if multiple instances of sbopkg can be run
+# simultaneously. It is *strongly* recommended that this value be set to NO.
+# Do not set it to YES without first reading the sbopkg.conf(5) man page.
+ALLOW_MULTI=${ALLOW_MULTI:-NO}
 
 # The following variables are used by sbopkg and by the SlackBuild scripts
-# themselves.  They are exported for this reason.
+# themselves.  They must be exported for this reason.
 export TMP=${TMP:-/tmp/SBo}
 export OUTPUT=${OUTPUT:-/tmp}
 
 # The following variables are required and can be tweaked if desired,
-# although most users should leave them alone.  Note:  rsync already uses
+# although this is not recommended.  Note:  rsync already uses
 # --archive, --delete, --no-owner, and --exclude in the main sbopkg script
-# so there is no need to add those flags here.  Similarly, wget already
-# uses the -O options so there is no need to add that either.  In general,
-# it is not recommended that users change these default values.
-RSYNCFLAGS="--verbose --timeout=30"
-WGETFLAGS="--continue --progress=bar:force --timeout=30 --tries=5"
+# so there is no need to add those flags here.
+RSYNCFLAGS="${RSYNCFLAGS:---verbose --timeout=30}"
+WGETFLAGS="${WGETFLAGS:--c --progress=bar:force --timeout=30 --tries=5}"
 DIFF=${DIFF:-diff}
 DIFFOPTS=${DIFFOPTS:--u}
