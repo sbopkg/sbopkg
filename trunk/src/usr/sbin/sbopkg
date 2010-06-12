@@ -147,19 +147,6 @@ EOF
     yesno_to_setunset ALLOW_MULTI
     yesno_to_setunset MKDIR_PROMPT
 
-    # If multiple instances of sbopkg are allowed, they need their own
-    # private $SBOPKGTMP.
-    # Since simply appending the cookie makes sbopkg to inform the user about
-    # the creation of the new $SBOPKGTMP directory on every startup, we do a
-    # little more setup here.
-    if [[ $ALLOW_MULTI ]]; then
-        # Note: this ck_dir line is copied from directory_checks
-        ck_dir $SBOPKGTMP \
-            "Creating local sbopkg TMP directory $SBOPKGTMP."
-        SBOPKGTMP+=/sbopkg-instance-$(mcookie)
-        mkdir -p $SBOPKGTMP
-    fi
-
     # Make sure there are no unexpected files in $SBOPKGTMP
     if [[ -n $(find $SBOPKGTMP -mindepth 1 -maxdepth 1 -not -name sbopkg\* \
             2> /dev/null) ]]; then
@@ -280,81 +267,98 @@ EOF
     return 0
 }
 
-ck_dir() {
-    # This function displays the directory-creation message and then creates
-    # the missing directory.
+dir_init() {
+    # Check to make sure certain sbopkg-related directories exist.
+    # If not, create them.
 
-    local DIR=$1
-    local MSG="$2"
-    local ERROR=0
-    local JUNK
+    local DIR_VARS DI_OUTPUT_LINES DIRS2MK DI_OUTPUT REPLY ERROR
 
-    # Try to create the specified folder
-    if [[ ! -d $DIR ]]; then
-        if [[ $MKDIR_PROMPT ]]; then
-            echo
-            crunch_fmt "$MSG"
-            echo
-            read -n1 -sep "Press any key to continue or Ctrl-C to exit."
-            mkdir -p $DIR 2> /dev/null && echo "Directory created." || ERROR=1
+    # Keep DIR_VARS and DI_OUTPUT_LINES in sync where REPO_DIR ~ REPO_ROOT.
+
+    # We show REPO_ROOT and make REPO_DIR because the REPO_DIR we need to make
+    # is assigned to elswhere in the script as a combination of
+    # REPO_ROOT/REPO_NAME and may or may not be combined with REPO_BRANCH -
+    # but these are all subdirectories of REPO_ROOT, so that's all we need to
+    # actually display and we can avoid the confusion we might get with a
+    # display like 'REPO_DIR[/REPO_NAME]'.
+
+    DIR_VARS=(
+        $REPO_DIR ${LOGFILE%/*} $QUEUEDIR $SRCDIR $SBOPKGTMP $TMP $OUTPUT
+    )
+
+    DI_OUTPUT_LINES=(
+        "REPO_ROOT -----------> $REPO_ROOT"
+        "LOGFILE directory ---> ${LOGFILE%/*}"
+        "QUEUEDIR ------------> $QUEUEDIR"
+        "SRCDIR --------------> $SRCDIR"
+        "SBOPKGTMP -----------> $SBOPKGTMP"
+        "TMP -----------------> $TMP"
+        "OUTPUT --------------> $OUTPUT"
+    )
+
+    for ((i=0; i<${#DIR_VARS[*]}; i++)); do
+        if [ ! -d ${DIR_VARS[$i]} ]; then
+            DIRS2MK+="${DIR_VARS[$i]} "
+            DI_OUTPUT+=( "${DI_OUTPUT_LINES[$i]}" )
+        fi
+    done
+    if [[ $DI_OUTPUT ]]; then
+        # Keep DI_OUTPUT_LINES and the 'table headers' aligned, too.
+        cat << EOF
+
+The following directories do not exist:
+
+Variable               Assignment
+--------               ----------
+EOF
+        for ((i=0; i<${#DI_OUTPUT[*]}; i++)); do
+            echo "${DI_OUTPUT[$i]}"
+        done
+        cat << EOF
+
+To have sbopkg create them, type 'y'. If these values are incorrect, press 'n'
+and edit your config files or pass different flags.
+
+EOF
+        read -n1 -ep "[y/n] "
+        if [[ $REPLY == y ]]; then
+            if ! mkdir -p $DIRS2MK 2>/dev/null; then
+                echo "$SCRIPT: failed to create directories" >&2
+                cleanup; exit 1
+            fi
         else
-            mkdir -p $DIR 2> /dev/null || ERROR=1
+            if [[ ${FUNCNAME[1]} == main ]]; then
+                cleanup; exit 1
+            else
+                return 1
+            fi
         fi
     fi
 
-    # Try to create a file in the specified folder
-    if [[ $ERROR -eq 0 ]]; then
-        (> $DIR/sbopkg-testfile 2> /dev/null && rm -f \
-        $DIR/sbopkg-testfile 2> /dev/null) || ERROR=2
+    for ((i=0; i<${#DIR_VARS[*]}; i++)); do
+        if [ ! -w ${DIR_VARS[$i]} ]; then
+            echo ${DIR_VARS[$i]} not writable
+            ERROR=nowrite
+        fi
+    done
+
+    if [[ $ERROR == nowrite ]]; then
+        # error msg above
+        cleanup; exit 1
     fi
 
-    case $ERROR in
-        1 ) crunch_fmt "\\nWARNING:\
-                \\n$SCRIPT: Unable to create $DIR.\
-                \\n\\nMake sure you have enough privileges to create that\
-                directory, or specify a different location in sbopkg.conf.\
-                \\nSee the sbopkg.conf(5) man page for more details.\
-                \\n\\nPress ENTER to continue anyway, CTRL-C to abort."
-            read JUNK
-            ;;
-        2 ) crunch_fmt "\\nWARNING:\
-                \\n$SCRIPT: Unable to create files in $DIR.\
-                \\n\\nMake sure you have enough privileges to write in\
-                that directory, or specify a different location in\
-                sbopkg.conf.\
-                \\nSee the sbopkg.conf(5) man page for more details.\
-                \\n\\nPress ENTER to continue anyway, CTRL-C to abort."
-            read JUNK
-            ;;
-    esac
-}
-
-directory_checks() {
-    # Check and make sure certain sbopkg-related directories exist.
-    # If not, create them.
-
-    ck_dir $REPO_DIR \
-        "Creating local repository directory $REPO_DIR for the \
-            script mirror."
-    ck_dir ${LOGFILE%/*} \
-        "Creating log directory ${LOGFILE%/*}."
-    ck_dir $QUEUEDIR \
-        "Creating queues directory $QUEUEDIR."
-    ck_dir $SRCDIR \
-        "Creating local cache directory $SRCDIR to keep downloaded sources."
-    ck_dir $SBOPKGTMP \
-        "Creating local sbopkg TMP directory $SBOPKGTMP."
-    ck_dir $TMP \
-        "Creating local SBo TMP directory $TMP." # Also see config_check()
-    ck_dir $OUTPUT \
-        "Creating local package output directory $OUTPUT."
-
-    # Let's catch Control-C and try to exit cleanly.  Please see the
-    # comment to the control_c function, below.
-    trap 'control_c' 2 14 15
+    # If multiple instances of sbopkg are allowed, they need their own private
+    # $SBOPKGTMP under an already created and verified $SBOPKGTMP (so no error
+    # checking) but we only need to do this once from main().
+    if [[ $ALLOW_MULTI ]] && [[ ${FUNCNAME[1]} == main ]]; then
+        SBOPKGTMP+=/sbopkg-instance-$(mcookie)
+        mkdir -p $SBOPKGTMP
+    fi
 }
 
 pid_check() {
+    [[ $ALLOW_MULTI ]] && return
+
     # Set and check for pid file.
     local PIDFILE OTHERPID
 
@@ -384,19 +388,6 @@ EOF
     fi
     cleanup
     echo $$ > $PIDFILE
-}
-
-check_write() {
-    # Check to see whether the user has write permissions on the
-    # directory.
-
-    local DIR=$1
-
-    if [[ ! -w $DIR ]]; then
-        return 1
-    else
-        return 0
-    fi
 }
 
 check_if_repo_exists() {
@@ -1050,22 +1041,24 @@ select_repository() {
         eval $(sed 's:^\(.*\) (\(.*\))$:REPO_NAME=\2;REPO_BRANCH=\1:g' \
             < $SBOPKGTMP/sbopkg_version_selection)
         set_repo_vars
-        dialog --title "Save this setting?" --defaultno --yesno \
-            "$(crunch "Would you like to save this repository setting \
-            in the user's $HOME/.sbopkg.conf file? (One will be created if \
-            it is not found).\n\nPress <Yes> to save in the user's \
-            $HOME/.sbopkg.conf or press <No> to continue without saving, \
-            making this a temporary change only.")" 12 60
-        if [[ $? != 0 ]]; then
+        if dir_init; then
+            dialog --title "Save this setting?" --defaultno --yesno \
+                "$(crunch "Would you like to save this repository setting \
+                in the user's $HOME/.sbopkg.conf file? (One will be created \
+                if it is not found).\n\nPress <Yes> to save in the user's \
+                $HOME/.sbopkg.conf or press <No> to continue without saving, \
+                making this a temporary change only.")" 12 60
+            if [[ $? != 0 ]]; then
+                break
+            fi
+            if [[ -e $HOME/.sbopkg.conf ]]; then
+                sed -i '/^REPO_NAME=.*$/d' $HOME/.sbopkg.conf
+                sed -i '/^REPO_BRANCH=.*$/d' $HOME/.sbopkg.conf
+            fi
+            echo "REPO_NAME=$REPO_NAME" >> $HOME/.sbopkg.conf
+            echo "REPO_BRANCH=$REPO_BRANCH" >> $HOME/.sbopkg.conf
             break
         fi
-        if [[ -e $HOME/.sbopkg.conf ]]; then
-            sed -i '/^REPO_NAME=.*$/d' $HOME/.sbopkg.conf
-            sed -i '/^REPO_BRANCH=.*$/d' $HOME/.sbopkg.conf
-        fi
-        echo "REPO_NAME=$REPO_NAME" >> $HOME/.sbopkg.conf
-        echo "REPO_BRANCH=$REPO_BRANCH" >> $HOME/.sbopkg.conf
-        break
     done
     rm -f $SBOPKGTMP/sbopkg_version_selection
 }
@@ -2348,20 +2341,7 @@ sync_repo() {
         fi
         continue
     fi
-    directory_checks
-    if ! check_write $REPO_DIR; then
-        if [[ $DIAG ]]; then
-            dialog --title "ERROR" --msgbox \
-                "You do not have write permissions on the target directory." \
-                8 30
-            continue
-        else
-            crunch_fmt "You do not have write permissions on the target \
-                directory." >&2
-            cleanup
-            exit 1
-        fi
-    elif [[ $REPO_TOOL != "rsync" && $REPO_TOOL != "git" ]]; then
+    if [[ $REPO_TOOL != "rsync" && $REPO_TOOL != "git" ]]; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox \
                 "Unsupported fetching tool \"$REPO_TOOL\"." 8 30
@@ -4601,10 +4581,10 @@ if [[ $? -ne 0 ]] ; then
 fi
 
 # Check for required directories
-directory_checks
+dir_init
 
 # Check for another instance
-[[ $ALLOW_MULTI ]] || pid_check
+pid_check
 
 if [[ $DIAG ]]; then
     if [[ $TERM =~ ^rxvt.* || $TERM =~ ^screen.* ]]; then
