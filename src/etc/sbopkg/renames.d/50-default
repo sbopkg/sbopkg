@@ -34,3 +34,4 @@ ng-spice=ngspice
 snes9x_gtk=snes9x
 libiphone=libimobiledevice
 xml-twig=perl-xml-twig
+drbd=drbd-tools
