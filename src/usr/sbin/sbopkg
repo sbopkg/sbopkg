@@ -322,23 +322,30 @@ EOF
         done
         cat << EOF
 
-To have sbopkg create them, type 'y'. If these values are incorrect, press 'n'
-and edit your config files or pass different flags.
+You can have sbopkg create them or, if these values are incorrect, you can
+abort to edit your config files or pass different flags.
 
 EOF
-        read -n1 -ep "[y/n] "
-        if [[ $REPLY == y ]]; then
-            if ! mkdir -p $DIRS2MK 2>/dev/null; then
-                echo "$SCRIPT: failed to create directories" >&2
-                cleanup; exit 1
-            fi
-        else
-            if [[ ${FUNCNAME[1]} == main ]]; then
-                cleanup; exit 1
-            else
-                return 1
-            fi
-        fi
+        while :; do
+            read $NFLAG -ep "(C)reate or (A)bort?: "
+            case $REPLY in
+                C|c)
+                    if ! mkdir -p $DIRS2MK 2>/dev/null; then
+                        echo "$SCRIPT: failed to create directories" >&2
+                        cleanup; exit 1
+                    fi
+                    break
+                    ;;
+                A|a)
+                    if [[ ${FUNCNAME[1]} == main ]]; then
+                        cleanup; exit 1
+                    else
+                        return 1
+                    fi
+                    ;;
+                *) unknown_response ;;
+            esac
+        done
     fi
 
     for ((i=0; i<${#DIR_VARS[*]}; i++)); do
@@ -478,7 +485,7 @@ get_sbo_packages() {
                     --file $CONFIRMLIST 2> $REMOVELIST
                 if [[ $? == 0 ]]; then
                     removepkg $(tr -d \" < $REMOVELIST)
-                    read -n1 -p "Press any key to continue."
+                    read -n1 -ep "Press any key to continue: "
                 fi
             fi
         else
@@ -1282,7 +1289,7 @@ info_item() {
                             continue;
                         fi
                         install_package $OUTPUT $CURPACKAGE | tee $TMPLOG
-                        read -n 1 -p "Press any key to continue."
+                        read -n1 -ep "Press any key to continue: "
                         if [[ $KEEPLOG ]]; then
                             cat $TMPLOG >> $LOGFILE
                         fi
@@ -2618,19 +2625,17 @@ read_info() {
 
     if [[ $2 == --check_buildable ]]; then
         if [[ $DOWNLOAD == "UNSUPPORTED" || $DOWNLOAD == "UNTESTED" ]]; then
+            echo
+            crunch_fmt "$PRGNAM:  This package is marked UNSUPPORTED \
+                or UNTESTED and may not build successfully on your \
+                architecture."
+            echo
             while :; do
-                echo
-                crunch_fmt "$PRGNAM:  This package is marked UNSUPPORTED \
-                    or UNTESTED and may not build successfully on your \
-                    architecture. Do you want to try and proceed anyway or \
-                    do you want to skip it?"
-                echo
-                echo "Press (Y)es to proceed or (N)o to skip."
-                read
+                read $NFLAG -ep "(P)roceed anyway or (S)kip?: "
                 case $REPLY in
-                    y* | Y* ) break ;;
-                    n* | N* ) return 1 ;;
-                    * ) unknown_response ;;
+                    P|p) break ;;
+                    S|s) return 1 ;;
+                    *) unknown_response ;;
                 esac
             done
             if [[ $ARCH != "x86_64" ]]; then
@@ -3080,15 +3085,14 @@ remove_files() {
         else
             # Unquote file names
             tr -d \" < $FILES > $FILES_DELETING
-            echo -e "[ Displaying $TOPIC ]\n" |
-                cat - $FILES_DELETING | $PAGER
+            echo "[ Displaying $TOPIC ]" | cat - $FILES_DELETING | $PAGER
+            echo
             while :; do
-                echo
-                read -n1 -ep "Do you want to delete these files? [y/n] "
+                read $NFLAG -ep "(K)eep or (D)elete these files?: "
                 case $REPLY in
-                    n* | N* ) break ;;
-                    y* | Y* ) DELETE=1; break ;;
-                    * ) unknown_response ;;
+                    K|k) break ;;
+                    D|d) DELETE=1; break ;;
+                    *) unknown_response ;;
                 esac
             done
         fi
@@ -3162,17 +3166,16 @@ install_package() {
 
     if [[ $(find $INSTDIR/$INSTPKG ! -user root -o ! -group root) ]]; then
         crunch_fmt "WARNING:  The file $INSTPKG is not set with root:root \
-            permissions!  Do you want to proceed?  Here is the output of \
-            ls -l:"
+            permissions! Here is the output of ls -l:"
         echo
         ls -l $INSTDIR/$INSTPKG
         echo
         while :; do
-            read -n1 -ep "Press (Y)es to proceed or (N)o to abort: "
+            read $NFLAG -ep "(P)roceed anyway or (A)bort?: "
             case $REPLY in
-                y* | Y* ) echo "Proceeding..."; break ;;
-                n* | N* ) echo "Aborting..."; return ;;
-                * ) unknown_response ;;
+                P|p) echo "Proceeding..."; break ;;
+                A|a) echo "Aborting..."; return ;;
+                *) unknown_response ;;
             esac
         done
     fi
@@ -3306,9 +3309,7 @@ build_package() {
                     r* | R* ) # Retry
                         continue 2
                         ;;
-                    * ) # Huh?
-                        unknown_response
-                        ;;
+                    *) unknown_response ;;
                 esac
             done
         fi
@@ -3460,34 +3461,19 @@ pick_file() {
                 esac
             done
         else
+            echo
+            crunch_fmt "A local $FILE file for $PKG was found in \
+                addition to the original $FILE file."
+            echo
             while :; do
-                echo
-                crunch_fmt "A local $FILE file for $PKG was found in \
-                    addition to the original $FILE file."
-                echo "Which one would you like to use?"
-                echo
-                crunch_fmt "(O)riginal, (L)ocal, (D)iff, (C)ancel:"
-                read
+                read $NFLAG -ep \
+                    "Use (O)riginal/(L)ocal, see (D)iff, or (C)ancel?: "
                 case $REPLY in
-                    o* | O* )
-                        PICKFILE="original"
-                        break
-                        ;;
-                    l* | L* )
-                        PICKFILE="local"
-                        break
-                        ;;
-                    d* | D* )
-                        $PAGER $SBOPKGTMP/sbopkg_diff
-                        ;;
-                    c* | C* )
-                        rm $SBOPKGTMP/sbopkg_diff
-                        cleanup
-                        return 1
-                        ;;
-                    * ) # Huh?
-                        unknown_response
-                        ;;
+                    O|o) PICKFILE="original"; break ;;
+                    L|l) PICKFILE="local"; break ;;
+                    D|d) $PAGER $SBOPKGTMP/sbopkg_diff ;;
+                    C|c) cleanup; return 1 ;;
+                    *) unknown_response ;;
                 esac
             done
         fi
@@ -3514,7 +3500,7 @@ use_options() {
     local OPTAPP=$2
     local OPTCHOICE=$SBOPKGTMP/sbopkg_options_choice
     local OPTLIST=$SBOPKGTMP/sbopkg_options_list
-    local TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG REPLY
+    local TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG REPLY SAVEDOPT QUEUEOPT
 
     # By default (i.e. no options.sbopkg file) there are no build options.
     unset BUILDOPTIONS
@@ -3558,29 +3544,24 @@ use_options() {
                 rm -f $OPTLIST $OPTCHOICE
              fi
         else
+            echo
+            echo "One or more build option files for the $OPTAPP"
+            echo "SlackBuild script were found:"
+            echo
+            if [[ $TMPOPTIONS ]]; then
+                echo "Saved options: $TMPOPTIONS"
+                SAVEDOPT=" (S)aved,"
+            fi
+            if [[ $LDOPTIONS ]]; then
+                echo "Queuefile options: $LDOPTIONS"
+                QUEUEOPT=" (Q)ueuefile,"
+            fi
+            echo
             while :; do
-                echo "One or more build option files for the $OPTAPP"
-                echo "SlackBuild script were found:"
-                echo
-                if [[ $TMPOPTIONS ]]; then
-                    echo "Saved options: $TMPOPTIONS"
-                else
-                    echo "Saved options: No saved build options found"
-                fi
-                if [[ $LDOPTIONS ]]; then
-                    echo "Queuefile options: $LDOPTIONS"
-                else
-                    echo "Queuefile options: No queuefile options found"
-                fi
-                echo
-                crunch_fmt "Please choose (N)one, (S)aved, (Q)ueuefile, \
-                    or (A)bort"
-                read
+                read $NFLAG -ep "Use (N)one,$SAVEDOPT$QUEUEOPT or (A)bort?: "
                 case $REPLY in
-                    n* | N* )
-                        break
-                        ;;
-                    s* | S* )
+                    N|n) break ;;
+                    S|s)
                         if [[ $TMPOPTIONS ]]; then
                             cp $PKGPATH/options.sbopkg $PKGPATH/options.build
                             BUILDOPTIONS=$TMPOPTIONS
@@ -3592,7 +3573,7 @@ use_options() {
                             echo
                         fi
                         ;;
-                    q* | Q* )
+                    Q|q)
                         if [[ $LDOPTIONS ]]; then
                             cp $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions \
                                 $PKGPATH/options.build
@@ -3605,13 +3586,8 @@ use_options() {
                             echo
                         fi
                         ;;
-                    a* | A* )
-                        return 1
-                        ;;
-                    * )
-                        unknown_response
-                        echo
-                        ;;
+                    A|a) return 1 ;;
+                    *) unknown_response ;;
                 esac
             done
             echo
@@ -3763,29 +3739,24 @@ process_queue() {
             return 0
         fi
     else
+        cat $TMPLOG
+        echo
+        echo "Pre-check complete."
+        echo
+        crunch_fmt "Do you wish to proceed based on the search \
+            results above? Packages not found will be skipped during \
+            the process."
+        echo
         while :; do
-            cat $TMPLOG
-            echo
-            echo "Pre-check complete."
-            echo
-            crunch_fmt "Do you wish to proceed based on the search\
-                results above? Packages not found will be skipped during\
-                the process."
-            echo
-            echo "Press (Y)es to proceed or (N)o to quit."
-            read
+            read $NFLAG -ep "(P)roceed or (Q)uit?: "
             case $REPLY in
-                y* | Y* )
-                    break
-                    ;;
-                n* | N* )
+                P|p) break ;;
+                Q|q)
                     rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
                     rm -f $PKGPATH/options.build
                     return 0
                     ;;
-                * )
-                    unknown_response
-                    ;;
+                *) unknown_response ;;
             esac
         done
         echo
@@ -3872,7 +3843,7 @@ process_queue() {
     echo >> $TMPLOG
     cat $TMPLOG
     if [[ $DIAG ]]; then
-        read -n 1 -p "Press any key to continue."
+        read -n1 -ep "Press any key to continue: "
     fi
     if [[ $KEEPLOG ]]; then
         cat $TMPLOG >> $LOGFILE
@@ -3953,8 +3924,8 @@ check_for_latest() {
             if [[ $DIAG ]]; then
                 MSG="Different versions reported.  Press <OK> to continue."
             else
-                MSG="Different versions reported.  Press (Y)es to \
-                    download the update package or press (N)o to quit."
+                MSG="Different versions reported.  (D)ownload the remote \
+                package or (Q)uit?: "
             fi
         fi
     else
@@ -3985,14 +3956,13 @@ check_for_latest() {
         echo
         echo "Latest version of sbopkg found on sbopkg.org: $NVRS"
         echo
-        crunch_fmt "$MSG"
         if [[ $SBOPKGUP ]]; then
             while :; do
-                read
+                read $NFLAG -ep "$(crunch_fmt "$MSG")"
                 case $REPLY in
-                    y* | Y* ) break ;;
-                    n* | N* ) return 0 ;;
-                    * ) unknown_response ;;
+                    D|d) break ;;
+                    Q|q) return ;;
+                    *) unknown_response ;;
                 esac
             done
         fi
@@ -4019,7 +3989,7 @@ check_for_latest() {
             \nhttp://www.sbopkg.org/changelog\
             \n"
         if [[ $DIAG ]]; then
-            read -n 1 -p "Press any key to continue."
+            read -n1 -ep "Press any key to continue: "
         fi
     fi
 }
@@ -4375,6 +4345,8 @@ SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
+# this is the undocumented 'slakmagik hates hitting enter' option
+NFLAG=$NFLAG
 
 # Make sure we are root.
 if [[ $(id -u) != 0 ]]; then
@@ -4612,22 +4584,15 @@ else
             if [[ -r $QUEUEDIR/$PKGBUILD.sqf ]] &&
                     search_package $PKGBUILD; then
                 crunch_fmt "Both a queuefile and a package were found with \
-                    the name \"$PKGBUILD\".  Which would you like to use?"
+                    the name \"$PKGBUILD\"."
                 echo
-                echo "Please enter (Q)ueuefile, (P)ackage, or (A)bort:"
                 while :; do
-                    read
+                    read $NFLAG -ep "Use (Q)ueuefile, (P)ackage, or (A)bort?: "
                     case $REPLY in
-                        q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sqf
-                                  break
-                                  ;;
-                        p* | P* ) add_item_to_queue $PKGBUILD
-                                  break
-                                  ;;
-                        a* | A* ) cleanup
-                                  exit 1
-                                  ;;
-                        * ) unknown_response ;;
+                        Q|q) parse_queue $QUEUEDIR/$PKGBUILD.sqf; break ;;
+                        P|p) add_item_to_queue $PKGBUILD; break ;;
+                        A|a) cleanup; exit 1 ;;
+                        *) unknown_response ;;
                     esac
                 done
             else
@@ -4671,13 +4636,12 @@ else
         if [[ $PREVIEW_READMES ]]; then
             view_queue_readmes
             echo
-            echo "OK to continue processing?"
             while :; do
-                read
+                read $NFLAG -ep "(C)ontinue processing or (Q)uit?: "
                 case $REPLY in
-                    y* | Y* ) break ;;
-                    n* | N* ) cleanup; exit 1 ;;
-                    * ) unknown_response ;;
+                    C|c) break ;;
+                    Q|q) cleanup; exit 1 ;;
+                    *) unknown_response ;;
                 esac
             done
         fi
