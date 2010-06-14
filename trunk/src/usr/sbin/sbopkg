@@ -2798,26 +2798,27 @@ You can choose among the following options:
  - (Y)es, keep the source and continue the build process;
  - (N)o, delete the source and abort the build process; or
  - (R)etry download and continue the build process.
-Your choice?
+
 EOF
+            printf "(Y)es, (N)o, (R)etry?: "
             error_read
             case $REPLY in
-                y* | Y* )
+                Y|y)
                     MD5SUM=$(tr / _ <<< "$MD5CHK")
                     echo "    Keeping the source and continuing." |
                         tee -a $TMPSUMMARYLOG
                     return 0
                     ;;
-                n* | N* )
+                N|n)
                     rm -f "$SRCDIR/$SRCNAME"
                     echo "    Source deleted." | tee -a $TMPSUMMARYLOG
                     return 2
                     ;;
-                r* | R* )
+                R|r)
                     echo "    Downloading again." | tee -a $TMPSUMMARYLOG
                     return 1
                     ;;
-                * )
+                *)
                     unknown_response
                     ;;
             esac
@@ -3194,24 +3195,27 @@ install_package() {
 
 error_read() {
     # This function wraps a simple 'read' call. The read itself is skipped if
-    # $ON_ERROR != "ask", and the value put in the variable ($1) is "Yes" when
-    # $ON_ERROR == "continue", and "No" when $ON_ERROR == "stop".
+    # $ON_ERROR != "ask", and "Y" is automatically assigned to REPLY when
+    # $ON_ERROR == "continue", and "N" when $ON_ERROR == "stop".
+    #
     # Useful in all those places where the CLI version of sbopkg asks the user
     # what to do on build errors.
-    # The automatic answer is printed to stdout, to record it on the permanent
+    #
+    # The automatic answer is printed to stdout, to record it in the permanent
     # build log.
 
+    local NOTE="(as specified with '-e')"
+
     case $ON_ERROR in
-        ask) read $1; return ;;
-        stop) eval $1=No; echo -n "No " ;;
-        cont*) eval $1=Yes; echo -n "Yes " ;;
+        ask) read $NFLAG -e; return ;;
+        stop) REPLY=N; echo "No $NOTE" ;;
+        continue) REPLY=Y; echo "Yes $NOTE" ;;
         *)
-            crunch_fmt "$SCRIPT: ${FUNCNAME[0]}: this shouldn't happen. \
+            crunch_fmt "$SCRIPT: ${FUNCNAME[0]}: this can't happen. \
                 Please file a bug report which includes this line."
             exit 1
             ;;
     esac
-    echo "(as specified with '-e')"
 }
 
 build_package() {
@@ -3292,21 +3296,20 @@ build_package() {
             echo "package is a dependency of another package in the queue"
             echo "then it may not make sense to continue."
             echo
-            echo "Press (Y)es to continue, (N)o to abort, (R)etry to try"
-            echo "to build the package again."
             while :; do
+                printf "(Y)es to continue, (N)o to abort, (R)etry the build?: "
                 error_read
                 case $REPLY in
-                    y* | Y* ) # Continue
+                    Y|y) # Continue
                         RETVAL=1
                         break 2
                         ;;
-                    n* | N* ) # Abort
+                    N|n) # Abort
                         RETVAL=2
                         rm -f $SBOPKGTMP/sbopkg_build.lck
                         break 2
                         ;;
-                    r* | R* ) # Retry
+                    R|r) # Retry
                         continue 2
                         ;;
                     *) unknown_response ;;
@@ -3611,35 +3614,31 @@ check_asc() {
         while :; do
             cat << EOF
 
-Do you want keep the $GPGNAME directory and tarball and continue with the
-build process?  Selecting "No" will delete the $GPGNAME directory and
-tarball and all local changes to $GPGNAME and its files will be lost.
-
-You can choose among the following options:
- - (Y)es, keep the $GPGNAME directory and tarball and continue the build process;
- - (N)o, delete the $GPGNAME directory and tarball and abort the build process; or
- - (A)bort the build process without deleting anything.
-Your choice?
+Say (Y)es if you want keep the $GPGNAME directory and tarball and continue
+with the build process, or (N)o to delete the $GPGNAME directory and tarball
+(all local changes to $GPGNAME and its files will be lost), or (A)bort to stop
+the build process without deleting anything.
 EOF
+            printf "(Y)es, (N)o, (A)bort?: "
             error_read
             case $REPLY in
-                y* | Y* )
+                Y|y)
                     echo "  Keeping $GPGNAME directory and tarball." |
                         tee -a $TMPLOG
                     return 0
                     ;;
-                n* | N* )
+                N|n)
                     echo "  Deleting $GPGNAME directory and tarball." |
                         tee -a $TMPLOG
                     rm -rf $PKGPATH; rm $PKGPATH.*
                     return 1
                     ;;
-                a* | A* )
+                A|a)
                     echo "  Aborting the build process." |
                         tee -a $TMPLOG
                     return 1
                     ;;
-                * )
+                *)
                     unknown_response
                     ;;
             esac
@@ -4613,13 +4612,13 @@ else
             cat $MISSING_LIST_FILE
             cat $MISSING_SINGLE_FILE
             echo
-            echo "OK to continue processing?"
             while :; do
+                printf "(Y)es to continue processing or (N)o to stop?: "
                 error_read
                 case $REPLY in
-                    y* | Y* ) break ;;
-                    n* | N* ) cleanup; exit 1 ;;
-                    * ) unknown_response ;;
+                    Y|y) break ;;
+                    N|n) cleanup; exit 1 ;;
+                    *) unknown_response ;;
                 esac
             done
         fi
