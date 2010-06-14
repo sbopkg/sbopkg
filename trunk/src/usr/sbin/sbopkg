@@ -4022,7 +4022,7 @@ check_for_latest() {
             \n\
             \nYou can also view a complete ChangeLog.txt in the\
             /usr/share/doc/sbopkg-$NVRS/ directory or online at:\
-            \nhttp://www.sbopkg.org/files/ChangeLog.txt\
+            \nhttp://www.sbopkg.org/changelog\
             \n"
         if [[ $DIAG ]]; then
             read -n 1 -p "Press any key to continue."
