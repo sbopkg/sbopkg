@@ -4344,8 +4344,6 @@ SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
-# this is the undocumented 'slakmagik hates hitting enter' option
-NFLAG=$NFLAG
 
 # Make sure we are root.
 if [[ $(id -u) != 0 ]]; then

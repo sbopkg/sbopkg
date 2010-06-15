@@ -19,6 +19,8 @@ enhancements:
   * The directory initialization process has been changed - at first run or
     otherwise when encountering missing directories, the user will now be
     presented with a single list of them and a (C)reate/(A)bort prompt.
+  * The command line user interface has been overhauled in terms of more
+    consistent validated command line messages and prompts.
 +--------------------------+
 Thu May 27 18:13:59 UTC 2010
 Sbopkg 0.33.1 released.  This version contains the following fixes and
