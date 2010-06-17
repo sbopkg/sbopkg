@@ -2008,8 +2008,11 @@ add_item_to_queue() {
     if grep -q "^$APP " $TMPQUEUE 2> /dev/null; then
         : # it's the same app and version so toss it
     else
+        # note that this regex was missing the ^ as of r826 and this caused a
+        # false match when running 'sbopkg -k -i queue' because 'foo' and
+        # 'libfoo' matched
         INSTALLED=$(ls -1 /var/log/packages |
-            grep "$APP-[^-]*-[^-]*-[^-]*$REPO_TAG\$")
+            grep "^$APP-[^-]*-[^-]*-[^-]*$REPO_TAG$")
         if [[ -n $INSTALLED ]]; then
             VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
             # NOTE: When changing, see the uncheck_installed() comment
@@ -2653,6 +2656,24 @@ read_info() {
     MD5SUM=($MD5SUM)
 }
 
+fix_urls() {
+    # A quirks function of source filename corrections for a variety of apps
+    # where a variety of nonsense gets prepended or appended to the tarball
+    # name in the URLs. Ideally, these should match classes of apps which are
+    # noted. Else they should be app-specific and noted. But they shouldn't be
+    # completely generic and uncommented.
+    sed '
+        # fix calcurse
+        /get\.cgi?calcurse/s/^.*?//
+        # fix zarafa and zarafa-webaccess-ajax
+        /src=zarafa-/{s/.*=//;s/$/.tar.gz/}
+        # fix dzen2
+        /dzen2-/s/?attachauth=.*//
+        # fix several packages using trac as an scms
+        s/?format=.*$//
+        '
+}
+
 get_source_names() {
     # Echo the source names for an app, given the info file.
     # Usage: get_source_names [--all] [--placeholder] info_file
@@ -2679,13 +2700,14 @@ get_source_names() {
 
     read_info $INFO
     for DL in "${DOWNLOAD[@]}"; do
-        # remove the '/download' from any SRCNAME that ends that way rather
-        # than in the actual tarball
+        # remove the '/download' from several SRCNAMEs that end that way
+        # rather than in the actual tarball so the subsequent basename doesn't
+        # end with 'download'
         SRCNAME=${DL//%\/download}
         SRCNAME=${SRCNAME##*/}
-        # this is actually so that calcurse will make it to
-        # remove_obsolete_sources()
-        SRCNAME=$(sed 's/?e=.*$//;s/?format=.*$//;s/^.*?//' <<< "$SRCNAME")
+        # calcurse has a nonsense url in the info file - this is to get it
+        # through this function and on to remove_obsolete_sources()
+        SRCNAME=$(fix_urls <<< "$SRCNAME")
         # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with
         # their corresponding characters.
         # This is done by replacing '%' with '\x' and passing the string to
@@ -2899,11 +2921,7 @@ get_source() {
                 echo >> $TMPSUMMARYLOG
             fi
             DL=$(ls -A . 2> /dev/null)
-            # Source filename corrections for Virtualbox, where '?e=foo' gets
-            # appended to the filename and for calcurse, where a 'foo?' gets
-            # prepended to the filename - and for a potential issue with trac
-            # URLs
-            DL_SRCNAME=$(sed 's/?e=.*$//;s/?format=.*$//;s/^.*?//' <<< "$DL")
+            DL_SRCNAME=$(fix_urls <<< "$DL")
             if [[ $DL_SRCNAME ]]; then
                 # if we have *anything* in here, then we did a download. We
                 # may not know what to do with it, but we don't need to get it
