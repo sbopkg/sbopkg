@@ -715,7 +715,7 @@ check_for_updates() {
 
             # Extract the new package version
             if [[ ! -z $NEWSB ]]; then
-                unset BUILD
+                unset BUILD NEWARCH
                 eval NEW$(grep -m1 ^ARCH= $NEWSB) 2>/dev/null
                 if [[ $NEWARCH != "noarch" ]]; then
                    NEWARCH=$ARCH
