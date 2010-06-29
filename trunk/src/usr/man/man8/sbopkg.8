@@ -184,7 +184,10 @@ will suffice.
 .TP 5
 .BI \-b " PACKAGE(s)/QUEUE(s)"
 Build packages of the argument(s) from the active repository.
-If more than one package is specified, they must be quoted.
+If more than one package is specified, they may either be quoted or the
+switch can be given multiple times.
+Using this second form, a colon-separated list of options may be given.
+If whitespace occurs between the colons, it must be quoted.
 .IP
 For example:
 .RS
@@ -198,6 +201,18 @@ will build
 .I foo
 and then
 .IR bar .
+.IP
+Or
+.RS
+.IP
+.nf
+\fC# sbopkg -b app1:opt1="foo bar":opt2=baz -b app2:opt=mu"\fP
+.fi
+.RE
+.IP
+will build app1 with the options ``foo bar'' and ``baz'', and app2 with
+the option ``mu''.
+.IP
 Queuefile names can also be specified.
 In that case, all the packages specified in the queuefile will be built.
 In the unfortunate case a token matches both a queuefile name and a
@@ -255,7 +270,8 @@ General search for
 .I PACKAGE(s)
 by case-insensitive glob where the argument is automatically wrapped in
 .BR * s.
-If more than one glob is specified, they must be quoted.
+If more than one glob is specified, they must be quoted or the \-g flag
+must be used multiple times, once for each glob.
 .IP
 For example:
 .RS
@@ -372,7 +388,8 @@ files in that order for each
 .I PACKAGE
 found, using
 .IR $PAGER .
-If more than one glob is specified, they must be quoted.
+If more than one glob is specified, they must be quoted or the \-s flag
+must be used multiple times, once for each glob.
 .IP
 For example:
 .RS
@@ -398,6 +415,8 @@ instance,
 .RE
 .IP
 will return all packages with 'open' or 'Open' anywhere in the name.
+If multiple applications are returned, the user will be presented with a
+menu to select from.
 .\"---------------------------------------------------------------------
 .TP
 .B \-u

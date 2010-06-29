@@ -1908,6 +1908,32 @@ remove_from_queue() {
     done
 }
 
+parse_arguments() {
+    # this converts the 'app:opt1="arg1 arg2":opt2=arg1' syntax we need on the
+    # command line to the 'app' and 'opt1="arg1 arg2" opt2="arg1"' syntax we
+    # need internally and passes it on to a file.
+
+    local CLI_OPTIONS
+
+    if [[ "$PKGBUILD" == *:* ]]; then # it has options
+        PKGBUILD=$(sed '
+            s/:/ /
+            s/=/="/g
+            s/:/":/g
+            s/:/ /g
+            s/$/"/' <<< $PKGBUILD)
+        CLI_OPTIONS="${PKGBUILD#* }"
+        PKGBUILD="${PKGBUILD%% *}"
+        echo "$CLI_OPTIONS" > $SBOPKGTMP/sbopkg_$PKGBUILD.cliopts
+    fi
+
+    if ! add_item_to_queue $PKGBUILD; then
+        echo "Queuefile or package $PKGBUILD not found - skipping." >>\
+            $MISSING_SINGLE_FILE
+        echo
+    fi
+}
+
 parse_queue() {
     # This begins the process of parsing through a queuefile.  The $2
     # assignment to NODELETE is used in order to remove the $DUPEQUEUE file
@@ -3506,10 +3532,15 @@ use_options() {
     local OPTAPP=$2
     local OPTCHOICE=$SBOPKGTMP/sbopkg_options_choice
     local OPTLIST=$SBOPKGTMP/sbopkg_options_list
-    local TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG REPLY SAVEDOPT QUEUEOPT
+    local CLI_OPTFILE=$SBOPKGTMP/sbopkg_$OPTAPP.cliopts
+    local CLI_OPTIONS TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG
+    local REPLY CLI_OPT SAVEDOPT QUEUEOPT
 
     # By default (i.e. no options.sbopkg file) there are no build options.
     unset BUILDOPTIONS
+    if [[ -f $CLI_OPTFILE ]]; then
+        CLI_OPTIONS=$(< $CLI_OPTFILE)
+    fi
     if [[ -f $PKGPATH/options.sbopkg ]]; then
         TMPOPTIONS=$(< $PKGPATH/options.sbopkg)
     fi
@@ -3517,8 +3548,8 @@ use_options() {
         LDOPTIONS=$(< $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions)
     fi
     rm -f $PKGPATH/options.build
-    if [[ $TMPOPTIONS || $LDOPTIONS ]]; then
-        if [[ $DIAG ]]; then
+    if [[ $DIAG ]]; then
+        if [[ $TMPOPTIONS || $LDOPTIONS ]]; then
             rm -f $OPTLIST $OPTCHOICE
             if [[ $TMPOPTIONS ]]; then
                 echo 'Saved "Build with your saved options"' >> $OPTLIST
@@ -3549,11 +3580,17 @@ use_options() {
                 fi
                 rm -f $OPTLIST $OPTCHOICE
              fi
-        else
+         fi
+    else
+        if [[ $CLI_OPTIONS || $TMPOPTIONS || $LDOPTIONS ]]; then
             echo
             echo "One or more build option files for the $OPTAPP"
             echo "SlackBuild script were found:"
             echo
+            if [[ $CLI_OPTIONS ]]; then
+                echo "Command line options: $CLI_OPTIONS"
+                CLI_OPT=" (C)ommand line options,"
+            fi
             if [[ $TMPOPTIONS ]]; then
                 echo "Saved options: $TMPOPTIONS"
                 SAVEDOPT=" (S)aved,"
@@ -3564,9 +3601,16 @@ use_options() {
             fi
             echo
             while :; do
-                read $NFLAG -ep "Use (N)one,$SAVEDOPT$QUEUEOPT or (A)bort?: "
+                read $NFLAG -ep "Use (N)one,$CLI_OPT$SAVEDOPT$QUEUEOPT or (A)bort?: "
                 case $REPLY in
                     N|n) break ;;
+                    C|c)
+                        if [[ $CLI_OPTIONS ]]; then
+                            BUILDOPTIONS="$CLI_OPTIONS"
+                            cp $CLI_OPTFILE $PKGPATH/options.build
+                            break
+                        fi
+                        ;;
                     S|s)
                         if [[ $TMPOPTIONS ]]; then
                             cp $PKGPATH/options.sbopkg $PKGPATH/options.build
@@ -4531,7 +4575,11 @@ Options are:
                   starting with the default repo. For a list of valid repos,
                   issue '-V ?'
 
-Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2")
+Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2") or
+can be specified multiple times (-i foo -i bar). If using the latter syntax,
+build options may also be passed on the command line on a per app basis using
+the -b or -i flags in colon-separated groups (where whitespace must also be
+quoted). For example, '-i app:opt1="arg1 arg2":opt2=arg1 app2'
 EOF
             exit
             ;;
@@ -4619,7 +4667,13 @@ else
         > $SBOPKGTMP/sbopkg_user_queue.lck
         > $MISSING_LIST_FILE
         > $MISSING_SINGLE_FILE
-        for PKGBUILD in ${BUILDLIST[*]}; do
+        if [[ ${#BUILDLIST[*]} == 1 && ${BUILDLIST[*]} != *:* ]]; then
+            # we've got either a single package or old-style optionless quoted
+            # multi-args, so split 'em if you got 'em
+            BUILDLIST=(${BUILDLIST[*]})
+        fi
+        for ((i=0; i<${#BUILDLIST[*]}; i++)); do
+            PKGBUILD="${BUILDLIST[$i]}"
             if [[ ${PKGBUILD:(-4)} == ".sqf" ]]; then
                 parse_queue $QUEUEDIR/$PKGBUILD
                 continue
@@ -4633,7 +4687,7 @@ else
                     read $NFLAG -ep "Use (Q)ueuefile, (P)ackage, or (A)bort?: "
                     case $REPLY in
                         Q|q) parse_queue $QUEUEDIR/$PKGBUILD.sqf; break ;;
-                        P|p) add_item_to_queue $PKGBUILD; break ;;
+                        P|p) parse_arguments "$PKGBUILD"; break ;;
                         A|a) cleanup; exit 1 ;;
                         *) unknown_response ;;
                     esac
@@ -4643,11 +4697,7 @@ else
                     # Add an entire queue
                     parse_queue $QUEUEDIR/$PKGBUILD.sqf
                 else
-                    if ! add_item_to_queue $PKGBUILD; then
-                        crunch_fmt "Queuefile or package $PKGBUILD not found\
-                            - skipping." >> $MISSING_SINGLE_FILE
-                        echo
-                    fi
+                    parse_arguments "$PKGBUILD"
                 fi
             fi
         done

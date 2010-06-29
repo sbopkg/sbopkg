@@ -24,6 +24,24 @@ enhancements:
   * Fix an ARCH display issue in the updates screen; thanks to alkos333, Marc
     Payne, and David Spencer for confirming the issue and thanks to David
     Spencer for testing the fix.
+  * Fixed bugs with dzen2 and *zarafa* not downloading/building properly. Note
+    that, while the changes fix these issues and should make it easier to
+    handle similar problems in the future, this change may introduce
+    regressions. If a download or build fails due to a downloaded tarball
+    looking something like 'blah?actual_tarball.tar.gz' or the like, please
+    report it to us.
+  * Fixed bugs with the '-s' option where only the first of multiple
+    arguments would be returned and where the command line select menu was
+    broken. Also where it and the -g flag might inadvertently expand globs
+    wrongly.
+  * It's now possible to specify the b,g,i,s flags multiple times. Previously
+    multiple arguments to these flags had to be quoted (-b "foo bar") but now
+    they can be given as '-b foo -b bar'. The original style is still
+    supported.
+  * With the new style of passing multiple arguments, it is now possible to
+    specify app-specific options on the command line. These take the form of,
+    e.g., '-i app1:opt1="foo bar":opt2=baz app2:opt=mu'. If that's cryptic,
+    see the manual for details.
 +--------------------------+
 Thu May 27 18:13:59 UTC 2010
 Sbopkg 0.33.1 released.  This version contains the following fixes and
