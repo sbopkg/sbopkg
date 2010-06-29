@@ -3652,9 +3652,9 @@ check_asc() {
     local CATEGORY=$(echo $CHKPKG | cut -d/ -f2)
     local REPLY
 
-    echo -n "  Checking GPG for $GPGNAME.tar.gz ... " | tee -a $TMPLOG
+    echo -n "  Checking GPG for $GPGNAME.tar.gz ... " >> $TMPLOG
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
-        echo "FAILED!" | tee -a $TMPLOG
+        echo "GPG check FAILED!" | tee -a $TMPLOG
         if [[ ! -e $CHKPKG.tar.gz && ! -e $CHKPKG.*.asc ]]; then
             echo "  No tarball or .asc file found." | tee -a $TMPLOG
         fi
@@ -3691,7 +3691,7 @@ EOF
             esac
         done
     else
-        echo "OK" | tee -a $TMPLOG
+        echo "OK" >> $TMPLOG
     fi
     tar -C ./$CATEGORY -zxf $CHKPKG.tar.gz
     return 0
@@ -3721,8 +3721,6 @@ process_queue() {
         echo "  Build only" >> $TMPLOG
     fi
     echo >> $TMPLOG
-    echo "Checking GPG signatures.  Please be patient..."
-    echo
     for CHKBUILD in $(< $STARTQUEUE); do
         unset PKG PKGPATH PKGNAME VERSION BUILD PICKFILE FILE
         echo "$CHKBUILD:" >> $TMPLOG
@@ -3765,7 +3763,7 @@ process_queue() {
             return 0
         fi
         if [[ $BUILDOPTIONS ]]; then
-            echo "  $BUILDOPTIONS" >> $TMPLOG
+            echo "  Build options: $BUILDOPTIONS" >> $TMPLOG
         else
             echo "  No build options selected." >> $TMPLOG
         fi
