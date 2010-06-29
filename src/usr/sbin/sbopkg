@@ -2390,7 +2390,7 @@ search_package() {
 
     cd $REPO_DIR
     PKG="$1"
-    PKGPATH=( $(find -type d -mindepth 2 -name "$PKG") )
+    PKGPATH=( $(find -type d -mindepth 2 -name "$PKG" | sort) )
 
     if [[ -z $PKGPATH ]]; then
         return 1
@@ -2400,8 +2400,9 @@ search_package() {
 }
 
 gen_search_package() {
-    # Search for package name glob generally using grep.  In dialog interface,
-    # jump to selected package.
+    # Search for package name glob generally using the '-iwholename' argument
+    # to find, with values wrapped in '*'.  In dialog interface, jump to
+    # selected package.
     # Returns 0 unless the user asked to jump back to the main menu.
 
     cd $REPO_DIR
@@ -3422,25 +3423,9 @@ pick_file() {
     local PKGPATH=$2
     local PKG=$3
     PICKFILE=original
-    local ITEM ANS REPLY
+    local ANS REPLY
 
     rm -f $SBOPKGTMP/sbopkg_file_selection $SBOPKGTMP/sbopkg_diff
-    # FIXME slakmagik, what's going on here?
-    # (this was added in r446)
-    if (( ${#PKGPATH[*]} > 1 )); then
-        select ITEM in ${PKGPATH[*]#*/} Quit; do
-            if [[ $ITEM == Quit ]]; then
-                exit
-            fi
-            PKGPATH=$ITEM
-            if [[ -z $ITEM ]]; then
-                echo "$SCRIPT: invalid choice."
-                continue
-            else
-                break
-            fi
-        done
-    fi
 
     # Build the diff, if there are 2 files to choose between
     if [[ -f $PKGPATH/$PKG.$FILE.sbopkg ]]; then
@@ -4148,6 +4133,48 @@ control_c() {
     fi
 }
 
+search_and_display() {
+    # This function takes one or more arguments from the command line (-s):
+    # the pattern(s) the user provides as the app to search for.
+    #
+    # This uses search_package() to return an array of possible matches. If
+    # more than one app is returned, it presents the user with a menu. It
+    # displays the default files associated with the app the user chooses. If
+    # search_package() only returns one app, it displays the associated files
+    # immediately.
+
+    # global SCRIPT SEARCH
+    local PKGSEARCH PKGPATH ITEM
+
+    check_if_repo_exists
+    # We temporarily turn globbing off and turn it back on before we get to
+    # pick_file()/show_readme(). There, we need to expand globs and will be
+    # using full paths or be in the right directory to do so.
+    set -f
+    for PKGSEARCH in $SEARCH; do
+        echo "Searching for $PKGSEARCH"
+        if search_package $PKGSEARCH; then
+            if (( ${#PKGPATH[*]} > 1 )); then
+                select PKGPATH in ${PKGPATH[*]#*/} Quit; do
+                    case $PKGPATH in
+                        Quit) exit ;;
+                        '') echo "$SCRIPT: invalid choice."; continue ;;
+                        *) break ;;
+                    esac
+                done
+            fi
+            set +f
+            # the only reason we need to go through pick_file() is that it
+            # provides the .build copies of the files that show_readme()
+            # insists upon. Otherwise, I'd just show the default files.
+            pick_file info $PKGPATH $PKGSEARCH
+            show_readme $PKGPATH $PKGSEARCH
+        else
+            echo "$SCRIPT: package \"$PKGSEARCH\" not found." >&2
+        fi
+    done
+}
+
 main_search() {
     # This is the main package search gateway, showing the search box dialog
     # and calling the appropriate search function after validating the user
@@ -4708,16 +4735,7 @@ else
     fi
 
     if [[ -n $SEARCH ]]; then
-        check_if_repo_exists
-        for PKGSEARCH in "$SEARCH"; do
-            echo "Searching for $PKGSEARCH"
-            if search_package $PKGSEARCH; then
-                pick_file info $PKGPATH $PKGSEARCH
-                show_readme $PKGPATH $PKGSEARCH
-            else
-                echo "ERROR: Package \"$PKGSEARCH\" not found." >&2
-            fi
-        done
+        search_and_display "$SEARCH"
     fi
 
     if [[ $UPDATE ]]; then
@@ -4726,10 +4744,12 @@ else
 
     if [[ -n $GENSEARCH ]]; then
         check_if_repo_exists
+        set -f
         for PKGSEARCH in $GENSEARCH; do
             echo "Searching for $PKGSEARCH"
             gen_search_package $PKGSEARCH
         done
+        set +f
     fi
 
     cleanup
