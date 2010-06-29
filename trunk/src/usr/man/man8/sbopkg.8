@@ -253,7 +253,8 @@ with
 .BI \-g " PACKAGE(s)"
 General search for
 .I PACKAGE(s)
-by glob.
+by case-insensitive glob where the argument is automatically wrapped in
+.BR * s.
 If more than one glob is specified, they must be quoted.
 .IP
 For example:
@@ -361,7 +362,7 @@ This is useful when the user wants to make a final check.
 .BI \-s " PACKAGE(s)"
 Specific search for
 .I PACKAGE(s)
-by name and, if found, display the
+by case-sensitive glob and, if found, display the
 .IR README ,
 .IR SlackBuild ,
 .IR .info ,
@@ -371,7 +372,7 @@ files in that order for each
 .I PACKAGE
 found, using
 .IR $PAGER .
-If more than one package is specified, they must be quoted.
+If more than one glob is specified, they must be quoted.
 .IP
 For example:
 .RS
@@ -386,6 +387,17 @@ exactly
 .I foo
 or
 .IR bar .
+.IP
+Note that shell metacharacters may be supplied in the arguments. For
+instance,
+.RS
+.IP
+.nf
+\fC# sbopkg -s '*[Oo]pen*'\fP
+.fi
+.RE
+.IP
+will return all packages with 'open' or 'Open' anywhere in the name.
 .\"---------------------------------------------------------------------
 .TP
 .B \-u
