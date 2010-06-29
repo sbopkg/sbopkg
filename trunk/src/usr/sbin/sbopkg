@@ -4151,7 +4151,7 @@ search_and_display() {
     # pick_file()/show_readme(). There, we need to expand globs and will be
     # using full paths or be in the right directory to do so.
     set -f
-    for PKGSEARCH in $SEARCH; do
+    for PKGSEARCH in ${SEARCH[*]}; do
         echo "Searching for $PKGSEARCH"
         if search_package $PKGSEARCH; then
             if (( ${#PKGPATH[*]} > 1 )); then
@@ -4169,6 +4169,7 @@ search_and_display() {
             # insists upon. Otherwise, I'd just show the default files.
             pick_file info $PKGPATH $PKGSEARCH
             show_readme $PKGPATH $PKGSEARCH
+            read -n1 -ep "Hit any key to continue: "
         else
             echo "$SCRIPT: package \"$PKGSEARCH\" not found." >&2
         fi
@@ -4422,7 +4423,7 @@ while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
         b ) # Build
             BFLAG=1
             TYPE="build"
-            BUILDLIST="$OPTARG"
+            BUILDLIST+=("$OPTARG")
             unset DIAG
             ;;
         c ) # Check for updates to installed SBo packages
@@ -4440,13 +4441,13 @@ while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             SBOPKG_CONF=$OPTARG
             ;;
         g ) # String search
-            GENSEARCH="$OPTARG"
+            GENSEARCH+=("$OPTARG")
             unset DIAG
             ;;
         i ) # Build and install
             IFLAG=1
             TYPE="buildinstall"
-            BUILDLIST="$OPTARG"
+            BUILDLIST+=("$OPTARG")
             unset DIAG
             ;;
         k ) # Skip installed packages
@@ -4482,7 +4483,7 @@ while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             unset DIAG
             ;;
         s ) # Name search
-            SEARCH="$OPTARG"
+            SEARCH+=("$OPTARG")
             unset DIAG
             ;;
         u ) # Search an updated sbopkg package
@@ -4618,7 +4619,7 @@ else
         > $SBOPKGTMP/sbopkg_user_queue.lck
         > $MISSING_LIST_FILE
         > $MISSING_SINGLE_FILE
-        for PKGBUILD in $BUILDLIST; do
+        for PKGBUILD in ${BUILDLIST[*]}; do
             if [[ ${PKGBUILD:(-4)} == ".sqf" ]]; then
                 parse_queue $QUEUEDIR/$PKGBUILD
                 continue
@@ -4735,7 +4736,7 @@ else
     fi
 
     if [[ -n $SEARCH ]]; then
-        search_and_display "$SEARCH"
+        search_and_display "${SEARCH[*]}"
     fi
 
     if [[ $UPDATE ]]; then
@@ -4745,7 +4746,7 @@ else
     if [[ -n $GENSEARCH ]]; then
         check_if_repo_exists
         set -f
-        for PKGSEARCH in $GENSEARCH; do
+        for PKGSEARCH in ${GENSEARCH[*]}; do
             echo "Searching for $PKGSEARCH"
             gen_search_package $PKGSEARCH
         done
