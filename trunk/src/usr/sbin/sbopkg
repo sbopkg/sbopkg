@@ -2821,8 +2821,10 @@ check_source() {
     # If there's no known source name, or if it doesn't exist, it has to be
     # downloaded...
     if [[ -f $SRCDIR/$SRCNAME ]]; then
+        echo "Found $SRCNAME in $SRCDIR."
         unset NO_DL_LOOP
     else
+        echo "$PKG not found in $SRCDIR."
         return 1
     fi
 
