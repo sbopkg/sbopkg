@@ -42,6 +42,9 @@ enhancements:
     specify app-specific options on the command line. These take the form of,
     e.g., '-i app1:opt1="foo bar":opt2=baz app2:opt=mu'. If that's cryptic,
     see the manual for details.
+  * Users now have the option of interactively retrying a failed https
+    download, invoking wget with '--no-check-certificate', as this can be
+    caused by 'self-signed certificates' and the like.
 +--------------------------+
 Thu May 27 18:13:59 UTC 2010
 Sbopkg 0.33.1 released.  This version contains the following fixes and

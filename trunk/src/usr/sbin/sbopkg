@@ -2875,6 +2875,33 @@ EOF
     fi
 }
 
+check_cert_prompt() {
+    # this asks the user if they want to retry a download that may have failed
+    # due to an SSL error.
+
+    local REPLY
+
+    echo
+    crunch_fmt "$SCRIPT: Some https download errors can be worked around \
+        by temporarily adding '--no-check-certificate' to WGETFLAGS. If \
+        unsure, see the wget manual on the use of this flag."
+    echo
+    while :; do
+        printf "Would you like to have sbopkg attempt this? [Y/n]: "
+        error_read
+        case $REPLY in
+            Y|y|'')
+                echo "Re-trying with '--no-check-certificate'."
+                echo
+                TWGETFLAGS+=" --no-check-certificate"
+                return
+                ;;
+            N|n) return 1 ;;
+            *) unknown_response ;;
+        esac
+    done
+}
+
 get_source() {
     # Check to see if the source tarball exists in the local cache directory.
     # If it does, make a symlink to the package directory in the local mirror.
@@ -2893,7 +2920,7 @@ get_source() {
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-    local SRCNAME DL_SRCNAME DL FAILURE MD5CHK i CWD
+    local SRCNAME DL_SRCNAME DL FAILURE MD5CHK i CWD TWGETFLAGS
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
@@ -2903,6 +2930,7 @@ get_source() {
     echo | tee -a $TMPSUMMARYLOG
     echo "$PKG:" | tee -a $TMPSUMMARYLOG
     for i in ${!MD5SUM[@]}; do
+        TWGETFLAGS=$WGETFLAGS
         while :; do
             cd "$CWD"
             SRCNAME=$(get_source_names --placeholder $INFO)
@@ -2938,7 +2966,7 @@ get_source() {
             cd $DLDIR
 
             if [[ -z $NO_DL_LOOP ]]; then
-                wget $WGETFLAGS ${DOWNLOAD[$i]} >> \
+                wget $TWGETFLAGS ${DOWNLOAD[$i]} >> \
                     $SBOPKGOUTPUT & echo "$!" >> $PIDLIST 2>> $SBOPKGOUTPUT
                 wait
             else
@@ -2956,6 +2984,10 @@ get_source() {
                 NO_DL_LOOP=1
                 mv "$DL" "$SRCDIR/$DL_SRCNAME"
             else
+                if [[ ${DOWNLOAD[$i]} == https://* &&
+                        $TWGETFLAGS != *no-check-certificate* ]]; then
+                    check_cert_prompt && continue
+                fi
                 FAILURE=download
                 echo "  Download failed." >> $TMPSUMMARYLOG
                 echo >> $TMPSUMMARYLOG
