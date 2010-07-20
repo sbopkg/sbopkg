@@ -1,11 +1,9 @@
 #!/bin/bash
 #
-# $Id$
+# $Id: sbopkg 836 2010-07-20 01:06:26Z slakmagik $
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2010 Chess Griffin <chess@chessgriffin.com>
-# Copyright 2009-2010 Mauro Giachero <mauro.giachero@gmail.com>
-#                     slakmagik <slakmagik@gmail.com>
 #
 # Redistribution and use of this script, with or without modification, is
 # permitted provided that the following conditions are met:
@@ -63,12 +61,6 @@ crunch_fmt() {
     echo -e "$@" | tr -s ' ' | fmt -78
 }
 
-unknown_response() {
-    # This is to produce the error message for bad read input
-
-    crunch_fmt "$SCRIPT: ${FUNCNAME[1]}: Unknown response: \"$REPLY\"."
-}
-
 split_pkg_name() {
     # This function takes a string in the Slackware format NAME-VER-ARCH-BUILD
     # (with an optional TAG) and splits the string into those respective
@@ -112,8 +104,8 @@ config_check() {
     [[ -e $HOME/.sbopkg.conf ]] && . $HOME/.sbopkg.conf
 
     # Some configuration options are mandatory
-    for VAR in REPO_ROOT QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME REPO_BRANCH \
-        KEEPLOG CLEANUP LOGFILE DEBUG_UPDATES TMP OUTPUT RSYNCFLAGS \
+    for VAR in REPO_ROOT LOGDIR QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME \
+        REPO_BRANCH KEEPLOG CLEANUP LOGFILE DEBUG TMP OUTPUT RSYNCFLAGS \
         WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D ALLOW_MULTI; do
         if [[ -z "${!VAR}" ]]; then
             MISSING+="$VAR "
@@ -137,13 +129,8 @@ Please correct this error and run $SCRIPT again.
 EOF
        exit 1
     fi
-    if [[ $DEBUG_UPDATES != [012] ]]; then
-        echo "The DEBUG_UPDATES variable must be set to 0, 1, or 2." 1>&2
-        exit 1
-    fi
-
-    if [[ $LOGFILE != /* ]]; then
-        echo "The LOGFILE variable must be set to a full path." 1>&2
+    if [[ $DEBUG -ne 0 && $DEBUG -ne 1 && $DEBUG -ne 2 ]]; then
+        echo "The \$DEBUG variable must be set to 0, 1, or 2." 1>&2
         exit 1
     fi
 
@@ -152,6 +139,19 @@ EOF
     yesno_to_setunset CLEANUP
     yesno_to_setunset ALLOW_MULTI
     yesno_to_setunset MKDIR_PROMPT
+
+    # If multiple instances of sbopkg are allowed, they need their own
+    # private $SBOPKGTMP.
+    # Since simply appending the cookie makes sbopkg to inform the user about
+    # the creation of the new $SBOPKGTMP directory on every startup, we do a
+    # little more setup here.
+    if [[ $ALLOW_MULTI ]]; then
+        # Note: this ck_dir line is copied from directory_checks
+        ck_dir $SBOPKGTMP \
+            "Creating local sbopkg TMP directory $SBOPKGTMP."
+        SBOPKGTMP+=/sbopkg-instance-$(mcookie)
+        mkdir -p $SBOPKGTMP
+    fi
 
     # Make sure there are no unexpected files in $SBOPKGTMP
     if [[ -n $(find $SBOPKGTMP -mindepth 1 -maxdepth 1 -not -name sbopkg\* \
@@ -273,105 +273,83 @@ EOF
     return 0
 }
 
-dir_init() {
-    # Check to make sure certain sbopkg-related directories exist.
+ck_dir() {
+    # This function displays the directory-creation message and then creates
+    # the missing directory.
+
+    local DIR=$1
+    local MSG="$2"
+    local ERROR=0
+    local JUNK
+
+    # Try to create the specified directory
+    if [[ ! -d $DIR ]]; then
+        if [[ $MKDIR_PROMPT ]]; then
+            echo
+            crunch_fmt "$MSG"
+            echo
+            read -n1 -sep "Press any key to continue or Ctrl-C to exit."
+            mkdir -p $DIR 2> /dev/null && echo "Directory created." || ERROR=1
+        else
+            mkdir -p $DIR 2> /dev/null || ERROR=1
+        fi
+    fi
+
+    # Try to create a file in the specified folder
+    if [[ $ERROR -eq 0 ]]; then
+        (> $DIR/sbopkg-testfile 2> /dev/null && rm -f \
+        $DIR/sbopkg-testfile 2> /dev/null) || ERROR=2
+    fi
+
+    case $ERROR in
+        1 ) crunch_fmt "\\nWARNING:\
+                \\n$SCRIPT: Unable to create $DIR.\
+                \\n\\nMake sure you have enough privileges to create that\
+                directory, or specify a different location in sbopkg.conf.\
+                \\nSee the sbopkg.conf(5) man page for more details.\
+                \\n\\nPress ENTER to continue anyway, CTRL-C to abort."
+            read JUNK
+            ;;
+        2 ) crunch_fmt "\\nWARNING:\
+                \\n$SCRIPT: Unable to create files in $DIR.\
+                \\n\\nMake sure you have enough privileges to write in\
+                that directory, or specify a different location in\
+                sbopkg.conf.\
+                \\nSee the sbopkg.conf(5) man page for more details.\
+                \\n\\nPress ENTER to continue anyway, CTRL-C to abort."
+            read JUNK
+            ;;
+    esac
+}
+
+directory_checks() {
+    # Check and make sure certain sbopkg-related directories exist.
     # If not, create them.
 
-    local DIR_VARS DI_OUTPUT_LINES DIRS2MK DI_OUTPUT REPLY ERROR
+    ck_dir $REPO_DIR \
+        "Creating local repository directory $REPO_DIR for the \
+            script mirror."
+    ck_dir $LOGDIR \
+        "Creating log directory $LOGDIR."
+    ck_dir $QUEUEDIR \
+        "Creating queues directory $QUEUEDIR."
+    ck_dir $SRCDIR \
+        "Creating local cache directory $SRCDIR to keep downloaded sources."
+    ck_dir $SBOPKGTMP \
+        "Creating local sbopkg TMP directory $SBOPKGTMP."
+    # ensure basic perm/owner sanity - we'll do better soon.
+    chown root:root $SBOPKGTMP
+    chmod 700 $SBOPKGTMP
+    rm -rf $SBOPKGTMP/*
+    ck_dir $OUTPUT \
+        "Creating local package output directory $OUTPUT."
 
-    # Keep DIR_VARS and DI_OUTPUT_LINES in sync where REPO_DIR ~ REPO_ROOT.
-
-    # We show REPO_ROOT and make REPO_DIR because the REPO_DIR we need to make
-    # is assigned to elswhere in the script as a combination of
-    # REPO_ROOT/REPO_NAME and may or may not be combined with REPO_BRANCH -
-    # but these are all subdirectories of REPO_ROOT, so that's all we need to
-    # actually display and we can avoid the confusion we might get with a
-    # display like 'REPO_DIR[/REPO_NAME]'.
-
-    DIR_VARS=(
-        $REPO_DIR ${LOGFILE%/*} $QUEUEDIR $SRCDIR $SBOPKGTMP $TMP $OUTPUT
-    )
-
-    DI_OUTPUT_LINES=(
-        "REPO_ROOT -----------> $REPO_ROOT"
-        "LOGFILE directory ---> ${LOGFILE%/*}"
-        "QUEUEDIR ------------> $QUEUEDIR"
-        "SRCDIR --------------> $SRCDIR"
-        "SBOPKGTMP -----------> $SBOPKGTMP"
-        "TMP -----------------> $TMP"
-        "OUTPUT --------------> $OUTPUT"
-    )
-
-    for ((i=0; i<${#DIR_VARS[*]}; i++)); do
-        if [ ! -d ${DIR_VARS[$i]} ]; then
-            DIRS2MK+="${DIR_VARS[$i]} "
-            DI_OUTPUT+=( "${DI_OUTPUT_LINES[$i]}" )
-        fi
-    done
-    if [[ $DI_OUTPUT ]]; then
-        # Keep DI_OUTPUT_LINES and the 'table headers' aligned, too.
-        cat << EOF
-
-The following directories do not exist:
-
-Variable               Assignment
---------               ----------
-EOF
-        for ((i=0; i<${#DI_OUTPUT[*]}; i++)); do
-            echo "${DI_OUTPUT[$i]}"
-        done
-        cat << EOF
-
-You can have sbopkg create them or, if these values are incorrect, you can
-abort to edit your config files or pass different flags.
-
-EOF
-        while :; do
-            read $NFLAG -ep "(C)reate or (A)bort?: "
-            case $REPLY in
-                C|c)
-                    if ! mkdir -p $DIRS2MK 2>/dev/null; then
-                        echo "$SCRIPT: failed to create directories" >&2
-                        cleanup; exit 1
-                    fi
-                    break
-                    ;;
-                A|a)
-                    if [[ ${FUNCNAME[1]} == main ]]; then
-                        cleanup; exit 1
-                    else
-                        return 1
-                    fi
-                    ;;
-                *) unknown_response ;;
-            esac
-        done
-    fi
-
-    for ((i=0; i<${#DIR_VARS[*]}; i++)); do
-        if [ ! -w ${DIR_VARS[$i]} ]; then
-            echo ${DIR_VARS[$i]} not writable
-            ERROR=nowrite
-        fi
-    done
-
-    if [[ $ERROR == nowrite ]]; then
-        # error msg above
-        cleanup; exit 1
-    fi
-
-    # If multiple instances of sbopkg are allowed, they need their own private
-    # $SBOPKGTMP under an already created and verified $SBOPKGTMP (so no error
-    # checking) but we only need to do this once from main().
-    if [[ $ALLOW_MULTI ]] && [[ ${FUNCNAME[1]} == main ]]; then
-        SBOPKGTMP+=/sbopkg-instance-$(mcookie)
-        mkdir -p $SBOPKGTMP
-    fi
+    # Let's catch Control-C and try to exit cleanly.  Please see the
+    # comment to the control_c function, below.
+    trap 'control_c' 2 14 15
 }
 
 pid_check() {
-    [[ $ALLOW_MULTI ]] && return
-
     # Set and check for pid file.
     local PIDFILE OTHERPID
 
@@ -401,6 +379,19 @@ EOF
     fi
     cleanup
     echo $$ > $PIDFILE
+}
+
+check_write() {
+    # Check to see whether the user has write permissions on the
+    # directory.
+
+    local DIR=$1
+
+    if [[ ! -w $DIR ]]; then
+        return 1
+    else
+        return 0
+    fi
 }
 
 check_if_repo_exists() {
@@ -485,7 +476,7 @@ get_sbo_packages() {
                     --file $CONFIRMLIST 2> $REMOVELIST
                 if [[ $? == 0 ]]; then
                     removepkg $(tr -d \" < $REMOVELIST)
-                    read -n1 -ep "Press any key to continue: "
+                    read -n1 -p "Press any key to continue."
                 fi
             fi
         else
@@ -715,7 +706,7 @@ check_for_updates() {
 
             # Extract the new package version
             if [[ ! -z $NEWSB ]]; then
-                unset BUILD NEWARCH
+                unset BUILD
                 eval NEW$(grep -m1 ^ARCH= $NEWSB) 2>/dev/null
                 if [[ $NEWARCH != "noarch" ]]; then
                    NEWARCH=$ARCH
@@ -752,7 +743,7 @@ check_for_updates() {
 
                 # Step 3 - reverse the file order
                 # Because dependencies must be first...
-                tac $VERSION_FILE >> $TEMPFILE
+                tac $VERSION_FILE > $TEMPFILE
                 mv $TEMPFILE $VERSION_FILE
 
                 # Step 4 - let's get the version number!
@@ -819,7 +810,7 @@ check_for_updates() {
                         >> $UPDATELIST
                     echo "-$NAME" >> $SBOPKGTMP/sbopkg-update-queue
                 else
-                    if [[ $DEBUG_UPDATES -eq 2 ]]; then
+                    if [[ $DEBUG -eq 2 ]]; then
                         echo $NAME: >> $UPDATELIST
                         echo "  No update." >> $UPDATELIST
                     fi
@@ -829,7 +820,7 @@ check_for_updates() {
                         "standard method, may be inaccurate." >> $UPDATELIST
                 fi
             else
-                if [[ $DEBUG_UPDATES -ge 1 ]]; then
+                if [[ $DEBUG -ge 1 ]]; then
                     echo $NAME: >> $UPDATELIST
                     echo "  Not in the repository." >> $UPDATELIST
                 fi
@@ -852,9 +843,8 @@ check_for_updates() {
         else
             cat $UPDATELIST
         fi
-        # Permanent log of the updatelist is saved when DEBUG_UPDATES is
-        # enabled.
-        if [[ $DEBUG_UPDATES -ge 1 ]]; then
+        # Permanent log of the updatelist is saved when DEBUG is enabled.
+        if [[ $DEBUG -ge 1 ]]; then
             cp $UPDATELIST $SBOPKGTMP/sbopkg-debug-updatelist
         else
             rm $UPDATELIST
@@ -1054,24 +1044,22 @@ select_repository() {
         eval $(sed 's:^\(.*\) (\(.*\))$:REPO_NAME=\2;REPO_BRANCH=\1:g' \
             < $SBOPKGTMP/sbopkg_version_selection)
         set_repo_vars
-        if dir_init; then
-            dialog --title "Save this setting?" --defaultno --yesno \
-                "$(crunch "Would you like to save this repository setting \
-                in the user's $HOME/.sbopkg.conf file? (One will be created \
-                if it is not found).\n\nPress <Yes> to save in the user's \
-                $HOME/.sbopkg.conf or press <No> to continue without saving, \
-                making this a temporary change only.")" 12 60
-            if [[ $? != 0 ]]; then
-                break
-            fi
-            if [[ -e $HOME/.sbopkg.conf ]]; then
-                sed -i '/^REPO_NAME=.*$/d' $HOME/.sbopkg.conf
-                sed -i '/^REPO_BRANCH=.*$/d' $HOME/.sbopkg.conf
-            fi
-            echo "REPO_NAME=$REPO_NAME" >> $HOME/.sbopkg.conf
-            echo "REPO_BRANCH=$REPO_BRANCH" >> $HOME/.sbopkg.conf
+        dialog --title "Save this setting?" --defaultno --yesno \
+            "$(crunch "Would you like to save this repository setting \
+            in the user's $HOME/.sbopkg.conf file? (One will be created if \
+            it is not found).\n\nPress <Yes> to save in the user's \
+            $HOME/.sbopkg.conf or press <No> to continue without saving, \
+            making this a temporary change only.")" 12 60
+        if [[ $? != 0 ]]; then
             break
         fi
+        if [[ -e $HOME/.sbopkg.conf ]]; then
+            sed -i '/^REPO_NAME=.*$/d' $HOME/.sbopkg.conf
+            sed -i '/^REPO_BRANCH=.*$/d' $HOME/.sbopkg.conf
+        fi
+        echo "REPO_NAME=$REPO_NAME" >> $HOME/.sbopkg.conf
+        echo "REPO_BRANCH=$REPO_BRANCH" >> $HOME/.sbopkg.conf
+        break
     done
     rm -f $SBOPKGTMP/sbopkg_version_selection
 }
@@ -1289,7 +1277,7 @@ info_item() {
                             continue;
                         fi
                         install_package $OUTPUT $CURPACKAGE | tee $TMPLOG
-                        read -n1 -ep "Press any key to continue: "
+                        read -n 1 -p "Press any key to continue."
                         if [[ $KEEPLOG ]]; then
                             cat $TMPLOG >> $LOGFILE
                         fi
@@ -1908,32 +1896,6 @@ remove_from_queue() {
     done
 }
 
-parse_arguments() {
-    # this converts the 'app:opt1="arg1 arg2":opt2=arg1' syntax we need on the
-    # command line to the 'app' and 'opt1="arg1 arg2" opt2="arg1"' syntax we
-    # need internally and passes it on to a file.
-
-    local CLI_OPTIONS
-
-    if [[ "$PKGBUILD" == *:* ]]; then # it has options
-        PKGBUILD=$(sed '
-            s/:/ /
-            s/=/="/g
-            s/:/":/g
-            s/:/ /g
-            s/$/"/' <<< $PKGBUILD)
-        CLI_OPTIONS="${PKGBUILD#* }"
-        PKGBUILD="${PKGBUILD%% *}"
-        echo "$CLI_OPTIONS" > $SBOPKGTMP/sbopkg_$PKGBUILD.cliopts
-    fi
-
-    if ! add_item_to_queue $PKGBUILD; then
-        echo "Queuefile or package $PKGBUILD not found - skipping." >>\
-            $MISSING_SINGLE_FILE
-        echo
-    fi
-}
-
 parse_queue() {
     # This begins the process of parsing through a queuefile.  The $2
     # assignment to NODELETE is used in order to remove the $DUPEQUEUE file
@@ -2034,11 +1996,8 @@ add_item_to_queue() {
     if grep -q "^$APP " $TMPQUEUE 2> /dev/null; then
         : # it's the same app and version so toss it
     else
-        # note that this regex was missing the ^ as of r826 and this caused a
-        # false match when running 'sbopkg -k -i queue' because 'foo' and
-        # 'libfoo' matched
         INSTALLED=$(ls -1 /var/log/packages |
-            grep "^$APP-[^-]*-[^-]*-[^-]*$REPO_TAG$")
+            grep "$APP-[^-]*-[^-]*-[^-]*$REPO_TAG\$")
         if [[ -n $INSTALLED ]]; then
             VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
             # NOTE: When changing, see the uncheck_installed() comment
@@ -2383,7 +2342,20 @@ sync_repo() {
         fi
         continue
     fi
-    if [[ $REPO_TOOL != "rsync" && $REPO_TOOL != "git" ]]; then
+    directory_checks
+    if ! check_write $REPO_DIR; then
+        if [[ $DIAG ]]; then
+            dialog --title "ERROR" --msgbox \
+                "You do not have write permissions on the target directory." \
+                8 30
+            continue
+        else
+            crunch_fmt "You do not have write permissions on the target \
+                directory." >&2
+            cleanup
+            exit 1
+        fi
+    elif [[ $REPO_TOOL != "rsync" && $REPO_TOOL != "git" ]]; then
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox \
                 "Unsupported fetching tool \"$REPO_TOOL\"." 8 30
@@ -2416,7 +2388,7 @@ search_package() {
 
     cd $REPO_DIR
     PKG="$1"
-    PKGPATH=( $(find -type d -mindepth 2 -name "$PKG" | sort) )
+    PKGPATH=( $(find -type d -mindepth 2 -name "$PKG") )
 
     if [[ -z $PKGPATH ]]; then
         return 1
@@ -2426,9 +2398,8 @@ search_package() {
 }
 
 gen_search_package() {
-    # Search for package name glob generally using the '-iwholename' argument
-    # to find, with values wrapped in '*'.  In dialog interface, jump to
-    # selected package.
+    # Search for package name glob generally using grep.  In dialog interface,
+    # jump to selected package.
     # Returns 0 unless the user asked to jump back to the main menu.
 
     cd $REPO_DIR
@@ -2624,7 +2595,7 @@ read_info() {
     # (possibly ARCH-dependent) values.
 
     local INFO=$1
-    local i DOWNLOAD_ARCH DLSAVE MDSAVE REPLY
+    local i DOWNLOAD_ARCH DLSAVE MDSAVE ANS
     local {DOWNLOAD,MD5SUM}_$ARCH
 
     unset DOWNLOAD MD5SUM
@@ -2655,17 +2626,25 @@ read_info() {
 
     if [[ $2 == --check_buildable ]]; then
         if [[ $DOWNLOAD == "UNSUPPORTED" || $DOWNLOAD == "UNTESTED" ]]; then
-            echo
-            crunch_fmt "$PRGNAM:  This package is marked UNSUPPORTED \
-                or UNTESTED and may not build successfully on your \
-                architecture."
-            echo
             while :; do
-                read $NFLAG -ep "(P)roceed anyway or (S)kip?: "
-                case $REPLY in
-                    P|p) break ;;
-                    S|s) return 1 ;;
-                    *) unknown_response ;;
+                echo
+                crunch_fmt "$PRGNAM:  This package is marked UNSUPPORTED \
+                    or UNTESTED and may not build successfully on your \
+                    architecture. Do you want to try and proceed anyway or \
+                    do you want to skip it?"
+                echo
+                echo "Press (Y)es to proceed or (N)o to skip."
+                read ANS
+                case $ANS in
+                    y* | Y* )
+                        break
+                        ;;
+                    n* | N* )
+                        return 1
+                        ;;
+                    * )
+                        echo "Unknown response."
+                        ;;
                 esac
             done
             if [[ $ARCH != "x86_64" ]]; then
@@ -2681,24 +2660,6 @@ read_info() {
     # Convert the space-separated strings to arrays
     DOWNLOAD=($DOWNLOAD)
     MD5SUM=($MD5SUM)
-}
-
-fix_urls() {
-    # A quirks function of source filename corrections for a variety of apps
-    # where a variety of nonsense gets prepended or appended to the tarball
-    # name in the URLs. Ideally, these should match classes of apps which are
-    # noted. Else they should be app-specific and noted. But they shouldn't be
-    # completely generic and uncommented.
-    sed '
-        # fix calcurse
-        /get\.cgi?calcurse/s/^.*?//
-        # fix zarafa and zarafa-webaccess-ajax
-        /src=zarafa-/{s/.*=//;s/$/.tar.gz/}
-        # fix dzen2
-        /dzen2-/s/?attachauth=.*//
-        # fix several packages using trac as an scms
-        s/?format=.*$//
-        '
 }
 
 get_source_names() {
@@ -2727,14 +2688,13 @@ get_source_names() {
 
     read_info $INFO
     for DL in "${DOWNLOAD[@]}"; do
-        # remove the '/download' from several SRCNAMEs that end that way
-        # rather than in the actual tarball so the subsequent basename doesn't
-        # end with 'download'
+        # remove the '/download' from any SRCNAME that ends that way rather
+        # than in the actual tarball
         SRCNAME=${DL//%\/download}
         SRCNAME=${SRCNAME##*/}
-        # calcurse has a nonsense url in the info file - this is to get it
-        # through this function and on to remove_obsolete_sources()
-        SRCNAME=$(fix_urls <<< "$SRCNAME")
+        # this is actually so that calcurse will make it to
+        # remove_obsolete_sources()
+        SRCNAME=$(sed 's/?e=.*$//;s/?format=.*$//;s/^.*?//' <<< "$SRCNAME")
         # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with
         # their corresponding characters.
         # This is done by replacing '%' with '\x' and passing the string to
@@ -2816,15 +2776,13 @@ check_source() {
     local PKG=$1
     local MD5SUM="$2"
     local SRCNAME="$3"
-    local MD5CHK REPLY
+    local MD5CHK ANS
 
     # If there's no known source name, or if it doesn't exist, it has to be
     # downloaded...
     if [[ -f $SRCDIR/$SRCNAME ]]; then
-        echo "Found $SRCNAME in $SRCDIR."
         unset NO_DL_LOOP
     else
-        echo "$PKG not found in $SRCDIR."
         return 1
     fi
 
@@ -2849,59 +2807,31 @@ You can choose among the following options:
  - (Y)es, keep the source and continue the build process;
  - (N)o, delete the source and abort the build process; or
  - (R)etry download and continue the build process.
-
+Your choice?
 EOF
-            printf "(Y)es, (N)o, (R)etry?: "
-            error_read
-            case $REPLY in
-                Y|y)
+            error_read ANS
+            case $ANS in
+                y* | Y* )
                     MD5SUM=$(tr / _ <<< "$MD5CHK")
                     echo "    Keeping the source and continuing." |
                         tee -a $TMPSUMMARYLOG
                     return 0
                     ;;
-                N|n)
+                n* | N* )
                     rm -f "$SRCDIR/$SRCNAME"
                     echo "    Source deleted." | tee -a $TMPSUMMARYLOG
                     return 2
                     ;;
-                R|r)
+                r* | R* )
                     echo "    Downloading again." | tee -a $TMPSUMMARYLOG
                     return 1
                     ;;
-                *)
-                    unknown_response
+                * )
+                    echo "    Unknown response."
                     ;;
             esac
         done
     fi
-}
-
-check_cert_prompt() {
-    # this asks the user if they want to retry a download that may have failed
-    # due to an SSL error.
-
-    local REPLY
-
-    echo
-    crunch_fmt "$SCRIPT: Some https download errors can be worked around \
-        by temporarily adding '--no-check-certificate' to WGETFLAGS. If \
-        unsure, see the wget manual on the use of this flag."
-    echo
-    while :; do
-        printf "Would you like to have sbopkg attempt this? [Y/n]: "
-        error_read
-        case $REPLY in
-            Y|y|'')
-                echo "Re-trying with '--no-check-certificate'."
-                echo
-                TWGETFLAGS+=" --no-check-certificate"
-                return
-                ;;
-            N|n) return 1 ;;
-            *) unknown_response ;;
-        esac
-    done
 }
 
 get_source() {
@@ -2922,7 +2852,7 @@ get_source() {
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-    local SRCNAME DL_SRCNAME DL FAILURE MD5CHK i CWD TWGETFLAGS
+    local SRCNAME DL_SRCNAME DL FAILURE ANS MD5CHK i CWD
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
@@ -2932,7 +2862,6 @@ get_source() {
     echo | tee -a $TMPSUMMARYLOG
     echo "$PKG:" | tee -a $TMPSUMMARYLOG
     for i in ${!MD5SUM[@]}; do
-        TWGETFLAGS=$WGETFLAGS
         while :; do
             cd "$CWD"
             SRCNAME=$(get_source_names --placeholder $INFO)
@@ -2968,7 +2897,7 @@ get_source() {
             cd $DLDIR
 
             if [[ -z $NO_DL_LOOP ]]; then
-                wget $TWGETFLAGS ${DOWNLOAD[$i]} >> \
+                wget $WGETFLAGS ${DOWNLOAD[$i]} >> \
                     $SBOPKGOUTPUT & echo "$!" >> $PIDLIST 2>> $SBOPKGOUTPUT
                 wait
             else
@@ -2978,7 +2907,11 @@ get_source() {
                 echo >> $TMPSUMMARYLOG
             fi
             DL=$(ls -A . 2> /dev/null)
-            DL_SRCNAME=$(fix_urls <<< "$DL")
+            # Source filename corrections for Virtualbox, where '?e=foo' gets
+            # appended to the filename and for calcurse, where a 'foo?' gets
+            # prepended to the filename - and for a potential issue with trac
+            # URLs
+            DL_SRCNAME=$(sed 's/?e=.*$//;s/?format=.*$//;s/^.*?//' <<< "$DL")
             if [[ $DL_SRCNAME ]]; then
                 # if we have *anything* in here, then we did a download. We
                 # may not know what to do with it, but we don't need to get it
@@ -2986,10 +2919,6 @@ get_source() {
                 NO_DL_LOOP=1
                 mv "$DL" "$SRCDIR/$DL_SRCNAME"
             else
-                if [[ ${DOWNLOAD[$i]} == https://* &&
-                        $TWGETFLAGS != *no-check-certificate* ]]; then
-                    check_cert_prompt && continue
-                fi
                 FAILURE=download
                 echo "  Download failed." >> $TMPSUMMARYLOG
                 echo >> $TMPSUMMARYLOG
@@ -3129,7 +3058,7 @@ remove_files() {
     local ONOFF="$4"
     local FILES_CHECKLIST=$SBOPKGTMP/sbopkg_file_removal_checklist
     local FILES_DELETING=$SBOPKGTMP/sbopkg_file_removal_deleting
-    local SRC USER_OPTS DELETE DLGWIDTH CHOICE REPLY
+    local SRC USER_OPTS DELETE ANS DLGWIDTH CHOICE
 
     cd $FILESPATH
     if [[ -s $FILES ]]; then
@@ -3165,14 +3094,15 @@ remove_files() {
         else
             # Unquote file names
             tr -d \" < $FILES > $FILES_DELETING
-            echo "[ Displaying $TOPIC ]" | cat - $FILES_DELETING | $PAGER
-            echo
+            echo -e "[ Displaying $TOPIC ]\n" |
+                cat - $FILES_DELETING | $PAGER
             while :; do
-                read $NFLAG -ep "(K)eep or (D)elete these files?: "
+                echo
+                read -n1 -ep "Do you want to delete these files? [y/n] "
                 case $REPLY in
-                    K|k) break ;;
-                    D|d) DELETE=1; break ;;
-                    *) unknown_response ;;
+                    n* | N* ) break ;;
+                    y* | Y* ) DELETE=1; break ;;
+                    * ) echo "Unknown response." ;;
                 esac
             done
         fi
@@ -3231,70 +3161,68 @@ add_options() {
     fi
 }
 
+do_install() {
+    # This is mostly equivalent to "upgradepkg --reinstall --install-new $@",
+    # but also checks for renames
+
+    local PKG OLDPKG
+    local PKG_NAME PKG_VER PKG_ARCH PKG_BUILD PKG_TAG
+
+    for PKG in "$@"; do
+        split_pkg_name $PKG
+        get_old_name OLDNAME "$PKG_NAME"
+        # we grep ls's output rather than have ls return a glob so 'foo'
+        # doesn't match 'foo-bar'
+        if ! OLDPKG=$(ls /var/log/packages/ |
+                grep -m1 "^$OLDNAME-[^-]*-[^-]*-[^-]*$REPO_TAG$"); then
+            OLDPKG=$PKG
+        fi
+        upgradepkg --reinstall --install-new $OLDPKG%"$PKG"
+    done
+}
+
 install_package() {
     # Install the package.
-    # This is mostly equivalent to "upgradepkg --reinstall --install-new $1",
-    # but also checks for package ownership and renames
 
     local INSTDIR=$1
     local INSTPKG=$2
-    local REPLY OLDPKG
-    # keep the variables we pull up with split_pkg_name() here
-    local PKG_NAME PKG_VER PKG_ARCH PKG_BUILD PKG_TAG
-    # ditto the one from get_old_name()
-    local OLDNAME
+    local OWNER=$(stat -c %U $INSTDIR/$INSTPKG)
+    local GROUP=$(stat -c %G $INSTDIR/$INSTPKG)
 
-    if [[ $(find $INSTDIR/$INSTPKG ! -user root -o ! -group root) ]]; then
+    if [[ $OWNER != root && $GROUP != root ]]; then
         crunch_fmt "WARNING:  The file $INSTPKG is not set with root:root \
-            permissions! Here is the output of ls -l:"
+            permissions!  Do you want to proceed?  Here is the \
+            output of ls -l:"
         echo
         ls -l $INSTDIR/$INSTPKG
         echo
-        while :; do
-            read $NFLAG -ep "(P)roceed anyway or (A)bort?: "
-            case $REPLY in
-                P|p) echo "Proceeding..."; break ;;
-                A|a) echo "Aborting..."; return ;;
-                *) unknown_response ;;
-            esac
-        done
+        echo "Press (Y)es to proceed or (N)o to abort."
+        read ANS
+        case $ANS in
+            y* | Y* ) echo "Proceeding..." ;;
+            n* | N* ) echo "Aborting..."; return 0 ;;
+            * ) echo "Unknown response."; break ;;
+        esac
     fi
-
-    split_pkg_name $INSTPKG
-    get_old_name OLDNAME $PKG_NAME
-    # we grep ls's output rather than have ls return a glob so 'foo'
-    # doesn't match 'foo-bar'
-    if ! OLDPKG=$(ls /var/log/packages/ |
-            grep -m1 "^$OLDNAME-[^-]*-[^-]*-[^-]*$REPO_TAG$"); then
-        OLDPKG=$INSTPKG
-    fi
-    upgradepkg --reinstall --install-new $OLDPKG%$INSTDIR/$INSTPKG
+    do_install $INSTDIR/$INSTPKG
     echo "Done upgrading/installing package."
 }
 
 error_read() {
     # This function wraps a simple 'read' call. The read itself is skipped if
-    # $ON_ERROR != "ask", and "Y" is automatically assigned to REPLY when
-    # $ON_ERROR == "continue", and "N" when $ON_ERROR == "stop".
-    #
+    # $ON_ERROR != "ask", and the value put in the variable ($1) is "Yes" when
+    # $ON_ERROR == "continue", and "No" when $ON_ERROR == "stop".
     # Useful in all those places where the CLI version of sbopkg asks the user
     # what to do on build errors.
-    #
-    # The automatic answer is printed to stdout, to record it in the permanent
+    # The automatic answer is printed to stdout, to record it on the permanent
     # build log.
 
-    local NOTE="(as specified with '-e')"
-
     case $ON_ERROR in
-        ask) read $NFLAG -e; return ;;
-        stop) REPLY=N; echo "No $NOTE" ;;
-        continue) REPLY=Y; echo "Yes $NOTE" ;;
-        *)
-            crunch_fmt "$SCRIPT: ${FUNCNAME[0]}: this can't happen. \
-                Please file a bug report which includes this line."
-            exit 1
-            ;;
+        ask) read $1; return ;;
+        stop) eval $1=No; echo -n "No " ;;
+        cont*) eval $1=Yes; echo -n "Yes " ;;
     esac
+    echo "(as specified with '-e')"
 }
 
 build_package() {
@@ -3312,7 +3240,6 @@ build_package() {
     local PKGPATH=$1
     local PKGNAME=$2
     local RETVAL=0
-    local REPLY
 
     echo
     echo "Building $PKGNAME"
@@ -3375,23 +3302,26 @@ build_package() {
             echo "package is a dependency of another package in the queue"
             echo "then it may not make sense to continue."
             echo
+            echo "Press (Y)es to continue, (N)o to abort, (R)etry to try"
+            echo "to build the package again."
             while :; do
-                printf "(Y)es to continue, (N)o to abort, (R)etry the build?: "
-                error_read
-                case $REPLY in
-                    Y|y) # Continue
+                error_read ANS
+                case $ANS in
+                    y* | Y* ) # Continue
                         RETVAL=1
                         break 2
                         ;;
-                    N|n) # Abort
+                    n* | N* ) # Abort
                         RETVAL=2
                         rm -f $SBOPKGTMP/sbopkg_build.lck
                         break 2
                         ;;
-                    R|r) # Retry
+                    r* | R* ) # Retry
                         continue 2
                         ;;
-                    *) unknown_response ;;
+                    * ) # Huh?
+                        echo "Unknown response."
+                        ;;
                 esac
             done
         fi
@@ -3483,9 +3413,25 @@ pick_file() {
     local PKGPATH=$2
     local PKG=$3
     PICKFILE=original
-    local ANS REPLY
+    local ANS ITEM
 
     rm -f $SBOPKGTMP/sbopkg_file_selection $SBOPKGTMP/sbopkg_diff
+    # FIXME slakmagik, what's going on here?
+    # (this was added in r446)
+    if (( ${#PKGPATH[*]} > 1 )); then
+        select ITEM in ${PKGPATH[*]#*/} Quit; do
+            if [[ $ITEM == Quit ]]; then
+                exit
+            fi
+            PKGPATH=$ITEM
+            if [[ -z $ITEM ]]; then
+                echo "$SCRIPT: invalid choice."
+                continue
+            else
+                break
+            fi
+        done
+    fi
 
     # Build the diff, if there are 2 files to choose between
     if [[ -f $PKGPATH/$PKG.$FILE.sbopkg ]]; then
@@ -3527,19 +3473,34 @@ pick_file() {
                 esac
             done
         else
-            echo
-            crunch_fmt "A local $FILE file for $PKG was found in \
-                addition to the original $FILE file."
-            echo
             while :; do
-                read $NFLAG -ep \
-                    "Use (O)riginal/(L)ocal, see (D)iff, or (C)ancel?: "
-                case $REPLY in
-                    O|o) PICKFILE="original"; break ;;
-                    L|l) PICKFILE="local"; break ;;
-                    D|d) $PAGER $SBOPKGTMP/sbopkg_diff ;;
-                    C|c) cleanup; return 1 ;;
-                    *) unknown_response ;;
+                echo
+                crunch_fmt "A local $FILE file for $PKG was found in \
+                    addition to the original $FILE file."
+                echo "Which one would you like to use?"
+                echo
+                crunch_fmt "(O)riginal, (L)ocal, (D)iff, (C)ancel:"
+                read ANS
+                case $ANS in
+                    o* | O* )
+                        PICKFILE="original"
+                        break
+                        ;;
+                    l* | L* )
+                        PICKFILE="local"
+                        break
+                        ;;
+                    d* | D* )
+                        $PAGER $SBOPKGTMP/sbopkg_diff
+                        ;;
+                    c* | C* )
+                        rm $SBOPKGTMP/sbopkg_diff
+                        cleanup
+                        return 1
+                        ;;
+                    * ) # Huh?
+                        echo "Unknown response."
+                        ;;
                 esac
             done
         fi
@@ -3566,15 +3527,10 @@ use_options() {
     local OPTAPP=$2
     local OPTCHOICE=$SBOPKGTMP/sbopkg_options_choice
     local OPTLIST=$SBOPKGTMP/sbopkg_options_list
-    local CLI_OPTFILE=$SBOPKGTMP/sbopkg_$OPTAPP.cliopts
-    local CLI_OPTIONS TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG
-    local REPLY CLI_OPT SAVEDOPT QUEUEOPT
+    local TMPOPTIONS LDOPTIONS CHOICE OPTIONS_MSG
 
     # By default (i.e. no options.sbopkg file) there are no build options.
     unset BUILDOPTIONS
-    if [[ -f $CLI_OPTFILE ]]; then
-        CLI_OPTIONS=$(< $CLI_OPTFILE)
-    fi
     if [[ -f $PKGPATH/options.sbopkg ]]; then
         TMPOPTIONS=$(< $PKGPATH/options.sbopkg)
     fi
@@ -3582,8 +3538,8 @@ use_options() {
         LDOPTIONS=$(< $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions)
     fi
     rm -f $PKGPATH/options.build
-    if [[ $DIAG ]]; then
-        if [[ $TMPOPTIONS || $LDOPTIONS ]]; then
+    if [[ $TMPOPTIONS || $LDOPTIONS ]]; then
+        if [[ $DIAG ]]; then
             rm -f $OPTLIST $OPTCHOICE
             if [[ $TMPOPTIONS ]]; then
                 echo 'Saved "Build with your saved options"' >> $OPTLIST
@@ -3614,38 +3570,30 @@ use_options() {
                 fi
                 rm -f $OPTLIST $OPTCHOICE
              fi
-         fi
-    else
-        if [[ $CLI_OPTIONS || $TMPOPTIONS || $LDOPTIONS ]]; then
-            echo
-            echo "One or more build option files for the $OPTAPP"
-            echo "SlackBuild script were found:"
-            echo
-            if [[ $CLI_OPTIONS ]]; then
-                echo "Command line options: $CLI_OPTIONS"
-                CLI_OPT=" (C)ommand line options,"
-            fi
-            if [[ $TMPOPTIONS ]]; then
-                echo "Saved options: $TMPOPTIONS"
-                SAVEDOPT=" (S)aved,"
-            fi
-            if [[ $LDOPTIONS ]]; then
-                echo "Queuefile options: $LDOPTIONS"
-                QUEUEOPT=" (Q)ueuefile,"
-            fi
-            echo
+        else
             while :; do
-                read $NFLAG -ep "Use (N)one,$CLI_OPT$SAVEDOPT$QUEUEOPT or (A)bort?: "
-                case $REPLY in
-                    N|n) break ;;
-                    C|c)
-                        if [[ $CLI_OPTIONS ]]; then
-                            BUILDOPTIONS="$CLI_OPTIONS"
-                            cp $CLI_OPTFILE $PKGPATH/options.build
-                            break
-                        fi
+                echo "One or more build option files for the $OPTAPP"
+                echo "SlackBuild script were found:"
+                echo
+                if [[ $TMPOPTIONS ]]; then
+                    echo "Saved options: $TMPOPTIONS"
+                else
+                    echo "Saved options: No saved build options found"
+                fi
+                if [[ $LDOPTIONS ]]; then
+                    echo "Queuefile options: $LDOPTIONS"
+                else
+                    echo "Queuefile options: No queuefile options found"
+                fi
+                echo
+                crunch_fmt "Please choose (N)one, (S)aved, (Q)ueuefile, \
+                    or (A)bort"
+                read ANS
+                case $ANS in
+                    n* | N* )
+                        break
                         ;;
-                    S|s)
+                    s* | S* )
                         if [[ $TMPOPTIONS ]]; then
                             cp $PKGPATH/options.sbopkg $PKGPATH/options.build
                             BUILDOPTIONS=$TMPOPTIONS
@@ -3657,7 +3605,7 @@ use_options() {
                             echo
                         fi
                         ;;
-                    Q|q)
+                    q* | Q* )
                         if [[ $LDOPTIONS ]]; then
                             cp $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions \
                                 $PKGPATH/options.build
@@ -3670,8 +3618,13 @@ use_options() {
                             echo
                         fi
                         ;;
-                    A|a) return 1 ;;
-                    *) unknown_response ;;
+                    a* | A* )
+                        return 1
+                        ;;
+                    * )
+                        echo "Unknown response."
+                        echo
+                        ;;
                 esac
             done
             echo
@@ -3684,48 +3637,51 @@ check_asc() {
     local CHKPKG=$1
     local GPGNAME=$(basename $CHKPKG)
     local CATEGORY=$(echo $CHKPKG | cut -d/ -f2)
-    local REPLY
 
-    echo -n "  Checking GPG for $GPGNAME.tar.gz ... " >> $TMPLOG
+    echo -n "  Checking GPG for $GPGNAME.tar.gz ... " | tee -a $TMPLOG
     if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
-        echo "GPG check FAILED!" | tee -a $TMPLOG
+        echo "FAILED!" | tee -a $TMPLOG
         if [[ ! -e $CHKPKG.tar.gz && ! -e $CHKPKG.*.asc ]]; then
             echo "  No tarball or .asc file found." | tee -a $TMPLOG
         fi
         while :; do
             cat << EOF
 
-Say (Y)es if you want keep the $GPGNAME directory and tarball and continue
-with the build process, or (N)o to delete the $GPGNAME directory and tarball
-(all local changes to $GPGNAME and its files will be lost), or (A)bort to stop
-the build process without deleting anything.
+Do you want keep the $GPGNAME directory and tarball and continue with the
+build process?  Selecting "No" will delete the $GPGNAME directory and
+tarball and all local changes to $GPGNAME and its files will be lost.
+
+You can choose among the following options:
+ - (Y)es, keep the $GPGNAME directory and tarball and continue the build process;
+ - (N)o, delete the $GPGNAME directory and tarball and abort the build process; or
+ - (A)bort the build process without deleting anything.
+Your choice?
 EOF
-            printf "(Y)es, (N)o, (A)bort?: "
-            error_read
-            case $REPLY in
-                Y|y)
+            error_read ANS
+            case $ANS in
+                y* | Y* )
                     echo "  Keeping $GPGNAME directory and tarball." |
                         tee -a $TMPLOG
                     return 0
                     ;;
-                N|n)
+                n* | N* )
                     echo "  Deleting $GPGNAME directory and tarball." |
                         tee -a $TMPLOG
                     rm -rf $PKGPATH; rm $PKGPATH.*
                     return 1
                     ;;
-                A|a)
+                a* | A* )
                     echo "  Aborting the build process." |
                         tee -a $TMPLOG
                     return 1
                     ;;
-                *)
-                    unknown_response
+                * )
+                    echo "Unknown response."
                     ;;
             esac
         done
     else
-        echo "OK" >> $TMPLOG
+        echo "OK" | tee -a $TMPLOG
     fi
     tar -C ./$CATEGORY -zxf $CHKPKG.tar.gz
     return 0
@@ -3733,7 +3689,7 @@ EOF
 
 process_queue() {
     local QUEUETYPE=$1 # build|buildinstall
-    local CHKBUILD REPLY
+    local CHKBUILD ANS
 
     # The first (and largest) of three sections in this function is a precheck
     # section.
@@ -3755,6 +3711,8 @@ process_queue() {
         echo "  Build only" >> $TMPLOG
     fi
     echo >> $TMPLOG
+    echo "Checking GPG signatures.  Please be patient..."
+    echo
     for CHKBUILD in $(< $STARTQUEUE); do
         unset PKG PKGPATH PKGNAME VERSION BUILD PICKFILE FILE
         echo "$CHKBUILD:" >> $TMPLOG
@@ -3797,7 +3755,7 @@ process_queue() {
             return 0
         fi
         if [[ $BUILDOPTIONS ]]; then
-            echo "  Build options: $BUILDOPTIONS" >> $TMPLOG
+            echo "  $BUILDOPTIONS" >> $TMPLOG
         else
             echo "  No build options selected." >> $TMPLOG
         fi
@@ -3817,24 +3775,29 @@ process_queue() {
             return 0
         fi
     else
-        cat $TMPLOG
-        echo
-        echo "Pre-check complete."
-        echo
-        crunch_fmt "Do you wish to proceed based on the search \
-            results above? Packages not found will be skipped during \
-            the process."
-        echo
         while :; do
-            read $NFLAG -ep "(P)roceed or (Q)uit?: "
-            case $REPLY in
-                P|p) break ;;
-                Q|q)
+            cat $TMPLOG
+            echo
+            echo "Pre-check complete."
+            echo
+            crunch_fmt "Do you wish to proceed based on the search\
+                results above? Packages not found will be skipped during\
+                the process."
+            echo
+            echo "Press (Y)es to proceed or (N)o to quit."
+            read ANS
+            case $ANS in
+                y* | Y* )
+                    break
+                    ;;
+                n* | N* )
                     rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
                     rm -f $PKGPATH/options.build
                     return 0
                     ;;
-                *) unknown_response ;;
+                * )
+                    echo "Unknown response."
+                    ;;
             esac
         done
         echo
@@ -3921,7 +3884,7 @@ process_queue() {
     echo >> $TMPLOG
     cat $TMPLOG
     if [[ $DIAG ]]; then
-        read -n1 -ep "Press any key to continue: "
+        read -n 1 -p "Press any key to continue."
     fi
     if [[ $KEEPLOG ]]; then
         cat $TMPLOG >> $LOGFILE
@@ -3985,7 +3948,7 @@ check_for_latest() {
     local NEWSBOPKG=$(wget -T 10 -q -O - $NEWPKG)
     local NEWDL=http://www.sbopkg.org/currentdownload
     local NEWDLPKG=$(wget -T 10 -q -O - $NEWDL)
-    local SBOPKGUP MSG REPLY
+    local SBOPKGUP MSG ANS
 
     if [[ -z $CVRS || -z $NVRS ]]; then
         if [[ -z $NVRS ]]; then
@@ -4002,8 +3965,8 @@ check_for_latest() {
             if [[ $DIAG ]]; then
                 MSG="Different versions reported.  Press <OK> to continue."
             else
-                MSG="Different versions reported.  (D)ownload the remote \
-                package or (Q)uit?: "
+                MSG="Different versions reported.  Press (Y)es to \
+                    download the update package or press (N)o to quit."
             fi
         fi
     else
@@ -4034,13 +3997,14 @@ check_for_latest() {
         echo
         echo "Latest version of sbopkg found on sbopkg.org: $NVRS"
         echo
+        crunch_fmt "$MSG"
         if [[ $SBOPKGUP ]]; then
             while :; do
-                read $NFLAG -ep "$(crunch_fmt "$MSG")"
-                case $REPLY in
-                    D|d) break ;;
-                    Q|q) return ;;
-                    *) unknown_response ;;
+                read ANS
+                case $ANS in
+                    y* | Y* ) break ;;
+                    n* | N* ) return 0 ;;
+                    * ) echo "Unknown response." ;;
                 esac
             done
         fi
@@ -4064,10 +4028,10 @@ check_for_latest() {
             \n\
             \nYou can also view a complete ChangeLog.txt in the\
             /usr/share/doc/sbopkg-$NVRS/ directory or online at:\
-            \nhttp://www.sbopkg.org/changelog\
+            \nhttp://www.sbopkg.org/files/ChangeLog.txt\
             \n"
         if [[ $DIAG ]]; then
-            read -n1 -ep "Press any key to continue: "
+            read -n 1 -p "Press any key to continue."
         fi
     fi
 }
@@ -4207,49 +4171,6 @@ control_c() {
         cleanup
         exit 0
     fi
-}
-
-search_and_display() {
-    # This function takes one or more arguments from the command line (-s):
-    # the pattern(s) the user provides as the app to search for.
-    #
-    # This uses search_package() to return an array of possible matches. If
-    # more than one app is returned, it presents the user with a menu. It
-    # displays the default files associated with the app the user chooses. If
-    # search_package() only returns one app, it displays the associated files
-    # immediately.
-
-    # global SCRIPT SEARCH
-    local PKGSEARCH PKGPATH ITEM
-
-    check_if_repo_exists
-    # We temporarily turn globbing off and turn it back on before we get to
-    # pick_file()/show_readme(). There, we need to expand globs and will be
-    # using full paths or be in the right directory to do so.
-    set -f
-    for PKGSEARCH in ${SEARCH[*]}; do
-        echo "Searching for $PKGSEARCH"
-        if search_package $PKGSEARCH; then
-            if (( ${#PKGPATH[*]} > 1 )); then
-                select PKGPATH in ${PKGPATH[*]#*/} Quit; do
-                    case $PKGPATH in
-                        Quit) exit ;;
-                        '') echo "$SCRIPT: invalid choice."; continue ;;
-                        *) break ;;
-                    esac
-                done
-            fi
-            set +f
-            # the only reason we need to go through pick_file() is that it
-            # provides the .build copies of the files that show_readme()
-            # insists upon. Otherwise, I'd just show the default files.
-            pick_file info $PKGPATH $PKGSEARCH
-            show_readme $PKGPATH $PKGSEARCH
-            read -n1 -ep "Hit any key to continue: "
-        else
-            echo "$SCRIPT: package \"$PKGSEARCH\" not found." >&2
-        fi
-    done
 }
 
 main_search() {
@@ -4461,8 +4382,8 @@ SBOPKG_REPOS_D=${SBOPKG_REPOS_D:-/etc/sbopkg/repos.d}
 EDITOR=${EDITOR:-vi}
 PAGER=${PAGER:-more}
 CWD=$(pwd)
-REV="$Revision$"
-SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
+REV="$Revision: 836 $"
+SBOVER=0.33.2
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
@@ -4499,7 +4420,7 @@ while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
         b ) # Build
             BFLAG=1
             TYPE="build"
-            BUILDLIST+=("$OPTARG")
+            BUILDLIST="$OPTARG"
             unset DIAG
             ;;
         c ) # Check for updates to installed SBo packages
@@ -4517,13 +4438,13 @@ while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             SBOPKG_CONF=$OPTARG
             ;;
         g ) # String search
-            GENSEARCH+=("$OPTARG")
+            GENSEARCH="$OPTARG"
             unset DIAG
             ;;
         i ) # Build and install
             IFLAG=1
             TYPE="buildinstall"
-            BUILDLIST+=("$OPTARG")
+            BUILDLIST="$OPTARG"
             unset DIAG
             ;;
         k ) # Skip installed packages
@@ -4559,7 +4480,7 @@ while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             unset DIAG
             ;;
         s ) # Name search
-            SEARCH+=("$OPTARG")
+            SEARCH="$OPTARG"
             unset DIAG
             ;;
         u ) # Search an updated sbopkg package
@@ -4607,11 +4528,7 @@ Options are:
                   starting with the default repo. For a list of valid repos,
                   issue '-V ?'
 
-Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2") or
-can be specified multiple times (-i foo -i bar). If using the latter syntax,
-build options may also be passed on the command line on a per app basis using
-the -b or -i flags in colon-separated groups (where whitespace must also be
-quoted). For example, '-i app:opt1="arg1 arg2":opt2=arg1 app2'
+Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2")
 EOF
             exit
             ;;
@@ -4637,8 +4554,6 @@ if [[ $ON_ERROR != ask && \
     echo "Unknown -e specifier -- \"$ON_ERROR\"" >&2
     echo "Valid values are: ask (default), continue, stop" >&2
     exit 1
-else
-    readonly ON_ERROR
 fi
 
 # Check for a good config file and set initial variables
@@ -4680,10 +4595,10 @@ if [[ $? -ne 0 ]] ; then
 fi
 
 # Check for required directories
-dir_init
+directory_checks
 
 # Check for another instance
-pid_check
+[[ $ALLOW_MULTI ]] || pid_check
 
 if [[ $DIAG ]]; then
     if [[ $TERM =~ ^rxvt.* || $TERM =~ ^screen.* ]]; then
@@ -4699,13 +4614,7 @@ else
         > $SBOPKGTMP/sbopkg_user_queue.lck
         > $MISSING_LIST_FILE
         > $MISSING_SINGLE_FILE
-        if [[ ${#BUILDLIST[*]} == 1 && ${BUILDLIST[*]} != *:* ]]; then
-            # we've got either a single package or old-style optionless quoted
-            # multi-args, so split 'em if you got 'em
-            BUILDLIST=(${BUILDLIST[*]})
-        fi
-        for ((i=0; i<${#BUILDLIST[*]}; i++)); do
-            PKGBUILD="${BUILDLIST[$i]}"
+        for PKGBUILD in $BUILDLIST; do
             if [[ ${PKGBUILD:(-4)} == ".sqf" ]]; then
                 parse_queue $QUEUEDIR/$PKGBUILD
                 continue
@@ -4713,15 +4622,22 @@ else
             if [[ -r $QUEUEDIR/$PKGBUILD.sqf ]] &&
                     search_package $PKGBUILD; then
                 crunch_fmt "Both a queuefile and a package were found with \
-                    the name \"$PKGBUILD\"."
+                    the name \"$PKGBUILD\".  Which would you like to use?"
                 echo
+                echo "Please enter (Q)ueuefile, (P)ackage, or (A)bort:"
                 while :; do
-                    read $NFLAG -ep "Use (Q)ueuefile, (P)ackage, or (A)bort?: "
-                    case $REPLY in
-                        Q|q) parse_queue $QUEUEDIR/$PKGBUILD.sqf; break ;;
-                        P|p) parse_arguments "$PKGBUILD"; break ;;
-                        A|a) cleanup; exit 1 ;;
-                        *) unknown_response ;;
+                    read ANS
+                    case $ANS in
+                        q* | Q* ) parse_queue $QUEUEDIR/$PKGBUILD.sqf
+                                  break
+                                  ;;
+                        p* | P* ) add_item_to_queue $PKGBUILD
+                                  break
+                                  ;;
+                        a* | A* ) cleanup
+                                  exit 1
+                                  ;;
+                        * ) echo "Unknown response." ;;
                     esac
                 done
             else
@@ -4729,7 +4645,11 @@ else
                     # Add an entire queue
                     parse_queue $QUEUEDIR/$PKGBUILD.sqf
                 else
-                    parse_arguments "$PKGBUILD"
+                    if ! add_item_to_queue $PKGBUILD; then
+                        crunch_fmt "Queuefile or package $PKGBUILD not found\
+                            - skipping." >> $MISSING_SINGLE_FILE
+                        echo
+                    fi
                 fi
             fi
         done
@@ -4738,13 +4658,13 @@ else
             cat $MISSING_LIST_FILE
             cat $MISSING_SINGLE_FILE
             echo
+            echo "OK to continue processing?"
             while :; do
-                printf "(Y)es to continue processing or (N)o to stop?: "
-                error_read
-                case $REPLY in
-                    Y|y) break ;;
-                    N|n) cleanup; exit 1 ;;
-                    *) unknown_response ;;
+                error_read ANS
+                case $ANS in
+                    y* | Y* ) break ;;
+                    n* | N* ) cleanup; exit 1 ;;
+                    * ) echo "Unknown response." ;;
                 esac
             done
         fi
@@ -4761,12 +4681,13 @@ else
         if [[ $PREVIEW_READMES ]]; then
             view_queue_readmes
             echo
+            echo "OK to continue processing?"
             while :; do
-                read $NFLAG -ep "(C)ontinue processing or (Q)uit?: "
-                case $REPLY in
-                    C|c) break ;;
-                    Q|q) cleanup; exit 1 ;;
-                    *) unknown_response ;;
+                read ANS
+                case $ANS in
+                    y* | Y* ) break ;;
+                    n* | N* ) cleanup; exit 1 ;;
+                    * ) echo "Unknown response." ;;
                 esac
             done
         fi
@@ -4818,7 +4739,16 @@ else
     fi
 
     if [[ -n $SEARCH ]]; then
-        search_and_display "${SEARCH[*]}"
+        check_if_repo_exists
+        for PKGSEARCH in "$SEARCH"; do
+            echo "Searching for $PKGSEARCH"
+            if search_package $PKGSEARCH; then
+                pick_file info $PKGPATH $PKGSEARCH
+                show_readme $PKGPATH $PKGSEARCH
+            else
+                echo "ERROR: Package \"$PKGSEARCH\" not found." >&2
+            fi
+        done
     fi
 
     if [[ $UPDATE ]]; then
@@ -4827,12 +4757,10 @@ else
 
     if [[ -n $GENSEARCH ]]; then
         check_if_repo_exists
-        set -f
-        for PKGSEARCH in ${GENSEARCH[*]}; do
+        for PKGSEARCH in $GENSEARCH; do
             echo "Searching for $PKGSEARCH"
             gen_search_package $PKGSEARCH
         done
-        set +f
     fi
 
     cleanup

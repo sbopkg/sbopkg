@@ -1,10 +1,8 @@
-# $Id$
+# $Id: README 777 2010-05-17 02:17:25Z slakmagik $
 # vim:set ft=:
 
 Sbopkg README
 Copyright 2007-2010 Chess Griffin <chess@chessgriffin.com>
-Copyright 2009-2010 Mauro Giachero <mauro.giachero@gmail.com>
-                    slakmagik <slakmagik@gmail.com>
 
 Homepage:  http://www.sbopkg.org
 
@@ -18,7 +16,7 @@ locally-maintained repository.
 
 Sbopkg will allow the user to create, synchronize, search, and browse a copy
 of the active repository (currently, the size of a local copy of the SBo
-repository is xxxSIZExxx), read the ChangeLog (if available), list the
+repository is about 70MB), read the ChangeLog (if available), list the
 installed SBo packages, display potential updates to SlackBuilds.org packages,
 view the README, SlackBuild, .info, and slack-desc files for each package, and
 make manual edits to a copy of the original .info or SlackBuild files.  Sbopkg

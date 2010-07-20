@@ -1,4 +1,4 @@
-# $Id$
+# $Id: README-repos.d 777 2010-05-17 02:17:25Z slakmagik $
 # vim:set ft=:
 
 In sbopkg parlance, a "repository" is a local or remote service used as a

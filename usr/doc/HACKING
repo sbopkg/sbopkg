@@ -1,4 +1,4 @@
-# $Id$
+# $Id: HACKING 777 2010-05-17 02:17:25Z slakmagik $
 # vim:set ft=:
 
 We welcome contributions to sbopkg.  If you have a bug report or a feature
@@ -231,72 +231,3 @@ Please make sure your patches conform to these stylistic points:
   sure that they work across bash 3.1, 3.2, and 4.0. This means the regexes
   must be unquoted for bash >=3.2 and still work in bash 3.1 (i.e., no
   'foo|bar' expressions).
-
-----------------------------
-Manual Page Style Guidelines
-----------------------------
-
-* Separate all text header and section header requests with commented lines of
-  equal (=) signs. Separate all subsections and tagged paragraphs that serve
-  as subsections with commented lines of minus (-) signs.
-
-* Leave no blank lines in the file. E.g., .PP will often serve under .SH and
-  .IP under .TP.
-
-* Wrap lines at 72 columns and begin all sentences on new lines.
-
-* If variables are being used in the sense of their value, use $VAL but if
-  they are being used in reference to themselves, use VAR.
-
-* Where sensible, try to make .TPs have a consistent indent.
-
-* Try to use standard headers where possible, filing other information
-  under subsections of the relevant section header.
-
-* Add options as .TP 5 (or current default), with \- and bold options,
-  followed by italic replaceable arguments to those options or bold literal
-  arguments, if any. Brackets, bars, etc., should be regular font, though.
-
-* More generally, italicize filenames, URLs, replaceable terms (including
-  references to unspecified variable values ($VARs)).
-
-* Embolden variables (when used literally rather than replaceably), option
-  values, programs, program flags, and all references to sbopkg itself.
-
-* Make all option dashes in the form \- (or \-\-) unless in a code example.
-
-* Try to refer to the user as 'the user' rather than 'you'.
-
-* Collect all referenced programs (unless used purely as an example) in the
-  SEE ALSO section. (The SEE ALSO section is not *limited* to referenced
-  programs, however.)
-
-* Try to be as specific as conveniently possible, where 'convenient' means to
-  generalize wherever constant updates might be necessary and such
-  generalization wouldn't compromise clarity and accuracy.
-
-* Use `` and '' for double-quotes so groff does the fancy stuff for ps output.
-
-* .EX doesn't seem to be very well supported or necessarily what is wanted -
-  code examples can be done with the following cookie-cutter code:
-    .RS
-    .IP \" or .PP or whatever's appropriate
-    .nf
-    \fCline_of_code\fP
-    .fi
-    .RE
-  If inline, at least embolden them so they're set off in ascii overstrike
-  output.
-
-  In command line examples, prefix the commands with the root prompt (#).
-
-* Start configuration file option sections with a statement of type, a
-  description, and the following cookie-cutter code:
-    The default assignment is:
-    .IP
-    \fCdefault_assignment\fP
-
-* Try to refer to SlackBuilds as SlackBuilds rather than SlackBuild scripts
-  unless for a particular need (for instance, explaining what SlackBuilds are
-  in the first place). And once SlackBuilds.org has been properly introduced,
-  try to refer to it as SBo.
