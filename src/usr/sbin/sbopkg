@@ -112,7 +112,7 @@ config_check() {
     [[ -e $HOME/.sbopkg.conf ]] && . $HOME/.sbopkg.conf
 
     # Some configuration options are mandatory
-    for VAR in REPO_ROOT QUEUEDIR SRCDIR SBOPKGTMP REPO_NAME REPO_BRANCH \
+    for VAR in REPO_ROOT QUEUEDIR SRCDIR REPO_NAME REPO_BRANCH \
         KEEPLOG CLEANUP LOGFILE DEBUG_UPDATES TMP OUTPUT RSYNCFLAGS \
         WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D ALLOW_MULTI; do
         if [[ -z "${!VAR}" ]]; then
@@ -152,31 +152,6 @@ EOF
     yesno_to_setunset CLEANUP
     yesno_to_setunset ALLOW_MULTI
     yesno_to_setunset MKDIR_PROMPT
-
-    # Make sure there are no unexpected files in $SBOPKGTMP
-    if [[ -n $(find $SBOPKGTMP -mindepth 1 -maxdepth 1 -not -name sbopkg\* \
-            2> /dev/null) ]]; then
-        cat << EOF
-
-ERROR
-$SCRIPT: Unexpected files found in working directory
-
-$SCRIPT performs many file operations, including some 'rm -rf',
-inside \$SBOPKGTMP, which is currently set to:
-$SBOPKGTMP
-
-As a safety measure to prevent user data loss due to a bad
-program configuration, $SCRIPT will now exit. Please fix this
-error by making sure that \$SBOPKGTMP refers to a directory
-$SCRIPT can use freely, and then make sure it contains no
-stale files.
-
-If \$SBOPKGTMP is actually correct, and the only files it
-contains are $SCRIPT-generated, please file a bug report.
-
-EOF
-        exit 1
-    fi
 
     # Load the repositories data
     load_repositories || exit 1
@@ -289,7 +264,7 @@ dir_init() {
     # display like 'REPO_DIR[/REPO_NAME]'.
 
     DIR_VARS=(
-        $REPO_DIR ${LOGFILE%/*} $QUEUEDIR $SRCDIR $SBOPKGTMP $TMP $OUTPUT
+        $REPO_DIR ${LOGFILE%/*} $QUEUEDIR $SRCDIR $TMP $OUTPUT
     )
 
     DI_OUTPUT_LINES=(
@@ -297,7 +272,6 @@ dir_init() {
         "LOGFILE directory ---> ${LOGFILE%/*}"
         "QUEUEDIR ------------> $QUEUEDIR"
         "SRCDIR --------------> $SRCDIR"
-        "SBOPKGTMP -----------> $SBOPKGTMP"
         "TMP -----------------> $TMP"
         "OUTPUT --------------> $OUTPUT"
     )
@@ -332,13 +306,13 @@ EOF
                 C|c)
                     if ! mkdir -p $DIRS2MK 2>/dev/null; then
                         echo "$SCRIPT: failed to create directories" >&2
-                        cleanup; exit 1
+                        exit 1
                     fi
                     break
                     ;;
                 A|a)
                     if [[ ${FUNCNAME[1]} == main ]]; then
-                        cleanup; exit 1
+                        exit 1
                     else
                         return 1
                     fi
@@ -357,15 +331,7 @@ EOF
 
     if [[ $ERROR == nowrite ]]; then
         # error msg above
-        cleanup; exit 1
-    fi
-
-    # If multiple instances of sbopkg are allowed, they need their own private
-    # $SBOPKGTMP under an already created and verified $SBOPKGTMP (so no error
-    # checking) but we only need to do this once from main().
-    if [[ $ALLOW_MULTI ]] && [[ ${FUNCNAME[1]} == main ]]; then
-        SBOPKGTMP+=/sbopkg-instance-$(mcookie)
-        mkdir -p $SBOPKGTMP
+        exit 1
     fi
 }
 
@@ -373,17 +339,12 @@ pid_check() {
     [[ $ALLOW_MULTI ]] && return
 
     # Set and check for pid file.
-    local PIDFILE OTHERPID
+    local PIDFILE=/var/run/sbopkg.pid
+    local OTHERPID
 
-    PIDFILE=/var/run/sbopkg.pid
     if [[ -e $PIDFILE ]]; then
-        # When things go haywire and sbopkg crashes (this happens only on
-        # development versions, of course ;-)) the PIDFILE isn't deleted and
-        # triggers the error below on the following run.  Perform a basic test
-        # to reduce the amount of false positives. Note that no check on the
-        # file name is performed, to avoid missing true positives in the
-        # (rare, but possible) cases where the user renames the sbopkg script.
-
+        # make sure the process indicated by the pid file is actually running
+        # and the pid file isn't just stale.
         OTHERPID=$(< $PIDFILE)
         if [[ -n $(ps h --pid $OTHERPID) ]]; then
             cat << EOF
@@ -399,7 +360,6 @@ EOF
            exit 1
         fi
     fi
-    cleanup
     echo $$ > $PIDFILE
 }
 
@@ -422,7 +382,6 @@ or is empty.  Please make sure your respository
 directory is set correctly and that you have done
 a sync first.
 EOF
-            cleanup
             exit 1
         fi
     fi
@@ -449,7 +408,6 @@ No ChangeLog.txt found.  Please make sure your
 repository directory is set correctly and that
 you have done a sync first.  Exiting.
 EOF
-            cleanup
             exit 1
         fi
     else
@@ -752,7 +710,7 @@ check_for_updates() {
 
                 # Step 3 - reverse the file order
                 # Because dependencies must be first...
-                tac $VERSION_FILE >> $TEMPFILE
+                tac $VERSION_FILE > $TEMPFILE
                 mv $TEMPFILE $VERSION_FILE
 
                 # Step 4 - let's get the version number!
@@ -1282,7 +1240,7 @@ info_item() {
                         ;;
                     Queue ) add_item_to_queue $APP ;;
                     Build )
-                        echo "$APP" > $SBOPKGTMP/sbopkg-start-queue
+                        echo "$APP" > $STARTQUEUE
                         start_dialog_queue ;;
                     Install )
                         if [[ ! -e $OUTPUT/$CURPACKAGE ]]; then
@@ -2390,8 +2348,7 @@ sync_repo() {
             continue
         else
             echo "Unsupported fetching tool \"$REPO_TOOL\"."
-            cleanup
-            exit 0
+            exit 1
         fi
     fi
     if [[ $DIAG ]]; then
@@ -2920,7 +2877,7 @@ get_source() {
     local PKG=${INFO%.info.build}
     local BUILD_LOCK=$SBOPKGTMP/sbopkg_build.lck
     local DLDIR=$SBOPKGTMP/sbopkg-download
-    local PIDLIST=$SBOPKGTMP/sbopkgpidlist
+    local SBOPKG_PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
     local SRCNAME DL_SRCNAME DL FAILURE MD5CHK i CWD TWGETFLAGS
     # Don't pollute the environment with the .info content...
@@ -2968,8 +2925,8 @@ get_source() {
             cd $DLDIR
 
             if [[ -z $NO_DL_LOOP ]]; then
-                wget $TWGETFLAGS ${DOWNLOAD[$i]} >> \
-                    $SBOPKGOUTPUT & echo "$!" >> $PIDLIST 2>> $SBOPKGOUTPUT
+                wget $TWGETFLAGS ${DOWNLOAD[$i]} >> $SBOPKGOUTPUT &
+                echo "$!" >> $SBOPKG_PIDLIST 2>> $SBOPKGOUTPUT
                 wait
             else
                 FAILURE=loop
@@ -3350,12 +3307,10 @@ build_package() {
                 # We want to remove all the build residuals after running the
                 # SlackBuild script. To do that reliably (i.e. without
                 # deleting too much or leaving garbage behind us), a nice
-                # approach is to use a dedicated build directory.
-                export TMP=$SBOPKGTMP/sbopkg-build-directory
-                rm -rf $TMP # Just in case
+                # approach is to use sbopkg's own temp directory.
+                export TMP=$SBOPKGTMP
                 nice sh $PKGNAME.SlackBuild.build
                 echo "Cleaning up..."
-                rm -rf $TMP
             else
                 nice sh $PKGNAME.SlackBuild.build
             fi
@@ -3479,21 +3434,23 @@ pick_file() {
     # $3 = the package name
     # Returns 0 if the user did his choice, 1 if ESC was pressed.
 
+    trap 'rm -f $DIFF_OUT $DIFF_PICK' RETURN
+
     local FILE=$1
     local PKGPATH=$2
     local PKG=$3
     PICKFILE=original
     local ANS REPLY
-
-    rm -f $SBOPKGTMP/sbopkg_file_selection $SBOPKGTMP/sbopkg_diff
+    local DIFF_OUT=$SBOPKGTMP/sbopkg_diff
+    local DIFF_PICK=$SBOPKGTMP/sbopkg_file_selection
 
     # Build the diff, if there are 2 files to choose between
     if [[ -f $PKGPATH/$PKG.$FILE.sbopkg ]]; then
         $DIFF $DIFFOPTS $PKGPATH/$PKG.$FILE{,.sbopkg} \
-            > $SBOPKGTMP/sbopkg_diff
+            > $DIFF_OUT
     fi
     # Ask the user which file he wants sbopkg to use.
-    if [[ -s $SBOPKGTMP/sbopkg_diff ]]; then
+    if [[ -s $DIFF_OUT ]]; then
         if [[ $DIAG ]]; then
             while :; do
                 dialog --title "Choose $PKG $FILE file" --menu \
@@ -3503,9 +3460,9 @@ pick_file() {
                     "Local" "Use the local $FILE" \
                     "Original" "Use the original $FILE" \
                     "Diff" "View a diff of the two" \
-                    2> $SBOPKGTMP/sbopkg_file_selection
+                    2> $DIFF_PICK
 
-                ANS=$(< $SBOPKGTMP/sbopkg_file_selection)
+                ANS=$(< $DIFF_PICK)
 
                 case $ANS in
                     Local )
@@ -3518,10 +3475,9 @@ pick_file() {
                         ;;
                     Diff )
                         dialog --title "Viewing diff of $FILE file" \
-                            --textbox $SBOPKGTMP/sbopkg_diff 0 0
+                            --textbox $DIFF_OUT 0 0
                         ;;
                     *)  # The user pressed ESC
-                        rm $SBOPKGTMP/sbopkg_diff
                         return 1
                         ;;
                 esac
@@ -3537,14 +3493,12 @@ pick_file() {
                 case $REPLY in
                     O|o) PICKFILE="original"; break ;;
                     L|l) PICKFILE="local"; break ;;
-                    D|d) $PAGER $SBOPKGTMP/sbopkg_diff ;;
-                    C|c) cleanup; return 1 ;;
+                    D|d) $PAGER $DIFF_OUT ;;
+                    C|c) return 1 ;;
                     *) unknown_response ;;
                 esac
             done
         fi
-
-        rm $SBOPKGTMP/sbopkg_diff
     fi
 
     if [[ $PICKFILE == original ]]; then
@@ -3552,6 +3506,7 @@ pick_file() {
     elif [[ $PICKFILE == local ]]; then
         cp $PKGPATH/$PKG.$FILE.sbopkg $PKGPATH/$PKG.$FILE.build
     fi
+
     return 0
 }
 
@@ -3879,12 +3834,12 @@ process_queue() {
             echo "  Building package $NEWPACKAGE ... OK" >> $TMPSUMMARYLOG
             echo "Built package: $NEWPACKAGE"
             if [[ -f $NEWPACKAGE ]]; then
+                mv $NEWPACKAGE $OUTPUT
                 if [[ $QUEUETYPE == "buildinstall" ]]; then
-                    install_package $SB_OUTPUT $NEWPACKAGE
+                    install_package $OUTPUT $NEWPACKAGE
                     echo "  Installing package $NEWPACKAGE ... OK" >> \
                         $TMPSUMMARYLOG
                 fi
-                mv $NEWPACKAGE $OUTPUT
             fi
         else
             echo >> $TMPSUMMARYLOG
@@ -4156,56 +4111,24 @@ cleanup() {
     if [[ $HAS_NCURSES ]]; then
         tput cnorm # Restore cursor
     fi
-    rm -f $SBOPKGTMP/sbopkg_*
-    rm -f $SBOPKGTMP/sbopkgpidlist
-    rm -rf $SBOPKGTMP/sbopkg-sbooutputdir
-    rm -rf $SBOPKGTMP/sbopkg-build-directory
-    rm -f $SBOPKGTMP/sbopkg-*-queue
-    rm -f $SBOPKGTMP/sbopkg-tmp-*
+    rm -r $SBOPKGTMP
     rm -f $PIDFILE
-
-    if [[ $ALLOW_MULTI ]]; then
-        if ! rmdir $SBOPKGTMP 2>/dev/null; then
-            cat <<EOF
-$SCRIPT was unable to remove the temporary folder:
-
-$SBOPKGTMP
-
-since it still contains some file or directory.
-Please file a bug report telling us how you managed to trigger this
-message and append to it the output of:
-
-find $SBOPKGTMP
-
-EOF
-        fi
-    fi
-
-    # Back to the directory the user started sbopkg in
-    cd "$CWD"
 }
 
 control_c() {
     # This function holds the commands that will be executed when the user
     # presses Control-C.  The $SBOPKGTMP/sbopkgpidlist file is the file to
     # which various PID's are written to as certain background processes etc.
-    # are executed.
+    # are executed (e.g., get_source()'s wget processes).
 
     local PID
     local SBOPKG_PIDLIST=$SBOPKGTMP/sbopkgpidlist
 
-    echo
-    echo "Control-C detected.  Trying to exit cleanly...";
     if [[ -f $SBOPKG_PIDLIST ]]; then
         for PID in $(< $SBOPKG_PIDLIST); do
-            echo "killing $PID"
             kill -9 $PID;
-        done;
+        done
         rm $SBOPKG_PIDLIST
-    fi
-    if [[ ! $DIAG ]]; then
-        cleanup
-        exit 0
     fi
 }
 
@@ -4415,6 +4338,10 @@ main_menu() {
 # END OF FUNCTIONS.  What comes below is the actual start of the
 # script when it is first run.
 
+trap 'control_c; trap INT; kill -2 $$' INT
+trap 'exit 2' HUP QUIT PIPE TERM
+trap 'cleanup' EXIT
+
 # Global variables
 # There are two groups of global variables:
 # - those that are meant to be global;
@@ -4466,6 +4393,20 @@ SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
+
+SBOPKGTMP=$(mktemp -td sbopkg.XXXXXX) ||
+    { echo "$SCRIPT: failed to create sbopkg's temporary directory"; exit 1; }
+STARTQUEUE=$SBOPKGTMP/sbopkg-start-queue
+USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
+MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
+MISSING_SINGLE_FILE=$SBOPKGTMP/sbopkg_add_item_missing
+TMPLOG=$SBOPKGTMP/sbopkg_tmplog
+TMPQUEUE=$SBOPKGTMP/sbopkg-tmp-queue
+FINALQUEUE=$SBOPKGTMP/sbopkg-final-queue
+SB_OUTPUT=$SBOPKGTMP/sbopkg-sbooutputdir
+SBOPKGOUTPUT=$SBOPKGTMP/sbopkg_output
+TMPBUILDLOG=$SBOPKGTMP/sbopkg-tmp-buildlog
+TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
 
 # Make sure we are root.
 if [[ $(id -u) != 0 ]]; then
@@ -4643,14 +4584,6 @@ fi
 
 # Check for a good config file and set initial variables
 config_check
-STARTQUEUE=$SBOPKGTMP/sbopkg-start-queue
-TMPLOG=$SBOPKGTMP/sbopkg_tmplog
-TMPQUEUE=$SBOPKGTMP/sbopkg-tmp-queue
-FINALQUEUE=$SBOPKGTMP/sbopkg-final-queue
-SB_OUTPUT=$SBOPKGTMP/sbopkg-sbooutputdir
-SBOPKGOUTPUT=$SBOPKGTMP/sbopkg_output
-TMPBUILDLOG=$SBOPKGTMP/sbopkg-tmp-buildlog
-TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
 
 # Change $REPO_BRANCH (and optionally REPO_NAME) if set manually using cli -v
 if [[ $VERSION ]]; then
@@ -4672,8 +4605,7 @@ if [[ $VERSION ]]; then
         fi
     fi
 fi
-set_repo_vars
-if [[ $? -ne 0 ]] ; then
+if ! set_repo_vars; then
     echo "Unknown repository name -- \"$CUSTOMVER\"" >&2
     list_repos
     exit 1
@@ -4690,13 +4622,10 @@ if [[ $DIAG ]]; then
         dialog_refresh_workaround
     fi
     main_menu
-    cleanup
 else
     if [[ $BUILDLIST ]]; then
-        MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
-        MISSING_SINGLE_FILE=$SBOPKGTMP/sbopkg_add_item_missing
-        > $SBOPKGTMP/sbopkg-start-queue
-        > $SBOPKGTMP/sbopkg_user_queue.lck
+        > $STARTQUEUE
+        > $USERQUEUE_LOCK
         > $MISSING_LIST_FILE
         > $MISSING_SINGLE_FILE
         if [[ ${#BUILDLIST[*]} == 1 && ${BUILDLIST[*]} != *:* ]]; then
@@ -4720,7 +4649,7 @@ else
                     case $REPLY in
                         Q|q) parse_queue $QUEUEDIR/$PKGBUILD.sqf; break ;;
                         P|p) parse_arguments "$PKGBUILD"; break ;;
-                        A|a) cleanup; exit 1 ;;
+                        A|a) exit 1 ;;
                         *) unknown_response ;;
                     esac
                 done
@@ -4733,7 +4662,9 @@ else
                 fi
             fi
         done
-        rm $SBOPKGTMP/sbopkg_user_queue.lck
+        rm $USERQUEUE_LOCK
+        # the following two files are (possibly) generated by
+        # parse_{queue,arguments}
         if [[ -s $MISSING_LIST_FILE || -s $MISSING_SINGLE_FILE ]]; then
             cat $MISSING_LIST_FILE
             cat $MISSING_SINGLE_FILE
@@ -4743,14 +4674,13 @@ else
                 error_read
                 case $REPLY in
                     Y|y) break ;;
-                    N|n) cleanup; exit 1 ;;
+                    N|n) exit 1 ;;
                     *) unknown_response ;;
                 esac
             done
         fi
         if [[ ! -e $TMPQUEUE ]]; then
             echo "No valid queuefile or package name given.  Exiting."
-            cleanup
             exit 1
         fi
         # Skip installed packages
@@ -4765,7 +4695,7 @@ else
                 read $NFLAG -ep "(C)ontinue processing or (Q)uit?: "
                 case $REPLY in
                     C|c) break ;;
-                    Q|q) cleanup; exit 1 ;;
+                    Q|q) exit 1 ;;
                     *) unknown_response ;;
                 esac
             done
@@ -4834,10 +4764,6 @@ else
         done
         set +f
     fi
-
-    cleanup
-    echo
-    echo "All done."
 fi
 
 exit 0
