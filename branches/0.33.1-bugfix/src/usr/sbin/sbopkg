@@ -282,7 +282,7 @@ ck_dir() {
     local ERROR=0
     local JUNK
 
-    # Try to create the specified folder
+    # Try to create the specified directory
     if [[ ! -d $DIR ]]; then
         if [[ $MKDIR_PROMPT ]]; then
             echo
@@ -337,8 +337,10 @@ directory_checks() {
         "Creating local cache directory $SRCDIR to keep downloaded sources."
     ck_dir $SBOPKGTMP \
         "Creating local sbopkg TMP directory $SBOPKGTMP."
-    ck_dir $TMP \
-        "Creating local SBo TMP directory $TMP." # Also see config_check()
+    # ensure basic perm/owner sanity - we'll do better soon.
+    chown root:root $SBOPKGTMP
+    chmod 700 $SBOPKGTMP
+    rm -rf $SBOPKGTMP/*
     ck_dir $OUTPUT \
         "Creating local package output directory $OUTPUT."
 
@@ -741,7 +743,7 @@ check_for_updates() {
 
                 # Step 3 - reverse the file order
                 # Because dependencies must be first...
-                tac $VERSION_FILE >> $TEMPFILE
+                tac $VERSION_FILE > $TEMPFILE
                 mv $TEMPFILE $VERSION_FILE
 
                 # Step 4 - let's get the version number!
