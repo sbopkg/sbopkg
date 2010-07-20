@@ -1,0 +1,60 @@
+The following are the known user-visible issues in sbopkg or upstream in the
+tools it uses:
+
+* in dialog '--inputbox' widgets (the boxes the user types text into) the
+  left/right arrows do not navigate in a button context. (They do navigate in
+  an editing context.) This does not seem to be an sbopkg issue.
+
+  Workaround: navigate with up/down arrows or tab/shift-tab
+  Note: there is a newer dialog version available which fixes this issue, but
+  we encourage users to stick with the dialog Slackware ships.
+
+* if dialog is run in a terminal emulator and the user exits using the
+  window manager's 'close' (or equivalent) button/command, dialog may hang,
+  using full CPU capacity and have to be killed. This does not seem to be an
+  sbopkg issue.
+
+  Details: http://code.google.com/p/sbopkg/issues/detail?id=30
+
+  Workaround: use dialog's own exit methods - its buttons, escape, ^C, etc.
+
+* when checking for updates, for some packages sbopkg may tell you
+  "Note: repo version not obtainable by standard method, may be inaccurate.".
+  This happens with packages whose version is very difficult/impossible to
+  determine without actually building the package -- one example of this at
+  the time of writing is the google-chrome package, whose version is picked
+  from the source archive itself. In these cases sbopkg falls back to trusting
+  the .info file, and warns the user about it.
+
+  Workaround: none needed
+
+* while you are free to set PAGER to any value you like, be aware that some
+  pagers and settings may cause unexpected behavior. An example is if paging
+  less than a screenful of output from the uninstalled packages option - the
+  default pager 'more' will exit, displaying the packages and a prompt. 'less'
+  may prompt for exit and clear its output on exit. Setting the environment
+  variable LESS to include the F and X options will make less behave more like
+  more in this instance. Other pagers may have other behaviors and other means
+  of configuration.
+
+  Workaround: pager-specific
+
+* a few SlackBuild scripts in the slackbuilds.org repo have a source download
+  that is only available through an https download.  By default, sbopkg will
+  not be able to download these sources.
+
+  Workaround: add --no-check-certificate to WGETFLAGS in sbopkg.conf
+
+* certain packages build kernel modules and need to (re)set the ARCH to 'x86'
+  on i?86 (32-bit) systems which may result in packages with 'x86' as the ARCH
+  in the file name, while sbopkg will display the specific ARCH of your system
+  (or the ARCH you've set) in certain cases, such as in widget titles.
+
+  Workaround: none needed
+
+* when using sbopkg to sync to SBo git repositories (which is possible but
+  unsupported) unexpected results may occur. See
+    http://code.google.com/p/sbopkg/issues/detail?id=47
+    http://sbopkg.org/pipermail/sbopkg-users/2010-May/000477.html
+
+  Workaround: see above links

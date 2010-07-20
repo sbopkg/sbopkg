@@ -1,4 +1,4 @@
-sbopkg 0.33.1
+sbopkg 0.33.2
 Usage: sbopkg [OPTIONS] <packagename(s)>
 Options are:
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
