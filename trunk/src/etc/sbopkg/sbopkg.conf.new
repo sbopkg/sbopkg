@@ -16,7 +16,6 @@ export OUTPUT=${OUTPUT:-/tmp}
 LOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}
 QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
 REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}
-SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 
 # Other variables:
