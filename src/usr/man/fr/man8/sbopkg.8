@@ -1,4 +1,4 @@
-.TH SBOPKG 8 "août 2009" sbopkg-SVN ""
+.TH SBOPKG 8 "juillet 2010" sbopkg-0.33.2 ""
 .SH NAME
 .B sbopkg
 \ - Le navigateur de paquets SlackBuilds.org
@@ -8,16 +8,16 @@
 .B [options]
 
 .SH DESCRIPTION
-Sbopkg est un outil en ligne de commande ou avec dialog pour  
-utiliser le depôt de SlackBuilds.org ("SBo"), une collection 
-tierce de scripts SlackBuild pour compiler des paquets 
-Slackware.
+Sbopkg est un outil en ligne de commande interactif pour utiliser le 
+depôt de SlackBuilds.org ("SBo"), une collection de scripts SlackBuild 
+externes pour compiler des paquets Slackware.
 
 .SH INSTRUCTIONS
-L'utilisation de sbopkg suppose une compréhension des scripts SlackBuild, 
-en général et du dépôt SlackBuilds.org en particulier. Il est fortement 
-recommandé de lire attentivement http://www.slackbuilds.org/howto/ et les 
-pages traitant des scripts SlackBuild sur http://www.slackwiki.org.
+L'utilisation de sbopkg présuppose une compréhension des scripts 
+SlackBuild en général et du dépôt SlackBuilds.org en particulier. 
+Il est fortement recommandé de lire attentivement 
+http://www.slackbuilds.org/howto/ et les pages traitant des scripts 
+SlackBuild sur http://www.slackwiki.org.
 
 Avant de pouvoir utiliser sbopkg, il faut créer le fichier de 
 configuration /etc/sbopkg/sbopkg.conf. Un fichier exemple est 
@@ -26,14 +26,22 @@ fourni avec /etc/sbopkg/sbopkg.conf.new. Voir
 (5) pour plus d'information sur ce fichier de configuration.
 
 Sbopkg peut être lancé depuis la ligne de commande en tapant simplement 
-"sbopkg". Cela va lancer l'interface dialog, les menus affichés devraient 
+"sbopkg". Sbopkg doit être lancé par root (puisque les scripts 
+Slackbuild sont prévus pour être utilisés par root). De plus, il est 
+fortement conseillé d'utiliser 'su -' au lieu de 'su'. Parce que 
+quelques scripts (par ex. texmf pour construire les pages de manuel) 
+dépendent de certains outils disponibles uniquement dans le $PATH de 
+root quand celui-ci est hérité, ce qui n'est pas le cas en utilisant 
+seulement 'su'. Dans tous les cas, appeler 'sbopkg' depuis la ligne de 
+commande va lancer l'interface de dialogue, les menus affichés devraient 
 être suffisament parlants. Le menu principal permet à l'utilisateur 
 de se synchroniser (avec rsync) avec le dépôt de SlackBuilds.org 
 (actuellement la taille d'une copie locale du dépôt SBo est inférieure à 
 50MB), de voir le journal de SlackBuilds.org, de rechercher les mises 
-à jour possibles de paquets SBo, d'afficher le contenu du répertoire cache 
-local où sont sauvegardés les sources, d'afficher le journal permanent des 
-compilations et de lister ou de chercher dans la copie locale du dépôt de SBo.
+à jour possibles de paquets SBo, d'afficher le contenu du répertoire 
+cache local où sont sauvegardés les sources, d'afficher le journal 
+permanent des compilations et de lister ou de chercher dans la copie 
+locale du dépôt de SBo.
 
 Lorsque l'on choisit de naviguer dans la copie locale, on peut choisir 
 dans quelle catégorie de programmes aller. Àprès le choix de cette 
@@ -46,32 +54,33 @@ synchronisation.
 
 De plus, l'utilisateur peut choisir de construire un paquet en utilisant 
 le SlackBuild d'origine ou la version locale modifiée si elle existe. 
-Si on utilise l'interface dialog et si sbopkg trouve, dans le répertoire 
-OUTPUT, un paquet compilé pour un programme précis, il va automatiquement 
-ajouter un nouveau choix au menu pour permettre à l'utilisateur d'installer 
-ce paquet s'il le souhaite. L'utilisateur peut aussi décider de 
-compiler ou de compiler et installer un seul ou plusieurs paquets listés dans 
-une queue de compilation. Finalement, si la variable KEEPLOG est à 
-YES dans le fichier de configuration sbopkg.conf, un journal permanent 
-des opérations de construction est sauvegardé dans /tmp/sbopkg-build-log.
+Si on utilise l'interface de dialogue et si sbopkg trouve, dans le 
+répertoire OUTPUT, un paquet compilé pour un programme précis, il va 
+automatiquement ajouter un nouveau choix au menu pour permettre à 
+l'utilisateur d'installer ce paquet s'il le souhaite. L'utilisateur 
+peut aussi décider de compiler ou de compiler et installer un seul 
+paquet ou plusieurs paquets inscrits dans une file de compilation. 
+Finalement, si la variable KEEPLOG est à YES dans le fichier de 
+configuration sbopkg.conf, un journal permanent des opérations de 
+construction est sauvegardé dans /tmp/sbopkg-build-log.
 
 Sbopkg peut aussi être lancé en ligne de commande sans utiliser 
-l'interface dialog. Taper "sbopkg -h" affichera la liste des options 
-disponibles depuis la ligne de commande.
+l'interface de dialogue. Taper "sbopkg -h" affichera la liste des 
+options disponibles depuis la ligne de commande.
 
-Avec Sbopkg, on peut charger, sauvegarder et utiliser des files d'attente 
-crées par l'utilisateur. Ces fichiers sont de simples fichiers texte 
-comprenant une application par ligne. Lorsqu'on charge une file d'attente 
-par l'interface dialog, l'application est sélectionnée ou "ON". Ce 
-comportement peut être modifié en insérant un "-" devant le nom de 
-l'application dans la file d'attente. Une file d'attente peut aussi 
-contenir d'autres files, dont le nom est alors précédé d'un "@". 
+Avec Sbopkg, on peut charger, sauvegarder et utiliser des files 
+d'attente crées par l'utilisateur. Ces fichiers sont de simples 
+ichiers texte comprenant une application par ligne. Lorsqu'on charge 
+une file d'attente par l'interface de dialogue, l'application est 
+sélectionnée ou "ON". Ceci peut être modifié en insérant un "-" devant 
+le nom de l'application dans la file d'attente. Une file d'attente peut 
+aussi contenir d'autres files, dont le nom est alors précédé d'un "@". 
 Pour plus d'informations, lire le fichier readme-queuefiles dans le 
 répertoire /doc.
 
 Certaines capacités de sbopkg dépendent de binaires externes, comme 
 un afficheur pour lire les fichiers texte quand sbopkg est lancé en 
-ligne de commande er un éditeur pour modifier les fichiers .info et 
+ligne de commande et un éditeur pour modifier les fichiers .info et 
 SlackBuild. La fonction affichage recherche la variable d'environnement 
 $PAGER et si celle-ci n'est pas définie, utilise "more". De même, la 
 fonction édition recherche la variable $EDITOR et si celle-ci n'est pas 
@@ -144,7 +153,7 @@ Si on indique plusieurs extraits, il faut les placer entre guillemets.
 
 .TP 5
 .B -h
-Affiche cette aide.
+Affiche l'aide.
 
 .TP 5
 .B -i PAQUET(s)
@@ -193,6 +202,11 @@ des versions différentes de Slackware), les fichiers source utilisés
 uniquement dans "d'autres" dépôts seront affichés.
 
 .TP 5
+.B -P
+Affiche la liste des paquets dans le cache qui ne sont pas actuellement 
+installés sur le système et propose de les effacer.
+
+.TP 5
 .B -p
 Affiche la liste des paquets SBo installés.
 
@@ -206,11 +220,18 @@ de certaines option de ligne de commande devient plus succinte.
 Synchronise le dépôt local avec SlackBuilds.org et quitte.
 
 .TP 5
+.B -R
+Affiche tous les fichiers README des paquets en file d'attente avant de 
+commencer la compilation. Ce qui est utile si vous souhaitez effectuer 
+un dernier contrôle.
+
+.TP 5
 .B -s PAQUET(s)
 Cherche un PAQUET(s) par son nom précis PAQUET et s'il est trouvé 
 affiche les fichiers README, SlackBuild, .info, et slack-desc dans cet 
-ordre en utilisant $PAGER, "more" par défaut. Si on indique plusieurs 
-paquets, ils doivent être entre guillemets. Par exemple\ :
+ordre en utilisant $PAGER, "more" par défaut comme vu précédemment. Si 
+on indique plusieurs paquets, ils doivent être entre guillemets. 
+Par exemple\ :
 
 #sbopkg -s "toto titi"
 
@@ -221,22 +242,24 @@ cherche toto puis titi.
 Vérifie l'existence d'une mise à jour pour sbopkg lui-même et quitte.
 
 .TP 5
-.B -v VERSION
+.B -V DEPOT/VERSION
 Définit le dépôt et la version de Slackware à utiliser.
 
-Les valeurs possibles pour le dépôt sont SBo, SB64 et local.
-Les valeurs possibles de version sont 11.0, 12.0, 12.1, 
-12.2 et 13.0 pour le dépôt SBo\ ; master pour SB64 
-(dépôt Slamd64Builds) et local pour le dépôt local.
+Pour obtenir la liste des versions valides, lancer sbopkg avec
+.BR "sbopkg -V ?"
 Voir la page de manuel 
 .B sbopkg.conf (5)
 pour plus d'information sur le dépôt "local".
 
-Le format de VERSION est présenté dépôt/branche (par ex SBo/13.0). 
+Le format de VERSION est présenté par dépôt/branche (par ex SBo/13.1). 
 SI le dépôt n'est pas précisé, sbopkg va chercher la branche 
 indiquée dans le dépôt par défaut. Si cette recherche échoue, 
 sbopkg va recherche la première branche qui concorde dans tous 
 les dépôts.
+
+.TP 5
+.B -v
+Affiche la version courante de sbopkg sur la sortie standard
 
 .SH FILES
 .B /etc/sbopkg/sbopkg.conf
@@ -267,7 +290,7 @@ Chess Griffin
 
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<http://mcclinews.free.fr/> le 12\ août\ 2009.
+<mccnews@free.fr> le 23\ juillet\ 2010.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 

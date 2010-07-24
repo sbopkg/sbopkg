@@ -1,4 +1,4 @@
-.TH SBOPKG.CONF 5 "Juin 2009" sbopkg-0.30.0beta ""
+.TH SBOPKG.CONF 5 "Juillet 2010" sbopkg-0.33.2 ""
 .SH NAME
 .B sbopkg.conf
 \- Fichier de Configuration de sbopkg
@@ -8,9 +8,12 @@
 Le fichier sbopkg.conf contient les paramètres de configuration pour
 .B sbopkg
 (8), un outil pour utiliser le dépôt de SlackBuilds.org ("SBo"), 
-une collection tierce de scripts Slackbuild pour construire des 
+une collection de scripts Slackbuild externes pour construire des 
 packages Slackware. Un fichier exemple est fourni par 
-/etc/sbopkg/sbopkg.conf.new.
+/etc/sbopkg/sbopkg.conf.new. Lisez aussi, s'il vous plait, la note 
+ci-dessous sur $ARCH.
+
+Les options booléennes sont insensibles à la casse.
 
 Voici les différentes options de configuration\ :
 .TP 5
@@ -19,8 +22,8 @@ Voici les différentes options de configuration\ :
 Cette option permet à l'utilisateur de choisir le dépôt à utiliser.
 Les possibilités sont SBo, SB64 et local.
 Le choix "local" correspond à un dépôt géré par l'utilisateur et 
-dont la structure est identique à celle de SlackBuilds.org. 
-NOTE\ : toutes les variables préfixées par REPO_ sont touchées par 
+dont la structure doit être identique à celle de SlackBuilds.org. 
+NOTE\ : toutes les variables préfixées par REPO_ sont concernées par 
 les fichiers de dépôt gérés dans le répertoire /etc/sbopkg/repos.d. 
 Lire le fichier README-repos.d dans le répertoire /doc de sbopkg.
 
@@ -33,18 +36,19 @@ REPO_NAME=${REPO_NAME:-SBo}.
 .br
 Cette option permet à l'utilisateur de définir la branche active 
 par défaut du dépôt. Les valeurs possibles sont 11.0, 12.0, 12.1, 
-12.2 et 13.0 pour le dépôt SBo\ ; master pour SB64 et local pour 
-le dépôt local.
+12.2, 13.0 et 13.1 pour le dépôt SBo et local pour le dépôt local.
+Le dépôt Slamd64Builds est "master" mais n'est pas officiellement 
+maintenu.
 
 La valeur par défaut de REPO_BRANCH est\ :
 .br
-REPO_BRANCH=${REPO_BRANCH:-13.0}.
+REPO_BRANCH=${REPO_BRANCH:-13.1}.
 
 .TP 5
 .B REPO_ROOT
 .br
-Cette option permet à l'utilisateur de définir l'emplacement du 
-miroir local des dépôts externes. Actuellement la taille d'une copie 
+Cette option permet à l'utilisateur de définir l'emplacement des 
+miroirs locaux des dépôts externes. Actuellement la taille d'une copie 
 locale du dépôt SBo est inférieure à 50MB.
 
 La valeur par défaut de REPO_ROOT est\ :
@@ -75,9 +79,9 @@ SBOPKGTMP=${SBOPKGTMP:-/tmp/sbopkg}.
 .B TMP
 .br
 Cette option définit le répertoire dans lequel seront sauvegardés les 
-paquets construits. TMP doit être exporté car il est aussi utilisé par les 
-SlackBuilds SBo. Remarquez que la valeur par défaut de TMP est donc 
-identique à celle des SlackBuildS SBO.
+paquets construits. TMP doit être exporté car il est aussi utilisé par 
+les SlackBuilds SBo. Notez que la valeur par défaut de TMP est donc 
+identique à celle des scripts SlackBuildS SBo.
 
 La valeur par défaut de TMP est\ :
 .br
@@ -88,8 +92,8 @@ export TMP=${TMP:-/tmp/SBo}.
 .br
 Cette option définit le répertoire où seront sauvegardés les paquets 
 compilés. OUTPUT doit être exporté car il est aussi utilisé par les 
-SlackBuilds SBo.La valeur par défaut de OUTPUT est donc la même que 
-dans les SlackBuildS SBO.
+SlackBuilds SBo. La valeur par défaut de OUTPUT est donc la même que 
+celle des SlackBuildS SBO.
 
 La valeur par défaut de OUTPUT est\ :
 .br
@@ -99,7 +103,7 @@ export OUTPUT=${OUTPUT:-/tmp}.
 .TP 5
 .B QUEUEDIR
 .br
-Cette option définit le répertoire dans lequel on enregistrera les 
+Cette option définit le répertoire dans lequel seront enregistrées les 
 files d'attente sauvegardées.
 
 La valeur par défaut de QUEUEDIR est\ :
@@ -109,7 +113,7 @@ QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}.
 .TP 5
 .B KEEPLOG
 .br
-Cette option doit prendre la valeur YES ou NO. Elle permet (ou non) à 
+Cette option doit prendre la valeur YES ou NO. Elle permet à 
 l'utilisateur de conserver un journal permanent des paquets qui sont 
 construits avec sbopkg pour pouvoir revenir en arrière, revoir la 
 construction et les erreurs éventuelles après avoir quitté sbopkg. 
@@ -135,32 +139,88 @@ Cette option doit être définie à YES ou NO. Définie à YES, les fichiers
 source et les divers éléments restant après la construction d'un paquet 
 seront effacés immédiatement après la construction.
 Définir CLEANUP à YES aura aussi pour effet d'ignorer la valeur de TMP 
-définie via les variables d'environnement ou le fichier de configuration.
+définie via les variables d'environnement ou via les fichiers de 
+configuration.
 
 La valeur par défaut de CLEANUP est\ : NO
+
+.TP 5
+.B ALLOW_MULTI
+.br
+Définie  à YES, cette option permet à l'utilisateur de lancer plusieurs 
+instances de sbopkg.
+
+Comprenez bien que cette option est là pour votre commodité, mais étant 
+donné le nombre d'erreurs potentielles qu'elle peut entraîner (et nous 
+n'avons pas l'intention de perdre du temps avec les âneries que peut 
+faire un utilisateur), il faut considérer que travailler avec 
+ALLOW_MULTI=YES est une fonctionnalité EXPÉRIMENTALE et NON PRISE EN 
+CHARGE. Si vous rencontrez des problèmes, vérifiez bien qu'ils ne 
+viennent pas d'actions inappropriées de votre part.
+
+Pour référence, voici quelques unes des actions à ne pas faire lors 
+de l'utilisation de cette option\ : 
+.RS 6
+.IP \[bu] 2
+Lancer une instance avec ALLOW_MULTI=NO en même temps que une ou 
+plusieurs instances avec ALLOW_MULTI=YES.
+.IP \[bu]
+Synchroniser un dépôt lorsqu'une autre instance l'utilise.
+.IP \[bu]
+Changer de branche sur un depôt git lorsqu'une autre instance l'utilise 
+(vous pouvez faire ceci avec un dépôt rsync 
+-- par exemple SlackBuild.org --)
+.IP \[bu]
+Construire ou installer simultanément le même logiciel à partir de 
+différentes instances
+.IP \[bu]
+Sauvegarder une file d'attente en cours d'utilisation 
+par une autre instance
+.RE
+
+.RS 5
+Il peut y avoir encore d'autres situations dangereuses auxquelles 
+nous n'avons pas pensé. Soyez prudents.
+.RE
+
+
 
 .TP 5
 .B DEBUG
 .br
 Cette option a pour valeur 0, 1 ou 2. DEBUG définit le niveau de débogage 
-par défaut de la liste de mise à jour de sbopkg. Si DEBUG vaut 0, seuls 
-les paquets pouvant être mis à jour sont montrés. C'était la sortie par 
-défaut avant l'utilisation de la variable DEBUG. Si DEBUG vaut 1, sont 
-montrés les paquets qui peuvent être mis à jour, les paquets qui ne sont 
+par défaut de la liste de mise à jour de sbopkg. Si DEBUG vaut 0, on affiche 
+seulement les paquets pouvant être mis à jour (ou degradés). Si DEBUG vaut 1, 
+on affiche les paquets qui peuvent être mis à jour, les paquets qui ne sont 
 pas dans le dépôt et les paquets qui sont plus neufs que ceux du dépôt. 
-Modifier la valeur de DEBUG à 1 peut être utile si la liste des mises à 
+Si DEBUG vaut 2, on affiche tous les paquets non à jour.
+Modifier la valeur de DEBUG à 1 ou 2 peut être utile si la liste des mises à 
 jour parait incompléte. 
 
 La valeur par défaut de DEBUG est\ : 0.
+
+.TP 5
+.B MKDIR_PROMPT
+.br
+Cette option peut prendre la valeur YES ou NO. Si elle vaut YES, sbopkg 
+demandera confirmation avant de modifier le système de fichiers en 
+créant ses répertoires. Si vous ne souhaitez pas avoir à confirmer 
+(par exemple, certains de ces répertoires sont dans un système de 
+fichiers temporaires et vous ne voulez avoir à confirmer à chaque 
+réinitialisation du système de fichiers), vous pouvez mettre cette 
+valeur à NO.
+
+La valeur par défaut de DEBUG est\ : YES.
+
 
 .TP 5
 .B RSYNCFLAGS
 .br
 Rsync est utilisé par sbopkg pour dupliquer le dépôt de SlackBuilds.org. 
 Cette option permet à l'utilisateur d'ajuster les indicateurs (options) 
-de Rsync utilisés par sbopkg. Les utilisateurs sont mis en garde contre 
+de rsync utilisés par sbopkg. Les utilisateurs sont mis en garde contre 
 toute modification des valeurs par défaut de ces indicateurs, 
-de nouvelles valeurs peuvant fonctionner ou non.
+de nouvelles valeurs pouvant fonctionner ou non.
 Note\ : la commande rsync de sbopkg utilise déjà les indicateurs --archive, 
 --delete, --no-owner, et --exclude, il n'est donc pas nécessaire de les 
 ajouter dans les options de RSYNCFLAGS. Modifier ces options par défaut 
@@ -171,18 +231,18 @@ La valeur par défaut de RSYNCFLAGS est\ : "--timeout=10 --verbose".
 .TP 5
 .B WGETFLAGS
 .br
-Wget est utilisé par sbopkg pour télécharger les sources des paquets 
-à compiler. Cette option permet à l'utilisateur d'ajuster les indicateurs 
-(options) de wget utilisés par sbopkg. Les utilisateurs sont mis en garde 
-contre toute modification des valeurs par défaut de ces indicateurs, 
-de nouvelles valeurs peuvant fonctionner ou non.
-Note\ : sbopkg utilise déjà l'option -O de wget, il n'est donc pas nécessaire 
-de le rajouter dans les options de WGETFLAGS. Modifier ces options par défaut 
-n'est pas conseillé.
+Wget est utilisé par sbopkg pour télécharger les sources des paquets à 
+compiler. Cette option permet à l'utilisateur d'ajuster les indicateurs 
+(options) de wget utilisés par sbopkg. Les utilisateurs sont mis en 
+garde contre toute modification des valeurs par défaut de ces 
+indicateurs, de nouvelles valeurs pouvant fonctionner ou non.
+Note\ : sbopkg utilise déjà l'option -O de wget, il n'est donc pas 
+nécessaire de le rajouter dans les options de WGETFLAGS. Modifier ces 
+options par défaut n'est pas conseillé.
 
 La valeur par défaut de WGETFLAGS est\ :
 .br
-"--continue --progress-bar --timeout=15 --tries=5".
+"--continue --progress-bar:force --timeout=15 --tries=5".
 
 .TP 5
 .B DIFF
@@ -207,7 +267,7 @@ La valeur par défaut de DIFFOPTS est\ :
 DIFFOPTS=${DIFFOPTS:--u}
 
 
-.SH ENVIRONMENT
+.SH REDÉFINIR LES VARIABLES D'ENVIRONMENT
 Il est possible de définir ou de redéfinir des variables d'environnement 
 et de les exporter vers les scripts SlackBuilds lorsqu'il sont 
 construits avec sbopkg. Nous avons déjà vu l'exemple suivant dans 
@@ -223,15 +283,30 @@ modifier cette ligne pour\ :
 
 export TMP=${TMP:-/home/sbo/tmp}
 
-définit $TMP comme /home/sbo/tmp pour la construcion 
+définit $TMP comme /home/sbo/tmp pour la construction 
 des paquets. OUTPUT peut aussi être modifié pour sauvegarder les 
 paquets compilés dans un autre emplacement que celui par défaut, /tmp.
 
-Se souvenir que si la variable CLEANUP vaut YES, la configuration de TMP 
-n'est pas prise en compte.
+Se souvenir que si la variable CLEANUP vaut YES, la définition de TMP 
+est ignorée.
 
 Il est possible également, d'exporter dans sbopkg.conf des variables 
 qui ne sont aucunement utilisées par sbopkg.
+
+.SH À PROPOS DE LA VARIABLE $ARCH
+Vous pouvez vous demander pourquoi $ARCH n'est pas un élément de 
+configuration dans le fichier sbopkg.conf. La raison est qu'il n'a pas 
+à y être. D'abord sbopkg fait certaines vérifications (avec  'uname -m')
+ pour déterminer l'architecture du système. Si cette architecture est
+x86_64, alors sbopkg définit automatiquement ARCH=x86_64. Si cette
+architecture n'est pas x86_64, alors sbopkg récupère la définition de
+$ARCH dans l'environnement. Ce qui signifie que l'utilisateur peut
+ajouter, par exemple, 'export ARCH=i686' dans son .bashrc ou dans un
+fichier similaire, il peut aussi exécuter quelque chose comme
+'export ARCH=i686 && sbopkg' dans un terminal root. En conclusion, si
+$ARCH n'est pas défini par l'utilisateur et si sbopkg ne détecte pas
+un système x86_64, alors $ARCH prendra par défaut la valeur définie 
+pour $ARCH dans les scripts SlackBuild.
 
 .SH FILES
 .B /etc/sbopkg/sbopkg.conf
@@ -259,7 +334,7 @@ plus d'information.
 .SH TRADUCTION
 
 Ce document est une traduction réalisée par M.C Collilieux 
-<http://mcclinews.free.fr/> le 11\ août\ 2009.
+<mccnews@free.fr> le 21\ juillet\ 2010.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 La version anglaise la plus à jour de ce document est toujours 
