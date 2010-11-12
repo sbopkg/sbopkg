@@ -1,4 +1,4 @@
-# $Id$
+# $Id: README-renames.d 777 2010-05-17 02:17:25Z slakmagik $
 # vim:set ft=:
 
 The /etc/sbopkg/renames.d directory is the directory that holds files

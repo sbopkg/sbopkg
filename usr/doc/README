@@ -1,4 +1,4 @@
-# $Id$
+# $Id: README 816 2010-06-08 02:59:46Z slakmagik $
 # vim:set ft=:
 
 Sbopkg README
@@ -18,7 +18,7 @@ locally-maintained repository.
 
 Sbopkg will allow the user to create, synchronize, search, and browse a copy
 of the active repository (currently, the size of a local copy of the SBo
-repository is xxxSIZExxx), read the ChangeLog (if available), list the
+repository is about 90MB), read the ChangeLog (if available), list the
 installed SBo packages, display potential updates to SlackBuilds.org packages,
 view the README, SlackBuild, .info, and slack-desc files for each package, and
 make manual edits to a copy of the original .info or SlackBuild files.  Sbopkg

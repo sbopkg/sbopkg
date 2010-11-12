@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id$
+# $Id: sbopkg 838 2010-07-20 02:05:28Z slakmagik $
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2010 Chess Griffin <chess@chessgriffin.com>
@@ -282,7 +282,7 @@ dir_init() {
             DI_OUTPUT+=( "${DI_OUTPUT_LINES[$i]}" )
         fi
     done
-    if [[ ${DI_OUTPUT[*]} ]]; then
+    if [[ $DI_OUTPUT ]]; then
         # Keep DI_OUTPUT_LINES and the 'table headers' aligned, too.
         cat << EOF
 
@@ -324,7 +324,7 @@ EOF
 
     for ((i=0; i<${#DIR_VARS[*]}; i++)); do
         if [ ! -w ${DIR_VARS[$i]} ]; then
-            echo $SCRIPT: ${DIR_VARS[$i]} not writable
+            echo ${DIR_VARS[$i]} not writable
             ERROR=nowrite
         fi
     done
@@ -4388,8 +4388,8 @@ SBOPKG_REPOS_D=${SBOPKG_REPOS_D:-/etc/sbopkg/repos.d}
 EDITOR=${EDITOR:-vi}
 PAGER=${PAGER:-more}
 CWD=$(pwd)
-REV="$Revision$"
-SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
+REV="$Revision: 838 $"
+SBOVER=0.34.0
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
