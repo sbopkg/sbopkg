@@ -1,4 +1,4 @@
-sbopkg 0.33.1
+sbopkg 0.34.0
 Usage: sbopkg [OPTIONS] <packagename(s)>
 Options are:
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
@@ -29,4 +29,8 @@ Options are:
                   starting with the default repo. For a list of valid repos,
                   issue '-V ?'
 
-Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2")
+Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2") or
+can be specified multiple times (-i foo -i bar). If using the latter syntax,
+build options may also be passed on the command line on a per app basis using
+the -b or -i flags in colon-separated groups (where whitespace must also be
+quoted). For example, '-i app:opt1="arg1 arg2":opt2=arg1 app2'
