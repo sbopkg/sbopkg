@@ -3303,6 +3303,7 @@ build_package() {
             # example, LC_COLLATE=fr_FR expands it to AbBcC..zZ).
             # See also the comment in /etc/profile.d/lang.sh
             export LC_COLLATE=C
+            export TAG=$REPO_TAG
             if [[ $CLEANUP ]]; then
                 # We want to remove all the build residuals after running the
                 # SlackBuild script. To do that reliably (i.e. without
