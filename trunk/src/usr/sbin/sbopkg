@@ -2752,7 +2752,7 @@ get_source_names() {
         # after, rather than grepping. And the conditionals ensure that we
         # only return PLACEHOLDER when we don't have any other results and
         # PLACEHOLDER is actually called for and set.
-        if ! ls -A $SRCDIR | grep "^${SRCNAME##*/}"; then
+        if [[ -z $SRCNAME ]] || ! ls -A $SRCDIR | grep "^${SRCNAME##*/}"; then
             if [[ $PLACEHOLDER ]]; then
                 echo $PLACEHOLDER
             fi
