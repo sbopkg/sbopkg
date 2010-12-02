@@ -283,43 +283,43 @@ dir_init() {
         fi
     done
     if [[ ${DI_OUTPUT[*]} ]]; then
-        # Keep DI_OUTPUT_LINES and the 'table headers' aligned, too.
-        cat << EOF
+        if [[ $MKDIR_PROMPT ]]; then
+            # Keep DI_OUTPUT_LINES and the 'table headers' aligned, too.
+            cat << EOF
 
 The following directories do not exist:
 
 Variable               Assignment
 --------               ----------
 EOF
-        for ((i=0; i<${#DI_OUTPUT[*]}; i++)); do
-            echo "${DI_OUTPUT[$i]}"
-        done
-        cat << EOF
+            for ((i=0; i<${#DI_OUTPUT[*]}; i++)); do
+                echo "${DI_OUTPUT[$i]}"
+            done
+            cat << EOF
 
 You can have sbopkg create them or, if these values are incorrect, you can
 abort to edit your config files or pass different flags.
 
 EOF
-        while :; do
-            read $NFLAG -ep "(C)reate or (A)bort?: "
-            case $REPLY in
-                C|c)
-                    if ! mkdir -p $DIRS2MK 2>/dev/null; then
-                        echo "$SCRIPT: failed to create directories" >&2
-                        exit 1
-                    fi
-                    break
-                    ;;
-                A|a)
-                    if [[ ${FUNCNAME[1]} == main ]]; then
-                        exit 1
-                    else
-                        return 1
-                    fi
-                    ;;
-                *) unknown_response ;;
-            esac
-        done
+            while :; do
+                read $NFLAG -ep "(C)reate or (A)bort?: "
+                case $REPLY in
+                    C|c) break ;;
+                    A|a)
+                        if [[ ${FUNCNAME[1]} == main ]]; then
+                            exit 1
+                        else
+                            return 1
+                        fi
+                        ;;
+                    *) unknown_response ;;
+                esac
+            done
+        fi
+        if ! mkdir -p $DIRS2MK 2>/dev/null; then
+            echo "$SCRIPT: failed to create directories" >&2
+            exit 1
+        fi
     fi
 
     for ((i=0; i<${#DIR_VARS[*]}; i++)); do
