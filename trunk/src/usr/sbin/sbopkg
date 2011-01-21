@@ -90,7 +90,7 @@ config_check() {
     # Check if config file is there and if so check that it has all
     # needed variables with any value, and set them.
 
-    local MISSING VAR
+    local MISSING VAR OBS OBSVAR
 
     if [[ ! -d $SBOPKG_REPOS_D ]]; then
         echo "$SCRIPT: No $SBOPKG_REPOS_D was found." 1>&2
@@ -111,6 +111,25 @@ config_check() {
     [[ -e $SBOPKG_CONF ]] && . $SBOPKG_CONF
     [[ -e $HOME/.sbopkg.conf ]] && . $HOME/.sbopkg.conf
 
+    # Some configuration options are obsolete
+    for OBSVAR in SBOPKGTMP; do
+        if [[ ${!OBSVAR} ]]; then
+            OBS+="$OBSVAR "
+        fi
+    done
+    if [[ $OBS ]]; then
+        cat << EOF
+$SCRIPT: obsolete configuration variable(s) found:
+
+$OBS
+
+Please remove or update any obsolete variables. See the sbopkg.conf(5) man
+page for more details.
+EOF
+        exit 1
+    fi
+
+
     # Some configuration options are mandatory
     for VAR in REPO_ROOT QUEUEDIR SRCDIR REPO_NAME REPO_BRANCH \
         KEEPLOG CLEANUP LOGFILE DEBUG_UPDATES TMP OUTPUT RSYNCFLAGS \
@@ -121,19 +140,15 @@ config_check() {
     done
     if [[ "$MISSING" ]]; then
         cat << EOF
+$SCRIPT: required configuration variable(s) not found:
 
-ERROR
-$SCRIPT: Can't find a value for variable(s):
 $MISSING
 
-If you have recently upgraded sbopkg there may be
-new variables in the sbopkg.conf file.  Please
-merge the sbopkg.conf.new file with your existing
-sbopkg.conf file.  Please see the sbopkg.conf(5)
-man page for more details.
+If you have recently upgraded sbopkg there may be new variables in the
+sbopkg.conf file. Please merge the sbopkg.conf.new file with your existing
+sbopkg.conf file. See the sbopkg.conf(5) man page for more details.
 
 Please correct this error and run $SCRIPT again.
-
 EOF
        exit 1
     fi
@@ -4113,7 +4128,9 @@ cleanup() {
     if [[ $HAS_NCURSES ]]; then
         tput cnorm # Restore cursor
     fi
-    rm -r $SBOPKGTMP
+    if [[ -d $SBOPKGTMP ]]; then
+        rm -r $SBOPKGTMP
+    fi
     rm -f $PIDFILE
 }
 
@@ -4396,20 +4413,6 @@ DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
 
-SBOPKGTMP=$(mktemp -td sbopkg.XXXXXX) ||
-    { echo "$SCRIPT: failed to create sbopkg's temporary directory"; exit 1; }
-STARTQUEUE=$SBOPKGTMP/sbopkg-start-queue
-USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
-MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
-MISSING_SINGLE_FILE=$SBOPKGTMP/sbopkg_add_item_missing
-TMPLOG=$SBOPKGTMP/sbopkg_tmplog
-TMPQUEUE=$SBOPKGTMP/sbopkg-tmp-queue
-FINALQUEUE=$SBOPKGTMP/sbopkg-final-queue
-SB_OUTPUT=$SBOPKGTMP/sbopkg-sbooutputdir
-SBOPKGOUTPUT=$SBOPKGTMP/sbopkg_output
-TMPBUILDLOG=$SBOPKGTMP/sbopkg-tmp-buildlog
-TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-
 # Make sure we are root.
 if [[ $(id -u) != 0 ]]; then
     echo "$SCRIPT: $SCRIPT must be run by the root user.  Exiting." >&2
@@ -4586,6 +4589,20 @@ fi
 
 # Check for a good config file and set initial variables
 config_check
+
+SBOPKGTMP=$(mktemp -td sbopkg.XXXXXX) ||
+    { echo "$SCRIPT: failed to create sbopkg's temporary directory"; exit 1; }
+STARTQUEUE=$SBOPKGTMP/sbopkg-start-queue
+USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
+MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
+MISSING_SINGLE_FILE=$SBOPKGTMP/sbopkg_add_item_missing
+TMPLOG=$SBOPKGTMP/sbopkg_tmplog
+TMPQUEUE=$SBOPKGTMP/sbopkg-tmp-queue
+FINALQUEUE=$SBOPKGTMP/sbopkg-final-queue
+SB_OUTPUT=$SBOPKGTMP/sbopkg-sbooutputdir
+SBOPKGOUTPUT=$SBOPKGTMP/sbopkg_output
+TMPBUILDLOG=$SBOPKGTMP/sbopkg-tmp-buildlog
+TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
 
 # Change $REPO_BRANCH (and optionally REPO_NAME) if set manually using cli -v
 if [[ $VERSION ]]; then
