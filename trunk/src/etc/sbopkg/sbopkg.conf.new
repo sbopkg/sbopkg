@@ -17,6 +17,13 @@ LOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}
 QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
 REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
+# sbopkg's temporary directory (where its internal temporary files are
+# kept and where packages are made prior to being moved to OUTPUT)
+# defaults to /tmp/sbopkg.XXXXXX where 'XXXXXX' is a random string. If
+# /tmp is not a suitable containing directory, pass in an alternate
+# TMPDIR or modify the following variable. This is actually a mktemp(1)
+# variable.
+TMPDIR=${TMPDIR:-/tmp}
 
 # Other variables:
 CLEANUP=${CLEANUP:-NO}

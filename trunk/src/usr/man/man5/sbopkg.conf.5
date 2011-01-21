@@ -334,19 +334,6 @@ The default assignment is:
 \fCxxxRSYNCFLAGSxxx\fP
 .\"---------------------------------------------------------------------
 .TP
-.B SBOPKGTMP
-Path.
-.IP
-This option sets the default directory where certain working files
-specific to
-.B sbopkg
-are saved on a temporary basis.
-.IP
-The default assignment is:
-.IP
-\fCxxxSBOPKGTMPxxx\fP
-.\"---------------------------------------------------------------------
-.TP
 .B SRCDIR
 Path.
 .IP
@@ -379,6 +366,30 @@ setting is ignored.
 The default assignment is:
 .IP
 \fCxxxTMPxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B TMPDIR
+Path.
+.IP
+This option sets the default directory where certain working files
+specific to
+.B sbopkg
+are saved on a temporary basis. Note that this variable is actually used
+by
+.BR mktemp (1),
+and that the actual directory is hardcoded internally to
+.I sbopkg.XXXXXX
+where 'XXXXXX' is a random string.
+This variable determines the containing directory for that.
+If /tmp is not a suitable containing directory, TMPDIR can be assigned
+to on the command line when invoking
+.B sbopkg
+or the variable can be modified in
+.IR sbopkg.conf .
+.IP
+The default assignment is:
+.IP
+\fCxxxTMPDIRxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B WGETFLAGS
@@ -564,6 +575,7 @@ slakmagik
 .\" the official tarball go here.
 .SH SEE ALSO
 .BR diff (1),
+.BR mktemp (1),
 .BR rsync (1),
 .BR sbopkg (8),
 .BR uname (1),
