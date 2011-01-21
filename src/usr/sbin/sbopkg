@@ -252,7 +252,8 @@ dir_init() {
     # Check to make sure certain sbopkg-related directories exist.
     # If not, create them.
 
-    local DIR_VARS DI_OUTPUT_LINES DIRS2MK DI_OUTPUT REPLY ERROR
+    local -a DIR_VARS DI_OUTPUT_LINES DI_OUTPUT
+    local DIRS2MK REPLY ERROR
 
     # Keep DIR_VARS and DI_OUTPUT_LINES in sync where REPO_DIR ~ REPO_ROOT.
 
