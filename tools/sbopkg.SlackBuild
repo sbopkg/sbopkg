@@ -2,26 +2,24 @@
 
 # $Id$
 
-# Slackware build script for Sbopkg
+# Slackware build script for sbopkg
 
-# Written by Chess Griffin <chess@chessgriffin.com>.  Based on the
-# SlackBuilds.org template.
+# Written by Chess Griffin <chess@chessgriffin.com>.
+# Based on the SlackBuilds.org template.
 
 PRGNAM=sbopkg
 VERSION=${VERSION:-0.34.0}
 ARCH=${ARCH:-noarch}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_cng}
+PKGTYPE=${PKGTYPE:-tgz}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp/build}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
-DOCS="ChangeLog.txt HACKING KNOWN_ISSUES README README-queuefiles \
-README-renames.d README-repos.d TODO queuefiles/"
-
-set -e # Exit on most errors
+set -e
 
 rm -rf $PKG
 mkdir -p $TMP $PKG $OUTPUT
@@ -31,10 +29,10 @@ tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
 cd $PRGNAM-$VERSION
 chown -R root:root .
 find . \
- \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
- -exec chmod 755 {} \; -o \
- \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
- -exec chmod 644 {} \;
+  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+  -exec chmod 755 {} \; -o \
+  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o \
+  -perm 400 \) -exec chmod 644 {} \;
 
 mkdir -p $PKG/etc/sbopkg
 cp -a etc/sbopkg/* $PKG/etc/sbopkg
@@ -44,14 +42,10 @@ cp usr/sbin/* $PKG/usr/sbin
 
 mkdir -p $PKG/usr/man
 cp -a usr/man/* $PKG/usr/man
-
-( cd $PKG/usr/man
-  find . -type f -exec gzip -9 {} \;
-  for i in $( find . -type l ) ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
-)
+find $PKG/usr/man -type f -exec gzip -9 {} \;
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
-(cd usr/doc && cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION)
+cp -a usr/doc/* $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a $CWD/sbopkg.SlackBuild $PKG/usr/doc/$PRGNAM-$VERSION
 chown root:root $PKG/usr/doc/$PRGNAM-$VERSION/sbopkg.SlackBuild
 
@@ -60,4 +54,4 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 cat $CWD/doinst.sh > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.tgz
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE
