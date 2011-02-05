@@ -1,64 +1,89 @@
-# $Id$
-# vim:set ft=:
+SBOPKG README
 
-Sbopkg README
-Copyright 2007-2010 Chess Griffin <chess@chessgriffin.com>
-Copyright 2009-2010 Mauro Giachero <mauro.giachero@gmail.com>
-                    slakmagik <slakmagik@gmail.com>
+SBOPKG COPYRIGHT/LICENSE
 
-Homepage:  http://www.sbopkg.org
+    Copyright 2007-2010 Chess Griffin <chess@chessgriffin.com>
+    Copyright 2009-2010 Mauro Giachero <mauro.giachero@gmail.com>
+                        slakmagik <slakmagik@gmail.com>
+
+    Sbopkg is released under a one-clause BSD license. See the script
+    itself for the text.
 
 ABOUT
 
-Sbopkg (pronounced s-b-o-package) is a command-line and dialog-based tool to
-synchronize with the SlackBuilds.org ("SBo") repository, a collection of
-third-party SlackBuild scripts to build Slackware packages.  Sbopkg can also
-synchronize with certain third-party repositories or access a
-locally-maintained repository.
+    Sbopkg (pronounced 's-b-o-package') is a command-line and
+    menu-based tool to synchronize with the SlackBuilds.org ('SBo')
+    repository, a collection of third-party SlackBuild scripts to build
+    Slackware packages. Sbopkg can also synchronize with any repository
+    with an SBo-compatible hierarchy, including a locally-maintained
+    repository.
 
-Sbopkg will allow the user to create, synchronize, search, and browse a copy
-of the active repository (currently, the size of a local copy of the SBo
-repository is xxxSIZExxx), read the ChangeLog (if available), list the
-installed SBo packages, display potential updates to SlackBuilds.org packages,
-view the README, SlackBuild, .info, and slack-desc files for each package, and
-make manual edits to a copy of the original .info or SlackBuild files.  Sbopkg
-will also allow the user to select packages to build and it will download the
-source code, check the md5sum, build a Slackware package, and, optionally
-install the package.  The user can also build, and optionally install, more
-than one package by using the 'build queue' feature.  Sbopkg will not check
-dependencies since that is not a feature native to Slackware, but since the
-build queue will process packages in the order listed, it sometimes may be
-possible to build and install dependencies in order prior to building and
-installing the final, desired package.  Given the nature of building
-dependencies, however, this probably will not always work and is not really a
-supported feature.  Ultimately, Sbopkg is one thing and one thing only: a
-medium to easily browse a local copy of the SlackBuilds.org and certain other
-repositories and build packages from them.
+    Sbopkg will allow the user to create, synchronize, search, and
+    browse a copy of the active repository (currently, the size of a
+    local copy of the SBo repository is xxxSIZExxx), read the ChangeLog
+    (if available), list the installed SBo packages, display potential
+    updates to SlackBuilds.org packages, view the README, SlackBuild,
+    .info, and slack-desc and other files for each package, and make
+    manual edits to a copy of the original .info or SlackBuild files.
+    Sbopkg will also allow the user to select packages to build and it
+    will download the source code, check the md5sum, build a Slackware
+    package, and optionally install the package. The user can also build
+    and optionally install more than one package by using the 'build
+    queue' feature. Sbopkg will not check dependencies since that is not
+    a feature native to Slackware, but since the build queue will
+    process packages in the order listed, it is possible to build and
+    install dependencies in order prior to building and installing the
+    final, desired package.
 
-Sbopkg can be also be used strictly from the command line without the
-dialog interface to do most of the above items.  Typing sbopkg -h
-will display the command line options.
+    Sbopkg can also be used strictly from the command line without the
+    dialog(1)-provided menu interface to do most of the above items.
+    Typing 'sbopkg -h' will display the command line options.
 
 HELP
 
-Sbopkg comes with two man pages:  sbopkg.conf(5) and sbopkg(8).  These
-man pages are kept up-to-date with functional changes in the script
-itself, so they are a good source of information on how to use sbopkg.
+    Sbopkg comes with two man pages: sbopkg.conf(5) and sbopkg(8). These
+    are the primary sources of information on how to use sbopkg.
 
-If the man pages are not sufficient, please consider joining the sbopkg
-mailing list and posting your question there.  You should be able to
-subscribe by sending mail to sbopkg-users-request@sbopkg.org whose body
-is 'subscribe your-email@address-here'. There is also an IRC channel for
-sbopkg on Freenode at #sbopkg.  Further information on all of these
-resources is on the project's website at http://www.sbopkg.org - click
-the "Docs/Help" tab.
+    If you have read the manuals and still need help, you may want to
+    join the sbopkg mailing list. Subscribe by sending a mail whose body
+    is "subscribe your-email@address-here" to:
 
-CONTRIBUTORS
+    sbopkg-users-request@sbopkg.org
 
-We welcome bug reports, suggestions, patches, or feature requests.
-Please post any of these to the Issue tracker (kind of like a
-Bugzilla) on the project's Google page (click the Issues tab) at
-http://code.google.com/p/sbopkg so we can keep track of them.  There
-have been many contributors so far, and they are all mentioned near
-the top of the sbopkg script itself.  Thanks to everyone who has
-helped make this script better.
+    or use the web interface:
+
+    http://sbopkg.org/mailman/listinfo/sbopkg-users
+
+    There is also an IRC channel for sbopkg on Freenode at #sbopkg.
+
+    Further information on these and other resources is on the project
+    website:
+
+    http://sbopkg.org
+
+    Specifically, the documentation page is:
+
+    http://sbopkg.org/docs.php
+
+CONTRIBUTING
+
+    We welcome bug reports, suggestions/feature requests, and patches.
+    Please post any of these to the issue tracker:
+
+    http://code.google.com/p/sbopkg/issues/list
+
+    Before reporting a bug, please check the KNOWN_ISSUES file. Before
+    contributing a suggestion please check the TODO file. Before
+    submitting a patch, please read the HACKING file.
+
+    Sbopkg's source is available in an svn repository hosted on
+    googlecode. To view a copy of the repo, see:
+
+    http://code.google.com/p/sbopkg/source/browse/
+
+    To obtain a local copy, use something like the following command:
+
+    svn checkout http://sbopkg.googlecode.com/svn/trunk/ sbopkg-contrib
+
+    There have been many contributors so far (see the THANKS file).
+    Thanks to everyone who has helped make this script better.

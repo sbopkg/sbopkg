@@ -1,302 +1,337 @@
-# $Id$
-# vim:set ft=:
+SBOPKG HACKING
 
-We welcome contributions to sbopkg.  If you have a bug report or a feature
-request, please go to the project's Google Code site and use the 'Issue
-Tracker' so your bug report/feature request does not get lost:
-http://code.google.com/p/sbopkg/issues/list.  If you cannot post to the Issue
-Tracker, please consider joining the sbopkg mailing list and post your bug
-report or feature request there:
-http://sbopkg.org/mailman/listinfo/sbopkg-users
+INTRODUCTION
 
-As far as hacking on the code, the best thing to do is to checkout the
-latest version from subversion (see http://www.sbopkg.org/devel.php) and then
-contribute patches with something like 'diff -Naurp' or 'svn diff -x -p'.
-Please try to make each patch do one thing and do it well.  Also, please do
-not combine whitespace or other non-functional changes with functional changes
-in the same patch (unless the same lines contain both types of changes).
-Basically, just use common sense -- a one line functional change and a typo
-correction can be a single patch, rather than two one-line patches.
+    We welcome contributions to sbopkg. If you have a bug report or a
+    feature request, please go to the project's Google Code site and use
+    the Issue Tracker so your bug report/feature request does not get
+    lost.
 
-Please make sure your patches conform to these stylistic points:
+        http://code.google.com/p/sbopkg/issues/list
 
-* Code in Bash.
+    If you cannot post to the Issue Tracker, please consider joining the
+    sbopkg mailing list and post your bug report or feature request
+    there.
 
-* Wrap lines at 78 columns.
+        http://sbopkg.org/mailman/listinfo/sbopkg-users
 
-* Expand tabs to spaces.
+    If you cannot join the mailing list, there is an #sbopkg channel on
+    the freenode IRC network.
 
-* Indent with four spaces at all levels.
+    As far as hacking on the code, the best thing to do is to checkout
+    the latest version from subversion using something like the
+    following command:
 
-* Use '[[' wherever possible, vs. '['.
+        svn checkout http://sbopkg.googlecode.com/svn/trunk \
+            sbopkg-contrib
 
-* Negate tests like '[[ ! foo ]]' instead of '! [[ foo ]]'.
+    (See http://www.sbopkg.org/devel.php for more information.) Then
+    contribute patches with something like 'diff -Naurp' or 'svn diff -x
+    -p'.
 
-* write functions in the form:
+    Please try to make each patch do one thing and do it well. Also,
+    please do not combine whitespace or other non-functional changes
+    with functional changes in the same patch (unless the same lines
+    contain both types of changes). Basically, just use common sense --
+    a one line functional change and a typo correction can be a single
+    patch, rather than two one-line patches.
 
-      my_func() {
-          # comments here
+PATCH/SCRIPT GUIDELINES
 
-          stuff
-      }
+    * Write code compatible with bash 3.1.17 to the latest stable
+      version.
 
-* In general, variables do not need to be quoted except in cases where the
-  variable may contain spaces.  If unsure, quote the variable just to be safe.
+    * Wrap lines at 78 columns.
 
-* Use variable names in the form:  MYVARNAME except when MYVARNAME is
-  ambiguous or made of more than two or three components.  In that case, use
-  MY_VAR_NAME.
+    * Expand tabs to spaces.
 
-* If you are going to need a bit of data repeatedly, try to grab it once and
-  assign it to a variable rather than re-obtaining it.
+    * Indent with four spaces at all levels.
 
-* If you are going to use a combination of several concatenated variables
-  multiple times, consider creating a new variable like:
-  'NEWVAR=$OLDVAR1-$OLDVAR2-$OLDVAR3'.
+    * Use '[[' wherever possible, vs. '['.
 
-* Prefer the style:
+    * Negate tests like '[[ ! foo ]]' instead of '! [[ foo ]]'.
 
-      if [[ foo ]]; then
-          bar
-      fi
+    * write functions in the form:
 
-  instead of:
+          my_func() {
+              # comments here
 
-      if [[ foo ]]
-      then
-          bar
-      fi
+              stuff
+          }
 
-  (same goes with 'for' and 'while' loops).
+    * In general, variables do not need to be quoted except in cases
+      where the variable may contain spaces. If unsure, quote the
+      variable just to be safe.
 
-* The spacing in numeric 'for' loops is:
+    * Use variable names in the form: MYVARNAME except when MYVARNAME is
+      ambiguous or made of more than two or three components. In that
+      case, use MY_VAR_NAME.
 
-      for ((i=0; i<=10; i++)); do
+    * If you are going to need a bit of data repeatedly, try to grab it
+      once and assign it to a variable rather than re-obtaining it.
 
-* Prefer shell redirection to piping 'echo' or 'cat'.
+    * If you are going to use a combination of several concatenated
+      variables multiple times, consider creating a new variable like:
+      'NEWVAR=$OLDVAR1-$OLDVAR2-$OLDVAR3'.
 
-* Prefer bash variable substitutions to 'tr', 'sed', 'cut', ..., when
-  possible.
+    * Prefer the style:
 
-* Error messages should go to standard error:
+          if [[ foo ]]; then
+              bar
+          fi
 
-      echo "Things have gone nuts" >&2
+      instead of:
 
-* Make return codes meaningful (i.e. if you redirect to stderr try
-  to return or exit 1 at the same time).
+          if [[ foo ]]
+          then
+              bar
+          fi
 
-* When both 'foo' is simple and 'bar' is a one-liner, the conditional form:
+      (same goes with 'for' and 'while' loops).
 
-      [[ foo ]] && bar
+    * The spacing in numeric 'for' loops is:
 
-  can be used instead of:
+          for ((i=0; i<=10; i++)); do
 
-      if [[ foo ]]; then
-          bar
-      fi
+    * Prefer shell redirection to piping 'echo' or 'cat'.
 
-  However, do not use the following form:
+    * Prefer bash variable substitutions to 'tr', 'sed', 'cut', ...,
+      when possible.
 
-      if [[ foo ]]; then bar; fi
+    * Error messages should go to standard error:
 
-* Use:
+          echo "Things have gone nuts" >&2
 
-      [[ foo ]] || bar
+    * Make return codes meaningful (i.e. if you redirect to stderr try
+      to return or exit 1 at the same time).
 
-  only when 'bar' is simple and supposed to be executed on error conditions
-  (i.e. almost never)
+    * When both 'foo' is simple and 'bar' is a one-liner, the
+      conditional form:
 
-* Multiple conditionals can be done either as:
+          [[ foo ]] && bar
 
-  if [[ $CHOICE == 1 ]] || [[ $CHOICE == 0 && -z $CUSTOMOPTS ]]; then
+      can be used instead of:
 
-  or
+          if [[ foo ]]; then
+              bar
+          fi
 
-  if [[ $CHOICE == 1 || ( $CHOICE == 0 && -z $CUSTOMOPTS ) ]]; then
+      However, do not use the following form:
 
-  but not:
+          if [[ foo ]]; then bar; fi
 
-  if [ $CHOICE = 1 ] || [ $CHOICE = 0 -a "$CUSTOMOPTS" = "" ]; then
+    * Use:
 
-  The reasons the third example is not as good as the first two are that it
-  uses single brackets instead of double brackets and uses '-a' instead of
-  '&&'.
+          [[ foo ]] || bar
 
-* 'case' statements should be indented as:
+      only when 'bar' is simple and supposed to be executed on error
+      conditions (i.e. almost never)
 
-    case $FOO in
-        bar ) # Comment goes here
-            commands
-            ;;
-        baz* ) # Comment goes here
-            commands
-            ;;
-    esac
+    * Multiple conditionals can be done either as:
 
-  unless the statements can be short one-liners, in which case the form
+          if [[ $FOO == 1 ]] || [[ $FOO == 0 && -z $BAR ]]; then
 
-    case $FOO in
-        bar ) short_simple_command ;;
-        baz* ) simple_short_command; exit ;;
-    esac
+      or
 
-  is preferred.
+          if [[ $FOO == 1 || ( $FOO == 0 && -z $BAR ) ]]; then
 
-* Avoid chaining commands with ';' (with the above exceptions).
+      but not:
 
-* Declare local variables as such at the function start.
+          if [ $FOO = 1 ] || [ $FOO = 0 -a "$BAR" = "" ]; then
 
-* Positional parameters to functions should be assigned to local variables,
-  one per 'local' statement, before declaring the other local variables (which
-  can share a single 'local' statement):
+      The reasons the third example is not as good as the first two are
+      that it uses single brackets instead of double brackets and uses
+      '-a' instead of '&&'.
 
-    local FILE="$1"
-    local DIR="$2"
-    local FOO BAR BAZ
+    * 'case' statements should be indented as:
 
-* In general, when wrapping long lines, the part going on the next line should
-  be indented with 8 spaces if there is ambiguity so as to distinguish the
-  wrap from other lines before and after it.  The same would be true for line
-  wraps in conditions.  For example:
+          case $FOO in
+              bar ) # Comment goes here
+                  commands
+                  ;;
+              baz* ) # Comment goes here
+                  commands
+                  ;;
+          esac
 
-    if ASD ||
-            FGH; then
-        echo "Success"
-    fi
+      unless the statements can be short one-liners, in which case the
+      form
 
-  as opposed to:
+          case $FOO in
+              bar ) short_simple_command ;;
+              baz* ) simple_short_command; exit ;;
+          esac
 
-    if ASD ||
-        FGH; then
-        echo "Success"
-    fi
+      is preferred.
 
-  In the latter case, having 'FGH; then' at the same indent level as the echo
-  is ambiguous.  On the other hand:
+    * Avoid chaining commands with ';' (with the above exceptions).
 
-    APP=$(grep foo \
-        really/long/path/to/file)
-    if foo; then
-        echo "Success"
-    fi
+    * Declare local variables as such at the function start.
 
-  is ok since there really is no ambiguity.
+    * Positional parameters to functions should be assigned to local
+      variables, one per 'local' statement, before declaring the other
+      local variables (which can share a single 'local' statement):
 
-* Prefer 'foo | bar' over 'foo |bar' or 'foo|bar'.  However, if the line
-  barely goes over 78 columns, then removing spaces is OK to keep it on a
-  single line.  In other words:
+          local FILE="$1"
+          local DIR="$2"
+          local FOO BAR BAZ
 
-    foo |bar |baz
+    * In general, when wrapping long lines, the part going on the next
+      line should be indented 8 spaces beyond the initial line if there
+      is ambiguity so as to distinguish the wrap from other lines before
+      and after it. The same would be true for line wraps in conditions.
+      For example:
 
-  is better than
+          if ASD ||
+                  FGH; then
+              echo "Success"
+          fi
 
-    foo | bar |
-            baz
+      as opposed to:
 
-* When wrapping between two piped commands, the pipe should be the last
-  character of the former line.  For example, prefer:
+          if ASD ||
+              FGH; then
+              echo "Success"
+          fi
 
-    some stuff here foo |
-        bar
+      In the latter case, having 'FGH; then' at the same indent level as
+      the echo is ambiguous. On the other hand:
 
-  instead of:
+          APP=$(grep foo \
+              really/long/path/to/file)
+          if foo; then
+              echo "Success"
+          fi
 
-    some stuff here foo \
-        | bar
+      is ok since there really is no ambiguity.
 
-  when possible.
+    * Prefer 'foo | bar' over 'foo |bar' or 'foo|bar'. However, if the
+      line barely goes over 78 columns, then removing spaces is OK to
+      keep it on a single line. In other words:
 
-* Always use $( ... ) instead of ` ... `.
+          foo |bar |baz
 
-* 'Break' and 'continue' should never be used to influence a loop outside of
-  the function they belong to.
+      is better than
 
-* Avoid indirect recursion (A calls B that calls A).
+          foo | bar |
+                  baz
 
-* [[ -z "$VAR" ]] vs. [[ ! "$VAR" ]] and [[ "$VAR" ]] vs. [[ -n "$VAR" ]]:
-  -n/-z should be used when $VAR contains a computational result and the other
-  form should be used where $VAR is a functional flag.  For example:
+    * When wrapping between two piped commands, the pipe should be the
+      last character of the former line. For example, prefer:
 
-    VAR=$(grep "^something=" <$SBOPKG_RENAMES)
-    if [[ -z $VAR ]]; then
+          some stuff here foo |
+              bar
 
-    and
+      instead of:
 
-    if [[ $DIAG ]]; then
+          some stuff here foo \
+              | bar
 
-* For indices, use FILE and DIR instead of 'f' and 'd'.  However, 'i' is OK as
-  a counter since that is fairly universal.
+      when possible.
 
-* When deciding whether or not to use the =~ operator in [[ commands, make
-  sure that they work across bash 3.1, 3.2, and 4.0. This means the regexes
-  must be unquoted for bash >=3.2 and still work in bash 3.1 (i.e., no
-  'foo|bar' expressions).
+    * Always use $( ... ) instead of ` ... `.
 
-----------------------------
-Manual Page Style Guidelines
-----------------------------
+    * 'Break' and 'continue' should never be used to influence a loop
+      outside of the function they belong to.
 
-* Separate all text header and section header requests with commented lines of
-  equal (=) signs. Separate all subsections and tagged paragraphs that serve
-  as subsections with commented lines of minus (-) signs.
+    * Avoid indirect recursion (A calls B that calls A).
 
-* Leave no blank lines in the file. E.g., .PP will often serve under .SH and
-  .IP under .TP.
+    * [[ -z "$VAR" ]] vs. [[ ! "$VAR" ]] and [[ "$VAR" ]] vs.
+      [[ -n "$VAR" ]]: -n/-z should be used when $VAR contains a
+      computational result and the other form should be used where $VAR
+      is a functional flag. For example:
 
-* Wrap lines at 72 columns and begin all sentences on new lines.
+          VAR=$(grep "^something=" <$SBOPKG_RENAMES)
+          if [[ -z $VAR ]]; then
 
-* If variables are being used in the sense of their value, use $VAL but if
-  they are being used in reference to themselves, use VAR.
+      and
 
-* Where sensible, try to make .TPs have a consistent indent.
+          if [[ $DIAG ]]; then
 
-* Try to use standard headers where possible, filing other information
-  under subsections of the relevant section header.
+    * For indices, use FILE and DIR instead of 'f' and 'd'. However, 'i'
+      is OK as a counter since that is fairly universal.
 
-* Add options as .TP 5 (or current default), with \- and bold options,
-  followed by italic replaceable arguments to those options or bold literal
-  arguments, if any. Brackets, bars, etc., should be regular font, though.
+    * When deciding whether or not to use the =~ operator in [[
+      commands, make sure that they work across bash 3.1, 3.2, and 4.0.
+      This means the regexes must be unquoted for bash >=3.2 and still
+      work in bash 3.1 (i.e., no 'foo|bar' expressions).
 
-* More generally, italicize filenames, URLs, replaceable terms (including
-  references to unspecified variable values ($VARs)).
+MANUAL PAGE STYLE GUIDELINES
 
-* Embolden variables (when used literally rather than replaceably), option
-  values, programs, program flags, and all references to sbopkg itself.
+    * Separate all text header and section header requests with
+      commented lines of equal (=) signs. Separate all subsections and
+      tagged paragraphs that serve as subsections with commented lines
+      of minus (-) signs.
 
-* Make all option dashes in the form \- (or \-\-) unless in a code example.
+    * Leave no blank lines in the file. E.g., .PP will often serve under
+      .SH and .IP under .TP.
 
-* Try to refer to the user as 'the user' rather than 'you'.
+    * Wrap lines at 72 columns and begin all sentences on new lines.
 
-* Collect all referenced programs (unless used purely as an example) in the
-  SEE ALSO section. (The SEE ALSO section is not *limited* to referenced
-  programs, however.)
+    * If variables are being used in the sense of their value, use $VAL
+      but if they are being used in reference to themselves, use VAR.
 
-* Try to be as specific as conveniently possible, where 'convenient' means to
-  generalize wherever constant updates might be necessary and such
-  generalization wouldn't compromise clarity and accuracy.
+    * Where sensible, try to make .TPs have a consistent indent.
 
-* Use `` and '' for double-quotes so groff does the fancy stuff for ps output.
+    * Try to use standard headers where possible, filing other
+      information under subsections of the relevant section header.
 
-* .EX doesn't seem to be very well supported or necessarily what is wanted -
-  code examples can be done with the following cookie-cutter code:
-    .RS
-    .IP \" or .PP or whatever's appropriate
-    .nf
-    \fCline_of_code\fP
-    .fi
-    .RE
-  If inline, at least embolden them so they're set off in ascii overstrike
-  output.
+    * Add options as .TP 5 (or current default), with \- and bold
+      options, followed by italic replaceable arguments to those options
+      or bold literal arguments, if any. Brackets, bars, etc., should be
+      regular font, though.
 
-  In command line examples, prefix the commands with the root prompt (#).
+    * More generally, italicize filenames, URLs, replaceable terms
+      (including references to unspecified variable values ($VARs)).
 
-* Start configuration file option sections with a statement of type, a
-  description, and the following cookie-cutter code:
-    The default assignment is:
-    .IP
-    \fCdefault_assignment\fP
+    * Embolden variables (when used literally rather than replaceably),
+      option values, programs, program flags, and all references to
+      sbopkg itself.
 
-* Try to refer to SlackBuilds as SlackBuilds rather than SlackBuild scripts
-  unless for a particular need (for instance, explaining what SlackBuilds are
-  in the first place). And once SlackBuilds.org has been properly introduced,
-  try to refer to it as SBo.
+    * Make all option dashes in the form \- (or \-\-) unless in a code
+      example.
+
+    * Try to refer to the user as 'the user' rather than 'you'.
+
+    * Collect all referenced programs (unless used purely as an example)
+      in the SEE ALSO section. (The SEE ALSO section is not *limited* to
+      referenced programs, however.)
+
+    * Try to be as specific as conveniently possible, where 'convenient'
+      means to generalize wherever constant updates might be necessary
+      and such generalization wouldn't compromise clarity and accuracy.
+
+    * Use `` and '' for double-quotes so groff does the fancy stuff for
+      ps output.
+
+    * .EX doesn't seem to be very well supported or necessarily what is
+      wanted - code examples can be done with the following
+      cookie-cutter code:
+
+          .RS
+          .IP \" or .PP or whatever's appropriate
+          .nf
+          \fCline_of_code\fP
+          .fi
+          .RE
+
+      If inline, at least embolden them so they're set off in ascii
+      overstrike output.
+
+      In command line examples, prefix the commands with the root prompt
+      (#).
+
+    * Start configuration file option sections with a statement of type,
+      a description, and the following cookie-cutter code:
+
+          The default assignment is:
+          .IP
+          \fCxxxVARxxx\fP
+
+      ('xxxVARxxx' will be replaced by whatever value VAR has in the
+      default sbopkg.conf file.)
+
+    * Try to refer to SlackBuilds as SlackBuilds rather than SlackBuild
+      scripts unless for a particular need (for instance, explaining
+      what SlackBuilds are in the first place). And once SlackBuilds.org
+      has been properly introduced, try to refer to it as SBo.

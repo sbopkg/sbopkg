@@ -23,21 +23,6 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-#  Slackware is a registered trademark of Patrick Volkerding.
-#  Linux is a registered trademark of Linus Torvalds.
-#
-#  Other contributors:  Bob Lounsbury, Robby Workman, Alan Hicks, Paul
-#  Wisehart, slakmagik, Eric Hameleers, Michiel van Wessem, hba, Erik Hanson,
-#  Antoine, ktabic, Ken Roberts, samac, Bert Babington, Murat D. Kadirov,
-#  The-spiki, David Somero, LukenShiro, Drew Ames, nille, acidchild, mancha,
-#  macavity, Zordrak, João Felipe Santos, cotterochan, necropresto, Pierre
-#  Cazenave, Mauro Giachero, The-Croupier, Wade Grant, TSquaredF, alkos333,
-#  Marco Bonetti and Gregory Tourte.
-#  This script would not be where it is without the help of these folks.
-#  If I left anyone out, I apologize.  Thank you!
-#
-#set -x
 
 dialog_refresh_workaround() {
     # Dialog has refresh problems on some terminals (currently known are some

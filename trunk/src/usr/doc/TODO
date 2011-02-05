@@ -1,27 +1,29 @@
-# $Id$
-# vim:set ft=:
+SBOPKG TODO
 
-Sbopkg TODO (in no particular order)
-* Add in better traps and error checks so a user can safely exit (by pressing
-  Control-C) during the source download or during the package building
-  process.  I have spent a _lot_ of time hacking on this but have not come up
-  with a workable solution yet.  The problem is that many subprocesses are
-  forked off during the package building process and it's difficult to capture
-  all the pids.  If anyone wants to help with this, please let me know.
-  of sbopkg 0.26.0.
-* Include a way to change the sync from rsync to lftp for those who have rsync
-  blocked.
-* Figure out proper way of testing getopts in order to prevent certain cli
-  options from being used together, such as -b and -i.  Right now, there is a
-  crude test to prevent -b and -i from being used together, but I know there
-  is a better way.
-* Add 'long' switches to the cli options, i.e. --build in addition to the
-  current -b switch.  This is pretty low priority, IMHO, and something tells
-  me that getopts does not like long options anyway.
-* Maybe change all instances of 'dialog' to $DIALOG and set $DIALOG to be a
-  variable equal to either 'dialog' or 'xdialog' in case someone wanted to run
-  sbopkg using xdialog.  I don't know how compatible dialog is with xdialog so
-  if there was breakage, I would not want to really address it as being able
-  to use xdialog is not important to me.  I prefer dialog anyway.
-* More error checking.
-* General code cleanups.
+Items should be grouped by {High,Medium,Low} Priorities with sub-groups
+of {Feature,Modification,Bugfix} Categories.
+
+MEDIUM PRIORITY
+
+    Feature Category
+
+        * Allow lftp as a sync method.
+
+    Modification Category
+
+        * Properly test supplied options to ensure that only sensible
+          option combinations are allowed, thus replacing the current
+          crude test which only prevents -b and -i from being used
+          together.
+
+LOW PRIORITY
+
+    Feature Category
+
+        * Replace getopts call with custom option parsing and add 'long'
+          switches to the cli options (for example, '--build' in
+          addition to the current '-b' switch).
+
+        * Replace all calls to dialog with a DIALOG variable (which
+          would still default to dialog), allowing users to more easily
+          try other interfaces.
