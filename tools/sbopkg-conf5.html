@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of SBOPKG.CONF</TITLE>
 </HEAD><BODY>
 <H1>SBOPKG.CONF</H1>
-Section:  (5)<BR>Updated: November 2010<BR><A HREF="#index">Index</A>
+Section:  (5)<BR>Updated: February 2011<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 
@@ -367,7 +367,7 @@ Path.
 <DT><DD>
 This option allows the user to set the location of the local mirrors of
 the remote repositories.
-Currently, the size of a local copy of the SBo repository is about 90MB.
+Currently, the size of a local copy of the SBo repository is about 93M.
 <DT><DD>
 The default assignment is:
 <DT><DD>
@@ -422,21 +422,6 @@ The default assignment is:
 <DT><DD>
 RSYNCFLAGS=&quot;${RSYNCFLAGS:---verbose --timeout=30}&quot;
 
-<DT><B>SBOPKGTMP</B>
-
-<DD>
-Path.
-<DT><DD>
-This option sets the default directory where certain working files
-specific to
-<B>sbopkg</B>
-
-are saved on a temporary basis.
-<DT><DD>
-The default assignment is:
-<DT><DD>
-xxxSBOPKGTMPxxx
-
 <DT><B>SRCDIR</B>
 
 <DD>
@@ -477,6 +462,36 @@ setting is ignored.
 The default assignment is:
 <DT><DD>
 export TMP=${TMP:-/tmp/SBo}
+
+<DT><B>TMPDIR</B>
+
+<DD>
+Path.
+<DT><DD>
+This option sets the default directory where certain working files
+specific to
+<B>sbopkg</B>
+
+are saved on a temporary basis. Note that this variable is actually used
+by
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+mktemp">mktemp</A></B>(1),
+
+and that the actual directory is hardcoded internally to
+<I>sbopkg.XXXXXX</I>
+
+where 'XXXXXX' is a random string.
+This variable determines the containing directory for that.
+If /tmp is not a suitable containing directory, TMPDIR can be assigned
+to on the command line when invoking
+<B>sbopkg</B>
+
+or the variable can be modified in
+<I>sbopkg.conf</I>.
+
+<DT><DD>
+The default assignment is:
+<DT><DD>
+export TMPDIR=${TMPDIR:-/tmp}
 
 <DT><B>WGETFLAGS</B>
 
@@ -745,6 +760,8 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+diff">diff</A></B>(1),
 
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+mktemp">mktemp</A></B>(1),
+
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+rsync">rsync</A></B>(1),
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?8+sbopkg">sbopkg</A></B>(8),
@@ -753,7 +770,7 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+wget">wget</A></B>(1),
 
-<I>/usr/doc/sbopkg-0.34.0/*</I>
+<I>/usr/doc/sbopkg-0.34.1/*</I>
 
 
 <P>
@@ -776,6 +793,6 @@ slakmagik
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 03:40:11 GMT, November 12, 2010
+Time: 04:21:25 GMT, February 05, 2011
 </BODY>
 </HTML>

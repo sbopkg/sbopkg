@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of SBOPKG</TITLE>
 </HEAD><BODY>
 <H1>SBOPKG</H1>
-Section:  (8)<BR>Updated: November 2010<BR><A HREF="#index">Index</A>
+Section:  (8)<BR>Updated: February 2011<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 
@@ -58,7 +58,7 @@ An initial install will provide the user with that file while upgrades
 will add an
 <I>/etc/sbopkg/sbopkg.conf.new</I>
 
-which may be merged with or replace the older version.
+file with which the user may merge or replace the older version.
 See
 <B><A HREF="http://localhost/cgi-bin/man/man2html?5+sbopkg.conf">sbopkg.conf</A></B>(5)
 
@@ -113,7 +113,7 @@ of
 <B>sbopkg</B>.
 
 Currently, the size of a local copy of the SBo repository is about
-about 90MB.
+about 93M.
 The main menu also allows the user to view the SBo
 <I>ChangeLog</I>,
 
@@ -420,13 +420,10 @@ See the
 option for details since, other than the installation, these two options
 operate similarly.
 <DT><DD>
-Note that by carefully considering the order of the packages listed, the
-user may be able to build and install dependencies in the right order
-before the final application is built and installed.
-Of course, given the nature of dependencies, this may not always be
-possible and so building dependencies like this is not really a
-supported feature.
-Still, when it works, it can be helpful.
+Note that by carefully considering the order of the packages listed
+and/or using queuefiles, the user may be able to build and install
+dependencies in the right order before the final application is built
+and installed.
 
 <DT><B>-k</B>
 
@@ -697,7 +694,7 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+vi">vi</A></B>(1),
 
-<I>/usr/doc/sbopkg-0.34.0/*</I>
+<I>/usr/doc/sbopkg-0.34.1/*</I>
 
 
 <P>
@@ -720,6 +717,6 @@ slakmagik
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 03:40:11 GMT, November 12, 2010
+Time: 04:21:25 GMT, February 05, 2011
 </BODY>
 </HTML>

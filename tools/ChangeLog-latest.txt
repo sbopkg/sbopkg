@@ -1,49 +1,44 @@
-Fri Nov 12 03:37:16 UTC 2010
-Sbopkg 0.34.0 released.  This version contains the following fixes and
-enhancements:
+sbopkg 0.34.1 (2011-02-05 04:20 UTC)
 
-  * Revised man pages - these are very different and now document a couple of
-    previously undocumented things and are worth a (re-)read. Thanks to
-    Marie-Claude Collilieux for the French translations of these.
-  * The HACKING file now includes a man page style guide in addition to the
-    coding style guide.
-  * The LOGDIR variable has been removed from sbopkg.conf - DIR can be
-    specified in LOGFILE.
-  * The DEBUG variable has been renamed to DEBUG_UPDATES in sbopkg.conf.
-  * The default timeout values in {WGET,RSYNC}FLAGS have been raised from
-    10/15 to 30 in sbopkg.conf.
-  * All parameters in sbopkg.conf now use default values only if the variable
-    hasn't been previously set (meaning they can all be overridden by passing
-    variables on the command line).
-  * sbopkg.conf has been reordered - this may make any merging that may be
-    needed more interesting this time but hopefully it's worth it.
-  * The directory initialization process has been changed - at first run or
-    otherwise when encountering missing directories, the user will now be
-    presented with a single list of them and a (C)reate/(A)bort prompt.
-  * The command line user interface has been overhauled in terms of more
-    consistent validated command line messages and prompts.
-  * Fix an ARCH display issue in the updates screen; thanks to alkos333, Marc
-    Payne, and David Spencer for confirming the issue and thanks to David
-    Spencer for testing the fix.
-  * Fixed bugs with dzen2 and *zarafa* not downloading/building properly. Note
-    that, while the changes fix these issues and should make it easier to
-    handle similar problems in the future, this change may introduce
-    regressions. If a download or build fails due to a downloaded tarball
-    looking something like 'blah?actual_tarball.tar.gz' or the like, please
-    report it to us.
-  * Fixed bugs with the '-s' option where only the first of multiple
-    arguments would be returned and where the command line select menu was
-    broken. Also where it and the -g flag might inadvertently expand globs
-    wrongly.
-  * It's now possible to specify the b,g,i,s flags multiple times. Previously
-    multiple arguments to these flags had to be quoted (-b "foo bar") but now
-    they can be given as '-b foo -b bar'. The original style is still
-    supported.
-  * With the new style of passing multiple arguments, it is now possible to
-    specify app-specific options on the command line. These take the form of,
-    e.g., '-i app1:opt1="foo bar":opt2=baz app2:opt=mu'. If that's cryptic,
-    see the manual for details.
-  * Users now have the option of interactively retrying a failed https
-    download, invoking wget with '--no-check-certificate', as this can be
-    caused by 'self-signed certificates' and the like.
-+--------------------------+
+    FEATURES
+
+        * Added Spanish translations of the man pages. Much thanks to
+          Pablo Castano Fernandez for doing these translations.
+
+    MODIFICATIONS
+
+        * Revision of documentation. Major reformatting and some textual
+          modifications of /usr/doc/sbopkg-*/* including breaking out
+          the credits in the script into a detailed THANKS file,
+          renaming and reformatting ChangeLog.txt into NEWS, renaming
+          the sample queuefiles from *.sqf to *.sqf.sample, and making
+          lesser modifications to all the other docs.
+
+    BUGFIXES
+
+        * Fixed issue where MKDIR_PROMPT was being ignored. Thanks to
+          catkin for raising this issue.
+
+        * Fixed issue where -o would wrongly produce no output. Thanks
+          to ArTourter for raising this issue and to Mauro Giachero for
+          the patch.
+
+        * Fixed issue where TAG would sometimes not appear in the final
+          package. Thanks to chytraeus for raising this issue.
+
+        * A revision which fixed a failure to properly initialize
+          directories when running under bash 3x was committed but
+          didn't make it into the released package. It is included in
+          this release. Also fixed a problem with a blank line being
+          wrongly displayed in the directory initialization output in
+          older bashes. Thanks to greinze for pointing the latter out.
+
+        * Fixed documentation bug where the obsolete SBOPKGTMP and
+          current TMPDIR variables weren't correctly documented. Thanks
+          to dive for raising this issue.
+
+        * Fixed non-documentation bug where TMPDIR wasn't being
+          correctly assigned when set in sbopkg.conf. Thanks to Ken
+          Roberts for reporting the issue and providing a preliminary
+          fix.
+
