@@ -23,7 +23,7 @@ SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 # /tmp is not a suitable containing directory, pass in an alternate
 # TMPDIR or modify the following variable. This is actually a mktemp(1)
 # variable.
-TMPDIR=${TMPDIR:-/tmp}
+export TMPDIR=${TMPDIR:-/tmp}
 
 # Other variables:
 CLEANUP=${CLEANUP:-NO}
