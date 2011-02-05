@@ -4575,8 +4575,13 @@ fi
 # Check for a good config file and set initial variables
 config_check
 
-SBOPKGTMP=$(mktemp -td sbopkg.XXXXXX) ||
-    { echo "$SCRIPT: failed to create sbopkg's temporary directory"; exit 1; }
+SBOPKGTMP=$(mktemp -td sbopkg.XXXXXX) || {
+cat << EOF
+$SCRIPT: failed to create sbopkg's temporary directory
+Do you need to create the parent directories first?
+EOF
+exit 1
+}
 STARTQUEUE=$SBOPKGTMP/sbopkg-start-queue
 USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
 MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
