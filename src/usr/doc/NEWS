@@ -2,6 +2,11 @@ SBOPKG NEWS
 
 sbopkg xxxVERSIONxxx (xxxDATExxx)
 
+    FEATURES
+
+        * Added Spanish translations of the man pages. Much thanks to
+          Pablo Castano Fernandez for doing these translations.
+
     MODIFICATIONS
 
         * Revision of documentation. Major reformatting and some textual
