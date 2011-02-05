@@ -5,7 +5,7 @@
 # /var/lib/sbopkg/queues directory
 # openshot.sqf
 # mlt-openshot.sqf
-# 
+#
 
 @mlt-openshot.sqf
 frei0r

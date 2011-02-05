@@ -11,7 +11,7 @@ perl-event
 perl-libintl
 lsdvd
 # mplayer is available in /extra for current/13.0
-# You may wish to recompile it to include the ability to read 
+# You may wish to recompile it to include the ability to read
 # encrypted DVDs though. See its SlackBuild for more info.
 -mplayer
 ogmtools
