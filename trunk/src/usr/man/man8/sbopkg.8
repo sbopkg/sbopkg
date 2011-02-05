@@ -33,7 +33,7 @@ to be used, a configuration file must exist at
 An initial install will provide the user with that file while upgrades
 will add an
 .I /etc/sbopkg/sbopkg.conf.new
-which may be merged with or replace the older version.
+file with which the user may merge or replace the older version.
 See
 .BR sbopkg.conf (5)
 for more information about the configuration file.
@@ -301,13 +301,10 @@ See the
 option for details since, other than the installation, these two options
 operate similarly.
 .IP
-Note that by carefully considering the order of the packages listed, the
-user may be able to build and install dependencies in the right order
-before the final application is built and installed.
-Of course, given the nature of dependencies, this may not always be
-possible and so building dependencies like this is not really a
-supported feature.
-Still, when it works, it can be helpful.
+Note that by carefully considering the order of the packages listed
+and/or using queuefiles, the user may be able to build and install
+dependencies in the right order before the final application is built
+and installed.
 .\"---------------------------------------------------------------------
 .TP
 .B \-k
