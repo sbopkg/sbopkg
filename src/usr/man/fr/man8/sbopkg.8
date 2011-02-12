@@ -1,5 +1,5 @@
 .\"=====================================================================
-.TH SBOPKG 8 "xxxDATExxx" sbopkg-SVN ""
+.TH SBOPKG 8 "Février 2011" sbopkg-0.34.1 ""
 .\"=====================================================================
 .SH NAME
 sbopkg \- Le navigateur de paquets SlackBuilds.org
@@ -33,7 +33,7 @@ il faut créer le fichier de configuration
 Une première installation fournit ce fichier à l'utilisateur tandis 
 qu'une mise à jour ajoutera un fichier
 .I /etc/sbopkg/sbopkg.conf.new
-qui pourra remplacer ou être fusionné avec l'ancienne version.
+avec lequel l'utilisateur pourra fusionner ou remplacer l'ancienne version.
 Voir
 .BR sbopkg.conf (5)
 pour plus d'information sur ce fichier de configuration.
@@ -73,8 +73,8 @@ Le menu principal permet à l'utilisateur de se synchroniser avec le
 dépôt de SBo. C'est la première étape (après la configuration) d'une 
 nouvelle installation de
 .BR sbopkg .
-Actuellement la taille d'une copie locale du dépôt SBo est environ de 
-xxxSIZExxx.
+Actuellement la taille d'une copie locale du dépôt SBo vaut environ 
+93Mo.
 Le menu principal permet aussi à l'utilisateur de lire le
 .IR Changelog
 de SBo, de rechercher les mises à jour possibles de paquets SBo,
@@ -205,7 +205,7 @@ Ou
 .RS
 .IP
 .nf
-\fC# sbopkg -b app1:opt1="foo bar":opt2=baz -b app2:opt=mu\fP
+\fC# sbopkg -b app1:opt1="foo bar":opt2=baz -b app2:opt="mu"\fP
 .fi
 .RE
 .IP
@@ -298,17 +298,14 @@ Affiche l'aide.
 Compile et installe les paquets indiqués dans l'argument à partir du 
 dépôt actif.
 .IP
-Pour les dérails, voir l'option
+Pour les détails, voir l'option
 .B \-b
 car mis à part la partie installation, ces deux options fonctionnent de
 la même manière.
 .IP
-À noter qu'en faisant bien attention à l'ordre des paquets, il est 
-possible de compiler et d'installer dans le bon ordre les dépendances 
-avant le programme principal. Bien sûr, selon la nature des dépendances, 
-cela ne sera pas toujours possible, donc cette possibilité ne constitue 
-pas une fonctionnalité garantie.
-Ceci dit, quand ça marche, ça aide bien.
+À noter qu'en faisant bien attention à l'ordre des paquets et/ou en 
+utilisant les queues, il est possible de compiler et d'installer les 
+dépendances dans le bon ordre avant le programme principal. 
 .\"---------------------------------------------------------------------
 .TP
 .B \-k
@@ -507,7 +504,7 @@ slakmagik
 .\"=====================================================================
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<mccnews@free.fr/> le 28\ juillet\ 2010.
+<mccnews@free.fr/> le 11\ février\ 2011.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 
