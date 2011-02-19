@@ -2880,7 +2880,7 @@ get_source() {
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local SBOPKG_PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-    local SRCNAME DL_SRCNAME DL FAILURE MD5CHK i CWD TWGETFLAGS
+    local SRCNAME DL_SRCNAME DL FAILURE MD5CHK i CWD TWGETFLAGS WGETRC
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
@@ -2928,7 +2928,8 @@ get_source() {
             if [[ -z $NO_DL_LOOP ]]; then
                 wget $TWGETFLAGS ${DOWNLOAD[$i]} >> $SBOPKGOUTPUT &
                 echo "$!" >> $SBOPKG_PIDLIST 2>> $SBOPKGOUTPUT
-                wait
+                wait $!
+                WGETRC=$?
             else
                 FAILURE=loop
                 echo "  Download failed. Please report this as a bug." >> \
@@ -2944,7 +2945,7 @@ get_source() {
                 NO_DL_LOOP=1
                 mv "$DL" "$SRCDIR/$DL_SRCNAME"
             else
-                if [[ ${DOWNLOAD[$i]} == https://* &&
+                if [[ $WGETRC == 5 &&
                         $TWGETFLAGS != *no-check-certificate* ]]; then
                     check_cert_prompt && continue
                 fi
