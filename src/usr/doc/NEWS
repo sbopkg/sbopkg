@@ -2,6 +2,21 @@ SBOPKG NEWS
 
 sbopkg xxxVERSIONxxx (xxxDATExxx)
 
+    MODIFICATIONS
+
+        * Updated French man pages. Thanks to Marie-Claude Collilieux.
+
+    BUGFIXES
+
+        * Fixed an issue where URL redirects and SSL certificate check
+          failures could combine to cause a download failure. Thanks to
+          vbatts for raising this issue.
+
+        * Fixed a documentation bug where the ability to keep a
+          ~/.sbopkg.conf file to override the system config file (since
+          0.25.0) wasn't documented anywhere other than this file. It's
+          now in both manuals. Thanks to Bill Kirkpatrick for raising
+          this issue.
 
 sbopkg 0.34.1 (2011-02-05 04:20 UTC)
 
