@@ -14,7 +14,12 @@ collection of third-party SlackBuild scripts to build Slackware
 packages.
 The default configuration file is installed at
 .IR /etc/sbopkg/sbopkg.conf .
-Also, please see the subsection below about
+The user may override any settings in that file by creating
+.IR ~/.sbopkg.conf .
+.PP
+Please see the
+.B NOTES
+section for more information about variables, including
 .BR ARCH .
 .PP
 All boolean options require a
@@ -541,6 +546,9 @@ settings if this is required for the build.
 .TP 3
 .I /etc/sbopkg/sbopkg.conf
 File to specify configuration options.
+.TP
+.I ~/.sbopkg.conf
+File to override system configuration options.
 .TP
 .I /etc/sbopkg/renames.d/50-default
 Default file that lists software in the SBo repository that has been

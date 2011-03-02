@@ -29,14 +29,16 @@ about SlackBuilds is strongly advised.
 In order for
 .B sbopkg
 to be used, a configuration file must exist at
-.IR /etc/sbopkg/sbopkg.conf .
-An initial install will provide the user with that file while upgrades
-will add an
+.I /etc/sbopkg/sbopkg.conf
+and/or
+.IR ~/.sbopkg.conf .
+An initial install will provide the user with the system file while
+upgrades will add an
 .I /etc/sbopkg/sbopkg.conf.new
 file with which the user may merge or replace the older version.
 See
 .BR sbopkg.conf (5)
-for more information about the configuration file.
+for more information about the configuration files.
 .PP
 .B Sbopkg
 must be run as the root user (since the SBo SlackBuilds are written with
@@ -116,9 +118,7 @@ Finally, if
 .B KEEPLOG
 is set to
 .B YES
-in the
-.I sbopkg.conf
-file then a permanent log of the build process is saved.
+in a configuration file, a permanent log of the build process is saved.
 See
 .BR sbopkg.conf (5)
 under
@@ -459,6 +459,9 @@ on stdout.
 .TP 5
 .I /etc/sbopkg/sbopkg.conf
 Default system-wide file to specify configuration options.
+.TP
+.I ~/.sbopkg.conf
+File to override system configuration options.
 .TP
 .I /etc/sbopkg/renames.d/50-default
 Default file that lists software in the SBo repositories that has been
