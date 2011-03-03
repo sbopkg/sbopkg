@@ -1,5 +1,5 @@
 .\"=====================================================================
-.TH SBOPKG.CONF 5 "Février 2011" sbopkg-0.34.1 ""
+.TH SBOPKG.CONF 5 "xxxDATExxx" sbopkg-SVN ""
 .\"=====================================================================
 .SH NAME
 sbopkg.conf \- Fichier de Configuration de sbopkg
@@ -15,7 +15,13 @@ une collection de scripts Slackbuild tiers pour construire des
 packages Slackware.
 Le fichier de configuration par défaut est   
 .IR /etc/sbopkg/sbopkg.conf .
-Lisez aussi, s'il vous plait, la note ci-dessous sur
+L'utilisateur peut remplacer n'importe quel paramètre de ce fichier 
+en créant un fichier 
+.IR ~/.sbopkg.conf .
+.PP
+Lisez aussi, s'il vous plait, la section 
+.B NOTES
+pour plus d'information sur les variables, y compris 
 .BR $ARCH.
 .PP
 Les options booléennes nécessitent un
@@ -553,6 +559,9 @@ si c'est nécessaire pour la compilation.
 .I /etc/sbopkg/sbopkg.conf
 Fichier qui contient les options de configuration.
 .TP
+.I ~/.sbopkg.conf
+Fichier pour remplacer les options de la configuration système.
+.TP
 .I /etc/sbopkg/renames.d/50-default
 Fichier contenant la liste des logiciels du dépôt SBo qui ont été 
 renommés.
@@ -594,7 +603,7 @@ slakmagik
 .\"=====================================================================
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<mccnews@free.fr> le 11\ février\ 2011.
+<mccnews@free.fr> le 03\ mars\ 2011.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 La version anglaise la plus à jour de ce document est toujours 
