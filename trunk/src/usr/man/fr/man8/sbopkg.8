@@ -1,5 +1,5 @@
 .\"=====================================================================
-.TH SBOPKG 8 "Février 2011" sbopkg-0.34.1 ""
+.TH SBOPKG 8 "xxxDATExxx" sbopkg-SVN ""
 .\"=====================================================================
 .SH NAME
 sbopkg \- Le navigateur de paquets SlackBuilds.org
@@ -29,14 +29,16 @@ et les pages traitant des scripts SlackBuild sur
 Avant de pouvoir utiliser 
 .BR sbopkg ,
 il faut créer le fichier de configuration 
-.IR /etc/sbopkg/sbopkg.conf .
-Une première installation fournit ce fichier à l'utilisateur tandis 
-qu'une mise à jour ajoutera un fichier
+.I /etc/sbopkg/sbopkg.conf .
+et / ou
+.IR ~/.sbopkg.conf .
+Une première installation fournit le fichier système à l'utilisateur 
+tandis qu'une mise à jour ajoutera un fichier
 .I /etc/sbopkg/sbopkg.conf.new
 avec lequel l'utilisateur pourra fusionner ou remplacer l'ancienne version.
 Voir
 .BR sbopkg.conf (5)
-pour plus d'information sur ce fichier de configuration.
+pour plus d'information sur les fichiers de configuration.
 .PP
 .B Sbopkg
 doit être lancé en tant que root (les Slackbuilds SBo sont écrits pour 
@@ -118,8 +120,7 @@ Finalement, si la variable
 .B KEEPLOG
 vaut
 .B YES
-dans le fichier 
-.I sbopkg.conf
+dans un fichier de configuration, 
 un journal permanent des opérations de compilation est sauvegardé.
 Voir dans
 .BR sbopkg.conf (5)
@@ -461,7 +462,10 @@ sur la sortie standard.
 .SH FICHIERS
 .TP 5
 .I /etc/sbopkg/sbopkg.conf
-Fichier par défaut qui contient les options de configuration.
+Fichier système par défaut qui contient les options de configuration.
+.TP
+.I ~/.sbopkg.conf
+Fichier pour remplacer les options de configuration système.
 .TP
 .I /etc/sbopkg/renames.d/50-default
 Fichier par défaut contenant la liste des logiciels du dépôt SBo qui 
@@ -504,7 +508,7 @@ slakmagik
 .\"=====================================================================
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<mccnews@free.fr/> le 11\ février\ 2011.
+<mccnews@free.fr/> le 03\ mars\ 2011.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 
