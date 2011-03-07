@@ -362,10 +362,20 @@ options is minimized.
 .\"---------------------------------------------------------------------
 .TP
 .B \-R
-Show all the
+When combined with
+.B -b
+or
+.BR -i ,
+view the
 .I README
-files of the queued packages before starting the build.
-This is useful when the user wants to make a final check.
+files of the packages to be built/installed before starting the build
+process.
+This is useful for making a final check.
+When combined with
+.BR -p ,
+view the
+.I README
+files of all installed packages from the active repo.
 .\"---------------------------------------------------------------------
 .TP
 .B \-r
