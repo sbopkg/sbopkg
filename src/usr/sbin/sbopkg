@@ -443,12 +443,13 @@ selection_state() {
     # may reverse the selected items in the checklist. The first argument
     # determines which is done ('reverse' to reverse, anything else to
     # preserve the selection state) while the second argument is the file the
-    # widget uses for input and the third is the file which reflects the
-    # user's selections.
+    # widget uses for input (to display the widget items) and the third is the
+    # file the widget uses for output (which reflects the user's selections).
 
     local ACTION=$1
     local MENU_FILE=$2
     local SELECTION_FILE=$3
+    local LINE
 
     sed -i 's/ON$/OFF/' $MENU_FILE
     while read LINE; do
@@ -456,7 +457,7 @@ selection_state() {
     done < $SELECTION_FILE
 
     if [[ $1 == reverse ]]; then
-        sed -i 's/ON$/HOLD/;s/OFF/ON/' $MENU_FILE
+        sed -i 's/ON$/HOLD/;s/OFF$/ON/' $MENU_FILE
         sed -i 's/HOLD$/OFF/' $MENU_FILE
     fi
 }
@@ -1463,8 +1464,7 @@ browse_categories() {
 view_cache_dir() {
     # This function displays the contents of $SRCDIR.
 
-    ls -A $SRCDIR | sed "s/^\(.*\)$/\"\\1\"/g" \
-        > $SBOPKGTMP/sbopkg_app_sources
+    ls -A $SRCDIR | sed 's/.*/"&"/g' > $SBOPKGTMP/sbopkg_app_sources
     remove_files $SRCDIR "sources" $SBOPKGTMP/sbopkg_app_sources OFF
 }
 
@@ -3102,7 +3102,7 @@ remove_obsolete_sources() {
     fi
 
     # Quote file names
-    sed -i "s/^\(.*\)$/\"\\1\"/" $SOURCES
+    sed -i 's/.*/"&"/' $SOURCES
 
     remove_files $SRCDIR "obsolete sources" $SOURCES ON
 }
@@ -3124,29 +3124,6 @@ remove_uninstalled_packages() {
     remove_files $OUTPUT "uninstalled packages" $PACKAGES ON
 }
 
-reverse_choices() {
-    # Reverses ON or OFF setting in a file for dialog purposes.
-    # $1 is the file
-
-    local REVERSE_FILE="$1"
-    local TMPREVERSE=$SBOPKGTMP/sbopkg_tmp_reverse
-    local PICK ONOFF
-
-    rm -f $TMPREVERSE
-    # Reading from $REVERSE_FILE
-    while read PICK; do
-        ONOFF=$(sed 's:^.* \([^ ]*\)$:\1:' <<< "$PICK")
-        if [[  $ONOFF =~ [oO][nN] ]]; then
-            PICK=${PICK/%[oO][nN]/OFF}
-            echo $PICK >> $TMPREVERSE
-        else
-            PICK=${PICK/%[oO][fF][fF]/ON}
-            echo $PICK >> $TMPREVERSE
-        fi
-    done < $REVERSE_FILE
-    mv $TMPREVERSE $REVERSE_FILE
-}
-
 remove_files() {
     # Selectively remove files, after showing a checklist of them.
     # The file names (specified in $3) _must_ be quoted.
@@ -3165,32 +3142,28 @@ remove_files() {
 
     cd $FILESPATH
     if [[ -s $FILES ]]; then
-        sed "s/^\(.*\)$/\\1 \"\" $ONOFF/g" < $FILES |
-            sort > $FILES_CHECKLIST
+        sed "s/.*/& \"\" $ONOFF/g" $FILES | sort > $FILES_CHECKLIST
         if [[ $DIAG ]]; then
             while :; do
-                dialog --title "$(crunch "Displaying $TOPIC")" \
-                    --ok-label "OK" --extra-label "Delete selected" \
-                    --cancel-label "Invert all" --extra-button \
-                    --separate-output --checklist "$(crunch "Would you like \
-                    to keep the $TOPIC in $FILESPATH?")"\
-                    20 60 12 \
-                    --file $FILES_CHECKLIST 2> $FILES_DELETING
-                CHOICE=$? # 0=Ok, 1=Invert all, 3=Delete
+                dialog --separate-output --defaultno \
+                    --title "Displaying $TOPIC" \
+                    --extra-button --extra-label "Invert Sel" \
+                    --checklist "Delete the $TOPIC in $FILESPATH?" \
+                    20 60 12 --file $FILES_CHECKLIST 2> $FILES_DELETING
+                CHOICE=$? # 0=Ok, 3=Invert Sel
+                selection_state preserve $FILES_CHECKLIST $FILES_DELETING
                 case $CHOICE in
-                    255|-1) # ESC
-                        rm -f $FILES_CHECKLIST $FILES_DELETING
-                        return 0
-                        ;;
                     0)
-                        return 0
-                        ;;
-                    1)
-                        reverse_choices $FILES_CHECKLIST
-                        ;;
-                    3)
                         DELETE=1
                         break
+                        ;;
+                    3)
+                        selection_state reverse $FILES_CHECKLIST \
+                            $FILES_DELETING
+                        ;;
+                    *)
+                        rm -f $FILES_CHECKLIST $FILES_DELETING
+                        return 0
                         ;;
                 esac
             done
@@ -3223,7 +3196,7 @@ remove_files() {
         fi
     else
         if [[ $DIAG ]]; then
-            dialog --title "ERROR" --msgbox "$(crunch "It appears there are \
+            dialog --title "NOTICE" --msgbox "$(crunch "It appears there are \
                 no $TOPIC in $FILESPATH.")" 8 30
         else
             echo "$(crunch "It appears there are no $TOPIC in $FILESPATH.")"
