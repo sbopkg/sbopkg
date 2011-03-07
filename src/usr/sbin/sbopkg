@@ -450,30 +450,36 @@ list_packages() {
         -printf "%P\n" 2> /dev/null | sort > $PKG_LIST
     if [[ -s $PKG_LIST ]]; then
         if [[ $DIAG ]]; then
-            sed 's/$/ "" OFF/' $PKG_LIST > $PKG_CHECKLIST
-            dialog --separate-output --title "Installed $REPO_NAME Packages" \
-                --extra-button --extra-label "View READMEs" \
-                --checklist "Check any packages you wish to uninstall" \
-                20 65 13 --file $PKG_CHECKLIST 2> $REMOVE_LIST
-            case $? in
-                0)
-                    if [[ -s $REMOVE_LIST ]]; then
-                        sed 's/$/ "" ON/' $REMOVE_LIST > $CONFIRM_LIST
-                        dialog --separate-output --defaultno \
-                            --title "Removepkg confirmation" \
-                            --checklist "Remove the following packages?" 20 65 13 \
-                            --file $CONFIRM_LIST 2> $REMOVE_LIST
-                        if [[ $? == 0 ]]; then
-                            removepkg $(cat $REMOVE_LIST)
-                            read -n1 -ep "Press any key to continue: "
+            while :; do
+                sed 's/$/ "" OFF/' $PKG_LIST > $PKG_CHECKLIST
+                dialog --separate-output --title "Installed $REPO_NAME Packages" \
+                    --extra-button --extra-label "View READMEs" \
+                    --checklist "Check any packages you wish to remove." \
+                    20 65 13 --file $PKG_CHECKLIST 2> $REMOVE_LIST
+                case $? in
+                    0)
+                        if [[ -s $REMOVE_LIST ]]; then
+                            sed 's/$/ "" ON/' $REMOVE_LIST > $CONFIRM_LIST
+                            dialog --separate-output --defaultno \
+                                --title "Removepkg confirmation" \
+                                --checklist "Remove the following packages?" 20 65 13 \
+                                --file $CONFIRM_LIST 2> $REMOVE_LIST
+                            if [[ $? == 0 ]]; then
+                                removepkg $(cat $REMOVE_LIST)
+                                read -n1 -ep "Press any key to continue: "
+                                break
+                            fi
+                        else
+                            break
                         fi
-                    fi
-                    ;;
-                3)
-                    nvabt2n $PKG_LIST $README_LIST
-                    view_readmes "Installed packages:" $README_LIST
-                    ;;
-            esac
+                        ;;
+                    3)
+                        nvabt2n $PKG_LIST $README_LIST
+                        view_readmes "Installed packages:" $README_LIST
+                        ;;
+                    *) break ;;
+                esac
+            done
         else
             $PAGER $PKG_LIST
         fi
