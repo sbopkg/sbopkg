@@ -436,8 +436,45 @@ nvabt2n() {
     done < $INPUT
 }
 
+selection_state() {
+    # When a dialog checklist widget is created, it uses a file for input.
+    # When the user modifies the checklist, the widget's input file is not
+    # modified to reflect this. This function makes this modification. It also
+    # may reverse the selected items in the checklist. The first argument
+    # determines which is done ('reverse' to reverse, anything else to
+    # preserve the selection state) while the second argument is the file the
+    # widget uses for input and the third is the file which reflects the
+    # user's selections.
+
+    local ACTION=$1
+    local MENU_FILE=$2
+    local SELECTION_FILE=$3
+
+    sed -i 's/ON$/OFF/' $MENU_FILE
+    while read LINE; do
+        sed -i "/$LINE/s/OFF$/ON/" $MENU_FILE
+    done < $SELECTION_FILE
+
+    if [[ $1 == reverse ]]; then
+        sed -i 's/ON$/HOLD/;s/OFF/ON/' $MENU_FILE
+        sed -i 's/HOLD$/OFF/' $MENU_FILE
+    fi
+}
+
+mk_pkg_lists() {
+    # Get a list of $REPO_TAG packages and generate two lists from them. At
+    # least for right now, this is purely an auxilary function called from
+    # list_packages().
+
+    find /var/log/packages -type f -name "*$REPO_TAG" \
+        -printf "%P\n" 2> /dev/null | sort > $PKG_LIST
+    sed 's/$/ "" OFF/' $PKG_LIST > $PKG_CHECKLIST
+    nvabt2n $PKG_LIST $README_LIST
+}
+
 list_packages() {
-    # Get a list of SBo packages.
+    # Display installed packages with options to remove them or view their
+    # READMEs.
 
     local PKG_LIST=$SBOPKGTMP/sbopkg_pkg_list
     local PKG_CHECKLIST=$SBOPKGTMP/sbopkg_pkg_checklist
@@ -445,18 +482,17 @@ list_packages() {
     local REMOVE_LIST=$SBOPKGTMP/sbopkg_remove_list
     local CONFIRM_LIST=$SBOPKGTMP/sbopkg_confirm_list
 
-    rm -f $PKG_LIST
-    find /var/log/packages -type f -name "*$REPO_TAG" \
-        -printf "%P\n" 2> /dev/null | sort > $PKG_LIST
+    mk_pkg_lists
     if [[ -s $PKG_LIST ]]; then
         if [[ $DIAG ]]; then
             while :; do
-                sed 's/$/ "" OFF/' $PKG_LIST > $PKG_CHECKLIST
                 dialog --separate-output --title "Installed $REPO_NAME Packages" \
                     --extra-button --extra-label "View READMEs" \
                     --checklist "Check any packages you wish to remove." \
                     20 65 13 --file $PKG_CHECKLIST 2> $REMOVE_LIST
-                case $? in
+                CHOICE=$?
+                selection_state preserve $PKG_CHECKLIST $REMOVE_LIST
+                case $CHOICE in
                     0)
                         if [[ -s $REMOVE_LIST ]]; then
                             sed 's/$/ "" ON/' $REMOVE_LIST > $CONFIRM_LIST
@@ -466,15 +502,14 @@ list_packages() {
                                 --file $CONFIRM_LIST 2> $REMOVE_LIST
                             if [[ $? == 0 ]]; then
                                 removepkg $(cat $REMOVE_LIST)
+                                mk_pkg_lists
                                 read -n1 -ep "Press any key to continue: "
-                                break
                             fi
                         else
                             break
                         fi
                         ;;
                     3)
-                        nvabt2n $PKG_LIST $README_LIST
                         view_readmes "Installed packages:" $README_LIST
                         ;;
                     *) break ;;
