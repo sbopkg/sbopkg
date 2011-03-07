@@ -424,31 +424,31 @@ EOF
 list_packages() {
     # Get a list of SBo packages.
 
-    local SBOPKGLIST=$SBOPKGTMP/sbopkg_pkglist
-    local REMOVELIST=$SBOPKGTMP/sbopkg_removelist
-    local CONFIRMLIST=$SBOPKGTMP/sbopkg_confirmlist
+    local PKG_LIST=$SBOPKGTMP/sbopkg_pkg_list
+    local REMOVE_LIST=$SBOPKGTMP/sbopkg_remove_list
+    local CONFIRM_LIST=$SBOPKGTMP/sbopkg_confirm_list
 
-    rm -f $SBOPKGLIST
+    rm -f $PKG_LIST
     find /var/log/packages -type f -name "*$REPO_TAG" \
-        -printf "%P\n" 2> /dev/null | sort > $SBOPKGLIST
-    if [[ -s $SBOPKGLIST ]]; then
+        -printf "%P\n" 2> /dev/null | sort > $PKG_LIST
+    if [[ -s $PKG_LIST ]]; then
         if [[ $DIAG ]]; then
-            sed -i 's/$/ "" OFF/' $SBOPKGLIST
+            sed -i 's/$/ "" OFF/' $PKG_LIST
             dialog --separate-output --title "Installed $REPO_NAME Packages" --checklist \
                 "Check any packages you wish to uninstall" 20 65 13 \
-                --file $SBOPKGLIST 2> $REMOVELIST
-            if [[ -s $REMOVELIST ]]; then
-                sed 's/$/ "" ON/' $REMOVELIST > $CONFIRMLIST
+                --file $PKG_LIST 2> $REMOVE_LIST
+            if [[ -s $REMOVE_LIST ]]; then
+                sed 's/$/ "" ON/' $REMOVE_LIST > $CONFIRM_LIST
                 dialog --defaultno --title "Removepkg confirmation" \
                     --checklist "Remove the following packages?" 20 65 13 \
-                    --file $CONFIRMLIST 2> $REMOVELIST
+                    --file $CONFIRM_LIST 2> $REMOVE_LIST
                 if [[ $? == 0 ]]; then
-                    removepkg $(tr -d \" < $REMOVELIST)
+                    removepkg $(tr -d \" < $REMOVE_LIST)
                     read -n1 -ep "Press any key to continue: "
                 fi
             fi
         else
-            $PAGER $SBOPKGLIST
+            $PAGER $PKG_LIST
         fi
     else
         if [[ $DIAG ]]; then
@@ -457,7 +457,7 @@ list_packages() {
                 installed.")" 8 40
         fi
     fi
-    rm -f $SBOPKGLIST $REMOVELIST $CONFIRMLIST
+    rm -f $PKG_LIST $REMOVE_LIST $CONFIRM_LIST
 }
 
 progressbar_cli() {
