@@ -2,6 +2,12 @@ SBOPKG NEWS
 
 sbopkg xxxVERSIONxxx (xxxDATExxx)
 
+    FEATURES
+
+        * The READMEs of all installed packages can now be read from the
+          main menu's list/uninstall item. (Selection state will also
+          now be remembered.) Thanks to dmotaleite for the RFE.
+
     MODIFICATIONS
 
         * Updated French man pages. Thanks to Marie-Claude Collilieux.
@@ -17,6 +23,13 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           0.25.0) wasn't documented anywhere other than this file. It's
           now in both manuals. Thanks to Bill Kirkpatrick for raising
           this issue.
+
+        * Fixed an issue where 'Invert all' in file removal dialogs
+          didn't 'invert' but turned everything on or off, regardless of
+          selection state. If it was really intended to be
+          'Select/Deselect all', then changing the button to "Invert
+          Sel" and making it do that was a feature/modification instead
+          of a bugfix. ;)
 
 sbopkg 0.34.1 (2011-02-05 04:20 UTC)
 
