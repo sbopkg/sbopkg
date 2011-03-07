@@ -453,7 +453,7 @@ selection_state() {
 
     sed -i 's/ON$/OFF/' $MENU_FILE
     while read LINE; do
-        sed -i "/$LINE/s/OFF$/ON/" $MENU_FILE
+        sed -i "/^$LINE /s/OFF$/ON/" $MENU_FILE
     done < $SELECTION_FILE
 
     if [[ $1 == reverse ]]; then
