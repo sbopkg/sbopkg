@@ -421,7 +421,7 @@ EOF
     fi
 }
 
-get_sbo_packages() {
+list_packages() {
     # Get a list of SBo packages.
 
     local SBOPKGLIST=$SBOPKGTMP/sbopkg_pkglist
@@ -4318,7 +4318,7 @@ main_menu() {
             "ChangeLog" )
                 show_changelog ;;
             "Packages" )
-                get_sbo_packages ;;
+                list_packages ;;
             "Updates" )
                 main_updates ;;
             "Browse" )
@@ -4749,7 +4749,7 @@ else
     fi
 
     if [[ $GETPKGS ]]; then
-        get_sbo_packages
+        list_packages
     fi
 
     if [[ $SYNC ]]; then
