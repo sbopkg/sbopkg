@@ -2107,7 +2107,6 @@ view_queue() {
     # Returns 0 if the user choose OK, nonzero otherwise
 
     local ANSQUEUE=$SBOPKGTMP/sbopkg-ans-queue
-    local WORKINGQUEUE=$SBOPKGTMP/sbopkg-working-queue
     local ORIGINALQUEUE=$SBOPKGTMP/sbopkg-original-queue
     local CHOICE
 
@@ -2131,17 +2130,7 @@ view_queue() {
         # Strip that damn "HELP " text when choosing the HELP dialog button
         [[ $CHOICE -eq 2 ]] && sed -i 's:^HELP ::g' $ANSQUEUE
 
-        rm -f $WORKINGQUEUE
-        # Reading from $TMPQUEUE...
-        while read PICK; do
-            TESTAPP="${PICK// */}"
-            if grep -qx "$TESTAPP" $ANSQUEUE; then
-                sed 's/OFF$/ON/' <<< "$PICK" >> $WORKINGQUEUE
-            else
-                sed 's/ON$/OFF/' <<< "$PICK" >> $WORKINGQUEUE
-            fi
-        done < $TMPQUEUE
-        mv $WORKINGQUEUE $TMPQUEUE
+        selection_state preserve $TMPQUEUE $ANSQUEUE
 
         case $CHOICE in
             0) # OK
@@ -2155,7 +2144,7 @@ view_queue() {
                 ;;
             *) # Cancel or ESC
                 mv $ORIGINALQUEUE $TMPQUEUE
-                rm -f $WORKINGQUEUE $ANSQUEUE
+                rm -f $ANSQUEUE
                 return 1
                 ;;
         esac
