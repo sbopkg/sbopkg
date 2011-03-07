@@ -2083,7 +2083,7 @@ view_queue() {
                 uncheck_installed $TMPQUEUE
                 ;;
             3) # View READMEs
-                view_queue_readmes
+                view_readmes
                 ;;
             *) # Cancel or ESC
                 mv $ORIGINALQUEUE $TMPQUEUE
@@ -2094,7 +2094,7 @@ view_queue() {
     done
 }
 
-view_queue_readmes() {
+view_readmes() {
     # Show a list of all README files for the queued (TMPQUEUE) packages.
 
     local READMES_FILE=$SBOPKGTMP/sbopkg-all-readmes
@@ -4699,7 +4699,7 @@ else
         fi
         # Preview READMEs
         if [[ $PREVIEW_READMES ]]; then
-            view_queue_readmes
+            view_readmes
             echo
             while :; do
                 read $NFLAG -ep "(C)ontinue processing or (Q)uit?: "
