@@ -2083,7 +2083,7 @@ view_queue() {
                 uncheck_installed $TMPQUEUE
                 ;;
             3) # View READMEs
-                view_readmes
+                view_readmes "The active queue is:" $TMPQUEUE
                 ;;
             *) # Cancel or ESC
                 mv $ORIGINALQUEUE $TMPQUEUE
@@ -2095,23 +2095,28 @@ view_queue() {
 }
 
 view_readmes() {
-    # Show a list of all README files for the queued (TMPQUEUE) packages.
+    # Show a list of all README files for $INPUT. Takes two arguments, the
+    # first of which will serve as header text and the second of which
+    # specifies the input (list of packages whose READMEs are to be
+    # displayed).
 
+    local HEADER_STRING=$1
+    local INPUT=$2
     local READMES_FILE=$SBOPKGTMP/sbopkg-all-readmes
     local HEAD_FILE=$SBOPKGTMP/sbopkg-all-readmes-head
     local REPORT_FILE=$SBOPKGTMP/sbopkg-all-readmes-report
-    local NAME ONOFF
-    local PICK READMES
+    local NAME ONOFF PICK READMES
 
     READMES=$(find $REPO_DIR -name README)
 
-    echo -e "The active queue is:\n" > $HEAD_FILE
+    printf "$HEADER_STRING\n" > $HEAD_FILE
 
     while read PICK; do
         NAME=${PICK/ *}
         ONOFF=${PICK/* }
 
-        if [[ $ONOFF =~ [Oo][Nn] ]]; then
+        # if not reading from TMPQUEUE, just pass everything through
+        if [[ $ONOFF =~ ^[Oo][Nn]$ ]] || [[ $INPUT != $TMPQUEUE ]]; then
             echo $NAME >> $HEAD_FILE
         else
             echo "$NAME (DISABLED)" >> $HEAD_FILE
@@ -2122,13 +2127,13 @@ view_readmes() {
         tin_text $NAME >> $READMES_FILE
         echo >> $READMES_FILE
         cat $(grep /$NAME/README\$ <<< "$READMES") >> $READMES_FILE
-    done < $TMPQUEUE
+    done < $INPUT
 
     tin_text "$(< $HEAD_FILE)" > $REPORT_FILE
     cat $READMES_FILE >> $REPORT_FILE
 
     if [[ $DIAG ]]; then
-        dialog --exit-label "OK" --title "READMEs for the queued packages" \
+        dialog --exit-label "OK" --title "Showing READMEs" \
             --textbox $REPORT_FILE 0 0
     else
         $PAGER $REPORT_FILE
@@ -4699,7 +4704,7 @@ else
         fi
         # Preview READMEs
         if [[ $PREVIEW_READMES ]]; then
-            view_readmes
+            view_readmes "The active queue is:" $TMPQUEUE
             echo
             while :; do
                 read $NFLAG -ep "(C)ontinue processing or (Q)uit?: "
