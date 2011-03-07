@@ -8,6 +8,9 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           main menu's list/uninstall item. (Selection state will also
           now be remembered.) Thanks to dmotaleite for the RFE.
 
+        * Similarly, the -R and -p flags can now be combined to page
+          through the READMEs of all installed packages.
+
     MODIFICATIONS
 
         * Updated French man pages. Thanks to Marie-Claude Collilieux.

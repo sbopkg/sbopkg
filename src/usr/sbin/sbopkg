@@ -517,7 +517,11 @@ list_packages() {
                 esac
             done
         else
-            $PAGER $PKG_LIST
+            if [[ $VIEW_READMES ]]; then
+                view_readmes "Installed packages:" $README_LIST
+            else
+                $PAGER $PKG_LIST
+            fi
         fi
     else
         if [[ $DIAG ]]; then
@@ -4418,7 +4422,7 @@ unset ALLOW_MULTI     # If set, allow more that one instance of sbopkg running
 unset BUILDLIST       # List of packages to build/install (from CLI)
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
-unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED PREVIEW_READMES
+unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED VIEW_READMES
 unset UNINSTPKG
 
 SCRIPT=${0##*/}
@@ -4522,7 +4526,7 @@ while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             unset DIAG
             ;;
         R ) # Preview the READMEs before building
-            PREVIEW_READMES=1
+            VIEW_READMES=1
             unset DIAG
             ;;
         s ) # Name search
@@ -4564,7 +4568,10 @@ Options are:
   -q              Quiet some of the command-line output.
   -r              Sync the remote repository with the local mirror and then
                   quit.
-  -R              Preview the READMEs before starting the build process.
+  -R              When combined with -b or -i, preview the READMEs of the
+                  packages to be built/installed before starting the build
+                  process. When combined with -p, show the READMEs of all
+                  installed packages from the active repo.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
@@ -4733,7 +4740,7 @@ else
             uncheck_installed $TMPQUEUE
         fi
         # Preview READMEs
-        if [[ $PREVIEW_READMES ]]; then
+        if [[ $VIEW_READMES ]]; then
             view_readmes "The active queue is:" $TMPQUEUE
             echo
             while :; do
