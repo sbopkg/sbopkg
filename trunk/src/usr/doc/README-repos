@@ -1,17 +1,17 @@
-README-repos.d
+README-repos
 
-In sbopkg parlance, a "repository" is a local or remote service used as
-a source of SlackBuilds. For example, slackbuilds.org is a repository.
-The builds.slamd64.com project is another repository. Every repository
-has one or more "branches". Branches consist of a single tree of scripts
-in a category/application hierarchy. For example, slackbuilds.org has a
-11.0 branch, a 12.0 branch and so on.
+In sbopkg terminology, a "repository" (or "repo") is a local or remote
+service used as a source of SlackBuilds. For example, slackbuilds.org is
+a repository. The builds.slamd64.com project is another repository.
+Every repository has one or more "branches". Branches consist of a
+single tree of scripts in a category/application hierarchy. For example,
+slackbuilds.org has an 11.0 branch, a 12.0 branch and so on.
 
-/etc/sbopkg/repos.d is a directory containing files defining the
-repositories and branches sbopkg will use. All *.repo files are scanned
-in alphabetical order. Every line in a *.repo file defines a branch
-except those _containing_ a '#' which are ignored. Lines containing
-backslashes (\) are not allowed.
+The repos and their branches that sbopkg will use are defined in a set
+of files which are stored in /etc/sbopkg/repos.d. All *.repo files are
+scanned in alphanumeric order. Every line in a *.repo file defines a
+branch except those _containing_ a '#' which are ignored. Lines
+containing backslashes (\) are not allowed.
 
 Each line contains the following seven fields (if a field is not
 applicable, it still _must_ be present in the form of an empty quote

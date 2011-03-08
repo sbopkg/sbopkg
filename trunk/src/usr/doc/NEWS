@@ -15,6 +15,13 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
 
         * Updated French man pages. Thanks to Marie-Claude Collilieux.
 
+        * Revised documentation: renamed the README-*.d documents,
+          stripping the '.d'. Clarified/updated the dialog nav/certcheck
+          sections of KNOWN_ISSUES, brought the missing 0.27.0 and
+          0.33.1 branch changes from their ChangeLogs into NEWS, added a
+          block in README describing all the plain text documents, added
+          a note about making corrections to THANKS, etc.
+
     BUGFIXES
 
         * Fixed an issue where URL redirects and SSL certificate check
@@ -142,6 +149,10 @@ sbopkg 0.34.0 (2010-11-12 03:37 UTC)
     * Users now have the option of interactively retrying a failed https
       download, invoking wget with '--no-check-certificate', as this can
       be caused by 'self-signed certificates' and the like.
+
+sbopkg 0.33.2 (2010-07-20 02:10 UTC)
+
+    * fix security issue involving unsafe creation of temp{dir,file}
 
 sbopkg 0.33.1 (2010-05-27 18:13 UTC)
 
@@ -506,6 +517,81 @@ sbopkg 0.30.0 (2009-08-24 17:28 UTC)
     * Add ability to 'invert' all selected/deselected in the clear cache
       and obsolete sources and packages dialogs; thanks to dive for the
       suggestion.
+
+sbopkg 0.27.4 (2009-06-24 16:13 UTC)
+
+    * Fix rare issue where incorrect file was upgraded; thanks to neonflux for
+      the bug report.
+
+    * Fix issue where custom build options may not be correctly exported.
+
+    * Improve cleanup after building or installing a package.
+
+sbopkg 0.27.3 (2009-06-15 00:51 UTC)
+
+    * Add museek-plus->museek+ to sbopkg-renames.new.
+
+    * Modify the source fetching code to check the md5sum also of cached
+      sources, to fix problems arising with those programs whose source archive
+      doesn't change name on version updates. Thanks to David Spencer for
+      raising the issue.
+
+    * Exit edit_build_queue menu with 'ESC'; thanks to Nille for the bug report.
+
+    * Modify do_install() to correctly invoke upgradepkg to avoid a fairly rare
+      but serious case of removing the wrong package; thanks to NaCl for the
+      bug report.
+
+sbopkg 0.27.2 (2009-04-30 14:36 UTC)
+
+    * Remove a stale 'find' call, which slightly improves the update feature.
+
+    * Add acroread->adobe-reader and GNOME-Colors->gnome-colors to
+      sbopkg-renames.new.
+
+    * Display a message when no packages are installed instead of doing nothing.
+
+    * Properly quote the current working directory variable in the event there
+      are spaces in the directory name.
+
+    * Fix a bug where 'sbopkg -c -v local' would display a dialog even though
+      running in cli mode.
+
+    * Fix issue where the 'games' directory was non-browsable due to a
+      slack-desc file containing double-quotes in the first line; thanks to
+      Glenn Becker for the original bug report.
+
+sbopkg 0.27.1 (2009-04-07 13:32 UTC)
+
+    * Remove some useless code from check_for_latest and also fix the
+      download folder for sbopkg updates.  Thanks to David Somero for the bug
+      report.
+
+    * Re-implement the code that checks for renamed software; fix upgrading
+      of renamed packages; thanks to Phillip Warner for raising the issues
+      with the older code; add wbxml2->libwbxml to sbopkg-renames; thanks to
+      Mauro Giachero for working on these fixes.
+
+    * Fix a tr invocation issue where in certain instances, sbopkg would not run
+      from certain directories; thanks to Marie-Claude Collilieux for the bug
+      report.
+
+    * Alter sed expression in download code to work around calcurse filename
+      idiosyncrasy; thanks to Glenn Becker for the bug report.
+
+    * Move French man pages into correct /usr/man/fr* location and remove them
+      from the /docs directory; update French man pages; thanks to
+      Marie-Claude Collilieux.
+
+    * Fix a problem with the Pre-Check Log dialog being non-scrollable and
+      having a visual glitch. Thanks to Erik Hanson for the bug report.
+
+    * Remove a problem where the "Using the queuefile QUEUEFILE" messages could
+      be incorrect.
+
+    * Fix a possible infinite loop when building in CLI mode.
+
+    * Fix an issue with an ncurses check and the cleanup() function.
 
 sbopkg 0.27.0 (2009-02-26 14:48 UTC)
 

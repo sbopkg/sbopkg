@@ -3,9 +3,12 @@ SBOPKG THANKS
 The following people have contributed to the development of sbopkg. They
 are generally listed by the revision number the effect of their first
 contribution entered the trunk, followed by their alternate name(s) (if
-any), and the type(s) of contributions. This script would not be where
-it is without the help of these folks. If we left anyone out, we
-apologize. Thank you!
+any), and the type(s) of contributions. If we left anyone out or
+mischaracterized anything, we apologize. Report it to us and, if we can
+find a record of it, we'll fix it.
+
+This script would not be where it is without the help of these folks.
+Thank you!
 
    1 Chess Griffin (project initiation, bug reports, suggestions, code)
   14 Bob Lounsbury (suggestion)
