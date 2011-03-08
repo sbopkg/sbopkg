@@ -3,14 +3,12 @@ SBOPKG KNOWN ISSUES
 The following are the known user-visible issues in sbopkg or upstream in
 the tools it uses:
 
-* In dialog '--inputbox' widgets (the boxes the user types text into)
-  the left/right arrows do not navigate in a button context. (They do
-  navigate in an editing context.) This does not seem to be an sbopkg
-  issue.
+* In dialog versions before 20100119 the left/right arrows in
+  '--inputbox' widgets (the boxes the user types text into) do not
+  navigate in a button context. (They do navigate in an editing
+  context.) This does not seem to be an sbopkg issue.
 
-  Workaround: navigate with up/down arrows or tab/shift-tab Note: there
-  is a newer dialog version available which fixes this issue, but we
-  encourage users to stick with the dialog Slackware ships.
+  Workaround: navigate with up/down arrows or tab/shift-tab.
 
 * If dialog is run in a terminal emulator and the user exits using the
   window manager's 'close' (or equivalent) button/command, dialog may
@@ -44,11 +42,16 @@ the tools it uses:
 
   Workaround: pager-specific
 
-* A few SlackBuild scripts in the slackbuilds.org repo have a source
-  download that is only available through an https download.  By
-  default, sbopkg will not be able to download these sources.
+* Some SlackBuild scripts in the SlackBuilds.org repo have a source
+  download that is only available through https. By default, sbopkg will
+  initially fail to download these sources, but will then offer to turn
+  off certificate checking temporarily and should then succeed.
 
-  Workaround: add --no-check-certificate to WGETFLAGS in sbopkg.conf
+  Workaround: The best step, in many cases, is to install
+  'openssl-certs' from SBo, though this will not help for 'self-signed'
+  certificates which will still trigger the prompt. To avoid it
+  altogether you can permanently turn off certificate checking by adding
+  '--no-check-certificate' to WGETFLAGS in sbopkg.conf.
 
 * Certain packages build kernel modules and need to (re)set the ARCH to
   'x86' on i?86 (32-bit) systems which may result in packages with 'x86'

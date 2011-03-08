@@ -26,27 +26,40 @@ ABOUT
     .info, and slack-desc and other files for each package, and make
     manual edits to a copy of the original .info or SlackBuild files.
     Sbopkg will also allow the user to select packages to build and it
-    will download the source code, check the md5sum, build a Slackware
-    package, and optionally install the package. The user can also build
-    and optionally install more than one package by using the 'build
-    queue' feature. Sbopkg will not check dependencies since that is not
-    a feature native to Slackware, but since the build queue will
-    process packages in the order listed, it is possible to build and
-    install dependencies in order prior to building and installing the
-    final, desired package.
+    will download the source code, check the md5sum and GPG signature,
+    build a Slackware package, and optionally install the package. The
+    user can also build and optionally install more than one package by
+    using the 'build queue' feature. Sbopkg will not check dependencies
+    since that is not a feature native to Slackware, but since the build
+    queue will process packages in the order listed, it is possible to
+    build and install dependencies in order prior to building and
+    installing the final, desired package.
 
     Sbopkg can also be used strictly from the command line without the
     dialog(1)-provided menu interface to do most of the above items.
     Typing 'sbopkg -h' will display the command line options.
 
-HELP
+GETTING HELP
 
     Sbopkg comes with two man pages: sbopkg.conf(5) and sbopkg(8). These
     are the primary sources of information on how to use sbopkg.
 
-    If you have read the manuals and still need help, you may want to
-    join the sbopkg mailing list. Subscribe by sending a mail whose body
-    is "subscribe your-email@address-here" to:
+    In addition to the manuals and this file, the following documents
+    may be of interest:
+
+    HACKING           Coding and documentation guidelines
+    KNOWN_ISSUES      Problems and workarounds
+    NEWS              History of user-visible changes
+    README-queuefiles Details on queuefiles and their format
+    README-renames    Details on rename files and their format
+    README-repos      Details on repo files and their format
+    THANKS            Appreciation of contributors to sbopkg
+    TODO              Things that may be added or modified in the future
+
+    If you have read the manuals and the relevant documents and still
+    need help, you may want to join the sbopkg mailing list. Subscribe
+    by sending a mail whose body is "subscribe your-email@address-here"
+    to:
 
     sbopkg-users-request@sbopkg.org
 
