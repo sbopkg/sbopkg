@@ -249,32 +249,25 @@ EOF
 }
 
 dir_init() {
-    # Check to make sure certain sbopkg-related directories exist.
-    # If not, create them.
+    # Check to make sure certain sbopkg-related directories exist. If not,
+    # create them.
 
     local -a DIR_VARS DI_OUTPUT_LINES DI_OUTPUT
     local DIRS2MK REPLY ERROR
 
     # Keep DIR_VARS and DI_OUTPUT_LINES in sync where REPO_DIR ~ REPO_ROOT.
 
-    # We show REPO_ROOT and make REPO_DIR because the REPO_DIR we need to make
-    # is assigned to elswhere in the script as a combination of
-    # REPO_ROOT/REPO_NAME and may or may not be combined with REPO_BRANCH -
-    # but these are all subdirectories of REPO_ROOT, so that's all we need to
-    # actually display and we can avoid the confusion we might get with a
-    # display like 'REPO_DIR[/REPO_NAME]'.
-
     DIR_VARS=(
         $REPO_DIR ${LOGFILE%/*} $QUEUEDIR $SRCDIR $TMP $OUTPUT
     )
 
     DI_OUTPUT_LINES=(
-        "REPO_ROOT -----------> $REPO_ROOT"
-        "LOGFILE directory ---> ${LOGFILE%/*}"
-        "QUEUEDIR ------------> $QUEUEDIR"
-        "SRCDIR --------------> $SRCDIR"
-        "TMP -----------------> $TMP"
-        "OUTPUT --------------> $OUTPUT"
+        "REPO_{ROOT,NAME,BRANCH} -> $REPO_ROOT/,$REPO_NAME/,$REPO_BRANCH"
+        "LOGFILE directory -------> ${LOGFILE%/*}"
+        "QUEUEDIR ----------------> $QUEUEDIR"
+        "SRCDIR ------------------> $SRCDIR"
+        "TMP ---------------------> $TMP"
+        "OUTPUT ------------------> $OUTPUT"
     )
 
     for ((i=0; i<${#DIR_VARS[*]}; i++)); do
@@ -290,11 +283,25 @@ dir_init() {
 
 The following directories do not exist:
 
-Variable               Assignment
---------               ----------
+Variable                   Assignment
+--------                   ----------
 EOF
             for ((i=0; i<${#DI_OUTPUT[*]}; i++)); do
-                echo "${DI_OUTPUT[$i]}"
+                # git doesn't use REPO_BRANCH in this context, so sed it out
+                # of the display - can you say "ad hackery"? I knew you could!
+                #
+                # We used to have DI_OUTPUT_LINES just display REPO_ROOT and
+                # create REPO_DIR to try to avoid confusion in the display to
+                # the user but then it would say a directory didn't exist just
+                # because its REPO_BRANCH subdirectory didn't exist which was
+                # even more confusing and outright wrong. So keep the
+                # replacement hyphens aligned here, too. *sigh*
+                if [[ $REPO_TOOL == git ]]; then
+                    echo "${DI_OUTPUT[$i]}" |
+                        sed "s@,BRANCH} @} -------@;s@/,$REPO_BRANCH@@"
+                else
+                    echo "${DI_OUTPUT[$i]}"
+                fi
             done
             cat << EOF
 
@@ -1071,24 +1078,26 @@ select_repository() {
     # Create menu and list the sbopkg-supported repositories for
     # user to choose from.
 
+    local OLD_REPO_NAME=$REPO_NAME
+    local OLD_REPO_BRANCH=$REPO_BRANCH
+
     while :; do
-        eval dialog --cancel-label "Back" --title \
-            '"Choose a repository"' \
-            --menu '"$(crunch "You are currently using sbopkg to browse a \
-            local copy of the $REPO_DESC.  If you would \
-            like to change it, please select another repository below or \
-            press <Back> to go back.")"' 19 60 9 \
+        eval dialog --cancel-label "Back" --title '"Repository Selection"' \
+            --menu '"$(crunch "You are currently working with the \
+            $REPO_DESC. If you would like to work with a different \
+            one, please select it from the list below. If not, choose \
+            < Back >.")"' 21 70 11 \
             $(
                 for ((i=0; i<${#REPOSITORIES[@]}; i+=$REPOS_FIELDS)); do
-                    echo \"${REPOSITORIES[$((i+1))]} \(${REPOSITORIES[$i]}\)\"
+                    echo \"${REPOSITORIES[$i]} \(${REPOSITORIES[$((i+1))]}\)\"
                     echo \"${REPOSITORIES[$((i+2))]}\"
                 done
             ) 2> $SBOPKGTMP/sbopkg_version_selection
         if [[ $? != 0 ]]; then
             break
         fi
-        eval $(sed 's:^\(.*\) (\(.*\))$:REPO_NAME=\2;REPO_BRANCH=\1:g' \
-            < $SBOPKGTMP/sbopkg_version_selection)
+        eval $(sed 's:^\(.*\) (\(.*\))$:REPO_NAME=\1;REPO_BRANCH=\2:g' \
+            $SBOPKGTMP/sbopkg_version_selection)
         set_repo_vars
         if dir_init; then
             dialog --title "Save this setting?" --defaultno --yesno \
@@ -1107,6 +1116,10 @@ select_repository() {
             echo "REPO_NAME=$REPO_NAME" >> $HOME/.sbopkg.conf
             echo "REPO_BRANCH=$REPO_BRANCH" >> $HOME/.sbopkg.conf
             break
+        else
+            REPO_NAME=$OLD_REPO_NAME
+            REPO_BRANCH=$OLD_REPO_BRANCH
+            set_repo_vars
         fi
     done
     rm -f $SBOPKGTMP/sbopkg_version_selection
@@ -4135,7 +4148,7 @@ utilities_menu() {
             14 69 6 \
             "Cache" "View the contents of the cache directory" \
             "Log" "View the permanent build log" \
-            "Repository" "Select repository [ $REPO_BRANCH ($REPO_NAME) ]" \
+            "Repository" "Select repository [ $REPO_NAME ($REPO_BRANCH) ]" \
             "Latest" "Check for an update to sbopkg"  \
             "Uninstalled packages" "View uninstalled packages" \
             "Obsolete sources" "View obsolete cached sources" 2> $ANSWERFILE
@@ -4660,8 +4673,8 @@ if [[ $VERSION ]]; then
     fi
     if [[ $CUSTOMVER =~ .*/.* ]]; then
         # The user specified repository/branch
-        eval $(sed 's:^\(.*\)/\(.*\)$:REPO_NAME=\1;REPO_BRANCH=\2:g' \
-            <<< $CUSTOMVER)
+        REPO_NAME=${CUSTOMVER%/*}
+        REPO_BRANCH=${CUSTOMVER#*/}
     else
         # The user specified only the branch -- keep the default repository
         REPO_BRANCH=$CUSTOMVER

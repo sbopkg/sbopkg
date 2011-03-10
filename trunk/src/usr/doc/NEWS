@@ -11,6 +11,18 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
         * Similarly, the -R and -p flags can now be combined to page
           through the READMEs of all installed packages.
 
+        * Added ponce's repo (SBo variant for -current) to the default
+          repos. Thanks to Mauro for suggesting this about a year ago.
+          Note that this is unsupported (if a build from this repo
+          breaks in sbopkg you get to keep both pieces) but people seem
+          pleased with this repo and it'll save a step for new users.
+          Note that the default repo files have been reordered, as well.
+          50-sb64 is now 70, 60-local is now 50, and the new one is 60.
+          This puts the unsupported repos last. If by chance you have a
+          file with those names already in there, upgrading sbopkg will
+          clobber them. See each of the two following sections for more
+          repo-related modifications and bugfixing.
+
     MODIFICATIONS
 
         * Updated French man pages. Thanks to Marie-Claude Collilieux.
@@ -21,6 +33,32 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           0.33.1 branch changes from their ChangeLogs into NEWS, added a
           block in README describing all the plain text documents, added
           a note about making corrections to THANKS, etc.
+
+        * The 'Choose a repository' dialog widget is now titled
+          'Repository Selection' and the widget text was revised. Also,
+          the menu itself used to say 'BRANCH (REPO) DESCRIPTION' and
+          now says 'REPO (BRANCH) DESCRIPTION'. The relevant item in the
+          Utilities menu that shows which repo/branch you're on and
+          takes you to the Repository Selection widget was similarly
+          re-ordered.
+
+        * When a repository directory does not exist, sbopkg now
+          displays, e.g.
+
+          REPO_{ROOT,NAME,BRANCH} -> /var/lib/sbopkg/,SBo/,13.1
+
+          or, in the case of git repos which don't currently have BRANCH
+          directories, it just shows REPO_{ROOT,NAME}. It used to
+          display
+
+          REPO_ROOT -----------> /var/lib/sbopkg/
+
+          While the new line may be odd looking, it should be clear
+          enough that it means REPO_ROOT is /var/lib/sbopkg/, REPO_NAME
+          is SBo/ and REPO_BRANCH is 13.1 and that these are path
+          components and that the path is missing. Before, it would say
+          /var/lib/sbopkg/ didn't exist if 13.1 was missing even when
+          /var/lib/sbopkg/ did exist.
 
     BUGFIXES
 
@@ -40,6 +78,11 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           'Select/Deselect all', then changing the button to "Invert
           Sel" and making it do that was a feature/modification instead
           of a bugfix. ;)
+
+        * Fixed an issue were the user could switch repos, receive a
+          directory creation prompt, abort it, and the active repo would
+          be switched anyway, despite the directory not being created.
+          Now, the original repo is restored as the active one.
 
 sbopkg 0.34.1 (2011-02-05 04:20 UTC)
 
