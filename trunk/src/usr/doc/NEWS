@@ -36,7 +36,7 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
 
         * Note also that symlinks are now made from README-repos and
           README-renames to READMEs in the corresponding /etc/sbopkg/*.d
-          directories. NOTE that renames files must now end in .rename
+          directories. NOTE that renames files must now end in .renames
           so, if you have custom files in renames.d, you'll need to
           rename them.
 
@@ -63,8 +63,8 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           enough that it means REPO_ROOT is /var/lib/sbopkg/, REPO_NAME
           is SBo/ and REPO_BRANCH is 13.1 and that these are path
           components and that the path is missing. Before, it would say
-          /var/lib/sbopkg/ didn't exist if 13.1 was missing even when
-          /var/lib/sbopkg/ did exist.
+          /var/lib/sbopkg/ didn't exist if, e.g., 13.1 was missing even
+          when /var/lib/sbopkg/ did exist.
 
     BUGFIXES
 
