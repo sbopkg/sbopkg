@@ -47,6 +47,9 @@ find $PKG/usr/man -type f -exec gzip -9 {} \;
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a usr/doc/* $PKG/usr/doc/$PRGNAM-$VERSION
+ln -s /usr/doc/$PRGNAM-$VERSION/README-repos $PKG/etc/$PRGNAM/repos.d/README
+ln -s /usr/doc/$PRGNAM-$VERSION/README-renames \
+    $PKG/etc/$PRGNAM/renames.d/README
 cp -a $CWD/sbopkg.SlackBuild $PKG/usr/doc/$PRGNAM-$VERSION
 chown root:root $PKG/usr/doc/$PRGNAM-$VERSION/sbopkg.SlackBuild
 

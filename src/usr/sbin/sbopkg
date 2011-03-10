@@ -644,7 +644,9 @@ get_new_name() {
 
     local NEW_NAME_VAR="$1"
     local OLD_NAME="$2"
-    local CANDIDATE=$(grep -hr "^$OLD_NAME=" $SBOPKG_RENAMES_D | head -n1)
+    local CANDIDATE=$(
+        grep -h "^$OLD_NAME=" $SBOPKG_RENAMES_D/*.renames | head -n1
+    )
 
     if [[ -z "$CANDIDATE" ]]; then
         # No rename occurred
@@ -666,7 +668,7 @@ get_old_name() {
     local NEW_NAME="$2"
     local CANDIDATE INSTALLED
     local SUBSTITUTIONS=$(
-        grep -hr "=$NEW_NAME\$" $SBOPKG_RENAMES_D | cut -d= -f1
+        grep -h "=$NEW_NAME\$" $SBOPKG_RENAMES_D/*.renames | cut -d= -f1
     )
 
     # By default, the old name is the new name
