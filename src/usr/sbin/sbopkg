@@ -487,7 +487,8 @@ list_packages() {
     if [[ -s $PKG_LIST ]]; then
         if [[ $DIAG ]]; then
             while :; do
-                dialog --separate-output --title "Installed $REPO_NAME Packages" \
+                dialog --separate-output \
+                    --title "Installed $REPO_NAME Packages" \
                     --extra-button --extra-label "View READMEs" \
                     --checklist "Check any packages you wish to remove." \
                     20 65 13 --file $PKG_CHECKLIST 2> $REMOVE_LIST
@@ -499,7 +500,8 @@ list_packages() {
                             sed 's/$/ "" ON/' $REMOVE_LIST > $CONFIRM_LIST
                             dialog --separate-output --defaultno \
                                 --title "Removepkg confirmation" \
-                                --checklist "Remove the following packages?" 20 65 13 \
+                                --checklist "Remove the following packages?" \
+                                20 65 13 \
                                 --file $CONFIRM_LIST 2> $REMOVE_LIST
                             if [[ $? == 0 ]]; then
                                 removepkg $(cat $REMOVE_LIST)
@@ -656,7 +658,9 @@ get_old_name() {
     local OLD_NAME_VAR="$1"
     local NEW_NAME="$2"
     local CANDIDATE INSTALLED
-    local SUBSTITUTIONS=$(grep -hr "=$NEW_NAME\$" $SBOPKG_RENAMES_D | cut -d= -f1)
+    local SUBSTITUTIONS=$(
+        grep -hr "=$NEW_NAME\$" $SBOPKG_RENAMES_D | cut -d= -f1
+    )
 
     # By default, the old name is the new name
     eval $OLD_NAME_VAR=$NEW_NAME
@@ -1285,7 +1289,8 @@ info_item() {
                             check_gpg $SHORTPATH
                             CHKRETVAL=$?
                             if [[ $CHKRETVAL == 0 ]]; then
-                                dialog --title "OK" --msgbox "GPG check passed." 6 25
+                                dialog --title "OK" \
+                                    --msgbox "GPG check passed." 6 25
                             elif [[ $CHKRETVAL == 1 ]]; then
                                 RETVAL=1
                                 break
@@ -1300,7 +1305,8 @@ info_item() {
                         if [[ ! -z $REPO_GPG ]]; then
                             extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
                             if [[ $? == 0 ]]; then
-                                dialog --title "Done" --msgbox "$(crunch "The \
+                                dialog --title "Done" \
+                                    --msgbox "$(crunch "The \
                                     tarball has been extracted.")" 8 30
                             else
                                 RETVAL=1
@@ -1308,8 +1314,8 @@ info_item() {
                             fi
                         else
                             dialog --title "ERROR" --msgbox "$(crunch "GPG \
-                                tarballs are not available for the $REPO_NAME \
-                                repository.")" 8 30
+                                tarballs are not available for the \
+                                $REPO_NAME repository.")" 8 30
                         fi
                         ;;
                     Queue ) add_item_to_queue $APP ;;
@@ -2735,7 +2741,7 @@ get_source_names() {
     # Note that even without --all this function can return multiple files,
     # if the application specifies more than one in its .info file.
 
-    local SRCNAME INFO ALL CWD DL PLACEHOLDER
+    local SRCNAME INFO ALL CWD DL PLACEHOLDER VER
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
@@ -2806,11 +2812,12 @@ get_source_names() {
             # egrep) is due to a grep having already been used below and this
             # having fewer potential side effects - this should eventually get
             # a proper fix rather than this ad hockery.
-            if grep -q \
-                '\(install_\|lib\)flash_\?player.*\.tar\.gz' <<< $SRCNAME; then
+            if grep -q '\(install_\|lib\)flash_\?player.*\.tar\.gz' \
+                    <<< $SRCNAME; then
                 SRCNAME='\(install_\|lib\)flash_\?player.*\.tar\.gz'
             elif [[ $SRCNAME =~ $VERSION ]]; then
-                SRCNAME=${SRCNAME%%$VERSION*}[0-9$VERSION]\*${SRCNAME##*$VERSION}
+                VER=$VERSION # just to shorten the following line
+                SRCNAME=${SRCNAME%%$VER*}[0-9$VER]\*${SRCNAME##*$VER}
             fi
         fi
 
@@ -3373,7 +3380,8 @@ build_package() {
             echo "then it may not make sense to continue."
             echo
             while :; do
-                printf "(Y)es to continue, (N)o to abort, (R)etry the build?: "
+                printf \
+                    "(Y)es to continue, (N)o to abort, (R)etry the build?: "
                 error_read
                 case $REPLY in
                     Y|y) # Continue
@@ -3632,7 +3640,8 @@ use_options() {
             fi
             echo
             while :; do
-                read $NFLAG -ep "Use (N)one,$CLI_OPT$SAVEDOPT$QUEUEOPT or (A)bort?: "
+                read $NFLAG \
+                    -ep "Use (N)one,$CLI_OPT$SAVEDOPT$QUEUEOPT or (A)bort?: "
                 case $REPLY in
                     N|n) break ;;
                     C|c)
@@ -4342,7 +4351,8 @@ main_menu() {
             "Sync" "Sync with the remote repository" \
             "ChangeLog" "View the ChangeLog" \
             "Packages" "List/uninstall installed $REPO_NAME packages" \
-            "Updates" "List potential updates to installed $REPO_NAME packages" \
+            "Updates" \
+                "List potential updates to installed $REPO_NAME packages" \
             "Browse" "Browse the active repository" \
             "Search" "Search the active repository" \
             "Queue" "Manage the build queue" \
@@ -4697,7 +4707,8 @@ else
                     the name \"$PKGBUILD\"."
                 echo
                 while :; do
-                    read $NFLAG -ep "Use (Q)ueuefile, (P)ackage, or (A)bort?: "
+                    read $NFLAG \
+                        -ep "Use (Q)ueuefile, (P)ackage, or (A)bort?: "
                     case $REPLY in
                         Q|q) parse_queue $QUEUEDIR/$PKGBUILD.sqf; break ;;
                         P|p) parse_arguments "$PKGBUILD"; break ;;
