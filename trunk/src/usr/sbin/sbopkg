@@ -4389,8 +4389,13 @@ main_menu() {
     done
 }
 
-# END OF FUNCTIONS.  What comes below is the actual start of the
-# script when it is first run.
+# END OF FUNCTIONS
+
+if [[ $SBOPKG_DEBUG ]]; then
+    exec 3>~/debug.out
+    BASH_XTRACEFD=3
+    set -x
+fi
 
 trap 'control_c; trap INT; kill -2 $$' INT
 trap 'exit 2' HUP QUIT PIPE TERM
