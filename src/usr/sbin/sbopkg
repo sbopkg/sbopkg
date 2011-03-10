@@ -3129,7 +3129,7 @@ remove_uninstalled_packages() {
     local PKG
 
     rm -f $PACKAGES
-    ls $OUTPUT/*$REPO_TAG.t?z | while read PKG; do
+    ls $OUTPUT/*$REPO_TAG.t?z 2>/dev/null | while read PKG; do
         PKG=${PKG##*/}
         if [ ! -f /var/log/packages/${PKG%.t?z} ]; then
             echo "$PKG" >> $PACKAGES
