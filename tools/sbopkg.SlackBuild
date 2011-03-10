@@ -36,6 +36,7 @@ find . \
 
 mkdir -p $PKG/etc/sbopkg
 cp -a etc/sbopkg/* $PKG/etc/sbopkg
+mv $PKG/etc/sbopkg/sbopkg.conf $PKG/etc/sbopkg/sbopkg.conf.new
 
 mkdir -p $PKG/usr/sbin
 cp usr/sbin/* $PKG/usr/sbin
