@@ -34,6 +34,12 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           block in README describing all the plain text documents, added
           a note about making corrections to THANKS, etc.
 
+        * Note also that symlinks are now made from README-repos and
+          README-renames to READMEs in the corresponding /etc/sbopkg/*.d
+          directories. NOTE that renames files must now end in .rename
+          so, if you have custom files in renames.d, you'll need to
+          rename them.
+
         * The 'Choose a repository' dialog widget is now titled
           'Repository Selection' and the widget text was revised. Also,
           the menu itself used to say 'BRANCH (REPO) DESCRIPTION' and

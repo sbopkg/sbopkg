@@ -1,6 +1,6 @@
 #!/bin/bash
 # $Id$
-# Written by slakmagik <jsun freeshell org> (usual symbols in spaces)
+# Written by slakmagik <slakmagik@gmail.com>
 # Released under the WTFPL
 
 script=${0##*/}
@@ -25,6 +25,11 @@ EOF
 exit
 }
 
+printe() {
+    printf "$script: $@" | tr -s ' ' | fmt -sw78 >&2
+    exit 1
+}
+
 if (( $# == 0 )); then
     build="yes"
     inst="yes"
@@ -46,19 +51,15 @@ done
 
 # Make sure we are root.
 if (( $(id -u) != 0 )); then
-    echo "$script: $script must be run by the root user." 1>&2
-    exit 1
+    printe "$script must be run by the root user."
 fi
 
 if [[ $sync == yes ]]; then
     if [[ -w $repo ]] || [[ ! -e $repo && -w ${repo%/*} ]]; then
-        svn checkout $remote_repo $repo ||
-            { echo "$script: checkout failed" 1>&2; exit 1; }
+        svn checkout $remote_repo $repo || printe "checkout failed"
     else
-        printf "$script: $repo is not writable.\n" 1>&2
-        printf "Change your privileges or the value of the \"repo\" " 1>&2
-        printf "variable.\n" 1>&2
-        exit 1
+        printe "$repo is not writable.\nChange your privileges or the \
+            value of the \"repo\" variable.\n"
     fi
 fi
 
@@ -71,23 +72,19 @@ if [[ $build == yes || $inst == yes ]]; then
     if [ -r $svn_script ]; then
         export VERSION=svn$(svnversion $repo)
     else
-        echo "$script: unable to find $svn_script." 1>&2
-        echo "Please check your repository." 1>&2
-        exit 1
+        printe "unable to find $svn_script.\nPlease check your repository."
     fi
 
     if [[ $OUTPUT =~ "$repo/(sbopkg-$VERSION|root-tools)" ]]; then
-        printf "$script: the OUTPUT variable is set to a path that will " 1>&2
-        printf "be removed.\n" 1>&2
-        printf "Please alter the value of the variable.\n" 1>&2
-        exit 1
+        printe "the OUTPUT variable is set to a path that will be \
+            removed.\nPlease alter the value of the variable.\n"
     fi
 
     output_pkg=$OUTPUT/sbopkg-$VERSION-noarch-1_cng.tgz
     if [[ $build == yes ]]; then
         cd $repo
         if [ -d sbopkg-$VERSION ] || [ -d root-tools ]; then
-            echo "$script: director(y|ies) exist" 1>&2; exit 1
+            printe "director(y|ies) exist(s)"
         fi
         cp -r src sbopkg-$VERSION
         cp -r tools root-tools
@@ -104,7 +101,7 @@ if [[ $build == yes || $inst == yes ]]; then
         if [ -r $output_pkg ]; then
             upgradepkg --install-new --reinstall $output_pkg
         else
-            echo "$script: $output_pkg not found." 1>&2; exit 1
+            printe "$output_pkg not found."
         fi
     fi
 fi

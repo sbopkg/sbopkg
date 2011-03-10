@@ -281,7 +281,7 @@ Note: all of the
 variables are affected by the repository files maintained in
 .I /etc/sbopkg/repos.d.
 Please see the
-.I README-repos.d
+.I README-repos
 document in the
 .B sbopkg
 documentation directory.
@@ -550,21 +550,20 @@ File to specify configuration options.
 .I ~/.sbopkg.conf
 File to override system configuration options.
 .TP
-.I /etc/sbopkg/renames.d/50-default
-Default file that lists software in the SBo repository that has been
-renamed.
+.I /etc/sbopkg/renames.d/*.renames
+Files that list software in the SBo repository that has been renamed.
 See the
-.I README-renames.d
+.I README-renames
 document in the
 .B sbopkg
 documentation directory for more information.
 .TP
-.I /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
-Three default files for various types of
+.I /etc/sbopkg/repos.d/*.repo
+Files for various types of
 .B sbopkg
 repositories.
 See the
-.I README-repos.d
+.I README-repos
 document in the
 .B sbopkg
 documentation directory for more information.
