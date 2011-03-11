@@ -82,7 +82,7 @@ nous n'avons pas pensé. Soyez prudents.
 .IP
 La valeur par défaut est\ :
 .IP
-\fCALLOW_MULTI=${ALLOW_MULTI:-NO}\fP
+\fCxxxALLOW_MULTIxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B CLEANUP
@@ -111,7 +111,7 @@ est ignorée.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCCLEANUP=${CLEANUP:-NO}\fP
+\fCxxxCLEANUPxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DEBUG_UPDATES
@@ -146,7 +146,7 @@ peut être utile si la liste des mises à jour parait incompléte.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCDEBUG_UPDATES=${DEBUG_UPDATES:-0}\fP
+\fCxxxDEBUG_UPDATESxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFF
@@ -159,7 +159,7 @@ affiche les différences entre fichiers édités.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCDIFF=${DIFF:-diff}\fP
+\fCxxxDIFFxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFFOPTS
@@ -174,7 +174,7 @@ affiche les différences entre fichiers édités.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCDIFFOPTS=${DIFFOPTS:--u}\fP
+\fCxxxDIFFOPTSxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B KEEPLOG
@@ -191,7 +191,7 @@ pour l'emplacement de ce journal.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCKEEPLOG=${KEEPLOG:-YES}\fP
+\fCxxxKEEPLOGxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B LOGFILE
@@ -204,7 +204,7 @@ vaut
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCLOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}\fP
+\fCxxxLOGFILExxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B MKDIR_PROMPT
@@ -223,7 +223,7 @@ fichiers), vous pouvez mettre cette valeur à
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCMKDIR_PROMPT=${MKDIR_PROMPT:-YES}\fP
+\fCxxxMKDIR_PROMPTxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B OUTPUT
@@ -239,7 +239,7 @@ est donc la même que celle des SlackBuildS SBO.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCexport OUTPUT=${OUTPUT:-/tmp}\fP
+\fCxxxOUTPUTxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B QUEUEDIR
@@ -250,7 +250,7 @@ files d'attente sauvegardées.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCQUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}\fP
+\fCxxxQUEUEDIRxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_BRANCH
@@ -270,7 +270,7 @@ et peuvent aussi être affichées en tapant
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCREPO_BRANCH=${REPO_BRANCH:-13.1}\fP
+\fCxxxREPO_BRANCHxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_NAME
@@ -290,13 +290,13 @@ Note\ : toutes les variables
 sont concernées par les fichiers de dépôt gérés dans le répertoire 
 .I /etc/sbopkg/repos.d.
 Lire le fichier
-.I README-repos.d
+.I README-repos
 dans le répertoire de documentation de
 .B sbopkg
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCREPO_NAME=${REPO_NAME:-SBo}\fP
+\fCxxxREPO_NAMExxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_ROOT
@@ -304,11 +304,11 @@ Chemin.
 .IP
 Cette option permet à l'utilisateur de définir l'emplacement des 
 miroirs locaux des dépôts externes. 
-Actuellement la taille d'une copie locale du dépôt SBo est d'environ 93Mo.
+Actuellement la taille d'une copie locale du dépôt SBo est d'environ xxxSIZExxx.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCREPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}\fP
+\fCxxxREPO_ROOTxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B RSYNCFLAGS
@@ -345,7 +345,7 @@ est une option utile à tester en cas d'erreur de synchronisation.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCRSYNCFLAGS="${RSYNCFLAGS:---verbose --timeout=30}"\fP
+\fCxxxRSYNCFLAGSxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B SRCDIR
@@ -356,7 +356,7 @@ contiendra la sauvegarde des sources téléchargés.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCSRCDIR=${SRCDIR:-/var/cache/sbopkg}\fP
+\fCxxxSRCDIRxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B TMP
@@ -380,7 +380,7 @@ est ignorée
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCexport TMP=${TMP:-/tmp/SBo}\fP
+\fCxxxTMPxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B TMPDIR
@@ -404,7 +404,7 @@ ou dans le fichier
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCexport TMPDIR=${TMPDIR:-/tmp}\fP
+\fCxxxTMPDIRxxx\fP
 .\"---------------------------------------------------------------------
 .TP
 .B WGETFLAGS
@@ -438,7 +438,7 @@ est une option utile à tester en cas d'erreur de téléchargement.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCWGETFLAGS="${WGETFLAGS:--c --progress=bar:force --timeout=30 --tries=5}"\fP
+\fCxxxWGETFLAGSxxx\fP
 .\"=====================================================================
 .SH NOTES
 .\"---------------------------------------------------------------------
@@ -562,20 +562,20 @@ Fichier qui contient les options de configuration.
 .I ~/.sbopkg.conf
 Fichier pour remplacer les options de la configuration système.
 .TP
-.I /etc/sbopkg/renames.d/50-default
-Fichier contenant la liste des logiciels du dépôt SBo qui ont été 
+.I /etc/sbopkg/renames.d/*.renames
+Fichiers contenant la liste des logiciels du dépôt SBo qui ont été 
 renommés.
 Voir le fichier
-.I README-renames.d
+.I README-renames
 dans le répertoire de documentation de 
 .B sbopkg
 pour plus d'information.
 .TP
-.I /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
-Trois fichiers par défaut pour les différents types de dépôts de 
+.I /etc/sbopkg/repos.d/*.repo
+Fichiers pour les différents types de dépôts de 
 .B sbopkg .
 Voir le fichier
-.I README-repos.d
+.I README-repos
 dans le répertoire de documentation de 
 .B sbopkg
 pour plus d'information.
@@ -603,7 +603,7 @@ slakmagik
 .\"=====================================================================
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<mccnews@free.fr> le 03\ mars\ 2011.
+<mccnews@free.fr> le 11\ mars\ 2011.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 La version anglaise la plus à jour de ce document est toujours 
