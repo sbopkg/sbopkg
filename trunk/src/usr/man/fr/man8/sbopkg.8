@@ -76,7 +76,7 @@ dépôt de SBo. C'est la première étape (après la configuration) d'une
 nouvelle installation de
 .BR sbopkg .
 Actuellement la taille d'une copie locale du dépôt SBo vaut environ 
-93Mo.
+xxxSIZExxx.
 Le menu principal permet aussi à l'utilisateur de lire le
 .IR Changelog
 de SBo, de rechercher les mises à jour possibles de paquets SBo,
@@ -364,10 +364,19 @@ plus succinte.
 .\"---------------------------------------------------------------------
 .TP
 .B \-R
-Montre tous les fichiers 
+Lorqu'il est combiné avec
+.B -b
+or
+.BR -i ,
+affiche le fichier
 .I README
-des paquets en file d'attente avant de lancer la coùpilation.
-Utile lorsque l'utilisateur veut effectuer un dernier contrôle.
+des paquets à compiler / installer avant de lancer la compilation.
+Utile pour effectuer un dernier contrôle.
+Lorqu'il est combiné avec
+.BR -p ,
+affiche le fichier 
+.I README
+de tous les paquets du dépôt en cours qui sont installés.
 .\"---------------------------------------------------------------------
 .TP
 .B \-r
@@ -467,20 +476,20 @@ Fichier système par défaut qui contient les options de configuration.
 .I ~/.sbopkg.conf
 Fichier pour remplacer les options de configuration système.
 .TP
-.I /etc/sbopkg/renames.d/50-default
-Fichier par défaut contenant la liste des logiciels du dépôt SBo qui 
+.I /etc/sbopkg/renames.d/*.renames
+Fichiers contenant la liste des logiciels du dépôt SBo qui 
 ont été renommés.
 Voir le document
-.I README-renames.d
+.I README-renames
 dans le répertoire de documentation de
 .B sbopkg
 pour plus d'information.
 .TP
-.I /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
-Trois fichiers par défaut pour les différents types de dépôts de
+.I /etc/sbopkg/repos.d/*.repo
+Fichiers pour les différents types de dépôts de
 .B sbopkg .
 Voir le document
-.I README-repos.d
+.I README-repos
 dans le répertoire de documentation de
 .B sbopkg
 pour plus d'information.
@@ -508,7 +517,7 @@ slakmagik
 .\"=====================================================================
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<mccnews@free.fr/> le 03\ mars\ 2011.
+<mccnews@free.fr/> le 11\ mars\ 2011.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 
