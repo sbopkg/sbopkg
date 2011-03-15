@@ -2775,7 +2775,7 @@ get_source_names() {
         # remove the '/download' from several SRCNAMEs that end that way
         # rather than in the actual tarball so the subsequent basename doesn't
         # end with 'download'
-        SRCNAME=${DL//%\/download}
+        SRCNAME=${DL%\/download}
         SRCNAME=${SRCNAME##*/}
         # calcurse has a nonsense url in the info file - this is to get it
         # through this function and on to remove_obsolete_sources()
