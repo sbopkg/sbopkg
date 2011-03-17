@@ -101,7 +101,11 @@ to
 .B YES
 is that
 .B TMP
-is set to an internal value and any other
+is set to
+.BR sbopkg 's
+own temporary directory
+.RI ( $TMPDIR/sbopkg.RANDOM_STRING )
+and any other
 .B TMP
 setting is ignored.
 .IP
@@ -410,16 +414,6 @@ flags (options) that are used by
 .BR sbopkg .
 Users are cautioned against making any changes to the default values
 since new flags may or may not work.
-Note: the
-.B wget
-command in
-.B sbopkg
-already uses the
-.B \-O
-flag, so there is no need to add that to the
-.B WGETFLAGS
-option.
-Changing most of these default options is not recommended.
 However,
 .B \-\-timeout
 is a useful option to play with if getting download errors.
