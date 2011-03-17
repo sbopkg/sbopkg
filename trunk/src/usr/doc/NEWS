@@ -23,16 +23,27 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           clobber them. See each of the two following sections for more
           repo-related modifications and bugfixing.
 
+        * Added a bash completion file for sbopkg. This is independent
+          of the bash-completion package. It can be found in the new
+          doc/contrib directory. Source the file (in your shell startup
+          files if you want it always on automatically) from its current
+          location or wherever you wish to copy it and you should be
+          able to complete some of sbopkg's flags and their arguments.
+          Also see the KNOWN_ISSUES file. Thanks to Sergey V. for this
+          contribution.
+
     MODIFICATIONS
 
         * Updated French man pages. Thanks to Marie-Claude Collilieux.
 
-        * Revised documentation: renamed the README-*.d documents,
+        * Revised documentation: moved the queuefiles directory into a
+          new contrib directory, renamed the README-*.d documents,
           stripping the '.d'. Clarified/updated the dialog nav/certcheck
           sections of KNOWN_ISSUES, brought the missing 0.27.0 and
           0.33.1 branch changes from their ChangeLogs into NEWS, added a
           block in README describing all the plain text documents, added
-          a note about making corrections to THANKS, etc.
+          a note about making corrections to THANKS, a couple of TODO
+          items, etc.
 
         * Note also that symlinks are now made from README-repos and
           README-renames to READMEs in the corresponding /etc/sbopkg/*.d
@@ -89,6 +100,10 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           directory creation prompt, abort it, and the active repo would
           be switched anyway, despite the directory not being created.
           Now, the original repo is restored as the active one.
+
+        * Fixed a bug in a previous bugfix that would still let sbopkg
+          download source files whose DOWNLOAD value ended in
+          '/download' even when the source files were cached.
 
 sbopkg 0.34.1 (2011-02-05 04:20 UTC)
 

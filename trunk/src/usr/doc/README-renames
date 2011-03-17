@@ -14,7 +14,7 @@ overwritten each time sbopkg is upgraded, so do not make local edits to
 it. Instead, create other files with a higher or lower number than 50
 and list your renamed files in those local files.
 
-The files are loaded in alphanumeric order (like the files in, e.g.,
+The files are loaded in alphabetical order (like the files in, e.g.,
 /etc/fonts/conf.d) so 'priority' is determined from low number to high
 and the first match wins, so:
 
