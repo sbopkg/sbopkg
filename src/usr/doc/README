@@ -55,6 +55,7 @@ GETTING HELP
     README-repos      Details on repo files and their format
     THANKS            Appreciation of contributors to sbopkg
     TODO              Things that may be added or modified in the future
+    contrib/          Additional user-contributed files
 
     If you have read the manuals and the relevant documents and still
     need help, you may want to join the sbopkg mailing list. Subscribe

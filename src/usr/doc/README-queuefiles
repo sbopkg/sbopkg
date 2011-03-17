@@ -3,7 +3,7 @@ README-queuefiles
 Sbopkg queuefiles are very simple to create, maintain, and share with
 other users. Each queuefile can contain a list of packages to build in
 order, from top to bottom, and should be named with a .sqf extension.
-Several sample queuefiles are provided in the ./doc/queuefiles
+Several sample queuefiles are provided in the ./contrib/queuefiles
 directory. Please note that these queuefiles are, in fact, only samples
 and have not necessarily been tested on the latest release of Slackware
 or on Slackware -current. If you wish to use these at your own risk,
@@ -47,7 +47,7 @@ RECURSIVE QUEUEFILES
         app2
         app3
 
-    And then the user might have another queuefile named 'mydesktop.sqf'
+    And then the user might have another queuefile named 'desktop.sqf'
     with these items:
 
         app4
@@ -80,9 +80,10 @@ PASSING BUILD OPTIONS
     Only use one pipe to separate the application name and the
     variables.
 
-    In case the user has saved build options individually in the dialog
-    interface, and also puts build options for that same application in
-    the queuefile, sbopkg will ask the user which set should be used.
+    In cases where the user has passed options on the command line
+    and/or saved build options individually via the dialog interface,
+    and also puts build options for that same application in the
+    queuefile, sbopkg will ask the user which set should be used.
 
 DUPLICATE BUILDS/OPTIONS
 
