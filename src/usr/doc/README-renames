@@ -6,7 +6,7 @@ a file whose name ends in '.renames' which is stored in the
 
 Renames are written, one per line, in the following format:
 
-oldname=newname
+    oldname=newname
 
 The default file that is installed with sbopkg is '50-default.renames'.
 This file is kept in sync with the SBo repository and will be
@@ -18,11 +18,11 @@ The files are loaded in alphabetical order (like the files in, e.g.,
 /etc/fonts/conf.d) so 'priority' is determined from low number to high
 and the first match wins, so:
 
-$ cat /etc/sbopkg/renames.d/10-local.renames
-foo=bar
+    $ cat /etc/sbopkg/renames.d/10-local.renames
+    foo=bar
 
 will override anything in a higher-numbered file, including anything in
 50-default.renames, such as:
 
-$ cat /etc/sbopkg/renames.d/50-default
-foo=baz
+    $ cat /etc/sbopkg/renames.d/50-default
+    foo=baz
