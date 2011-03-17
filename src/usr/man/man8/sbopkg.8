@@ -170,14 +170,12 @@ and  will default to
 .BR vi .
 If the user wants
 .B sbopkg
-to use another editor, such as
-.BR nano ,
-then adding the requisite information in
+to use another editor or pager, then adding the requisite information in
 .IR ~/.bashrc ,
 .IR /etc/profile ,
-or other similar configuration file to export
-.B EDITOR
-will suffice.
+or other similar configuration file (including
+.BR sbopkg 's
+own configuration files) to export the relevant variable will suffice.
 .\"=====================================================================
 .SH OPTIONS
 .\"---------------------------------------------------------------------
@@ -412,8 +410,8 @@ exactly
 or
 .IR bar .
 .IP
-Note that shell metacharacters may be supplied in the arguments. For
-instance,
+Note that shell metacharacters may be supplied in the arguments.
+For instance,
 .RS
 .IP
 .nf
