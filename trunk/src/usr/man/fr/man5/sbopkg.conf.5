@@ -104,8 +104,10 @@ Un effet secondaire de
 .B YES
 est que
 .B TMP
-est défini par une valeur interne et toute autre valeur de 
-configuration de 
+a pour valeur le répertoire temporaire de 
+.BR sbopkg 
+.RI ( $TMPDIR/sbopkg.RANDOM_STRING )
+et toute autre configuration de 
 .B TMP
 est ignorée.
 .IP
@@ -422,16 +424,6 @@ utilisés par
 Les utilisateurs sont mis en garde contre toute modification des 
 valeurs par défaut de ces indicateurs, de nouvelles valeurs pouvant 
 fonctionner ou non.
-Note\ : la commande 
-.B wget
-de 
-.B sbopkg
-utilise déjà l'indicateur
-.B \-O
-il n'est donc pas nécessaire de le rajouter dans les options de 
-.B WGETFLAGS
-Modifier ces 
-options par défaut n'est pas conseillé.
 Cependant,
 .B \-\-timeout
 est une option utile à tester en cas d'erreur de téléchargement.
@@ -603,7 +595,7 @@ slakmagik
 .\"=====================================================================
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<mccnews@free.fr> le 11\ mars\ 2011.
+<mccnews@free.fr> le 18\ mars\ 2011.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 La version anglaise la plus à jour de ce document est toujours 

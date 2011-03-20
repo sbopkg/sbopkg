@@ -10,7 +10,7 @@ sbopkg \- Le navigateur de paquets SlackBuilds.org
 .\"=====================================================================
 .SH DESCRIPTION
 .B Sbopkg
-est un outil en ligne de commande ou avec une interface
+est un outil en ligne de commande ou avec une interface 
 .BR dialog
 pour utiliser le depôt de SlackBuilds.org ("SBo"), une collection 
 de scripts SlackBuild tiers pour compiler des paquets 
@@ -171,13 +171,14 @@ et si celle-ci n'est pas définie, utilise
 .BR vi .
 Si on souhaite que 
 .B sbopkg
-utilise un autre éditeur,
-.BR nano
-par exemple, il suffit d'ajouter l'information nécessaire dans 
+utilise un autre éditeur ou un autre pager, l'ajout  
+de l'information requise dans 
 .IR ~/.bashrc ,
 .IR /etc/profile ,
-ou tout autre fichier de configuration similaire qui exporte la variable
-.B EDITOR .
+ou tout autre fichier de configuration semblable (y compris les
+fichiers de configuration même de
+.BR sbopkg
+) pour exporter la variable appropriée suffira.
 .\"=====================================================================
 .SH OPTIONS
 .\"---------------------------------------------------------------------
@@ -415,7 +416,8 @@ ou
 .IR bar .
 .IP
 À noter que les métacaractères du shell peuvent être utilisés dans les 
-arguments. Par exemple
+arguments. 
+Par exemple, 
 .RS
 .IP
 .nf
@@ -517,7 +519,7 @@ slakmagik
 .\"=====================================================================
 .SH TRADUCTION
 Ce document est une traduction réalisée par M.C Collilieux 
-<mccnews@free.fr/> le 11\ mars\ 2011.
+<mccnews@free.fr/> le 18\ mars\ 2011.
 N'hésitez pas à signaler au traducteur, toute erreur dans cette 
 page de manuel.
 
