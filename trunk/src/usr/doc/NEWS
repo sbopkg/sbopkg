@@ -105,6 +105,12 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           download source files whose DOWNLOAD value ended in
           '/download' even when the source files were cached.
 
+        * Fixed a depth-restriction bug triggered when an app
+          directory's subdirectory has the same name as another app
+          directory, causing sbopkg to match things or try to use things
+          like openvswitch/xen/foo when xen/foo is intended. Thanks to
+          David Somero for reporting this.
+
 sbopkg 0.34.1 (2011-02-05 04:20 UTC)
 
     FEATURES
