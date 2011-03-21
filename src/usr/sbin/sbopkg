@@ -694,12 +694,14 @@ check_for_updates() {
 
     local TEMPFILE=$SBOPKGTMP/sbopkg_updates_tempfile
     local ERRORMSG=$SBOPKGTMP/sbopkg_updates_errormsg
+    local PROGRESSCOUNTER=0
+    local FIND_FLAGS="$REPO_DIR -mindepth 3 -maxdepth 3"
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
     local UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
     local OLDNAME PKG_NAME PKG_VER PKG_ARCH PKG_BUILD
     local VER_NUMERIC NEWVER_NUMERIC VER_NDIGITS NEWVER_NDIGIT UPDATED
-    local CURPKG PKGS NUMPKGS PROGRESSCOUNTER=0
+    local CURPKG PKGS NUMPKGS
 
     if [[ -z $REPO_TOOL ]]; then
         if [[ $DIAG ]]; then
@@ -748,13 +750,13 @@ check_for_updates() {
             get_new_name NAME $OLDNAME
 
             # Find the current SlackBuild
-            NEWSB=$(find $REPO_DIR -name $NAME.SlackBuild)
+            NEWSB=$(find $FIND_FLAGS -name $NAME.SlackBuild)
             if [[ -z $NEWSB ]]; then
                 # Maybe we're running an old repository where the rename
                 # didn't take place
                 if [[ $NAME != $OLDNAME ]]; then
                     NAME=$OLDNAME
-                    NEWSB=$(find $REPO_DIR -name $NAME.SlackBuild)
+                    NEWSB=$(find $FIND_FLAGS -name $NAME.SlackBuild)
                 fi
             fi
 
@@ -2189,7 +2191,7 @@ view_readmes() {
     local REPORT_FILE=$SBOPKGTMP/sbopkg-all-readmes-report
     local NAME ONOFF PICK READMES
 
-    READMES=$(find $REPO_DIR -name README)
+    READMES=$(find $REPO_DIR -mindepth 3 -maxdepth 3 -name README)
 
     printf "$HEADER_STRING\n" > $HEAD_FILE
 
@@ -2461,7 +2463,7 @@ search_package() {
 
     cd $REPO_DIR
     PKG="$1"
-    PKGPATH=( $(find -type d -mindepth 2 -name "$PKG" | sort) )
+    PKGPATH=( $(find -type d -mindepth 2 -maxdepth 2 -name "$PKG" | sort) )
 
     if [[ -z $PKGPATH ]]; then
         return 1
@@ -2576,9 +2578,11 @@ string_search() {
             local INST_PKGS+="$REPO_DIR/*/$PKGNAME "
         done
         local FIND_PATH="$INST_PKGS"
+        local DEPTH=1
     else
         local SEARCH_TERM="$1"
         local FIND_PATH="$REPO"
+        local DEPTH=3
     fi
     local CAT_SELECTION=$SBOPKGTMP/sbopkg_category_selection
     local ITEM_SELECTION=$SBOPKGTMP/sbopkg_item_selection
@@ -2589,7 +2593,8 @@ string_search() {
     # The sed expression processes find's output into data usable for the menu
     # file but the first two parts are needed to sanitize the input - which
     # raises the question of true general sanitizing of this input
-    ( find $FIND_PATH -iname 'README' -exec egrep -iwm1 "$SEARCH_TERM" {} + |
+    ( find $FIND_PATH -mindepth $DEPTH -maxdepth $DEPTH -iname 'README' \
+        -exec egrep -iwm1 "$SEARCH_TERM" {} + |
         sed "
             s,\",\',g
             s/\\\/\\\\\\\\/g
@@ -3087,7 +3092,7 @@ remove_obsolete_sources() {
     { # Grouping for progressbar
     echo 0 # Progressbar begin
 
-    find $REPO_DIR -name \*.info > $FIND_RESULT
+    find $REPO_DIR -mindepth 3 -maxdepth 3 -name \*.info > $FIND_RESULT
     NUMINFO=$(wc -l < $FIND_RESULT)
     ls -A $SRCDIR > $SOURCES
 
