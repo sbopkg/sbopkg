@@ -39,3 +39,6 @@ glest=glestae
 dovecot-cmusieve=dovecot-pigeonhole
 pyyaml=PyYAML
 perl-dbd-sqlite=perl-DBD-SQLite
+virtualbox-ose-addons=virtualbox-addons
+virtualbox-ose=virtualbox
+wormux=warmux
