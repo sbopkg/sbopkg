@@ -50,9 +50,9 @@ GETTING HELP
     HACKING           Coding and documentation guidelines
     KNOWN_ISSUES      Problems and workarounds
     NEWS              History of user-visible changes
-    README-queuefiles Details on queuefiles and their format
-    README-renames    Details on rename files and their format
-    README-repos      Details on repo files and their format
+    README-queuefiles Details on repeatably building multiple packages
+    README-renames    Details on handling renamed programs
+    README-repos      Details on changing/adding sources of SlackBuilds
     THANKS            Appreciation of contributors to sbopkg
     TODO              Things that may be added or modified in the future
     contrib/          Additional user-contributed files
