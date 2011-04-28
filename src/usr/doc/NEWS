@@ -1,8 +1,11 @@
 SBOPKG NEWS
 
-sbopkg xxxVERSIONxxx (xxxDATExxx)
+sbopkg 0.35.0 (2011-04-28 02:48 UTC)
 
     FEATURES
+
+        * This release of sbopkg is Slackware 13.37-ready. (Congrats to
+          all involved in the Slackware release.)
 
         * The READMEs of all installed packages can now be read from the
           main menu's list/uninstall item. (Selection state will also
