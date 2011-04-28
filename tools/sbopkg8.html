@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of SBOPKG</TITLE>
 </HEAD><BODY>
 <H1>SBOPKG</H1>
-Section:  (8)<BR>Updated: February 2011<BR><A HREF="#index">Index</A>
+Section:  (8)<BR>Updated: April 2011<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 
@@ -52,17 +52,20 @@ In order for
 <B>sbopkg</B>
 
 to be used, a configuration file must exist at
-<I>/etc/sbopkg/sbopkg.conf</I>.
+<I>/etc/sbopkg/sbopkg.conf</I>
 
-An initial install will provide the user with that file while upgrades
-will add an
+and/or
+<I>~/.sbopkg.conf</I>.
+
+An initial install will provide the user with the system file while
+upgrades will add an
 <I>/etc/sbopkg/sbopkg.conf.new</I>
 
 file with which the user may merge or replace the older version.
 See
 <B><A HREF="http://localhost/cgi-bin/man/man2html?5+sbopkg.conf">sbopkg.conf</A></B>(5)
 
-for more information about the configuration file.
+for more information about the configuration files.
 <P>
 
 <B>Sbopkg</B>
@@ -113,7 +116,7 @@ of
 <B>sbopkg</B>.
 
 Currently, the size of a local copy of the SBo repository is about
-about 93M.
+about 96M.
 The main menu also allows the user to view the SBo
 <I>ChangeLog</I>,
 
@@ -171,10 +174,7 @@ Finally, if
 is set to
 <B>YES</B>
 
-in the
-<I>sbopkg.conf</I>
-
-file then a permanent log of the build process is saved.
+in a configuration file, a permanent log of the build process is saved.
 See
 <B><A HREF="http://localhost/cgi-bin/man/man2html?5+sbopkg.conf">sbopkg.conf</A></B>(5)
 
@@ -246,18 +246,15 @@ and  will default to
 If the user wants
 <B>sbopkg</B>
 
-to use another editor, such as
-<B>nano</B>,
-
-then adding the requisite information in
+to use another editor or pager, then adding the requisite information in
 <I>~/.bashrc</I>,
 
 <I>/etc/profile</I>,
 
-or other similar configuration file to export
-<B>EDITOR</B>
+or other similar configuration file (including
+<B>sbopkg</B>'s
 
-will suffice.
+own configuration files) to export the relevant variable will suffice.
 
 <A NAME="lbAF">&nbsp;</A>
 <H2>OPTIONS</H2>
@@ -495,11 +492,25 @@ options is minimized.
 <DT><B>-R</B>
 
 <DD>
-Show all the
+When combined with
+<B>-b</B>
+
+or
+<B>-i</B>,
+
+view the
 <I>README</I>
 
-files of the queued packages before starting the build.
-This is useful when the user wants to make a final check.
+files of the packages to be built/installed before starting the build
+process.
+This is useful for making a final check.
+When combined with
+<B>-p</B>,
+
+view the
+<I>README</I>
+
+files of all installed packages from the active repo.
 
 <DT><B>-r</B>
 
@@ -551,8 +562,8 @@ or
 <I>bar</I>.
 
 <DT><DD>
-Note that shell metacharacters may be supplied in the arguments. For
-instance,
+Note that shell metacharacters may be supplied in the arguments.
+For instance,
 <DL COMPACT><DT><DD>
 <DL COMPACT>
 <DT><DD>
@@ -604,7 +615,7 @@ man page for more information about the ``local'' repository.
 The
 <I>VERSION</I>
 
-format is repository/branch (e.g., SBo/13.1).
+format is repository/branch (e.g., SBo/13.37).
 If the repository is omitted,
 <B>sbopkg</B>
 
@@ -631,27 +642,30 @@ on stdout.
 
 <DD>
 Default system-wide file to specify configuration options.
-<DT><I>/etc/sbopkg/renames.d/50-default</I>
+<DT><I>~/.sbopkg.conf</I>
 
 <DD>
-Default file that lists software in the SBo repositories that has been
-renamed.
+File to override system configuration options.
+<DT><I>/etc/sbopkg/renames.d/*.renames</I>
+
+<DD>
+Files that list software in the SBo repositories that has been renamed.
 See the
-<I>README-renames.d</I>
+<I>README-renames</I>
 
 document in the
 <B>sbopkg</B>
 
 documentation directory for more information.
-<DT><I>/etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}</I>
+<DT><I>/etc/sbopkg/repos.d/*.repo</I>
 
 <DD>
-Three default files for various types of
+Files for various types of
 <B>sbopkg</B>
 
 repositories.
 See the
-<I>README-repos.d</I>
+<I>README-repos</I>
 
 document in the
 <B>sbopkg</B>
@@ -694,7 +708,7 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+vi">vi</A></B>(1),
 
-<I>/usr/doc/sbopkg-0.34.1/*</I>
+<I>/usr/doc/sbopkg-0.35.0/*</I>
 
 
 <P>
@@ -717,6 +731,6 @@ slakmagik
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 04:21:25 GMT, February 05, 2011
+Time: 02:57:11 GMT, April 28, 2011
 </BODY>
 </HTML>

@@ -1,4 +1,4 @@
-sbopkg 0.34.1
+sbopkg 0.35.0
 Usage: sbopkg [OPTIONS] <packagename(s)>
 Options are:
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
@@ -19,7 +19,10 @@ Options are:
   -q              Quiet some of the command-line output.
   -r              Sync the remote repository with the local mirror and then
                   quit.
-  -R              Preview the READMEs before starting the build process.
+  -R              When combined with -b or -i, preview the READMEs of the
+                  packages to be built/installed before starting the build
+                  process. When combined with -p, show the READMEs of all
+                  installed packages from the active repo.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.

@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of SBOPKG.CONF</TITLE>
 </HEAD><BODY>
 <H1>SBOPKG.CONF</H1>
-Section:  (5)<BR>Updated: February 2011<BR><A HREF="#index">Index</A>
+Section:  (5)<BR>Updated: April 2011<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 
@@ -27,7 +27,15 @@ packages.
 The default configuration file is installed at
 <I>/etc/sbopkg/sbopkg.conf</I>.
 
-Also, please see the subsection below about
+The user may override any settings in that file by creating
+<I>~/.sbopkg.conf</I>.
+
+<P>
+
+Please see the
+<B>NOTES</B>
+
+section for more information about variables, including
 <B>ARCH</B>.
 
 <P>
@@ -126,7 +134,13 @@ to
 is that
 <B>TMP</B>
 
-is set to an internal value and any other
+is set to
+<B>sbopkg</B>'s
+
+own temporary directory
+(<I>$TMPDIR/sbopkg.RANDOM_STRING</I>)
+
+and any other
 <B>TMP</B>
 
 setting is ignored.
@@ -325,7 +339,7 @@ files and can also be listed by issuing
 <DT><DD>
 The default assignment is:
 <DT><DD>
-REPO_BRANCH=${REPO_BRANCH:-13.1}
+REPO_BRANCH=${REPO_BRANCH:-13.37}
 
 <DT><B>REPO_NAME</B>
 
@@ -349,7 +363,7 @@ variables are affected by the repository files maintained in
 <I>/etc/sbopkg/repos.d.</I>
 
 Please see the
-<I>README-repos.d</I>
+<I>README-repos</I>
 
 document in the
 <B>sbopkg</B>
@@ -367,7 +381,7 @@ Path.
 <DT><DD>
 This option allows the user to set the location of the local mirrors of
 the remote repositories.
-Currently, the size of a local copy of the SBo repository is about 93M.
+Currently, the size of a local copy of the SBo repository is about 96M.
 <DT><DD>
 The default assignment is:
 <DT><DD>
@@ -512,20 +526,6 @@ flags (options) that are used by
 
 Users are cautioned against making any changes to the default values
 since new flags may or may not work.
-Note: the
-<B>wget</B>
-
-command in
-<B>sbopkg</B>
-
-already uses the
-<B>-O</B>
-
-flag, so there is no need to add that to the
-<B>WGETFLAGS</B>
-
-option.
-Changing most of these default options is not recommended.
 However,
 <B>--timeout</B>
 
@@ -711,27 +711,30 @@ settings if this is required for the build.
 
 <DD>
 File to specify configuration options.
-<DT><I>/etc/sbopkg/renames.d/50-default</I>
+<DT><I>~/.sbopkg.conf</I>
 
 <DD>
-Default file that lists software in the SBo repository that has been
-renamed.
+File to override system configuration options.
+<DT><I>/etc/sbopkg/renames.d/*.renames</I>
+
+<DD>
+Files that list software in the SBo repository that has been renamed.
 See the
-<I>README-renames.d</I>
+<I>README-renames</I>
 
 document in the
 <B>sbopkg</B>
 
 documentation directory for more information.
-<DT><I>/etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}</I>
+<DT><I>/etc/sbopkg/repos.d/*.repo</I>
 
 <DD>
-Three default files for various types of
+Files for various types of
 <B>sbopkg</B>
 
 repositories.
 See the
-<I>README-repos.d</I>
+<I>README-repos</I>
 
 document in the
 <B>sbopkg</B>
@@ -770,7 +773,7 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+wget">wget</A></B>(1),
 
-<I>/usr/doc/sbopkg-0.34.1/*</I>
+<I>/usr/doc/sbopkg-0.35.0/*</I>
 
 
 <P>
@@ -793,6 +796,6 @@ slakmagik
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 04:21:25 GMT, February 05, 2011
+Time: 02:57:11 GMT, April 28, 2011
 </BODY>
 </HTML>
