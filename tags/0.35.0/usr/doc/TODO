@@ -1,0 +1,37 @@
+SBOPKG TODO
+
+Items should be grouped by {High,Medium,Low} Priorities with sub-groups
+of {Feature,Modification,Bugfix} Categories.
+
+MEDIUM PRIORITY
+
+    Feature Category
+
+        * Add lftp to sync methods.
+
+        * Add flag to skip prompts and force building packages or queues
+          when both exist with the same name. (Suggested by OzanBurada.)
+
+    Modification Category
+
+        * Properly test supplied options to ensure that only sensible
+          option combinations are allowed, thus replacing the current
+          crude test which only prevents -b and -i from being used
+          together.
+
+LOW PRIORITY
+
+    Feature Category
+
+        * Replace getopts call with custom option parsing and add 'long'
+          switches to the cli options (for example, '--build' in
+          addition to the current '-b' switch).
+
+        * Replace all calls to dialog with a DIALOG variable (which
+          would still default to dialog), allowing users to more easily
+          try other interfaces.
+
+    Modification Category
+
+        * Smooth out the oddities regarding which vars can be passed how
+          (such as BUILD and TAG).

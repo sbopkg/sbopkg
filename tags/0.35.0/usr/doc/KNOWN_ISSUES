@@ -1,0 +1,85 @@
+SBOPKG KNOWN ISSUES
+
+The following are the known user-visible issues in sbopkg or upstream in
+the tools it uses:
+
+* In dialog versions before 20100119 the left/right arrows in
+  '--inputbox' widgets (the boxes the user types text into) do not
+  navigate in a button context. (They do navigate in an editing
+  context.)
+
+  Workaround: navigate with up/down arrows or tab/shift-tab.
+
+* If dialog is run in a terminal emulator and the user exits using the
+  window manager's 'close' (or equivalent) button/command, dialog may
+  hang, using full CPU capacity and have to be killed. This does not
+  seem to be an sbopkg issue.
+
+  Details: http://code.google.com/p/sbopkg/issues/detail?id=30
+
+  Workaround: use dialog's own exit methods - its buttons, escape, ^C,
+  etc.
+
+* When checking for updates, for some packages sbopkg may tell you
+  "Note: repo version not obtainable by standard method, may be
+  inaccurate.". This happens with packages whose version is very
+  difficult/impossible to determine without actually building the
+  package -- one example of this at the time of writing is the
+  google-chrome package, whose version is picked from the source archive
+  itself. In these cases sbopkg falls back to trusting the .info file,
+  and warns the user about it.
+
+  Workaround: none needed
+
+* While you are free to set PAGER to any value you like, be aware that
+  some pagers and settings may cause unexpected behavior. An example is
+  if paging less than a screenful of output from the uninstalled
+  packages option - the default pager 'more' will exit, displaying the
+  packages and a prompt. 'less' may prompt for exit and clear its output
+  on exit. Setting the environment variable LESS to include the F and X
+  options will make less behave more like more in this instance. Other
+  pagers may have other behaviors and other means of configuration.
+
+  Workaround: pager-specific
+
+* In Slackware 13.1 and earlier and sbopkg 0.33.2 and earlier, sbopkg
+  would initially fail to download SlackBuilds only available through
+  https. With more recent versions of sbopkg, it will offer to retry
+  with certificate checking temporarily disabled and should then
+  succeed. With more recent versions of Slackware, everything should
+  Just Work unless there is an issue with 'self-signed' certificates or
+  the like. Then the prompt to disable should still work.
+
+  Workaround: In Slackware 13.1 and earlier, the best step, in many
+  cases, is to install 'openssl-certs' from SBo, though this will not
+  help for 'self-signed' certificates which will still trigger the
+  prompt. To avoid it altogether you can permanently turn off
+  certificate checking by adding '--no-check-certificate' to WGETFLAGS
+  in sbopkg.conf.
+
+* Certain packages build kernel modules and need to (re)set the ARCH to
+  'x86' on i?86 (32-bit) systems which may result in packages with 'x86'
+  as the ARCH in the file name, while sbopkg will display the specific
+  ARCH of your system (or the ARCH you've set) in certain cases, such as
+  in widget titles.
+
+  Workaround: none needed
+
+* When using sbopkg to sync to SBo git repositories (which is possible
+  but unsupported) unexpected results may occur.
+
+  Details: http://code.google.com/p/sbopkg/issues/detail?id=47
+  http://sbopkg.org/pipermail/sbopkg-users/2010-May/000477.html
+
+  Workaround: see above links
+
+* When using the sbopkg bash completion file, 'sbopkg -V <TAB>' produces
+  only branches as output rather than 'repo/branch'es. Currently, this
+  works fine (just as if you typed 'sbopkg -V branch' yourself) but
+  means you need to know which branches go to which repos. Also, it
+  might have been more convenient to drop this in /etc/bash_completion.d
+  but the full Slackware bash completion package (in extra) had an
+  sbopkg completion file and may again someday and placing it in
+  doc/contrib avoids any namespace or loading collisions.
+
+  Workaround: none needed

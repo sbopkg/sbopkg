@@ -1,44 +1,114 @@
-sbopkg 0.34.1 (2011-02-05 04:20 UTC)
+sbopkg 0.35.0 (2011-04-28 02:48 UTC)
 
     FEATURES
 
-        * Added Spanish translations of the man pages. Much thanks to
-          Pablo Castano Fernandez for doing these translations.
+        * This release of sbopkg is Slackware 13.37-ready. (Congrats to
+          all involved in the Slackware release.)
+
+        * The READMEs of all installed packages can now be read from the
+          main menu's list/uninstall item. (Selection state will also
+          now be remembered.) Thanks to dmotaleite for the RFE.
+
+        * Similarly, the -R and -p flags can now be combined to page
+          through the READMEs of all installed packages.
+
+        * Added ponce's repo (SBo variant for -current) to the default
+          repos. Thanks to Mauro for suggesting this about a year ago.
+          Note that this is unsupported (if a build from this repo
+          breaks in sbopkg you get to keep both pieces) but people seem
+          pleased with this repo and it'll save a step for new users.
+          Note that the default repo files have been reordered, as well.
+          50-sb64 is now 70, 60-local is now 50, and the new one is 60.
+          This puts the unsupported repos last. If by chance you have a
+          file with those names already in there, upgrading sbopkg will
+          clobber them. See each of the two following sections for more
+          repo-related modifications and bugfixing.
+
+        * Added a bash completion file for sbopkg. This is independent
+          of the bash-completion package. It can be found in the new
+          doc/contrib directory. Source the file (in your shell startup
+          files if you want it always on automatically) from its current
+          location or wherever you wish to copy it and you should be
+          able to complete some of sbopkg's flags and their arguments.
+          Also see the KNOWN_ISSUES file. Thanks to Sergey V. for this
+          contribution.
 
     MODIFICATIONS
 
-        * Revision of documentation. Major reformatting and some textual
-          modifications of /usr/doc/sbopkg-*/* including breaking out
-          the credits in the script into a detailed THANKS file,
-          renaming and reformatting ChangeLog.txt into NEWS, renaming
-          the sample queuefiles from *.sqf to *.sqf.sample, and making
-          lesser modifications to all the other docs.
+        * Updated French man pages. Thanks to Marie-Claude Collilieux.
+
+        * Revised documentation: moved the queuefiles directory into a
+          new contrib directory, renamed the README-*.d documents,
+          stripping the '.d'. Clarified/updated the dialog nav/certcheck
+          sections of KNOWN_ISSUES, brought the missing 0.27.0 and
+          0.33.1 branch changes from their ChangeLogs into NEWS, added a
+          block in README describing all the plain text documents, added
+          a note about making corrections to THANKS, a couple of TODO
+          items, etc.
+
+        * Note also that symlinks are now made from README-repos and
+          README-renames to READMEs in the corresponding /etc/sbopkg/*.d
+          directories. NOTE that renames files must now end in .renames
+          so, if you have custom files in renames.d, you'll need to
+          rename them.
+
+        * The 'Choose a repository' dialog widget is now titled
+          'Repository Selection' and the widget text was revised. Also,
+          the menu itself used to say 'BRANCH (REPO) DESCRIPTION' and
+          now says 'REPO (BRANCH) DESCRIPTION'. The relevant item in the
+          Utilities menu that shows which repo/branch you're on and
+          takes you to the Repository Selection widget was similarly
+          re-ordered.
+
+        * When a repository directory does not exist, sbopkg now
+          displays, e.g.
+
+          REPO_{ROOT,NAME,BRANCH} -> /var/lib/sbopkg/,SBo/,13.1
+
+          or, in the case of git repos which don't currently have BRANCH
+          directories, it just shows REPO_{ROOT,NAME}. It used to
+          display
+
+          REPO_ROOT -----------> /var/lib/sbopkg/
+
+          While the new line may be odd looking, it should be clear
+          enough that it means REPO_ROOT is /var/lib/sbopkg/, REPO_NAME
+          is SBo/ and REPO_BRANCH is 13.1 and that these are path
+          components and that the path is missing. Before, it would say
+          /var/lib/sbopkg/ didn't exist if, e.g., 13.1 was missing even
+          when /var/lib/sbopkg/ did exist.
 
     BUGFIXES
 
-        * Fixed issue where MKDIR_PROMPT was being ignored. Thanks to
-          catkin for raising this issue.
+        * Fixed an issue where URL redirects and SSL certificate check
+          failures could combine to cause a download failure. Thanks to
+          vbatts for raising this issue.
 
-        * Fixed issue where -o would wrongly produce no output. Thanks
-          to ArTourter for raising this issue and to Mauro Giachero for
-          the patch.
+        * Fixed a documentation bug where the ability to keep a
+          ~/.sbopkg.conf file to override the system config file (since
+          0.25.0) wasn't documented anywhere other than this file. It's
+          now in both manuals. Thanks to Bill Kirkpatrick for raising
+          this issue.
 
-        * Fixed issue where TAG would sometimes not appear in the final
-          package. Thanks to chytraeus for raising this issue.
+        * Fixed an issue where 'Invert all' in file removal dialogs
+          didn't 'invert' but turned everything on or off, regardless of
+          selection state. If it was really intended to be
+          'Select/Deselect all', then changing the button to "Invert
+          Sel" and making it do that was a feature/modification instead
+          of a bugfix. ;)
 
-        * A revision which fixed a failure to properly initialize
-          directories when running under bash 3x was committed but
-          didn't make it into the released package. It is included in
-          this release. Also fixed a problem with a blank line being
-          wrongly displayed in the directory initialization output in
-          older bashes. Thanks to greinze for pointing the latter out.
+        * Fixed an issue were the user could switch repos, receive a
+          directory creation prompt, abort it, and the active repo would
+          be switched anyway, despite the directory not being created.
+          Now, the original repo is restored as the active one.
 
-        * Fixed documentation bug where the obsolete SBOPKGTMP and
-          current TMPDIR variables weren't correctly documented. Thanks
-          to dive for raising this issue.
+        * Fixed a bug in a previous bugfix that would still let sbopkg
+          download source files whose DOWNLOAD value ended in
+          '/download' even when the source files were cached.
 
-        * Fixed non-documentation bug where TMPDIR wasn't being
-          correctly assigned when set in sbopkg.conf. Thanks to Ken
-          Roberts for reporting the issue and providing a preliminary
-          fix.
+        * Fixed a depth-restriction bug triggered when an app
+          directory's subdirectory has the same name as another app
+          directory, causing sbopkg to match things or try to use things
+          like openvswitch/xen/foo when xen/foo is intended. Thanks to
+          David Somero for reporting this.
 
