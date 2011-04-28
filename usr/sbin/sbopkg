@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id$
+# $Id: sbopkg 901 2011-03-21 01:49:25Z slakmagik $
 #
 # sbopkg - The SlackBuilds.org Package Browser
 # Copyright 2007-2010 Chess Griffin <chess@chessgriffin.com>
@@ -4467,8 +4467,8 @@ SBOPKG_REPOS_D=${SBOPKG_REPOS_D:-/etc/sbopkg/repos.d}
 EDITOR=${EDITOR:-vi}
 PAGER=${PAGER:-more}
 CWD=$(pwd)
-REV="$Revision$"
-SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
+REV="$Revision: 901 $"
+SBOVER=0.35.0
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7

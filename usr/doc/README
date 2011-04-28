@@ -20,7 +20,7 @@ ABOUT
 
     Sbopkg will allow the user to create, synchronize, search, and
     browse a copy of the active repository (currently, the size of a
-    local copy of the SBo repository is xxxSIZExxx), read the ChangeLog
+    local copy of the SBo repository is about 96M), read the ChangeLog
     (if available), list the installed SBo packages, display potential
     updates to SlackBuilds.org packages, view the README, SlackBuild,
     .info, and slack-desc and other files for each package, and make
