@@ -71,6 +71,23 @@ split_pkg_name() {
     ')
 }
 
+set_type() {
+    # This function enforces the exclusivity of the -b/-d/-i flags and sets
+    # the value of TYPE. It takes an argument of 'download', 'build', or
+    # 'install' and sets TYPE to that value unless it's already been set to
+    # another, in which case it errors out.
+
+    local OPT_TYPE=$1
+
+    if [[ $TYPE && $TYPE != $OPT_TYPE ]]; then
+        printf "$SCRIPT: the -b, -d and -i options are exclusive. " >&2
+        printf "Please use only one.\n" >&2
+        exit 1
+    else # set global type
+        TYPE=$OPT_TYPE
+    fi
+}
+
 config_check() {
     # Check if config file is there and if so check that it has all
     # needed variables with any value, and set them.
@@ -2874,6 +2891,10 @@ check_source() {
     if [[ -f $SRCDIR/$SRCNAME ]]; then
         echo "Found $SRCNAME in $SRCDIR."
         unset NO_DL_LOOP
+        if [[ $QUEUETYPE == download ]]; then
+            echo "  Found $SRCNAME in $SRCDIR." >> $TMPSUMMARYLOG
+            return 0
+        fi
     else
         echo "$PKG not found in $SRCDIR."
         return 1
@@ -3340,7 +3361,7 @@ process_package() {
     local REPLY
 
     echo
-    echo "Building $PKGNAME"
+    echo "Processing $PKGNAME"
     # Prepare a temporary output directory
     rm -rf $SB_OUTPUT
     mkdir -p $SB_OUTPUT
@@ -3363,8 +3384,9 @@ process_package() {
         # necessarily a download.
         # If the sources are successfully fetched, start the build.
         if get_source $PKGNAME.info.build; then
-            if [[ $DOWNLOADONLY ]]; then
-                break
+            if [[ $QUEUETYPE == download ]]; then
+                echo "Done downloading source for $PKGBUILD."
+                return 1
             fi
             build_package $PKGNAME
         fi
@@ -3767,8 +3789,22 @@ EOF
     return 0
 }
 
+log_queuetype() {
+    # This function is auxilary to process_queue() and simply logs the correct
+    # operation based on QUEUETYPE.
+
+    printf "Queue Process:" >> $TMPLOG
+    if [[ $QUEUETYPE == "install" ]]; then
+        echo "  Download, build, and install" >> $TMPLOG
+    elif [[ $QUEUETYPE == "build" ]]; then
+        echo "  Download and build" >> $TMPLOG
+    else
+        echo "  Download only" >> $TMPLOG
+    fi
+}
+
 process_queue() {
-    local QUEUETYPE=$1 # build|buildinstall
+    local QUEUETYPE=$1 # download|build|install
     local CHKBUILD REPLY
 
     # The first (and largest) of three sections in this function is a precheck
@@ -3782,14 +3818,9 @@ process_queue() {
     echo "###########################################" >> $TMPLOG
     echo >> $TMPLOG
     echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
-    echo "PACKAGE BUILDING/INSTALLATION PRE-CHECK LOG" >> $TMPLOG
+    echo "PRE-CHECK LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
-    echo -n "Queue Process:" >> $TMPLOG
-    if [[ $QUEUETYPE == "buildinstall" ]]; then
-        echo "  Build and install" >> $TMPLOG
-    else
-        echo "  Build only" >> $TMPLOG
-    fi
+    log_queuetype
     echo >> $TMPLOG
     for CHKBUILD in $(< $STARTQUEUE); do
         unset PKG PKGPATH PKGNAME VERSION BUILD PICKFILE FILE
@@ -3880,8 +3911,8 @@ process_queue() {
     fi
     rm $TMPLOG
 
-    # Okay, precheck done, now start the actual queue processing (build or
-    # build+install)
+    # Okay, precheck done, now start the actual queue processing (download,
+    # build, install)
     > $SBOPKGTMP/sbopkg_build.lck
     for PKGBUILD in $(< $FINALQUEUE); do
         if ! search_package $PKGBUILD; then
@@ -3916,7 +3947,7 @@ process_queue() {
             echo "Built package: $NEWPACKAGE"
             if [[ -f $NEWPACKAGE ]]; then
                 mv $NEWPACKAGE $OUTPUT
-                if [[ $QUEUETYPE == "buildinstall" ]]; then
+                if [[ $QUEUETYPE == "install" ]]; then
                     install_package $OUTPUT $NEWPACKAGE
                     echo "  Installing package $NEWPACKAGE ... OK" >> \
                         $TMPSUMMARYLOG
@@ -3938,14 +3969,9 @@ process_queue() {
     rm -f $SBOPKGTMP/sbopkg_build.lck
     echo >> $TMPLOG
     echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
-    echo "PACKAGE BUILDING/INSTALLATION SUMMARY LOG" >> $TMPLOG
+    echo "SUMMARY LOG" >> $TMPLOG
     echo "Using the $REPO_DESC" >> $TMPLOG
-    echo -n "Queue Process:" >> $TMPLOG
-    if [[ $QUEUETYPE == "buildinstall" ]]; then
-        echo "  Build and install" >> $TMPLOG
-    else
-        echo "  Build only" >> $TMPLOG
-    fi
+    log_queuetype
     cat $TMPSUMMARYLOG >> $TMPLOG
     rm $TMPSUMMARYLOG
     echo >> $TMPLOG
@@ -3989,7 +4015,7 @@ start_dialog_queue() {
             to exit.")" 8 50
     case $? in
         0 ) # Build and install
-            process_queue buildinstall
+            process_queue install
             if [[ $? == 1 ]]; then
                 dialog --title "Error" --msgbox "$(crunch "No valid \
                     packages found.")" 8 40
@@ -4465,9 +4491,8 @@ unset CLEANUP         # If set, delete the sources & c. after the build
 unset KEEPLOG         # If set, keep a permanent build log
 unset ALLOW_MULTI     # If set, allow more that one instance of sbopkg running
 unset BUILDLIST       # List of packages to build/install (from CLI)
-unset DOWNLOADONLY    # Don't build packages, only download the sources
 
-unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
+unset BUILD CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED VIEW_READMES
 unset UNINSTPKG
 
@@ -4511,11 +4536,10 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:D:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
+while getopts ":b:cD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
     case $OPT in
-        b ) # Build
-            BFLAG=1
-            TYPE="build"
+        b ) # Download, build
+            set_type build
             BUILDLIST+=("$OPTARG")
             unset DIAG
             ;;
@@ -4523,11 +4547,11 @@ while getopts ":b:cd:D:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             CHK_UPDATES=1
             unset DIAG
             ;;
-        d ) # Location of the local SBo repository
+        D ) # Location of the local SBo repository
             REPO_ROOT=$OPTARG
             ;;
-        D ) # Download-only mode
-            DOWNLOADONLY=1
+        d ) # Download
+            set_type download
             BUILDLIST+=("$OPTARG")
             unset DIAG
             ;;
@@ -4542,9 +4566,8 @@ while getopts ":b:cd:D:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             GENSEARCH+=("$OPTARG")
             unset DIAG
             ;;
-        i ) # Build and install
-            IFLAG=1
-            TYPE="buildinstall"
+        i ) # Download, build, install
+            set_type install
             BUILDLIST+=("$OPTARG")
             unset DIAG
             ;;
@@ -4572,12 +4595,12 @@ while getopts ":b:cd:D:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             QUIET=1
             unset DIAG
             ;;
-        r ) # Sync with the remote repository
-            SYNC=1
-            unset DIAG
-            ;;
         R ) # Preview the READMEs before building
             VIEW_READMES=1
+            unset DIAG
+            ;;
+        r ) # Sync with the remote repository
+            SYNC=1
             unset DIAG
             ;;
         s ) # Name search
@@ -4588,13 +4611,13 @@ while getopts ":b:cd:D:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             UPDATE=1
             unset DIAG
             ;;
-        v ) # print version
-            echo $SBOVER
-            exit
-            ;;
         V ) # Set repository
             VERSION=1
             CUSTOMVER="$OPTARG"
+            ;;
+        v ) # print version
+            echo $SBOVER
+            exit
             ;;
         h | * ) # Help
             cat << EOF
@@ -4604,8 +4627,8 @@ Options are:
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
                   are specified, build the packages they refer to.
   -c              Check for updates to installed packages.
-  -d localdir     Location of local copy of the repositories.
-  -D pkg/queue(s) Like '-b', but only download sources.
+  -D localdir     Location of local copy of the repositories.
+  -d pkg/queue(s) Like '-b', but only download sources.
   -e error_action Specify what sbopkg is supposed to do on build errors.
                   Valid options are: ask (default), continue, stop.
   -f file         Override default configuration file with specified file.
@@ -4618,20 +4641,20 @@ Options are:
   -P              List uninstalled cached package files & prompt for deletion.
   -p              List installed packages from active repo.
   -q              Quiet some of the command-line output.
-  -r              Sync the remote repository with the local mirror and then
-                  quit.
   -R              When combined with -b or -i, preview the READMEs of the
                   packages to be built/installed before starting the build
                   process. When combined with -p, show the READMEs of all
                   installed packages from the active repo.
+  -r              Sync the remote repository with the local mirror and then
+                  quit.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
-  -v              Print sbopkg's version on stdout.
   -V repo/branch  Set the repository/branch. The repo is optional and, if
                   not given, sbopkg will try to make the best match,
                   starting with the default repo. For a list of valid repos,
                   issue '-V ?'
+  -v              Print sbopkg's version on stdout.
 
 Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2") or
 can be specified multiple times (-i foo -i bar). If using the latter syntax,
@@ -4648,12 +4671,6 @@ done
 shift $(($OPTIND - 1))
 if [[ $# -gt 0 ]]; then
     echo "Error: unknown token \"$@\"" >&2
-    exit 1
-fi
-
-if [[ $BFLAG && $IFLAG ]]; then
-    echo "Error:  The -b and -i options cannot be used together." >&2
-    echo "Please use one or the other.  Exiting." >&2
     exit 1
 fi
 

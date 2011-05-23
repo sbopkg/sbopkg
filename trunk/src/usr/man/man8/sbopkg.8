@@ -112,8 +112,8 @@ directory, then
 .B sbopkg
 will automatically add a new menu entry allowing the user to install the
 package if he chooses.
-Alternatively, the user can choose to automatically build, or both build
-and install, individual packages or several packages in a build queue.
+Alternatively, the user can choose to automatically download, build, or
+install individual packages or several packages in a build queue.
 Finally, if
 .B KEEPLOG
 is set to
@@ -233,7 +233,17 @@ time it is encountered.
 Display a list of installed SBo packages and potential updates.
 .\"---------------------------------------------------------------------
 .TP
-.BI \-d " DIRECTORY"
+.BI \-d " PACKAGE(s)/QUEUE(s)"
+Download source archives of the argument(s) from the URL specified in
+the active repository.
+.IP
+See the
+.B \-b
+option for details since, other than the build, these two options
+operate similarly.
+.\"---------------------------------------------------------------------
+.TP
+.BI \-D " DIRECTORY"
 Manually specify the full path to the
 .I DIRECTORY
 containing the local SBo repository.
@@ -291,7 +301,7 @@ Display the help.
 .\"---------------------------------------------------------------------
 .TP
 .BI \-i " PACKAGE(s)/QUEUE(s)"
-Build and install packages of the argument(s) from the active
+Download, build, and install packages of the argument(s) from the active
 repository.
 .IP
 See the
@@ -307,12 +317,13 @@ and installed.
 .TP
 .B \-k
 When used together with
-.B \-b
+.BR \-b ,
+.BR \-d ,
 or
 .BR \-i ,
 this option tells
 .B sbopkg
-to skip (i.e., don't build) any package it finds to be already
+to skip (i.e., don't process) any package it finds to be already
 installed.
 .IP
 Please note that only a name comparison is performed, so when this
@@ -361,13 +372,13 @@ options is minimized.
 .TP
 .B \-R
 When combined with
-.B -b
+.BR -b ,
+.BR -d ,
 or
 .BR -i ,
 view the
 .I README
-files of the packages to be built/installed before starting the build
-process.
+files of the packages to be processed before processing them.
 This is useful for making a final check.
 When combined with
 .BR -p ,
