@@ -2,6 +2,20 @@ SBOPKG NEWS
 
 sbopkg xxxVERSIONxxx (xxxDATExxx)
 
+    FEATURES
+
+        * Sbopkg now has a -d flag which can download without building
+          or installing, in addition to -b (download, build) and -i
+          (download, build, install). Thanks to Kristoffer Karlsson for
+          the feature request and some testing and to Mauro Giachero for
+          the initial patch and discussion and review of additional
+          patching.
+
+    MODIFICATIONS
+
+        * Specifying an alternate directory as repository root from the
+          command line, which was done with the -d flag, is now done
+          with the -D flag. Sorry for any inconvenience.
 
 sbopkg 0.35.0 (2011-04-28 02:48 UTC)
 
