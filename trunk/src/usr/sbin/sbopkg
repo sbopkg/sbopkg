@@ -2699,7 +2699,7 @@ read_info() {
     # to do.  If the user chooses to proceed, then the valid DOWNLOAD and
     # MD5SUM lines from the .info file are tacked on to the end of the
     # *.info.build file.  This way, when read_info is called elsewhere, like
-    # in get_source via build_package, the newly tacked-on lines will provide
+    # in get_source via process_package, the newly tacked-on lines will provide
     # the 'correct' DOWNLOAD and MD5SUM values.  This is more or less a
     # band aid until the multiple read_info invocations can be addressed.
 
@@ -3322,7 +3322,7 @@ error_read() {
     esac
 }
 
-build_package() {
+process_package() {
     # This function fetches the source tarball and builds the package.
     # $1 = the package path
     # $2 = the package name
@@ -3332,7 +3332,7 @@ build_package() {
     #   processing
     # 2 if the build failed and the user asked to stop the queue processing
     # When processing a queue, the caller should continue processing the
-    # queue items if build_package returns 0, and stop if it returns 1.
+    # queue items if process_package returns 0, and stop if it returns 1.
 
     local PKGPATH=$1
     local PKGNAME=$2
@@ -3362,28 +3362,12 @@ build_package() {
         # Note that get_source() "knows" about the source cache, so this isn't
         # necessarily a download.
         # If the sources are successfully fetched, start the build.
-        get_source $PKGNAME.info.build && (
-            # Run the build in a subshell, to avoid namespace pollution
-            echo "Building package for $PKGNAME..."
-            export OUTPUT=$SB_OUTPUT
-            # Custom LC_COLLATE settings can break scripts (since some
-            # expressions, like [A-Z], don't behave as expected -- for
-            # example, LC_COLLATE=fr_FR expands it to AbBcC..zZ).
-            # See also the comment in /etc/profile.d/lang.sh
-            export LC_COLLATE=C
-            export TAG=$REPO_TAG
-            if [[ $CLEANUP ]]; then
-                # We want to remove all the build residuals after running the
-                # SlackBuild script. To do that reliably (i.e. without
-                # deleting too much or leaving garbage behind us), a nice
-                # approach is to use sbopkg's own temp directory.
-                export TMP=$SBOPKGTMP
-                nice sh $PKGNAME.SlackBuild.build
-                echo "Cleaning up..."
-            else
-                nice sh $PKGNAME.SlackBuild.build
+        if get_source $PKGNAME.info.build; then
+            if [[ $DOWNLOADONLY ]]; then
+                break
             fi
-        )
+            build_package $PKGNAME
+        fi
 
         # Let's see the result
         if [ -f $SB_OUTPUT/*.t?z ]; then
@@ -3428,6 +3412,32 @@ build_package() {
     rm -f options.build
 
     return $RETVAL
+}
+
+build_package() {
+    local PKGNAME=$1
+    (
+        # Run the build in a subshell, to avoid namespace pollution
+        echo "Building package for $PKGNAME..."
+        export OUTPUT=$SB_OUTPUT
+        # Custom LC_COLLATE settings can break scripts (since some
+        # expressions, like [A-Z], don't behave as expected -- for
+        # example, LC_COLLATE=fr_FR expands it to AbBcC..zZ).
+        # See also the comment in /etc/profile.d/lang.sh
+        export LC_COLLATE=C
+        export TAG=$REPO_TAG
+        if [[ $CLEANUP ]]; then
+            # We want to remove all the build residuals after running the
+            # SlackBuild script. To do that reliably (i.e. without
+            # deleting too much or leaving garbage behind us), a nice
+            # approach is to use sbopkg's own temp directory.
+            export TMP=$SBOPKGTMP
+            nice sh $PKGNAME.SlackBuild.build
+            echo "Cleaning up..."
+        else
+            nice sh $PKGNAME.SlackBuild.build
+        fi
+    )
 }
 
 edit_local_file() {
@@ -3889,10 +3899,10 @@ process_queue() {
             continue
         fi
         # We test for the lockfile because it may be removed in
-        # build_package() when we call that
+        # process_package() when we call that
         if [[ -f $SBOPKGTMP/sbopkg_build.lck ]]; then
             set -o pipefail
-            build_package $PKGPATH $PKGBUILD 2>&1 | tee -a $TMPBUILDLOG
+            process_package $PKGPATH $PKGBUILD 2>&1 | tee -a $TMPBUILDLOG
             case $? in
                 0 ) ;;
                 1 ) continue ;;
@@ -4455,6 +4465,7 @@ unset CLEANUP         # If set, delete the sources & c. after the build
 unset KEEPLOG         # If set, keep a permanent build log
 unset ALLOW_MULTI     # If set, allow more that one instance of sbopkg running
 unset BUILDLIST       # List of packages to build/install (from CLI)
+unset DOWNLOADONLY    # Don't build packages, only download the sources
 
 unset BUILD BFLAG IFLAG CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED VIEW_READMES
@@ -4500,7 +4511,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
+while getopts ":b:cd:D:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
     case $OPT in
         b ) # Build
             BFLAG=1
@@ -4514,6 +4525,11 @@ while getopts ":b:cd:e:f:g:hi:kloPpqrRs:uV:v" OPT; do
             ;;
         d ) # Location of the local SBo repository
             REPO_ROOT=$OPTARG
+            ;;
+        D ) # Download-only mode
+            DOWNLOADONLY=1
+            BUILDLIST+=("$OPTARG")
+            unset DIAG
             ;;
         e ) # Default on-error behavior
             ON_ERROR=$OPTARG
@@ -4589,6 +4605,7 @@ Options are:
                   are specified, build the packages they refer to.
   -c              Check for updates to installed packages.
   -d localdir     Location of local copy of the repositories.
+  -D pkg/queue(s) Like '-b', but only download sources.
   -e error_action Specify what sbopkg is supposed to do on build errors.
                   Valid options are: ask (default), continue, stop.
   -f file         Override default configuration file with specified file.
