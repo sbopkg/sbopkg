@@ -16,6 +16,9 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
         * Specifying an alternate directory as repository root from the
           command line, which was done with the -d flag, is now done
           with the -D flag. Sorry for any inconvenience.
+        * The 'Build' option in a package's info menu has been renamed
+          to 'Process', along with many other minor informational
+          changes throughout the UI.
 
 sbopkg 0.35.0 (2011-04-28 02:48 UTC)
 
