@@ -4743,6 +4743,11 @@ if [[ $DIAG ]]; then
     fi
     main_menu
 else
+    if [[ $SYNC ]]; then
+        crunch_fmt "Syncing with the remote repository into $REPO_DIR."
+        sync_repo
+    fi
+
     if [[ $BUILDLIST ]]; then
         > $STARTQUEUE
         > $USERQUEUE_LOCK
@@ -4857,11 +4862,6 @@ else
 
     if [[ $GETPKGS ]]; then
         list_packages
-    fi
-
-    if [[ $SYNC ]]; then
-        crunch_fmt "Syncing with the remote repository into $REPO_DIR."
-        sync_repo
     fi
 
     if [[ -n $SEARCH ]]; then
