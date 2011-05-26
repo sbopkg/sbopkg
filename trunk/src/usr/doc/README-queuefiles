@@ -1,7 +1,7 @@
 README-queuefiles
 
 Sbopkg queuefiles are very simple to create, maintain, and share with
-other users. Each queuefile can contain a list of packages to build in
+other users. Each queuefile can contain a list of packages to process in
 order, from top to bottom, and should be named with a .sqf extension.
 Several sample queuefiles are provided in the ./contrib/queuefiles
 directory. Please note that these queuefiles are, in fact, only samples

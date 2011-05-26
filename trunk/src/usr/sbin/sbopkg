@@ -1278,8 +1278,8 @@ info_item() {
             "Options" "Edit Build Options/Flavors" \
             "Check GPG" "Check the GPG signature of the $REPO_NAME tarball" \
             "Extract" "Re-extract the $REPO_NAME tarball" \
-            "Queue" "Add $APP to build queue" \
-            "Build" "Build a package for $APP" \
+            "Queue" "Add $APP to queue" \
+            "Process" "Download/build/install $APP" \
             $MENUPACKAGE \
             2> $SBOPKGTMP/sbopkg_info_selection
         case $? in
@@ -1353,7 +1353,7 @@ info_item() {
                         fi
                         ;;
                     Queue ) add_item_to_queue $APP ;;
-                    Build )
+                    Process )
                         echo "$APP" > $STARTQUEUE
                         start_dialog_queue ;;
                     Install )
@@ -1544,14 +1544,14 @@ view_perm_log() {
 }
 
 empty_queue() {
-    # This function tests whether the temporary build queue is empty.
+    # This function tests whether the temporary queue is empty.
 
     if [[ ! -e $TMPQUEUE ]]; then
         if [[ $DIAG ]]; then
             dialog --title "Empty Queue" --msgbox \
-                "The build queue is empty." 8 30
+                "The queue is empty." 8 30
         else
-            echo "The build queue is empty."
+            echo "The queue is empty."
         fi
         return 0
     else
@@ -1560,7 +1560,7 @@ empty_queue() {
   }
 
 sort_queue() {
-    # This function sorts the build queue in $TMPQUEUE.
+    # This function sorts the queue in $TMPQUEUE.
 
     local PARTIALSORT=$SBOPKGTMP/sbopkg_sort_tempfile
     local TMPSORTQUEUE=$SBOPKGTMP/sbopkg-tmp-sort-queue
@@ -1821,7 +1821,7 @@ stripcom() {
 }
 
 save_user_queue() {
-    # This function saves the build queue to the filename the user specifies.
+    # This function saves the queue to the filename the user specifies.
     # If --end is specified as first parameter, assume that the user is
     # exiting sbopkg and that this call is about saving the currently active
     # queue. In that case, show the filename dialog only if there actually is
@@ -1927,11 +1927,11 @@ remove_from_queue() {
         if [[ $(wc -w < $REMOVEQUEUE) -eq 0 ]]; then
             echo '"" "The queue is empty."' > $REMOVEQUEUE
         fi
-        dialog --title "Remove From Build Queue" --ok-label "Delete" \
+        dialog --title "Remove From Queue" --ok-label "Delete" \
             --extra-button --extra-label "Clear" --help-button \
             --help-label "Done" --cancel-label "Cancel" \
             --menu "$(crunch "The following packages are currently in \
-            the build queue.  You can remove individual items from the build \
+            the queue.  You can remove individual items from the \
             queue by highlighting them and pressing <Delete>.  Press <Done> \
             when you are finished and the individual deletions will be \
             committed.  Otherwise, press <Cancel> at any time to abort your \
@@ -1966,13 +1966,13 @@ remove_from_queue() {
                     rm -f $TMPQUEUE
                 fi
                 dialog --title "Done" --msgbox \
-                    "The items have been removed from the build queue." 8 30
+                    "The items have been removed from the queue." 8 30
                 return 0
                 ;;
             3)
                 rm -f $REMOVEQUEUE $TMPQUEUE $QUEUELIST
                 dialog --title "Done" --msgbox \
-                    "The build queue has been cleared." 8 30
+                    "The queue has been cleared." 8 30
                 return 0
                 ;;
         esac
@@ -2130,7 +2130,7 @@ add_item_to_queue() {
     # after each app was added to the queue may get annoying.
     if [[ ! -e $USERQUEUE_LOCK ]]; then
         dialog --title "Done" --msgbox "$(crunch "$APP has been added to \
-            the build queue.")" 8 40
+            the queue.")" 6 40
     fi
     return 0
 }
@@ -2147,7 +2147,7 @@ uncheck_installed() {
 }
 
 view_queue() {
-    # This function displays the contents of the build queue.
+    # This function displays the contents of the queue.
     # Returns 0 if the user choose OK, nonzero otherwise
 
     local ANSQUEUE=$SBOPKGTMP/sbopkg-ans-queue
@@ -2157,17 +2157,17 @@ view_queue() {
     empty_queue && return 1
     cp $TMPQUEUE $ORIGINALQUEUE
     while :; do
-        dialog --title "Viewing Build Queue" --separate-output \
+        dialog --title "Viewing Queue" --separate-output \
             --extra-button --extra-label "View READMEs" \
             --help-button --help-label "Clear inst'd" --help-status \
             --cancel-label "Back" --checklist "$(crunch "The \
             following packages are currently \
-            in the build queue.  Please note that when the build queue \
-            is processed, the packages selected below will be built, and \
-            optionally installed, in the order listed from top to \
+            in the queue.  Please note that when the queue \
+            is processed, the packages selected below will be processed \
+            in the order listed from top to \
             bottom.\n\nPlease select or unselect those packages you wish \
-            to keep in the build queue and then press <OK> to continue \
-            or press <Back> to go back.")" 23 70 9 \
+            to keep in the queue and then press <OK> to continue \
+            or press <Back> to go back.")" 23 70 11 \
             --file $TMPQUEUE 2> $ANSQUEUE
         CHOICE=$?
 
@@ -2275,7 +2275,7 @@ tin_text() {
 
 add_all_to_queue() {
     # This function adds all currently installed repo packages to the
-    # build queue.
+    # queue.
 
     local SBOPKGLIST=$SBOPKGTMP/sbopkg_pkglist
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
@@ -2322,7 +2322,7 @@ EOF
             echo $((PROGRESS*100/NUM_PACKAGES))
         done
         } | progressbar "Queuing installed packages" \
-            "Loading all installed $REPO_NAME packages into the build queue.\
+            "Loading all installed $REPO_NAME packages into the queue.\
             This may take a few moments depending on how many $REPO_NAME\
             packages you have installed, so please be patient..."
         if [[ -f $PROGRESSBAR_INTERRUPTED ]]; then
@@ -2530,7 +2530,7 @@ gen_search_package() {
                     --help-button --help-label "Main Menu" \
                     --extra-label "Add to Queue" --menu "$(crunch "Please \
                     select an item you wish to view, press <Add to Queue> \
-                    to add it to the build queue, or press <Back> to \
+                    to add it to the queue, or press <Back> to \
                     go back.")" 22 70 14 --file \
                     $SEARCH_RESULTS 2> $SEARCH_CHOICE
                 CHOICE=$?
@@ -2634,7 +2634,7 @@ string_search() {
             --extra-button --extra-label "Add to Queue" \
             --cancel-label "Back" \
             --menu "$(crunch "Please select an item you wish to view or \
-                press <Add to Queue> to add it to the build queue or \
+                press <Add to Queue> to add it to the queue or \
                 press <Back> to go back.")" 0 0 0 \
             --file $MENU_FILE 2> $PICKED_FILE
 
@@ -3401,7 +3401,7 @@ process_package() {
             echo
             echo "$PKGNAME:"
             echo "Would you like to continue processing the rest of the"
-            echo "build queue or would you like to abort?  If this failed"
+            echo "queue or would you like to abort?  If this failed"
             echo "package is a dependency of another package in the queue"
             echo "then it may not make sense to continue."
             echo
@@ -3872,10 +3872,16 @@ process_queue() {
     done
     echo "+++++++++++++++++++++++++++++++++++++++++++" >> $TMPLOG
     if [[ ! -e $FINALQUEUE ]]; then
-        return 1
+        if [[ $DIAG ]]; then
+            dialog --title "Error" --msgbox "No valid packages found." 5 40
+            return 1
+        else
+            echo "No valid packages found. Exiting."
+            exit 1
+        fi
     fi
     if [[ $DIAG ]]; then
-        dialog --title "Pre-Check Log" --ok-label "Start Build" \
+        dialog --title "Pre-Check Log" --ok-label "Start" \
             --extra-button --extra-label "Back" --no-cancel \
             --textbox $TMPLOG 0 0
         if [[ $? != 0 ]]; then
@@ -3956,7 +3962,7 @@ process_queue() {
         else
             echo >> $TMPSUMMARYLOG
             echo "$PKGBUILD:" >> $TMPSUMMARYLOG
-            echo "  Not processed - build queue aborted." >> $TMPSUMMARYLOG
+            echo "  Not processed - queue aborted." >> $TMPSUMMARYLOG
             echo >> $TMPSUMMARYLOG
         fi
     done
@@ -3991,12 +3997,12 @@ process_queue() {
     rm $TMPLOG
     if [[ -f $TMPQUEUE ]]; then
         dialog --title "Clear Queue?" --yes-label "Keep" --no-label \
-            "Clear" --yesno "$(crunch "Would you like to keep the build \
+            "Clear" --yesno "$(crunch "Would you like to keep the \
             queue or would you like to clear it?")" 8 35
         if [[ $? == 1 ]]; then
             rm $TMPQUEUE
             dialog --title "Done" --msgbox \
-                "The build queue has been cleared." 8 35
+                "The queue has been cleared." 5 35
         fi
     fi
     rm -f $SBOPKGTMP/sbopkg-ans-queue
@@ -4005,32 +4011,25 @@ process_queue() {
 
 start_dialog_queue() {
     # This kick-starts the queue processing when using the dialog interface.
-    # When using cli, the -b or -i option will determine whether we build or
-    # build and install.
+    # When using cli, the -b, -d, or -i option will determine whether we
+    # download, build, or install.
 
-    dialog --title "Install Package(s)" \
-        --help-button --help-label "Cancel" --yesno \
-        "$(crunch  "Would you like to install the packages as they are \
-            built?  Press <Yes> to install, <No> to build only, or <Cancel> \
-            to exit.")" 8 50
-    case $? in
-        0 ) # Build and install
-            process_queue install
-            if [[ $? == 1 ]]; then
-                dialog --title "Error" --msgbox "$(crunch "No valid \
-                    packages found.")" 8 40
-            fi
-            ;;
-        1 ) # Build only
-            process_queue build
-            if [[ $? == 1 ]]; then
-                dialog --title "Error" --msgbox "$(crunch "No valid \
-                    packages found.")" 8 40
-            fi
-            ;;
-        * ) # Cancel, or the user pressed ESC
-            return 0
-            ;;
+    local PROCTYPE_FILE=$SBOPKGTMP/proctype
+    local PROCTYPE
+
+    dialog --title "Process Type" --default-item Install --menu \
+        "Please select how you wish the item(s) to be processed." \
+        11 50 3 \
+        Download "Download only" \
+        Build "Download and build" \
+        Install "Download, build, and install" 2> $PROCTYPE_FILE
+    PROCTYPE=$(< $PROCTYPE_FILE)
+
+    case $PROCTYPE in
+        Install) process_queue install ;;
+        Build) process_queue build ;;
+        Download) process_queue download ;;
+        *) return 0 ;;
     esac
 }
 
@@ -4141,20 +4140,20 @@ queue_menu() {
     local ANSWERFILE=$SBOPKGTMP/sbopkg_queue_menu_answer
 
     while :; do
-        dialog --title "Build Queue Menu" --backtitle \
+        dialog --title "Queue Menu" --backtitle \
             "$(eval echo $BACKTITLE)" \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "Choose one of the following or press <Back> to go back.\n" \
             16 60 9 \
-            "View" "View the current build queue" \
-            "Sort" "Sort items in build queue" \
-            "Remove" "Remove items in build queue" \
-            "Load" "Load a saved build queue" \
-            "Save" "Save the current build queue" \
-            "Rename" "Rename a saved build queue" \
-            "Delete" "Delete a saved build queue" \
+            "View" "View the current queue" \
+            "Sort" "Sort items in the queue" \
+            "Remove" "Remove items in the queue" \
+            "Load" "Load a saved queue" \
+            "Save" "Save the current queue" \
+            "Rename" "Rename a saved queue" \
+            "Delete" "Delete a saved queue" \
             "Add" "Add all installed packages to the queue" \
-            "Process" "Process the current build queue" 2> $ANSWERFILE
+            "Process" "Process the current queue" 2> $ANSWERFILE
 
         DEFAULTITEM=$(< $ANSWERFILE)
 
@@ -4370,14 +4369,14 @@ main_updates() {
     if [[ -f $UPDATES_QUEUE ]]; then
         dialog --title "Add Updates to Queue?" --yesno \
             "$(crunch "Would you like to add the flagged updates to \
-            the build queue?\\n\\nApparent downgrades will be added to the \
+            the queue?\\n\\nApparent downgrades will be added to the \
             queue but will be kept disabled.")" 9 50
         if [[ $? == 0 ]]; then
             touch $USERQUEUE_LOCK
             parse_queue $UPDATES_QUEUE
             rm -f $UPDATES_QUEUE $USERQUEUE_LOCK
             dialog --title "Done" --msgbox "$(crunch "The flagged \
-                updates have been added to the build queue.")" 8 30
+                updates have been added to the queue.")" 8 30
         fi
     fi
 }
@@ -4411,7 +4410,7 @@ main_menu() {
                 "List potential updates to installed $REPO_NAME packages" \
             "Browse" "Browse the active repository" \
             "Search" "Search the active repository" \
-            "Queue" "Manage the build queue" \
+            "Queue" "Manage the queue" \
             "Utilities" "Go to the utilities menu" \
             "Help" "Where to get sbopkg help" 2> $ANSWER_FILE
 
@@ -4838,10 +4837,6 @@ else
         done < $TMPQUEUE
         rm -f $TMPQUEUE
         process_queue $TYPE
-        if [[ $? == 1 ]]; then
-            echo "No valid packages found, or no packages to build.  Exiting."
-            exit 1
-        fi
     fi
 
     if [[ $CHK_UPDATES ]]; then

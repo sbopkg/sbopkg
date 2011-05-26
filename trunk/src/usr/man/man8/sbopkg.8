@@ -113,7 +113,7 @@ directory, then
 will automatically add a new menu entry allowing the user to install the
 package if he chooses.
 Alternatively, the user can choose to automatically download, build, or
-install individual packages or several packages in a build queue.
+install individual packages or several packages in a queue.
 Finally, if
 .B KEEPLOG
 is set to
@@ -223,7 +223,7 @@ A way to avoid this is to specify the queuefile with its
 extension.
 Also, a mix of both packages and queuefiles may be given.
 The tokens (package names or queuefiles) are processed in the order they
-are specified on the command line, and the build order specified in the
+are specified on the command line, and the order specified in the
 queuefiles is retained.
 If a package is specified more than once, it gets queued only the first
 time it is encountered.
@@ -252,7 +252,7 @@ containing the local SBo repository.
 .B \-e ask\fR|\fPcontinue\fR|\fPstop
 Specify what
 .B sbopkg
-should do when it encounters an error while building a package.
+should do when it encounters an error while processing a package.
 Valid options are:
 .IP
 .BR ask :
@@ -310,9 +310,8 @@ option for details since, other than the installation, these two options
 operate similarly.
 .IP
 Note that by carefully considering the order of the packages listed
-and/or using queuefiles, the user may be able to build and install
-dependencies in the right order before the final application is built
-and installed.
+and/or using queuefiles, the user may be able to install dependencies in
+the right order before the final application is built.
 .\"---------------------------------------------------------------------
 .TP
 .B \-k
