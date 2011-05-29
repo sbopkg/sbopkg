@@ -3454,10 +3454,10 @@ build_package() {
             # deleting too much or leaving garbage behind us), a nice
             # approach is to use sbopkg's own temp directory.
             export TMP=$SBOPKGTMP
-            nice sh $PKGNAME.SlackBuild.build
+            nice -n ${NICE:-10} sh $PKGNAME.SlackBuild.build
             echo "Cleaning up..."
         else
-            nice sh $PKGNAME.SlackBuild.build
+            nice -n ${NICE:-10} sh $PKGNAME.SlackBuild.build
         fi
     )
 }

@@ -10,6 +10,15 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
           the feature request and some testing and to Mauro Giachero for
           the initial patch and discussion and review of additional
           patching.
+        * It is now possible to combine the -r flag with other flags
+          such that a sync is performed first. For example 'sbopkg -ri
+          foo' will synchronize with the repo and install the latest
+          foo.
+        * There is a new configuration option, NICE, which enables the
+          user to specify a niceness for the execution of the
+          SlackBuild. Previously, this was hardcoded to 10 (which is
+          still the default). Thanks to Joni Martikainen for the
+          suggestion.
 
     MODIFICATIONS
 
@@ -19,10 +28,6 @@ sbopkg xxxVERSIONxxx (xxxDATExxx)
         * The 'Build' option in a package's info menu has been renamed
           to 'Process', along with many other minor informational
           changes throughout the UI.
-        * It is now possible to combine the -r flag with other flags
-          such that a sync is performed first. For example 'sbopkg -ri
-          foo' will synchronize with the repo and install the latest
-          foo.
 
 sbopkg 0.35.0 (2011-04-28 02:48 UTC)
 

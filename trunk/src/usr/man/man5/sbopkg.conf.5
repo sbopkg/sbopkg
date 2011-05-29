@@ -222,6 +222,36 @@ The default assignment is:
 \fCxxxMKDIR_PROMPTxxx\fP
 .\"---------------------------------------------------------------------
 .TP
+.B NICE
+Integer.
+.IP
+This value is passed to
+.BR nice (1)
+as its
+.B \-n
+argument.
+.\" I had to 'hardcode' the default here to explain things so, while the
+.\" 'The default assignment is' will be automatically updated, remember
+.\" to also change this text if we ever set the niceness to something
+.\" other than nice's default. (Not that we will.)
+If this value is unset or left at the default,
+.B sbopkg
+will execute SlackBuilds with
+.BR nice 's
+default niceness, which is
+.B 10.
+If you do not wish the priority to be effected, be sure to set it to
+.BR 0 .
+Note that this only affects SlackBuild execution and does not affect the
+priority of
+.B sbopkg
+as a whole.
+.IP
+The default assignment is:
+.IP
+\fCxxxNICExxx\fP
+.\"---------------------------------------------------------------------
+.TP
 .B OUTPUT
 Path.
 .IP
@@ -576,6 +606,7 @@ slakmagik
 .SH SEE ALSO
 .BR diff (1),
 .BR mktemp (1),
+.BR nice (1),
 .BR rsync (1),
 .BR sbopkg (8),
 .BR uname (1),
