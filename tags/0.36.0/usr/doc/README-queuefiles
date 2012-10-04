@@ -1,0 +1,94 @@
+README-queuefiles
+
+Sbopkg queuefiles are very simple to create, maintain, and share with
+other users. Each queuefile can contain a list of packages to process in
+order, from top to bottom, and should be named with a .sqf extension.
+Several sample queuefiles are provided in the ./contrib/queuefiles
+directory. Please note that these queuefiles are, in fact, only samples
+and have not necessarily been tested on the latest release of Slackware
+or on Slackware -current. If you wish to use these at your own risk,
+remove the '.sample' extension and either put them in $QUEUEDIR or set
+QUEUEDIR to where they are (see sbopkg.conf(5) for details).
+Additionally, the hope is that user-contributed queues can be shared.
+Please consider sending a copy of your queuefile(s) to the sbopkg
+mailing list:
+
+    http://sbopkg.org/mailman/listinfo/sbopkg-users
+
+SELECTING ON OR OFF IN DIALOG
+
+    If a line starts with an application's name, it will default to 'ON'
+    and be selected in the sbopkg dialog menus when the queuefile is
+    loaded. If the application's name is prepended with a '-' it will
+    default to 'OFF' and be deselected in the dialog menus.
+
+    For example, a queuefile might contain:
+
+        foo
+        -bar
+        baz
+
+    In this case, both 'foo' and 'baz' will be 'ON' and appear selected
+    in the sbopkg dialog menus, and 'bar' will be 'OFF' and appear
+    deselected.
+
+RECURSIVE QUEUEFILES
+
+    Additionally, queuefiles may be loaded recursively. This means the
+    user can have separate queuefiles for certain applications, or
+    certain queues, and then a 'master' queuefile can bring them all
+    together. Recursively-loaded queues are indicated by an '@'
+    prepended to the name of the queuefile.
+
+    For example, a user might have one queuefile named 'multimedia.sqf'
+    with these items:
+
+        app1
+        app2
+        app3
+
+    And then the user might have another queuefile named 'desktop.sqf'
+    with these items:
+
+        app4
+        app5
+        @multimedia.sqf
+
+    In this case, when the 'mydesktop.sqf' queuefile is loaded, it will
+    first load app4, then app5, then the contents of the multimedia.sqf
+    queuefile. The final queue will look like this:
+
+        app4
+        app5
+        app1
+        app2
+        app3
+
+    (Note that, while a given queuefile must have the .sqf extension to
+    be loaded, the extension is optional within queuefiles. For
+    instance, if multimedia.sqf exists in the QUEUEDIR, '@multimedia'
+    would work in the above example.)
+
+PASSING BUILD OPTIONS
+
+    Finally, it is possible to pass build options for an application in
+    a queuefile. This is done by using a single pipe ('|') character
+    after the application name (spaces are optional). For example:
+
+        app | FOO=yes BAR=no
+
+    Only use one pipe to separate the application name and the
+    variables.
+
+    In cases where the user has passed options on the command line
+    and/or saved build options individually via the dialog interface,
+    and also puts build options for that same application in the
+    queuefile, sbopkg will ask the user which set should be used.
+
+DUPLICATE BUILDS/OPTIONS
+
+    In all cases, whether loading software names more than once, or
+    indicating build options in more than one queuefile, the first
+    instance will apply. So if a user has "app" in one queuefile, and
+    "-app" in a recursive queuefile that is loaded further down the
+    list, the first instance, or "app" will prevail.

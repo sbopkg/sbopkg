@@ -1,840 +1,615 @@
-Content-type: text/html
-
-<HTML><HEAD><TITLE>Manpage of SBOPKG.CONF</TITLE>
-</HEAD><BODY>
-<H1>SBOPKG.CONF</H1>
-Section:  (5)<BR>Updated: October 2012<BR><A HREF="#index">Index</A>
-<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
-
-
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
-
-sbopkg.conf - configuration file for sbopkg
-
-<A NAME="lbAC">&nbsp;</A>
-<H2>DESCRIPTION</H2>
-
+.\"=====================================================================
+.TH SBOPKG.CONF 5 "October 2012" sbopkg-0.36.0 ""
+.\"=====================================================================
+.SH NAME
+sbopkg.conf \- configuration file for sbopkg
+.\"=====================================================================
+.SH DESCRIPTION
 The
-<I>sbopkg.conf</I>
-
+.I sbopkg.conf
 file contains configuration settings for
-<B><A HREF="http://localhost/cgi-bin/man/man2html?8+sbopkg">sbopkg</A></B>(8),
-
+.BR sbopkg (8),
 a tool for interacting with the SlackBuilds.org (``SBo'') repository, a
 collection of third-party SlackBuild scripts to build Slackware
 packages.
 The default configuration file is installed at
-<I>/etc/sbopkg/sbopkg.conf</I>.
-
+.IR /etc/sbopkg/sbopkg.conf .
 The user may override any settings in that file by creating
-<I>~/.sbopkg.conf</I>.
-
-<P>
-
+.IR ~/.sbopkg.conf .
+.PP
 Please see the
-<B>NOTES</B>
-
+.B NOTES
 section for more information about variables, including
-<B>ARCH</B>.
-
-<P>
-
+.BR ARCH .
+.PP
 All boolean options require a
-<B>YES</B>
-
+.B YES
 or a
-<B>NO</B>
-
+.B NO
 without regard to case.
 All path values must be full.
-<P>
-
+.PP
 The default configuration options are:
-
-<DL COMPACT>
-<DT><B>ALLOW_MULTI</B>
-
-<DD>
+.\"---------------------------------------------------------------------
+.TP 3
+.B ALLOW_MULTI
 Boolean.
-<DT><DD>
+.IP
 When set to
-<B>YES</B>,
-
+.BR YES ,
 this option allows the user to run multiple instances of
-<B>sbopkg</B>
-
+.B sbopkg
 simultaneously.
-<DT><DD>
+.IP
 Please understand that this option is provided for convenience, but
 given the number of potential issues you can face when enabling this
 (and we aren't going to try to work around users doing silly things),
 you should consider this an EXPERIMENTAL UNSUPPORTED feature.
 If you encounter problems, please try to make sure these aren't caused
 by yourself doing improper things.
-<DT><DD>
+.IP
 For reference, these are some of the things you shouldn't do with this
 option enabled:
-<DL COMPACT><DT><DD>
-<DL COMPACT>
-<DT>*<DD>
+.RS 5
+.TP 3
+\(bu
 run instances with a mixture of
-<B>YES</B>
-
+.B YES
 and
-<B>NO</B>
-
+.B NO
 settings
-<DT>*<DD>
+.TP
+\(bu
 sync a repository when another instance is using it
-<DT>*<DD>
+.TP
+\(bu
 change the branch of a git repository when another instance is using it
 (this caveat does not apply to rsync repositories)
-<DT>*<DD>
+.TP
+\(bu
 simultaneously process the same package from different instances
-<DT>*<DD>
+.TP
+\(bu
 save a queue file while using it from another instance
-</DL>
-</DL>
-
-<DT><DD>
+.RE
+.IP
 There can be more unsafe situations we haven't thought about.
 Take care.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-ALLOW_MULTI=${ALLOW_MULTI:-NO}
-
-<DT><B>CLEANUP</B>
-
-<DD>
+.IP
+\fCALLOW_MULTI=${ALLOW_MULTI:-NO}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B CLEANUP
 Boolean.
-<DT><DD>
+.IP
 When set to
-<B>YES</B>,
-
+.BR YES ,
 the unpacked source files and package tree in
-<I>$TMP</I>
-
+.I $TMP
 are deleted right after the build, though the downloaded source archive
 and completed package are left in
-<I>$SRCDIR</I>
-
+.I $SRCDIR
 and
-<I>$OUTPUT</I>.
-
-<DT><DD>
+.IR $OUTPUT .
+.IP
 A side effect of setting
-<B>CLEANUP</B>
-
+.B CLEANUP
 to
-<B>YES</B>
-
+.B YES
 is that
-<B>TMP</B>
-
+.B TMP
 is set to
-<B>sbopkg</B>'s
-
+.BR sbopkg 's
 own temporary directory
-(<I>$TMPDIR/sbopkg.RANDOM_STRING</I>)
-
+.RI ( $TMPDIR/sbopkg.RANDOM_STRING )
 and any other
-<B>TMP</B>
-
+.B TMP
 setting is ignored.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-CLEANUP=${CLEANUP:-NO}
-
-<DT><B>DEBUG_UPDATES</B>
-
-<DD>
+.IP
+\fCCLEANUP=${CLEANUP:-NO}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DEBUG_UPDATES
 Enumeration.
-<DT><DD>
+.IP
 This option should be set to
-<B>0</B>,
-
-<B>1</B>,
-
+.BR 0 ,
+.BR 1 ,
 or
-<B>2</B>.
-
-<B>DEBUG_UPDATES</B>
-
+.BR 2 .
+.B DEBUG_UPDATES
 sets the default debugging level for the update list feature of
-<B>sbopkg</B>.
-
+.BR sbopkg .
 When set to
-<B>0</B>,
-
+.BR 0 ,
 only potential updated (or downgraded) packages are listed.
 When set to
-<B>1</B>,
-
+.BR 1 ,
 potential updates plus packages not in the repo and packages that are
 newer than the repo are listed.
 When set to
-<B>2</B>,
-
+.BR 2 ,
 all non-updated packages are also listed.
 Changing
-<B>DEBUG_UPDATES</B>
-
+.B DEBUG_UPDATES
 to
-<B>1</B>
-
+.B 1
 or
-<B>2</B>
-
+.B 2
 may be helpful if it appears the updatelist might be missing an update.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-DEBUG_UPDATES=${DEBUG_UPDATES:-0}
-
-<DT><B>DIFF</B>
-
-<DD>
+.IP
+\fCDEBUG_UPDATES=${DEBUG_UPDATES:-0}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DIFF
 Command.
-<DT><DD>
+.IP
 This option allows the user to set which diff program to use when
-<B>sbopkg</B>
-
+.B sbopkg
 displays differences between edited files.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-DIFF=${DIFF:-diff}
-
-<DT><B>DIFFOPTS</B>
-
-<DD>
+.IP
+\fCDIFF=${DIFF:-diff}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DIFFOPTS
 Command options.
-<DT><DD>
+.IP
 This option allows the user to set which options are used by the
-<I>$DIFF</I>
-
+.I $DIFF
 program when
-<B>sbopkg</B>
-
+.B sbopkg
 displays differences between edited files.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-DIFFOPTS=${DIFFOPTS:--u}
-
-<DT><B>KEEPLOG</B>
-
-<DD>
+.IP
+\fCDIFFOPTS=${DIFFOPTS:--u}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B KEEPLOG
 Boolean.
-<DT><DD>
+.IP
 This option allows the user to choose whether to keep a permanent log of
 packages that are built with
-<B>sbopkg</B>
-
+.B sbopkg
 in order to review the builds for historical or troubleshooting
 purposes.
 See
-<B>LOGFILE</B>
-
+.B LOGFILE
 for the location of this log.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-KEEPLOG=${KEEPLOG:-YES}
-
-<DT><B>LOGFILE</B>
-
-<DD>
+.IP
+\fCKEEPLOG=${KEEPLOG:-YES}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B LOGFILE
 Path.
-<DT><DD>
+.IP
 This option sets the name for the build log if
-<B>KEEPLOG</B>
-
+.B KEEPLOG
 is set to
-<B>YES</B>.
-
-<DT><DD>
+.BR YES .
+.IP
 The default assignment is:
-<DT><DD>
-LOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}
-
-<DT><B>MKDIR_PROMPT</B>
-
-<DD>
+.IP
+\fCLOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B MKDIR_PROMPT
 Boolean.
-<DT><DD>
+.IP
 When set to
-<B>YES</B>,
-
-<B>sbopkg</B>
-
+.BR YES ,
+.B sbopkg
 will prompt for confirmation before changing the filesystem by creating
 its directories.
 If you do not wish to be prompted (for instance, if you have some of the
 directories on a temporary filesystem and don't wish to be prompted for
 confirmation each time the filesystem is reinitialized) you can set this
 to
-<B>NO</B>.
-
-<DT><DD>
+.BR NO .
+.IP
 The default assignment is:
-<DT><DD>
-MKDIR_PROMPT=${MKDIR_PROMPT:-YES}
-
-<DT><B>NICE</B>
-
-<DD>
+.IP
+\fCMKDIR_PROMPT=${MKDIR_PROMPT:-YES}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B NICE
 Integer.
-<DT><DD>
+.IP
 This value is passed to
-<B><A HREF="http://localhost/cgi-bin/man/man2html?1+nice">nice</A></B>(1)
-
+.BR nice (1)
 as its
-<B>-n</B>
-
+.B \-n
 argument.
-
-
-
-
+.\" I had to 'hardcode' the default here to explain things so, while the
+.\" 'The default assignment is' will be automatically updated, remember
+.\" to also change this text if we ever set the niceness to something
+.\" other than nice's default. (Not that we will.)
 If this value is unset or left at the default,
-<B>sbopkg</B>
-
+.B sbopkg
 will execute SlackBuilds with
-<B>nice</B>'s
-
+.BR nice 's
 default niceness, which is
-<B>10.</B>
-
+.B 10.
 If you do not wish the priority to be effected, be sure to set it to
-<B>0</B>.
-
+.BR 0 .
 Note that this only affects SlackBuild execution and does not affect the
 priority of
-<B>sbopkg</B>
-
+.B sbopkg
 as a whole.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-NICE=${NICE:-10}
-
-<DT><B>OUTPUT</B>
-
-<DD>
+.IP
+\fCNICE=${NICE:-10}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B OUTPUT
 Path.
-<DT><DD>
+.IP
 This option sets the default directory where compiled packages are
 saved.
-<B>OUTPUT</B>
-
+.B OUTPUT
 must be exported as it is also used by the SBo SlackBuilds.
 Note that the default value of
-<B>OUTPUT</B>
-
+.B OUTPUT
 is therefore the same as in the SBo SlackBuilds.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-export OUTPUT=${OUTPUT:-/tmp}
-
-<DT><B>QUEUEDIR</B>
-
-<DD>
+.IP
+\fCexport OUTPUT=${OUTPUT:-/tmp}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B QUEUEDIR
 Path.
-<DT><DD>
+.IP
 This option defines the directory under which saved queue files will be
 kept.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
-
-<DT><B>REPO_BRANCH</B>
-
-<DD>
+.IP
+\fCQUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_BRANCH
 Enumeration.
-<DT><DD>
+.IP
 This option allows the user to set the default active repository branch.
 The current standard values are listed in the default
-<I>repos.d/*</I>
-
+.I repos.d/*
 files and can also be listed by issuing
-<DL COMPACT><DT><DD>
-<DL COMPACT>
-<DT><DD>
-<PRE>
-# sbopkg -V ?
-</PRE>
-
-</DL>
-</DL>
-
-<DT><DD>
+.RS
+.IP
+.nf
+\fC# sbopkg -V ?\fP
+.fi
+.RE
+.IP
 The default assignment is:
-<DT><DD>
-REPO_BRANCH=${REPO_BRANCH:-14.0}
-
-<DT><B>REPO_NAME</B>
-
-<DD>
+.IP
+\fCREPO_BRANCH=${REPO_BRANCH:-14.0}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_NAME
 Enumeration.
-<DT><DD>
+.IP
 This option allows the user to choose the repository to use.
 See
-<B>REPO_BRANCH</B>
-
+.B REPO_BRANCH
 for how to get an enumeration of standard values.
 The ``local'' choice corresponds to a user-maintained repository whose
 structure must be the same as the one used by SBo, in the sense of a
-<I>category/package/files</I>
-
+.I category/package/files
 hierarchy.
 Note: all of the
-<B>REPO_*</B>
-
+.B REPO_*
 variables are affected by the repository files maintained in
-<I>/etc/sbopkg/repos.d.</I>
-
+.I /etc/sbopkg/repos.d.
 Please see the
-<I>README-repos</I>
-
+.I README-repos
 document in the
-<B>sbopkg</B>
-
+.B sbopkg
 documentation directory.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-REPO_NAME=${REPO_NAME:-SBo}
-
-<DT><B>REPO_ROOT</B>
-
-<DD>
+.IP
+\fCREPO_NAME=${REPO_NAME:-SBo}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_ROOT
 Path.
-<DT><DD>
+.IP
 This option allows the user to set the location of the local mirrors of
 the remote repositories.
 Currently, the size of a local copy of the SBo repository is about 115M.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}
-
-<DT><B>RSYNCFLAGS</B>
-
-<DD>
+.IP
+\fCREPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B RSYNCFLAGS
 Command options.
-<DT><DD>
-<B>Rsync</B>
-
+.IP
+.B Rsync
 is used by
-<B>sbopkg</B>
-
+.B sbopkg
 to mirror the SBo repository.
 This option allows the user to manually tweak the
-<B>rsync</B>
-
+.B rsync
 flags (options) that are used by
-<B>sbopkg</B>.
-
+.BR sbopkg .
 Users are cautioned against making any changes to the default values
 since new flags may or may not work.
 Note: the
-<B>rsync</B>
-
+.B rsync
 command in
-<B>sbopkg</B>
-
+.B sbopkg
 already uses the
-<B>--archive</B>,
-
-<B>--delete</B>,
-
-<B>--no-owner</B>,
-
+.BR \-\-archive ,
+.BR \-\-delete ,
+.BR \-\-no-owner ,
 and
-<B>--exclude</B>
-
+.B \-\-exclude
 flags, so there is no need to add them to the
-<B>RSYNCFLAGS</B>
-
+.B RSYNCFLAGS
 option.
 Changing those internal default options is not recommended.
 However,
-<B>--timeout</B>
-
+.B \-\-timeout
 is a useful option to play with if getting syncing errors.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-RSYNCFLAGS=&quot;${RSYNCFLAGS:---verbose --timeout=30}&quot;
-
-<DT><B>SRCDIR</B>
-
-<DD>
+.IP
+\fCRSYNCFLAGS="${RSYNCFLAGS:---verbose --timeout=30}"\fP
+.\"---------------------------------------------------------------------
+.TP
+.B SRCDIR
 Path.
-<DT><DD>
+.IP
 This option contains the location of the cache directory where source
 downloads will be saved.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-SRCDIR=${SRCDIR:-/var/cache/sbopkg}
-
-<DT><B>TMP</B>
-
-<DD>
+.IP
+\fCSRCDIR=${SRCDIR:-/var/cache/sbopkg}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B TMP
 Path.
-<DT><DD>
+.IP
 This option sets the default directory where built packages are saved.
-<B>TMP</B>
-
+.B TMP
 must be exported as it is also used by the SBo SlackBuilds.
 Note that the default value of
-<B>TMP</B>
-
+.B TMP
 is therefore the same as in the SBo SlackBuilds.
-<DT><DD>
+.IP
 Also note that if the
-<B>CLEANUP</B>
-
+.B CLEANUP
 variable is set to
-<B>YES</B>,
-
+.BR YES ,
 any custom
-<B>TMP</B>
-
+.B TMP
 setting is ignored.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-export TMP=${TMP:-/tmp/SBo}
-
-<DT><B>TMPDIR</B>
-
-<DD>
+.IP
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B TMPDIR
 Path.
-<DT><DD>
+.IP
 This option sets the default directory where certain working files
 specific to
-<B>sbopkg</B>
-
+.B sbopkg
 are saved on a temporary basis. Note that this variable is actually used
 by
-<B><A HREF="http://localhost/cgi-bin/man/man2html?1+mktemp">mktemp</A></B>(1),
-
+.BR mktemp (1),
 and that the actual directory is hardcoded internally to
-<I>sbopkg.XXXXXX</I>
-
+.I sbopkg.XXXXXX
 where 'XXXXXX' is a random string.
 This variable determines the containing directory for that.
 If /tmp is not a suitable containing directory, TMPDIR can be assigned
 to on the command line when invoking
-<B>sbopkg</B>
-
+.B sbopkg
 or the variable can be modified in
-<I>sbopkg.conf</I>.
-
-<DT><DD>
+.IR sbopkg.conf .
+.IP
 The default assignment is:
-<DT><DD>
-export TMPDIR=${TMPDIR:-/tmp}
-
-<DT><B>WGETFLAGS</B>
-
-<DD>
+.IP
+\fCexport TMPDIR=${TMPDIR:-/tmp}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B WGETFLAGS
 Command options.
-<DT><DD>
-<B>Wget</B>
-
+.IP
+.B Wget
 is used by
-<B>sbopkg</B>
-
+.B sbopkg
 to download the source files for package building.
 This option allows the user to manually tweak the
-<B>wget</B>
-
+.B wget
 flags (options) that are used by
-<B>sbopkg</B>.
-
+.BR sbopkg .
 Users are cautioned against making any changes to the default values
 since new flags may or may not work.
 However,
-<B>--timeout</B>
-
+.B \-\-timeout
 is a useful option to play with if getting download errors.
-<DT><DD>
+.IP
 The default assignment is:
-<DT><DD>
-WGETFLAGS=&quot;${WGETFLAGS:--c --progress=bar:force --timeout=30 --tries=5}&quot;
-
-</DL>
-<A NAME="lbAD">&nbsp;</A>
-<H2>NOTES</H2>
-
-
-<A NAME="lbAE">&nbsp;</A>
-<H3>Overriding Environmental Variables</H3>
-
+.IP
+\fCWGETFLAGS="${WGETFLAGS:--c --progress=bar:force --timeout=30 --tries=5}"\fP
+.\"=====================================================================
+.SH NOTES
+.\"---------------------------------------------------------------------
+.SS Overriding Environmental Variables
 It is possible to set or override environmental variables and pass them
 to the SlackBuilds when they are built from within
-<B>sbopkg</B>.
-
+.BR sbopkg .
 This is already demonstrated in the following example line (and others
 like it) in the
-<I>sbopkg.conf</I>
-
+.I sbopkg.conf
 file:
-<DL COMPACT><DT><DD>
-<P>
-
-<PRE>
-export TMP=${TMP:-/tmp/SBo}
-</PRE>
-
-</DL>
-
-<P>
-
+.RS
+.PP
+.nf
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
+.fi
+.RE
+.PP
 This sets
-<B>TMP</B>
-
+.B TMP
 to
-<I>/tmp/SBo</I>
-
+.I /tmp/SBo
 for building SBo packages within
-<B>sbopkg</B>
-
+.B sbopkg
 (which is currently the default for SBo SlackBuilds already).
 Since this variable is exported, it could be changed for both
-<B>sbopkg</B>
-
+.B sbopkg
 and for building SBo packages within
-<B>sbopkg</B>.
-
+.BR sbopkg .
 For example, changing this line so it reads:
-<DL COMPACT><DT><DD>
-<P>
-
-<PRE>
-export TMP=${TMP:-/home/sbo/tmp}
-</PRE>
-
-</DL>
-
-<P>
-
+.RS
+.PP
+.nf
+\fCexport TMP=${TMP:-/home/sbo/tmp}\fP
+.fi
+.RE
+.PP
 would then set
-<B>TMP</B>
-
+.B TMP
 to
-<I>/home/sbo/tmp</I>
-
+.I /home/sbo/tmp
 for building SBo packages and still allow it to be overridden at runtime
 by invoking
-<B>sbopkg</B>
-
+.B sbopkg
 as
-<DL COMPACT><DT><DD>
-<P>
-
-<PRE>
-# export TMP=foo; sbopkg
-</PRE>
-
-</DL>
-
-<P>
-
-<B>OUTPUT</B>
-
+.RS
+.PP
+.nf
+\fC# export TMP=foo; sbopkg\fP
+.fi
+.RE
+.PP
+.B OUTPUT
 can also be changed to save compiled packages in a location other than
 the default of
-<I>/tmp</I>.
-
-<P>
-
+.IR /tmp .
+.PP
 You can also export variables in
-<I>sbopkg.conf</I>
-
+.I sbopkg.conf
 that are not used by
-<B>sbopkg</B>
-
+.B sbopkg
 at all.
-
-<A NAME="lbAF">&nbsp;</A>
-<H3>About the ARCH Variable</H3>
-
+.\"---------------------------------------------------------------------
+.SS About the ARCH Variable
 You may be wondering why
-<B>ARCH</B>
-
+.B ARCH
 is not a configuration setting in the default
-<I>sbopkg.conf</I>
-
+.I sbopkg.conf
 file.
 The reason is that it does not have to be.
 If
-<B>ARCH</B>
-
+.B ARCH
 is not set,
-<B>sbopkg</B>
-
+.B sbopkg
 does some checking (using the output of
-<B>uname -m</B>)
-
+.BR "uname \-m" )
 to determine what the system's architecture is.
 If the architecture is x86, x86_64, or arm*, then
-<B>sbopkg</B>
-
+.B sbopkg
 automatically sets
-<B>ARCH</B>
-
+.B ARCH
 to i486, x86_64, or arm, respectively.
 If
-<B>ARCH</B>
-
+.B ARCH
 is set,
-<B>sbopkg</B>
-
+.B sbopkg
 will inherit that setting.
 This means the user can add, for example,
-<B>export ARCH=i686</B>
-
+.B export ARCH=i686
 in their
-<I>.bashrc</I>
-
+.I .bashrc
 or similar file, or the user can also execute something in the
 root terminal like
-<DL COMPACT><DT><DD>
-<P>
-
-<PRE>
-# export ARCH=i686; sbopkg
-</PRE>
-
-</DL>
-
-<P>
-
+.RS
+.PP
+.nf
+\fC# export ARCH=i686; sbopkg\fP
+.fi
+.RE
+.PP
 The user can also manually add it to their
-<I>sbopkg.conf</I>
-
+.I sbopkg.conf
 file if they wish.
 Finally, if
-<B>ARCH</B>
-
+.B ARCH
 is not set by the user and
-<B>sbopkg</B>
-
+.B sbopkg
 does not detect one of the previously mentioned architectures, then
-<B>ARCH</B>
-
+.B ARCH
 will be set by whatever is in the SlackBuilds.
 Note that the SlackBuild may, in certain instances, discard or override
 previous
-<B>ARCH</B>
-
+.B ARCH
 settings if this is required for the build.
-
-<A NAME="lbAG">&nbsp;</A>
-<H2>FILES</H2>
-
-<DL COMPACT>
-<DT><I>/etc/sbopkg/sbopkg.conf</I>
-
-<DD>
+.\"=====================================================================
+.SH FILES
+.TP 3
+.I /etc/sbopkg/sbopkg.conf
 File to specify configuration options.
-<DT><I>~/.sbopkg.conf</I>
-
-<DD>
+.TP
+.I ~/.sbopkg.conf
 File to override system configuration options.
-<DT><I>/etc/sbopkg/renames.d/*.renames</I>
-
-<DD>
+.TP
+.I /etc/sbopkg/renames.d/*.renames
 Files that list software in the SBo repository that has been renamed.
 See the
-<I>README-renames</I>
-
+.I README-renames
 document in the
-<B>sbopkg</B>
-
+.B sbopkg
 documentation directory for more information.
-<DT><I>/etc/sbopkg/repos.d/*.repo</I>
-
-<DD>
+.TP
+.I /etc/sbopkg/repos.d/*.repo
 Files for various types of
-<B>sbopkg</B>
-
+.B sbopkg
 repositories.
 See the
-<I>README-repos</I>
-
+.I README-repos
 document in the
-<B>sbopkg</B>
-
+.B sbopkg
 documentation directory for more information.
-
-</DL>
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHORS</H2>
-
+.\"=====================================================================
+.SH AUTHORS
 Chess Griffin
-&lt;<A HREF="mailto:chess@chessgriffin.com">chess@chessgriffin.com</A>&gt;
-<P>
-
+<chess@chessgriffin.com>
+.PP
 Mauro Giachero
-&lt;<A HREF="mailto:mauro.giachero@gmail.com">mauro.giachero@gmail.com</A>&gt;
-<P>
-
+<mauro.giachero@gmail.com>
+.PP
 slakmagik
-&lt;<A HREF="mailto:slakmagik@gmail.com">slakmagik@gmail.com</A>&gt;
-
-
-
-<A NAME="lbAI">&nbsp;</A>
-<H2>SEE ALSO</H2>
-
-<B><A HREF="http://localhost/cgi-bin/man/man2html?1+diff">diff</A></B>(1),
-
-<B><A HREF="http://localhost/cgi-bin/man/man2html?1+mktemp">mktemp</A></B>(1),
-
-<B><A HREF="http://localhost/cgi-bin/man/man2html?1+nice">nice</A></B>(1),
-
-<B><A HREF="http://localhost/cgi-bin/man/man2html?1+rsync">rsync</A></B>(1),
-
-<B><A HREF="http://localhost/cgi-bin/man/man2html?8+sbopkg">sbopkg</A></B>(8),
-
-<B><A HREF="http://localhost/cgi-bin/man/man2html?1+uname">uname</A></B>(1),
-
-<B><A HREF="http://localhost/cgi-bin/man/man2html?1+wget">wget</A></B>(1),
-
-<I>/usr/doc/sbopkg-0.36.0/*</I>
-
-
-<P>
-
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAD">NOTES</A><DD>
-<DL>
-<DT><A HREF="#lbAE">Overriding Environmental Variables</A><DD>
-<DT><A HREF="#lbAF">About the ARCH Variable</A><DD>
-</DL>
-<DT><A HREF="#lbAG">FILES</A><DD>
-<DT><A HREF="#lbAH">AUTHORS</A><DD>
-<DT><A HREF="#lbAI">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by
-<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
-using the manual pages.<BR>
-Time: 03:13:55 GMT, October 04, 2012
-</BODY>
-</HTML>
+<slakmagik@gmail.com>
+.\"=====================================================================
+.\" Make the release process handle a DOCDIR here? But the files from
+.\" the official tarball go here.
+.SH SEE ALSO
+.BR diff (1),
+.BR mktemp (1),
+.BR nice (1),
+.BR rsync (1),
+.BR sbopkg (8),
+.BR uname (1),
+.BR wget (1),
+.IR /usr/doc/sbopkg-0.36.0/*
+.\" vim:set tw=72:
