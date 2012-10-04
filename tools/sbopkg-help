@@ -1,10 +1,11 @@
-sbopkg 0.35.0
+sbopkg 0.36.0
 Usage: sbopkg [OPTIONS] <packagename(s)>
 Options are:
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
                   are specified, build the packages they refer to.
   -c              Check for updates to installed packages.
-  -d localdir     Location of local copy of the repositories.
+  -D localdir     Location of local copy of the repositories.
+  -d pkg/queue(s) Like '-b', but only download sources.
   -e error_action Specify what sbopkg is supposed to do on build errors.
                   Valid options are: ask (default), continue, stop.
   -f file         Override default configuration file with specified file.
@@ -17,20 +18,20 @@ Options are:
   -P              List uninstalled cached package files & prompt for deletion.
   -p              List installed packages from active repo.
   -q              Quiet some of the command-line output.
-  -r              Sync the remote repository with the local mirror and then
-                  quit.
   -R              When combined with -b or -i, preview the READMEs of the
                   packages to be built/installed before starting the build
                   process. When combined with -p, show the READMEs of all
                   installed packages from the active repo.
+  -r              Sync the remote repository with the local mirror and then
+                  quit.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
-  -v              Print sbopkg's version on stdout.
   -V repo/branch  Set the repository/branch. The repo is optional and, if
                   not given, sbopkg will try to make the best match,
                   starting with the default repo. For a list of valid repos,
                   issue '-V ?'
+  -v              Print sbopkg's version on stdout.
 
 Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2") or
 can be specified multiple times (-i foo -i bar). If using the latter syntax,

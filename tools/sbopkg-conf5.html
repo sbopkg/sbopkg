@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of SBOPKG.CONF</TITLE>
 </HEAD><BODY>
 <H1>SBOPKG.CONF</H1>
-Section:  (5)<BR>Updated: April 2011<BR><A HREF="#index">Index</A>
+Section:  (5)<BR>Updated: October 2012<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 
@@ -91,8 +91,7 @@ sync a repository when another instance is using it
 change the branch of a git repository when another instance is using it
 (this caveat does not apply to rsync repositories)
 <DT>*<DD>
-simultaneously build or install the same package from different
-instances
+simultaneously process the same package from different instances
 <DT>*<DD>
 save a queue file while using it from another instance
 </DL>
@@ -285,6 +284,44 @@ The default assignment is:
 <DT><DD>
 MKDIR_PROMPT=${MKDIR_PROMPT:-YES}
 
+<DT><B>NICE</B>
+
+<DD>
+Integer.
+<DT><DD>
+This value is passed to
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+nice">nice</A></B>(1)
+
+as its
+<B>-n</B>
+
+argument.
+
+
+
+
+If this value is unset or left at the default,
+<B>sbopkg</B>
+
+will execute SlackBuilds with
+<B>nice</B>'s
+
+default niceness, which is
+<B>10.</B>
+
+If you do not wish the priority to be effected, be sure to set it to
+<B>0</B>.
+
+Note that this only affects SlackBuild execution and does not affect the
+priority of
+<B>sbopkg</B>
+
+as a whole.
+<DT><DD>
+The default assignment is:
+<DT><DD>
+NICE=${NICE:-10}
+
 <DT><B>OUTPUT</B>
 
 <DD>
@@ -339,7 +376,7 @@ files and can also be listed by issuing
 <DT><DD>
 The default assignment is:
 <DT><DD>
-REPO_BRANCH=${REPO_BRANCH:-13.37}
+REPO_BRANCH=${REPO_BRANCH:-14.0}
 
 <DT><B>REPO_NAME</B>
 
@@ -381,7 +418,7 @@ Path.
 <DT><DD>
 This option allows the user to set the location of the local mirrors of
 the remote repositories.
-Currently, the size of a local copy of the SBo repository is about 96M.
+Currently, the size of a local copy of the SBo repository is about 115M.
 <DT><DD>
 The default assignment is:
 <DT><DD>
@@ -765,6 +802,8 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+mktemp">mktemp</A></B>(1),
 
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+nice">nice</A></B>(1),
+
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+rsync">rsync</A></B>(1),
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?8+sbopkg">sbopkg</A></B>(8),
@@ -773,7 +812,7 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+wget">wget</A></B>(1),
 
-<I>/usr/doc/sbopkg-0.35.0/*</I>
+<I>/usr/doc/sbopkg-0.36.0/*</I>
 
 
 <P>
@@ -796,6 +835,6 @@ slakmagik
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 02:57:11 GMT, April 28, 2011
+Time: 03:13:55 GMT, October 04, 2012
 </BODY>
 </HTML>

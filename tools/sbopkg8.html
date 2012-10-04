@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of SBOPKG</TITLE>
 </HEAD><BODY>
 <H1>SBOPKG</H1>
-Section:  (8)<BR>Updated: April 2011<BR><A HREF="#index">Index</A>
+Section:  (8)<BR>Updated: October 2012<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 
@@ -116,7 +116,7 @@ of
 <B>sbopkg</B>.
 
 Currently, the size of a local copy of the SBo repository is about
-about 96M.
+about 115M.
 The main menu also allows the user to view the SBo
 <I>ChangeLog</I>,
 
@@ -166,8 +166,8 @@ directory, then
 
 will automatically add a new menu entry allowing the user to install the
 package if he chooses.
-Alternatively, the user can choose to automatically build, or both build
-and install, individual packages or several packages in a build queue.
+Alternatively, the user can choose to automatically download, build, or
+install individual packages or several packages in a queue.
 Finally, if
 <B>KEEPLOG</B>
 
@@ -318,7 +318,7 @@ A way to avoid this is to specify the queuefile with its
 extension.
 Also, a mix of both packages and queuefiles may be given.
 The tokens (package names or queuefiles) are processed in the order they
-are specified on the command line, and the build order specified in the
+are specified on the command line, and the order specified in the
 queuefiles is retained.
 If a package is specified more than once, it gets queued only the first
 time it is encountered.
@@ -328,7 +328,19 @@ time it is encountered.
 <DD>
 Display a list of installed SBo packages and potential updates.
 
-<DT><B>-d</B><I> DIRECTORY</I>
+<DT><B>-d</B><I> PACKAGE(s)/QUEUE(s)</I>
+
+<DD>
+Download source archives of the argument(s) from the URL specified in
+the active repository.
+<DT><DD>
+See the
+<B>-b</B>
+
+option for details since, other than the build, these two options
+operate similarly.
+
+<DT><B>-D</B><I> DIRECTORY</I>
 
 <DD>
 Manually specify the full path to the
@@ -342,7 +354,7 @@ containing the local SBo repository.
 Specify what
 <B>sbopkg</B>
 
-should do when it encounters an error while building a package.
+should do when it encounters an error while processing a package.
 Valid options are:
 <DT><DD>
 <B>ask</B>:
@@ -408,7 +420,7 @@ Display the help.
 <DT><B>-i</B><I> PACKAGE(s)/QUEUE(s)</I>
 
 <DD>
-Build and install packages of the argument(s) from the active
+Download, build, and install packages of the argument(s) from the active
 repository.
 <DT><DD>
 See the
@@ -418,15 +430,16 @@ option for details since, other than the installation, these two options
 operate similarly.
 <DT><DD>
 Note that by carefully considering the order of the packages listed
-and/or using queuefiles, the user may be able to build and install
-dependencies in the right order before the final application is built
-and installed.
+and/or using queuefiles, the user may be able to install dependencies in
+the right order before the final application is built.
 
 <DT><B>-k</B>
 
 <DD>
 When used together with
-<B>-b</B>
+<B>-b</B>,
+
+<B>-d</B>,
 
 or
 <B>-i</B>,
@@ -434,7 +447,7 @@ or
 this option tells
 <B>sbopkg</B>
 
-to skip (i.e., don't build) any package it finds to be already
+to skip (i.e., don't process) any package it finds to be already
 installed.
 <DT><DD>
 Please note that only a name comparison is performed, so when this
@@ -493,7 +506,9 @@ options is minimized.
 
 <DD>
 When combined with
-<B>-b</B>
+<B>-b</B>,
+
+<B>-d</B>,
 
 or
 <B>-i</B>,
@@ -501,8 +516,7 @@ or
 view the
 <I>README</I>
 
-files of the packages to be built/installed before starting the build
-process.
+files of the packages to be processed before processing them.
 This is useful for making a final check.
 When combined with
 <B>-p</B>,
@@ -615,7 +629,7 @@ man page for more information about the ``local'' repository.
 The
 <I>VERSION</I>
 
-format is repository/branch (e.g., SBo/13.37).
+format is repository/branch (e.g., SBo/14.0).
 If the repository is omitted,
 <B>sbopkg</B>
 
@@ -708,7 +722,7 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+vi">vi</A></B>(1),
 
-<I>/usr/doc/sbopkg-0.35.0/*</I>
+<I>/usr/doc/sbopkg-0.36.0/*</I>
 
 
 <P>
@@ -731,6 +745,6 @@ slakmagik
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 02:57:11 GMT, April 28, 2011
+Time: 03:13:55 GMT, October 04, 2012
 </BODY>
 </HTML>
