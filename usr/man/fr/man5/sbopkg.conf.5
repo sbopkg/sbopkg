@@ -1,5 +1,5 @@
 .\"=====================================================================
-.TH SBOPKG.CONF 5 "xxxDATExxx" sbopkg-SVN ""
+.TH SBOPKG.CONF 5 "October 2012" sbopkg-SVN ""
 .\"=====================================================================
 .SH NAME
 sbopkg.conf \- Fichier de Configuration de sbopkg
@@ -82,7 +82,7 @@ nous n'avons pas pensé. Soyez prudents.
 .IP
 La valeur par défaut est\ :
 .IP
-\fCxxxALLOW_MULTIxxx\fP
+\fCALLOW_MULTI=${ALLOW_MULTI:-NO}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B CLEANUP
@@ -113,7 +113,7 @@ est ignorée.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxCLEANUPxxx\fP
+\fCCLEANUP=${CLEANUP:-NO}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DEBUG_UPDATES
@@ -148,7 +148,7 @@ peut être utile si la liste des mises à jour parait incompléte.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxDEBUG_UPDATESxxx\fP
+\fCDEBUG_UPDATES=${DEBUG_UPDATES:-0}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFF
@@ -161,7 +161,7 @@ affiche les différences entre fichiers édités.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxDIFFxxx\fP
+\fCDIFF=${DIFF:-diff}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFFOPTS
@@ -176,7 +176,7 @@ affiche les différences entre fichiers édités.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxDIFFOPTSxxx\fP
+\fCDIFFOPTS=${DIFFOPTS:--u}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B KEEPLOG
@@ -193,7 +193,7 @@ pour l'emplacement de ce journal.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxKEEPLOGxxx\fP
+\fCKEEPLOG=${KEEPLOG:-YES}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B LOGFILE
@@ -206,7 +206,7 @@ vaut
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxLOGFILExxx\fP
+\fCLOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B MKDIR_PROMPT
@@ -225,7 +225,7 @@ fichiers), vous pouvez mettre cette valeur à
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxMKDIR_PROMPTxxx\fP
+\fCMKDIR_PROMPT=${MKDIR_PROMPT:-YES}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B OUTPUT
@@ -241,7 +241,7 @@ est donc la même que celle des SlackBuildS SBO.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxOUTPUTxxx\fP
+\fCexport OUTPUT=${OUTPUT:-/tmp}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B QUEUEDIR
@@ -252,7 +252,7 @@ files d'attente sauvegardées.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxQUEUEDIRxxx\fP
+\fCQUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_BRANCH
@@ -272,7 +272,7 @@ et peuvent aussi être affichées en tapant
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxREPO_BRANCHxxx\fP
+\fCREPO_BRANCH=${REPO_BRANCH:-14.0}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_NAME
@@ -298,7 +298,7 @@ dans le répertoire de documentation de
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxREPO_NAMExxx\fP
+\fCREPO_NAME=${REPO_NAME:-SBo}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_ROOT
@@ -306,11 +306,11 @@ Chemin.
 .IP
 Cette option permet à l'utilisateur de définir l'emplacement des 
 miroirs locaux des dépôts externes. 
-Actuellement la taille d'une copie locale du dépôt SBo est d'environ xxxSIZExxx.
+Actuellement la taille d'une copie locale du dépôt SBo est d'environ about 115M.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxREPO_ROOTxxx\fP
+\fCREPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B RSYNCFLAGS
@@ -347,7 +347,7 @@ est une option utile à tester en cas d'erreur de synchronisation.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxRSYNCFLAGSxxx\fP
+\fCRSYNCFLAGS="${RSYNCFLAGS:---verbose --timeout=30}"\fP
 .\"---------------------------------------------------------------------
 .TP
 .B SRCDIR
@@ -358,7 +358,7 @@ contiendra la sauvegarde des sources téléchargés.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxSRCDIRxxx\fP
+\fCSRCDIR=${SRCDIR:-/var/cache/sbopkg}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B TMP
@@ -382,7 +382,7 @@ est ignorée
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxTMPxxx\fP
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B TMPDIR
@@ -406,7 +406,7 @@ ou dans le fichier
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxTMPDIRxxx\fP
+\fCexport TMPDIR=${TMPDIR:-/tmp}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B WGETFLAGS
@@ -430,7 +430,7 @@ est une option utile à tester en cas d'erreur de téléchargement.
 .IP
 La valeur par défaut est\ : 
 .IP
-\fCxxxWGETFLAGSxxx\fP
+\fCWGETFLAGS="${WGETFLAGS:--c --progress=bar:force --timeout=30 --tries=5}"\fP
 .\"=====================================================================
 .SH NOTES
 .\"---------------------------------------------------------------------
