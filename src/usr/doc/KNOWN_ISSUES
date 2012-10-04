@@ -83,3 +83,12 @@ the tools it uses:
   doc/contrib avoids any namespace or loading collisions.
 
   Workaround: none needed
+
+* Some SBo scripts change the name of the package that is installed on the
+  system from the name that's listed in the SBo repo - for instance, 'foo'
+  might become 'foo-en'. This may result in sbopkg reporting a possible update
+  to a 'new' package rather than as an installed package. This is only
+  cosmetic and everything will work as intended. This may be fixed in the next
+  release.
+
+  Workaround: none needed
