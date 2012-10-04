@@ -1,9 +1,11 @@
 SBOPKG NEWS
 
-sbopkg xxxVERSIONxxx (xxxDATExxx)
+sbopkg 0.36.0 (2012-10-04 03:05 UTC)
 
     FEATURES
 
+        * This release of sbopkg is Slackware 14.0-ready. (Congrats to
+          all involved in the Slackware release.)
         * Sbopkg now has a -d flag which can download without building
           or installing, in addition to -b (download, build) and -i
           (download, build, install). Thanks to Kristoffer Karlsson for
