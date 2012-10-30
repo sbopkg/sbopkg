@@ -1180,6 +1180,7 @@ view_app_file() {
     local FILE="$2"
     local PLAIN
     local AFSP=$SBOPKGTMP/sbopkg_app_files_selection_parsed
+    local RESTORED_README=$SBOPKGTMP/restored_readme
 
     cd $DIR
     case $FILE in
@@ -1192,7 +1193,13 @@ view_app_file() {
         * ) PLAIN=yes ;;
     esac
     if [[ "$PLAIN" == yes ]]; then
-        dialog --exit-label "OK" --title "$FILE" --textbox "$FILE" 0 0
+        # If it's a README, splice the damned deps back into its display.
+        FILENAME=$FILE
+        if [[ $FILE == README ]]; then
+            { cat README; echo; grep '^REQUIRES=' *.info; } > $RESTORED_README
+            FILE=$RESTORED_README
+        fi
+        dialog --exit-label "OK" --title "$FILENAME" --textbox "$FILE" 0 0
     else
         dialog --exit-label "OK" --title "Parsed contents of $FILE" \
             --textbox "$AFSP" 0 0
@@ -2209,6 +2216,7 @@ view_readmes() {
     local NAME ONOFF PICK READMES
 
     READMES=$(find $REPO_DIR -mindepth 3 -maxdepth 3 -name README)
+    INFOS=$(find $REPO_DIR -mindepth 3 -maxdepth 3 -name *.info)
 
     printf "$HEADER_STRING\n" > $HEAD_FILE
 
@@ -2227,7 +2235,11 @@ view_readmes() {
         echo >> $READMES_FILE
         tin_text $NAME >> $READMES_FILE
         echo >> $READMES_FILE
-        cat $(grep /$NAME/README\$ <<< "$READMES") >> $READMES_FILE
+        {
+            cat $(grep /$NAME/README\$ <<< "$READMES")
+            echo
+            grep '^REQUIRES=' $(grep /$NAME/*.info <<< "$INFOS")
+        } >> $READMES_FILE
     done < $INPUT
 
     tin_text "$(< $HEAD_FILE)" > $REPORT_FILE
