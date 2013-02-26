@@ -95,6 +95,8 @@ parse_queuefile_requires () {
         sed -i "/^$DEP$/ d" $QUEUEFILE
         echo "$DEP" >> $QUEUEFILE
         parse_queuefile_requires $DEP
+      elif [[ "$DEP" == "%README%" ]]; then
+        echo "#%README% - see the $PARSEAPP README file. " >> $QUEUEFILE
       fi
     done
   else
