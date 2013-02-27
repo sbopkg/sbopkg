@@ -45,16 +45,24 @@ REPO_BRANCH=${REPO_BRANCH:-14.0}
 
 ### NO CHANGES SHOULD BE NECESSARY BELOW THIS LINE ###
 
-REPO_DIR=$REPO_ROOT/$REPO_NAME/$REPO_BRANCH
-
 sanity_checks () {
-  if [[ ! -e $SBOPKG_CONF || ! -w $QUEUEDIR || ! -d $REPO_DIR ]]; then
-    echo "ERROR: $SBOPKG_CONF cannot be found or $QUEUEDIR"
-    echo "or $REPO_DIR do not exist or are not writable."
+  if [[ ! -e $SBOPKG_CONF ]]; then
+    echo "$SBOPKG_CONF not found."
     echo "Check the configurable variables at the top of the script."
     exit 1
   else
     . $SBOPKG_CONF
+  fi
+  if [ -d $REPO_ROOT/$REPO_NAME/.git ]; then
+    REPO_SUBPATH=$REPO_NAME
+  else
+    REPO_SUBPATH=$REPO_NAME/$REPO_BRANCH
+  fi
+  REPO_DIR=$REPO_ROOT/$REPO_SUBPATH
+  if [[ ! -w $QUEUEDIR || ! -d $REPO_DIR ]]; then
+    echo "ERROR: $QUEUEDIR or $REPO_DIR do not exist or are not writable."
+    echo "Check the configurable variables at the top of the script."
+    exit 1
   fi
 }
 
@@ -96,7 +104,7 @@ parse_queuefile_requires () {
         echo "$DEP" >> $QUEUEFILE
         parse_queuefile_requires $DEP
       elif [[ "$DEP" == "%README%" ]]; then
-        echo "#%README% - see the $PARSEAPP README file. " >> $QUEUEFILE
+        echo "# %README% - see the $PARSEAPP README file. " >> $QUEUEFILE
       fi
     done
   else
@@ -116,8 +124,8 @@ build_queuefile () {
 main_loop () {
   local MAINAPP="$1"
   if [[ $MAINAPP == "_all" ]]; then
-    printf "Processing all SlackBuilds in the $REPO_NAME/$REPO_BRANCH repo..."
-    for INFO in $(find $REPO_ROOT/$REPO_NAME/$REPO_BRANCH -name *.info); do
+    printf "Processing all SlackBuilds in the $REPO_SUBPATH repo..."
+    for INFO in $(find $REPO_DIR -name *.info); do
       printf "."
       . $INFO
       build_queuefile
@@ -126,7 +134,7 @@ main_loop () {
     for MAINAPP in $PKG; do
       if search_package $MAINAPP; then
         echo "Processing $MAINAPP."
-        . $REPO_ROOT/$REPO_NAME/$REPO_BRANCH/$PKGPATH/$MAINAPP.info
+        . $REPO_DIR/$PKGPATH/$MAINAPP.info
         build_queuefile
       else
         echo "$MAINAPP not found.  Exiting."
