@@ -3906,22 +3906,24 @@ process_queue() {
         echo
         echo "Pre-check complete."
         echo
-        crunch_fmt "Do you wish to proceed based on the search \
-            results above? Packages not found will be skipped during \
-            the process."
-        echo
-        while :; do
-            read $NFLAG -ep "(P)roceed or (Q)uit?: "
-            case $REPLY in
-                P|p) break ;;
-                Q|q)
-                    rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
-                    rm -f $PKGPATH/options.build
-                    return 0
-                    ;;
-                *) unknown_response ;;
-            esac
-        done
+        if [[ ! $BULK ]]; then
+            crunch_fmt "Do you wish to proceed based on the search \
+                results above? Packages not found will be skipped during \
+                the process."
+            echo
+            while :; do
+                read $NFLAG -ep "(P)roceed or (Q)uit?: "
+                case $REPLY in
+                    P|p) break ;;
+                    Q|q)
+                        rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
+                        rm -f $PKGPATH/options.build
+                        return 0
+                        ;;
+                    *) unknown_response ;;
+                esac
+            done
+        fi
         echo
     fi
     if [[ $KEEPLOG ]]; then
@@ -4547,11 +4549,15 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:cD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
+while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
     case $OPT in
         b ) # Download, build
             set_type build
             BUILDLIST+=("$OPTARG")
+            unset DIAG
+            ;;
+        B ) # Bulk process without confirmation
+            BULK=1
             unset DIAG
             ;;
         c ) # Check for updates to installed SBo packages
@@ -4637,6 +4643,7 @@ Usage: $SCRIPT [OPTIONS] <packagename(s)>
 Options are:
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
                   are specified, build the packages they refer to.
+  -B              Bulk process the queue without confirmation.
   -c              Check for updates to installed packages.
   -D localdir     Location of local copy of the repositories.
   -d pkg/queue(s) Like '-b', but only download sources.
