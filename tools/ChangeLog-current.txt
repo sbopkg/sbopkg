@@ -1,4 +1,0 @@
-SBOPKG NEWS
-
-sbopkg xxxVERSIONxxx (xxxUTCDATExxx)
-

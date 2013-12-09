@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# $Id$
+# $Id: sqg 923 2013-12-09 02:13:44Z chess.griffin@gmail.com $
 
 # sqg - sbopkg queuefile generator
 # A script designed to generate queuefiles for sbopkg with recursively-listed

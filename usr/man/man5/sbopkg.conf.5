@@ -1,5 +1,5 @@
 .\"=====================================================================
-.TH SBOPKG.CONF 5 "xxxDATExxx" sbopkg-xxxVERSIONxxx ""
+.TH SBOPKG.CONF 5 "December 2013" sbopkg-0.37.0 ""
 .\"=====================================================================
 .SH NAME
 sbopkg.conf \- configuration file for sbopkg
@@ -78,7 +78,7 @@ Take care.
 .IP
 The default assignment is:
 .IP
-\fCxxxALLOW_MULTIxxx\fP
+\fCALLOW_MULTI=${ALLOW_MULTI:-NO}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B CLEANUP
@@ -110,7 +110,7 @@ setting is ignored.
 .IP
 The default assignment is:
 .IP
-\fCxxxCLEANUPxxx\fP
+\fCCLEANUP=${CLEANUP:-NO}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DEBUG_UPDATES
@@ -144,7 +144,7 @@ may be helpful if it appears the updatelist might be missing an update.
 .IP
 The default assignment is:
 .IP
-\fCxxxDEBUG_UPDATESxxx\fP
+\fCDEBUG_UPDATES=${DEBUG_UPDATES:-0}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFF
@@ -156,7 +156,7 @@ displays differences between edited files.
 .IP
 The default assignment is:
 .IP
-\fCxxxDIFFxxx\fP
+\fCDIFF=${DIFF:-diff}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B DIFFOPTS
@@ -170,7 +170,7 @@ displays differences between edited files.
 .IP
 The default assignment is:
 .IP
-\fCxxxDIFFOPTSxxx\fP
+\fCDIFFOPTS=${DIFFOPTS:--u}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B KEEPLOG
@@ -187,7 +187,7 @@ for the location of this log.
 .IP
 The default assignment is:
 .IP
-\fCxxxKEEPLOGxxx\fP
+\fCKEEPLOG=${KEEPLOG:-YES}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B LOGFILE
@@ -200,7 +200,7 @@ is set to
 .IP
 The default assignment is:
 .IP
-\fCxxxLOGFILExxx\fP
+\fCLOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B MKDIR_PROMPT
@@ -219,7 +219,7 @@ to
 .IP
 The default assignment is:
 .IP
-\fCxxxMKDIR_PROMPTxxx\fP
+\fCMKDIR_PROMPT=${MKDIR_PROMPT:-YES}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B NICE
@@ -249,7 +249,7 @@ as a whole.
 .IP
 The default assignment is:
 .IP
-\fCxxxNICExxx\fP
+\fCNICE=${NICE:-10}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B OUTPUT
@@ -265,7 +265,7 @@ is therefore the same as in the SBo SlackBuilds.
 .IP
 The default assignment is:
 .IP
-\fCxxxOUTPUTxxx\fP
+\fCexport OUTPUT=${OUTPUT:-/tmp}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B QUEUEDIR
@@ -276,7 +276,7 @@ kept.
 .IP
 The default assignment is:
 .IP
-\fCxxxQUEUEDIRxxx\fP
+\fCQUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_BRANCH
@@ -295,7 +295,7 @@ files and can also be listed by issuing
 .IP
 The default assignment is:
 .IP
-\fCxxxREPO_BRANCHxxx\fP
+\fCREPO_BRANCH=${REPO_BRANCH:-14.1}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_NAME
@@ -321,7 +321,7 @@ documentation directory.
 .IP
 The default assignment is:
 .IP
-\fCxxxREPO_NAMExxx\fP
+\fCREPO_NAME=${REPO_NAME:-SBo}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B REPO_ROOT
@@ -329,11 +329,11 @@ Path.
 .IP
 This option allows the user to set the location of the local mirrors of
 the remote repositories.
-Currently, the size of a local copy of the SBo repository is xxxSIZExxx.
+Currently, the size of a local copy of the SBo repository is about 145MB.
 .IP
 The default assignment is:
 .IP
-\fCxxxREPO_ROOTxxx\fP
+\fCREPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B RSYNCFLAGS
@@ -369,7 +369,7 @@ is a useful option to play with if getting syncing errors.
 .IP
 The default assignment is:
 .IP
-\fCxxxRSYNCFLAGSxxx\fP
+\fCRSYNCFLAGS="${RSYNCFLAGS:---verbose --timeout=30}"\fP
 .\"---------------------------------------------------------------------
 .TP
 .B SRCDIR
@@ -380,7 +380,7 @@ downloads will be saved.
 .IP
 The default assignment is:
 .IP
-\fCxxxSRCDIRxxx\fP
+\fCSRCDIR=${SRCDIR:-/var/cache/sbopkg}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B TMP
@@ -403,7 +403,7 @@ setting is ignored.
 .IP
 The default assignment is:
 .IP
-\fCxxxTMPxxx\fP
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B TMPDIR
@@ -427,7 +427,7 @@ or the variable can be modified in
 .IP
 The default assignment is:
 .IP
-\fCxxxTMPDIRxxx\fP
+\fCexport TMPDIR=${TMPDIR:-/tmp}\fP
 .\"---------------------------------------------------------------------
 .TP
 .B WGETFLAGS
@@ -449,7 +449,7 @@ is a useful option to play with if getting download errors.
 .IP
 The default assignment is:
 .IP
-\fCxxxWGETFLAGSxxx\fP
+\fCWGETFLAGS="${WGETFLAGS:--c --progress=bar:force --timeout=30 --tries=5}"\fP
 .\"=====================================================================
 .SH NOTES
 .\"---------------------------------------------------------------------
@@ -611,5 +611,5 @@ slakmagik
 .BR sbopkg (8),
 .BR uname (1),
 .BR wget (1),
-.IR /usr/doc/sbopkg-xxxVERSIONxxx/*
+.IR /usr/doc/sbopkg-0.37.0/*
 .\" vim:set tw=72:
