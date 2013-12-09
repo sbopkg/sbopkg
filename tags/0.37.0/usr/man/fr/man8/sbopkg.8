@@ -1,0 +1,528 @@
+.\"=====================================================================
+.TH SBOPKG 8 "xxxDATExxx" sbopkg-SVN ""
+.\"=====================================================================
+.SH NAME
+sbopkg \- Le navigateur de paquets SlackBuilds.org
+.\"=====================================================================
+.SH SYNOPSIS
+.B sbopkg
+.RI [ options ]
+.\"=====================================================================
+.SH DESCRIPTION
+.B Sbopkg
+est un outil en ligne de commande ou avec une interface 
+.BR dialog
+pour utiliser le depôt de SlackBuilds.org ("SBo"), une collection 
+de scripts SlackBuild tiers pour compiler des paquets 
+Slackware.
+.\"---------------------------------------------------------------------
+.SS Instructions
+L'utilisation de
+.B Sbopkg
+suppose une compréhension des scripts SlackBuild 
+en général et du dépôt SlackBuilds.org en particulier.
+Il est fortement recommandé de lire attentivement 
+.I http://www.slackbuilds.org/howto/
+et les pages traitant des scripts SlackBuild sur 
+.I http://www.slackwiki.org
+.PP
+Avant de pouvoir utiliser 
+.BR sbopkg ,
+il faut créer le fichier de configuration 
+.I /etc/sbopkg/sbopkg.conf .
+et / ou
+.IR ~/.sbopkg.conf .
+Une première installation fournit le fichier système à l'utilisateur 
+tandis qu'une mise à jour ajoutera un fichier
+.I /etc/sbopkg/sbopkg.conf.new
+avec lequel l'utilisateur pourra fusionner ou remplacer l'ancienne version.
+Voir
+.BR sbopkg.conf (5)
+pour plus d'information sur les fichiers de configuration.
+.PP
+.B Sbopkg
+doit être lancé en tant que root (les Slackbuilds SBo sont écrits pour 
+être utilisés par l'utilisateur root)
+De plus, utiliser l'option
+.B \-
+avec
+.B su
+est fortement recommandé.
+La raison en est que quelques SlackBuilds dépendent de certains outils 
+disponibles uniquement dans le 
+.B PATH
+de root quand les scripts situés dans
+.I /etc/profile.d
+ont été exécutés (par ex. 
+.B texmf
+pour construire les pages de manuel), ce qui n'est réalisé que pour les 
+login shells, ou sinon exige un environnement root "plus vrai" que celui
+fourni par
+.BR su
+seulement. 
+Dans tous les cas, appeler 
+.B sbopkg
+sans argument (ou seulement avec
+.BR \-d ,
+.BR \-f ,
+ou
+.BR \-V )
+lancera l'interface
+.BR dialog
+et les menus affichés devraient être suffisament parlants.
+.PP
+Le menu principal permet à l'utilisateur de se synchroniser avec le 
+dépôt de SBo. C'est la première étape (après la configuration) d'une 
+nouvelle installation de
+.BR sbopkg .
+Actuellement la taille d'une copie locale du dépôt SBo vaut environ 
+xxxSIZExxx.
+Le menu principal permet aussi à l'utilisateur de lire le
+.IR Changelog
+de SBo, de rechercher les mises à jour possibles de paquets SBo,
+d'afficher le contenu du répertoire cache local où sont sauvegardés les 
+sources, d'afficher le journal permanent des compilations et de lister 
+ou de chercher dans la copie locale du dépôt de SBo.
+Lorsque l'on choisit de naviguer dans la copie locale, on peut choisir 
+la catégorie de programmes dans laquelle on veut aller.
+Après le choix de cette catégorie, on peut voir les différents 
+programmes disponibles de cette catégorie dans le dépôt SBo local. 
+Sélectionner un paquet affiche un autre menu permettant de lire les 
+fichiers 
+.IR README ,
+.IR SlackBuild ,
+.IR .info ,
+or
+.I slack-desc
+des paquets.
+L'utilisateur peut aussi modifier les fichiers 
+.I .info
+et
+.IR SlackBuild ,
+les fichiers modifiés seront préservés lors d'une synchronisation.
+De plus, l'utilisateur peut choisir de construire un paquet en utilisant 
+le 
+.I SlackBuild
+d'origine ou la version locale modifiée si elle existe.
+Si on utilise l'interface 
+.B dialog
+et si 
+.B sbopkg
+trouve, dans le répertoire 
+.B OUTPUT ,
+un paquet compilé pour un programme spécifique,
+.B sbopkg
+va automatiquement ajouter un nouveau choix au menu pour permettre à 
+l'utilisateur d'installer ce paquet s'il le souhaite.
+L'utilisateur peut aussi décider de compiler ou de compiler et installer
+un seul paquet ou plusieurs paquets listés dans une file de compilation.
+Finalement, si la variable 
+.B KEEPLOG
+vaut
+.B YES
+dans un fichier de configuration, 
+un journal permanent des opérations de compilation est sauvegardé.
+Voir dans
+.BR sbopkg.conf (5)
+les rubriques
+.B KEEPLOG
+et
+.B LOGFILE
+pour plus de détails.
+.PP
+.B Sbopkg 
+peut aussi être lancé en ligne de commande sans utiliser l'interface
+.B dialog .
+Voir la section
+.B OPTIONS
+pour les options disponibles depuis la ligne de commande.
+.PP
+.B Sbopkg
+peut aussi charger, sauvegarder et utiliser des files d'attente 
+crées par l'utilisateur.
+Ces files d'attente sont de simples fichiers texte comportant une 
+seule application par ligne.
+Lorsqu'on charge une file d'attente par l'interface de dialogue, 
+l'application est sélectionnée ou "ON".
+Ce comportement peut être modifié en insérant un "-" devant le nom de 
+l'application dans la file d'attente.
+Une file d'attente peut aussi contenir d'autres files, dont le nom est 
+alors précédé d'un "@". 
+Pour plus d'informations, lire le fichier 
+.I readme-queuefiles
+dans le répertoire de documentation.
+.PP
+Certaines capacités de 
+.B sbopkg
+dépendent de binaires externes, comme un afficheur pour lire les 
+fichiers texte quand 
+.B sbopkg
+est lancé en ligne de commande et un éditeur pour modifier les fichiers 
+.I .info
+ou
+.I SlackBuild .
+La fonction affichage recherche la variable d'environnement
+.B PAGER
+et si celle-ci n'est pas définie, utilise 
+.BR more .
+De même, la fonction édition recherche la variable 
+.B EDITOR
+et si celle-ci n'est pas définie, utilise 
+.BR vi .
+Si on souhaite que 
+.B sbopkg
+utilise un autre éditeur ou un autre pager, l'ajout  
+de l'information requise dans 
+.IR ~/.bashrc ,
+.IR /etc/profile ,
+ou tout autre fichier de configuration semblable (y compris les
+fichiers de configuration même de
+.BR sbopkg
+) pour exporter la variable appropriée suffira.
+.\"=====================================================================
+.SH OPTIONS
+.\"---------------------------------------------------------------------
+.TP 5
+.BI \-b " PAQUET(s)/QUEUE(s)"
+Compile les paquets indiqués dans l'argument à partir du dépôt actif.
+Si plusieurs paquets sont indiqués, il faut, soit les placer entre
+guillemets, soit répéter l'option.
+Dans le deuxième cas, on peut donner une liste d'option séparées par un
+deux-points. S'il y a des espaces, il faut utiliser les guillemets.
+.IP
+Par exemple\ :
+.RS
+.IP
+.nf
+\fC# sbopkg -b "foo bar"\fP
+.fi
+.RE
+.IP
+construira
+.I foo
+et ensuite
+.IR bar .
+.IP
+Ou
+.RS
+.IP
+.nf
+\fC# sbopkg -b app1:opt1="foo bar":opt2=baz -b app2:opt="mu"\fP
+.fi
+.RE
+.IP
+construira app1 avec les options ''foo bar'' et ''baz'', et construira 
+app2 avec l'option ''mu''.
+.IP
+On peut aussi indiquer un nom de file d'attente.
+Dans ce cas, tous les paquets indiqués dans le fichier de queue seront 
+compilés. Si par hasard, un fichier de file d'attente portait le même 
+nom qu'un paquet (l'utilisateur aurait donné au fichier de file 
+d'attente le nom d'un paquet existant),
+.B sbopkg
+demanderait à l'utilisateur lequel des deux utiliser.
+Un moyen d'éviter ceci est de préciser le nom de file d'attente avec
+une extension
+.IR .sqf .
+On peut indiquer un mélange de paquets et de files d'attente.
+Les éléments (noms de paquets ou de files d'attente) sont traités dans 
+l'ordre indiqué dans la ligne de commande ou dans l'ordre de compilation
+indiqué dans la file d'attente pour celle-ci.
+Si un paquet est cité plusieurs fois, il ne sera traité que la 
+première fois. 
+.\"---------------------------------------------------------------------
+.TP
+.B \-c
+Affiche la liste des paquets SBo installés et des mises à jour 
+possibles.
+.\"---------------------------------------------------------------------
+.TP
+.BI \-d " RÉPERTOIRE"
+Indique le chemin complet du 
+.I RÉPERTOIRE
+contenant le dépôt SBo local.
+.\"---------------------------------------------------------------------
+.TP
+.B \-e ask\fR|\fPcontinue\fR|\fPstop
+Indique ce que 
+.B sbopkg
+doit faire s'il rencontre une erreur pendant la construction d'un paquet.
+Les options possibles sont\ :
+.IP
+.BR ask :
+Valeur par défaut, demande à l'utilisateur ce qu'il faut faire.
+.IP
+.BR continue :
+Ignore l'erreur et continue le traitement (comme si l'utilisateur 
+répondait "Yes" à toutes les questions).
+.IP
+.BR stop :
+Stoppe le processus (comme si l'utilisateur répondait "No" à toutes 
+les questions).
+.\"---------------------------------------------------------------------
+.TP
+.BI \-f " FICHIER"
+Remplace le fichier de configuration par défaut,
+.IR /etc/sbopkg/sbopkg.conf ,
+par
+.IR FICHIER .
+.\"---------------------------------------------------------------------
+.TP
+.BI \-g " PAQUET(s)"
+Recherche pour un 
+.I PAQUET(s)
+à partir d'un motif, insensible à la casse, l'argument est 
+automatiquement entouré par
+.BR * s.
+Si on indique plusieurs motifs, il faut les placer entre guillemets 
+ou répéter l'option \-g à chaque motif
+.IP
+Par exemple\ :
+.RS
+.IP
+.nf
+\fC# sbopkg -g "foo bar"\fP
+.fi
+.RE
+.IP
+renverra une liste des paquets contenant, soit
+.IR foo ,
+soit
+.I bar
+dans leur nom.
+.\"---------------------------------------------------------------------
+.TP
+.B \-h
+Affiche l'aide.
+.\"---------------------------------------------------------------------
+.TP
+.BI \-i " PAQUET(s)/QUEUE(s)"
+Compile et installe les paquets indiqués dans l'argument à partir du 
+dépôt actif.
+.IP
+Pour les détails, voir l'option
+.B \-b
+car mis à part la partie installation, ces deux options fonctionnent de
+la même manière.
+.IP
+À noter qu'en faisant bien attention à l'ordre des paquets et/ou en 
+utilisant les queues, il est possible de compiler et d'installer les 
+dépendances dans le bon ordre avant le programme principal. 
+.\"---------------------------------------------------------------------
+.TP
+.B \-k
+Quand on l'utilise avec
+.B \-b
+or
+.BR \-i ,
+cette option demande à 
+.B sbopkg
+de passer (c-a-d ne pas construire) tout paquet qui serait déjà 
+installé.
+.IP
+À noter que celà se réalise avec une simple comparaison de nom, donc 
+quand on utilise cette option, 
+.B sbopkg
+sbopkg ne tient pas compte des différences de version.
+.\"---------------------------------------------------------------------
+.TP
+.B \-l
+Affiche le fichier 
+.I ChangeLog
+de SBo et quitte le programme.
+.\"---------------------------------------------------------------------
+.TP
+.B \-o
+Affiche la liste des fichiers source installés dans le cache qui sont 
+considérés comme obsolètes et propose de les effacer.
+.IP
+Les fichiers source sont obsolètes quand plus aucun(s) champ(s)
+.B DOWNLOAD
+du fichier
+.I .info
+ne les mentionne, ce qui peut arriver après avoir synchronisé le dépôt 
+local.
+.IP
+Notez qu'on utilise seulement le dépôt actuellement actif pour identifier 
+les sources obsolètes, donc si vous utilisez des dépôts différents (pour 
+des versions différentes de Slackware), les fichiers source utilisés 
+uniquement dans "d'autres" dépôts seront quand même affichés.
+.\"---------------------------------------------------------------------
+.TP
+.B \-P
+Affiche les fichiers paquets du cache qui ne sont pas actuellement 
+installés sur le système et propose de les supprimer.
+.\"---------------------------------------------------------------------
+.TP
+.B \-p
+Affiche la liste des paquets SBo installés.
+.\"---------------------------------------------------------------------
+.TP
+.B \-q
+Entre dans le "mode silencieux". 
+Dans ce mode, la sortie de certaines option de ligne de commande est 
+plus succinte.
+.\"---------------------------------------------------------------------
+.TP
+.B \-R
+Lorqu'il est combiné avec
+.B -b
+or
+.BR -i ,
+affiche le fichier
+.I README
+des paquets à compiler / installer avant de lancer la compilation.
+Utile pour effectuer un dernier contrôle.
+Lorqu'il est combiné avec
+.BR -p ,
+affiche le fichier 
+.I README
+de tous les paquets du dépôt en cours qui sont installés.
+.\"---------------------------------------------------------------------
+.TP
+.B \-r
+Synchronise ("rsync") le dépôt local avec SBo et quitte.
+.\"---------------------------------------------------------------------
+.TP
+.BI \-s " PAQUET(s)"
+Cherche un ou plusieurs
+.I PAQUET(s)
+par un nom précis, sensible à la casse et si trouvé affiche les 
+fichiers 
+.IR README ,
+.IR SlackBuild ,
+.IR .info
+et
+.I slack-desc
+dans cet ordre pour chaque
+.I PAQUET
+trouvé en utilisant 
+.IR $PAGER .
+Si on indique plusieurs paquets, ils doivent être mis entre guillemets 
+ou il faut répéter l'option \-s pour chaque paquet.
+.IP
+Par exemple\ :
+.RS
+.IP
+.nf
+\fC# sbopkg -s "foo bar"\fP
+.fi
+.RE
+.IP
+affichera tous les fichiers indiqués ci-dessus pour des paquets dont les
+noms sont exactement
+.I foo
+ou
+.IR bar .
+.IP
+À noter que les métacaractères du shell peuvent être utilisés dans les 
+arguments. 
+Par exemple, 
+.RS
+.IP
+.nf
+\fC# sbopkg -s '*[Oo]pen*'\fP
+.fi
+.RE
+.IP
+renverra tous les paquets comportant "open" ou "Open" n'importe où dans 
+leur nom. Si la réponse comprend plusieurs applications, l'utilisateur 
+pourra effectuer son choix dans un menu.
+.\"---------------------------------------------------------------------
+.TP
+.B \-u
+Vérifie l'existence d'une mise à jour pour 
+.B sbopkg
+lui-même et quitte.
+.\"---------------------------------------------------------------------
+.TP
+.BI \-V " VERSION"
+Définit le dépôt et la version à utiliser.
+.IP
+Pour obtenir une liste des versions valides, appeler
+.B sbopkg
+ainsi
+.RS
+.IP
+.nf
+\fC# sbopkg -V ?\fP
+.fi
+.RE
+.IP
+Voir la page de manuel 
+.BR sbopkg.conf (5)
+pour plus d'information sur le dépôt "local".
+.IP
+Le format de 
+.I VERSION
+est présenté dépôt/branche (par ex SBo/13.1). 
+Si le dépôt n'est pas précisé,
+.B sbopkg
+va chercher la branche indiquée dans le dépôt par défaut.
+Si cette recherche échoue,
+.B sbopkg
+sbopkg va rechercher la première branche qui concorde dans tous les 
+dépôts.
+.\"---------------------------------------------------------------------
+.TP
+.B \-v
+Affiche la version en cours de
+.B sbopkg
+sur la sortie standard.
+.\"=====================================================================
+.SH FICHIERS
+.TP 5
+.I /etc/sbopkg/sbopkg.conf
+Fichier système par défaut qui contient les options de configuration.
+.TP
+.I ~/.sbopkg.conf
+Fichier pour remplacer les options de configuration système.
+.TP
+.I /etc/sbopkg/renames.d/*.renames
+Fichiers contenant la liste des logiciels du dépôt SBo qui 
+ont été renommés.
+Voir le document
+.I README-renames
+dans le répertoire de documentation de
+.B sbopkg
+pour plus d'information.
+.TP
+.I /etc/sbopkg/repos.d/*.repo
+Fichiers pour les différents types de dépôts de
+.B sbopkg .
+Voir le document
+.I README-repos
+dans le répertoire de documentation de
+.B sbopkg
+pour plus d'information.
+.\"=====================================================================
+.SH AUTEURS
+Chess Griffin
+<chess@chessgriffin.com>
+.PP
+Mauro Giachero
+<mauro.giachero@gmail.com>
+.PP
+slakmagik
+<slakmagik@gmail.com>
+.\"=====================================================================
+.SH VOIR AUSSI
+.BR dialog (1),
+.BR more (1),
+.BR removepkg (8),
+.BR rsync (1),
+.BR sbopkg.conf (5),
+.BR su (1),
+.BR upgradepkg (8),
+.BR vi (1),
+.IR /usr/doc/sbopkg-SVN/*
+.\"=====================================================================
+.SH TRADUCTION
+Ce document est une traduction réalisée par M.C Collilieux 
+<mccnews@free.fr/> le 18\ mars\ 2011.
+N'hésitez pas à signaler au traducteur, toute erreur dans cette 
+page de manuel.
+
+La version anglaise la plus à jour de ce document est toujours 
+consultable via la commande\ : «\ \fBLANG=en\ man\ 8\ sbopkg\fR\ ».
+

@@ -1,0 +1,571 @@
+.\"=====================================================================
+.TH SBOPKG.CONF 5 "Noviembre 2010" sbopkg-0.34.0 ""
+.\"=====================================================================
+.SH NOMBRE
+sbopkg.conf \- archivo de configuracion para sbopkg
+.\"=====================================================================
+.SH DESCRIPCION
+El archivo
+.I sbopkg.conf
+contiene ajustes de configuracion para la herramienta
+.BR sbopkg (8),
+para interactuar con el repositorio SlackBuilds.org (``SBo''), una 
+colección de scripts SlackBuild de terceros para construir paquetes
+Slackware.
+El archivo de configuracion por defecto esta instalado en
+.IR /etc/sbopkg/sbopkg.conf .
+Tambien, por favor ver la subseccion siguiente sobre
+.BR ARCH .
+.PP
+Todas las opciones booleanas necesitan un
+.B YES
+o un
+.B NO
+sin tener en cuenta el caso.
+Todos los valores de path deben estar completos.
+.PP
+Las opciones de configuracion por defecto son:
+.\"---------------------------------------------------------------------
+.TP 3
+.B ALLOW_MULTI
+Booleano.
+.IP
+Cuando se establece en
+.BR YES ,
+esta opcion permite al usuario iniciar varias veces
+.B sbopkg
+simultaneamente.
+.IP
+Por favor entiende que esta opcion es proporcionada para mayor comodidad, 
+pero dar el numero de los problemas potenciales que puedes encarar cuando 
+actives esto (y no vamos a probar diferentes usuarios trabajando haciendo 
+tonterias), tu debes considerar que es una funcion EXPERIMENTAL NO 
+SOPORTADA.
+Si encuentras problemas, por favor, intenta asegurarte si no los has 
+causado tu haciendo cosas inadecuadas.
+.IP
+Por ejemplo, algunas de estas cosas, no deberian utilizarse con estas 
+opciones activadas:
+.RS 5
+.TP 3
+\(bu
+inicia instancias con una mezcla de configuraciones
+.B YES
+y
+.B NO
+.TP
+\(bu
+sincroniza un repositorio cuando otra instancia lo esta usando
+.TP
+\(bu
+cambia la rama de un repositorio git cuando otra instancia lo esta usando
+(esta advertencia no se utiliza para sincronizar los repositorios)
+.TP
+\(bu
+construye o instala el mismo paquete a la vez desde diferentes instancias
+.TP
+\(bu
+guarda un archivo de colas mientras se esta usando desde otra instancia
+.RE
+.IP
+Puede haber mas situaciones inseguras de las que nosotros pensamos.
+Ten cuidado.
+.IP
+La tarea por defecto es:
+.IP
+\fCALLOW_MULTI=${ALLOW_MULTI:-NO}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B CLEANUP
+Booleano.
+.IP
+Cuando se establece como
+.BR YES ,
+los archivos fuente desempaquetados y el arbol de paquetes en
+.I $TMP
+son eliminados despues de la construccion a traves del archivo fuente 
+descargado y el paquete completo es dejado en
+.I $SRCDIR
+y
+.IR $OUTPUT .
+.IP
+Un efecto colateral de establecer
+.B CLEANUP
+como
+.B YES
+es que
+.B TMP
+esta establecido con un valor interno, y cualquier otra opcion de
+.B TMP
+es ignorada.
+.IP
+La tarea por defecto es:
+.IP
+\fCCLEANUP=${CLEANUP:-NO}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DEBUG_UPDATES
+Enumeracion.
+.IP
+Esta opcion debe ser establecida como
+.BR 0 ,
+.BR 1 ,
+o
+.BR 2 .
+.B DEBUG_UPDATES
+establece el nivel de debugging por defecto para actualizar la lista de 
+funciones de
+.BR sbopkg .
+Cuando esta establecido en
+.BR 0 ,
+solo las actualizaciones importantes (o reducciones de version) de 
+paquetes son listados.
+Cuando esta establecido en
+.BR 1 ,
+actualizaciones importantes mas paquetes que no estan en el repo y 
+paquetes que nunca fueron listados en el repo.
+Cuando esta establecido en
+.BR 2 ,
+todos los paquetes no actualizados son listados.
+Cambiando
+.B DEBUG_UPDATES
+a
+.B 1
+o
+.B 2
+puede ser util si parece que la lista de actualizaciones puede estar 
+perdiendo una actualizacion.
+.IP
+La tarea por defecto es:
+.IP
+\fCDEBUG_UPDATES=${DEBUG_UPDATES:-0}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DIFF
+Comando.
+.IP
+Esta opcion le permite al usuario establecer que programa usar cuando
+.B sbopkg
+muestra diferencias entre archivos editados.
+.IP
+La tarea por defecto es:
+.IP
+\fCDIFF=${DIFF:-diff}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DIFFOPTS
+Opciones de comando.
+.IP
+Esta opcion le permite al usuario establecer que opciones seran usadas 
+por el programa
+.I $DIFF
+cuando
+.B sbopkg
+muestra diferencias entre archivos editados.
+.IP
+La tarea por defecto es:
+.IP
+\fCDIFFOPTS=${DIFFOPTS:--u}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B KEEPLOG
+Booleano.
+.IP
+Esta opcion le permite al usuario escoger si mantener un log permanente 
+de todos los paquetes que son construidos con
+.B sbopkg
+para volver a ver las construcciones para historial o para la solucion de problemas.
+Ver
+.B LOGFILE
+para la localizacion de este log.
+.IP
+La tarea por defecto es:
+.IP
+\fCKEEPLOG=${KEEPLOG:-YES}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B LOGFILE
+Ruta.
+.IP
+Esta opcion establece el nombre del log de construccion si
+.B KEEPLOG
+esta establecido como
+.BR YES .
+.IP
+La tarea por defecto es:
+.IP
+\fCLOGFILE=${LOGFILE:-/var/log/sbopkg/sbopkg-build-log}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B MKDIR_PROMPT
+Booleano.
+.IP
+Cuando esta establecido como
+.BR YES ,
+.B sbopkg
+le pedira la confirmacion antes de cambiar el sistema de archivos creando 
+sus directorios.
+Si no deseas recibir la peticion de confirmacion (por ejemplo, si tienes 
+parte de los directorios en sistemas de archivos temporales y no deseas 
+recibir la peticion de confirmacion cada vez que el sistema de archivos 
+es vuelto a iniciar) puedes establecerlo como
+.BR NO .
+.IP
+La tarea por defecto es:
+.IP
+\fCMKDIR_PROMPT=${MKDIR_PROMPT:-YES}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B OUTPUT
+Ruta.
+.IP
+Esta opcion establece el directorio por defecto donde los paquetes son compilados y guardados.
+.B OUTPUT
+debe ser exportado como si tambien es usado por SBo SlackBuildsmust be exported as it is also used by the SBo SlackBuilds.
+Cabe destacar que el valor por defecto de
+.B OUTPUT
+es ademas el mismo que en el SBo SlackBuilds.
+.IP
+La tarea por defecto es:
+.IP
+\fCexport OUTPUT=${OUTPUT:-/tmp}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B QUEUEDIR
+Ruta.
+.IP
+Esta opcion define el directorio bajo el que los archivos de cola seran 
+mantenidos.
+.IP
+La asignacion por defecto es:
+.IP
+\fCQUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_BRANCH
+Enumeracion.
+.IP
+Esta opcion le permite al usuario establecer el repositorio raiz activo 
+por defecto.
+Los valores estandar actuales son listados por defecto en los archivos
+.I repos.d/*
+y pueden tambien ser listados por emision
+.RS
+.IP
+.nf
+\fC# sbopkg -V ?\fP
+.fi
+.RE
+.IP
+La asignacion por defecto es:
+.IP
+\fCREPO_BRANCH=${REPO_BRANCH:-13.1}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_NAME
+Enumeracion.
+.IP
+Esta opcion le permite al usuario escoger que repositorio usar.
+Ver
+.B REPO_BRANCH
+para saber como conseguir una enumeracion de los valores estandar.
+La opcion ``local'' correspondeal repositorio mantenido por los usuarios 
+que debe ser el mismo que el usado por SBo, en sentido de le jerarquia
+.I category/package/files .
+Nota: todas las variables de
+.B REPO_*
+son afectadas por los archivos de repositorio mantenidas en
+.I /etc/sbopkg/repos.d.
+Por favor ver el documento
+.I README-repos.d
+en el directorio de documentacion de
+.B sbopkg .
+.IP
+La asignacion por defecto es:
+.IP
+\fCREPO_NAME=${REPO_NAME:-SBo}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_ROOT
+Ruta.
+.IP
+Esta opcion le permite al usuario establecer los mirrors de los 
+repositorios remotos.
+Actualmente, el tamaño de una copia local del repositorio SBo es de alrededor de 90MB.
+.IP
+La asignacion por defecto es:
+.IP
+\fCREPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B RSYNCFLAGS
+Comando de opciones.
+.IP
+.B Rsync
+es usado por
+.B sbopkg
+para reflejar el repositorio SBo.
+Esta opcion permite al usuario ajustar manualmente las banderas (opciones) 
+de
+.B rsync
+que seran usadas por
+.BR sbopkg .
+Los usuarios estan advertidos en contra de hacer cualquier cambio en los 
+valores por defecto porque las nuevas banderas pueden funcionar bien o no.
+Nota: el comando
+.B rsync
+en
+.B sbopkg
+ya utiliza las banderas
+.BR \-\-archive ,
+.BR \-\-delete ,
+.BR \-\-no-owner ,
+y
+.B \-\-exclude
+asique no es necesario añadirlas a la opcion
+.B RSYNCFLAGS .
+Cambiar las opciones internas por defecto no es recomendado.
+Sin embargo,
+.B \-\-timeout
+es una opcion util para reproducir si hay errores de sincronizacion.
+.IP
+La asignacion por defecto es:
+.IP
+\fCRSYNCFLAGS="${RSYNCFLAGS:---verbose --timeout=30}"\fP
+.\"---------------------------------------------------------------------
+.TP
+.B SBOPKGTMP
+Ruta.
+.IP
+Esta opcion establece el directorio por defecto donde algunos archivos 
+especificos de
+.B sbopkg
+son salvados de forma temporal.
+.IP
+La asignacion por defecto es:
+.IP
+\fCxxxSBOPKGTMPxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B SRCDIR
+Ruta.
+.IP
+Esta opcion contiene la localizacion de archivo de cache, donde las 
+descargas de archivos fuente son guardados.
+.IP
+La asignacion por defecto es:
+.IP
+\fCSRCDIR=${SRCDIR:-/var/cache/sbopkg}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B TMP
+Ruta.
+.IP
+Esta opcion establece el directorio por defecto donde los paquetes 
+construidos son salvados.
+.B TMP
+debe ser exportado como es usado por SBo SlackBuilds.
+Notese que el valor por defecto de
+.B TMP
+es ademas el mismo que el de SBo SlackBuilds.
+.IP
+Tambien notese que si la variable
+.B CLEANUP
+esta establecida como
+.BR YES ,
+cualquier opcion personalizada de
+.B TMP
+es ignorada.
+.IP
+La asignacion por defecto es:
+.IP
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
+.\"---------------------------------------------------------------------
+.TP
+.B WGETFLAGS
+Comando de opciones.
+.IP
+.B Wget
+es usado por
+.B sbopkg
+para descargar los archivos fuentes para construir el paquete.
+Esta opcion permite al usuario ajustar las banderas (opciones) de
+.B wget
+que son usadas por
+.BR sbopkg .
+Los usuarios estan advertidos en contra de hacer cualquier cambio a los 
+valores por defecto porque las banderas nuevas pueden funcionar o no.
+Nota: el comando
+.B wget
+en
+.B sbopkg
+ya usa la bandera
+.B \-O ,
+asique no es necesario añadirla a las opciones de
+.B WGETFLAGS .
+Cambiar la mayoria de estas opciones por defecto no esta recomendado.
+Sin embargo,
+.B \-\-timeout
+es una opcion util para reproducir si hay errores de descarga.
+.IP
+La asignacion por defecto es:
+.IP
+\fCWGETFLAGS="${WGETFLAGS:--c --progress=bar:force --timeout=30 --tries=5}"\fP
+.\"=====================================================================
+.SH NOTAS
+.\"---------------------------------------------------------------------
+.SS Sobreescribiendo Variables de Entorno
+Es posible establecer o sobreescribir variables de entorno y pasarselas 
+entonces a SlackBuilds cuando es construido sin ellas
+.BR sbopkg .
+Esto esta ya demostrado en la siguiente linea de ejemplo (y otras como 
+ella) en el archivo
+.I sbopkg.conf :
+.RS
+.PP
+.nf
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
+.fi
+.RE
+.PP
+Esto establece
+.B TMP
+a
+.I /tmp/SBo
+para construir los paquetes SBo sin 
+.B sbopkg
+(el cual es aun actualmente el predeterminado para SBo SlackBuilds).
+A causa de que esta variable es exportada, puede cambiar
+.B sbopkg
+y para construir paquetes SBo sin
+.BR sbopkg .
+Por ejemplo, cambia esta linea, por lo que lee:
+.RS
+.PP
+.nf
+\fCexport TMP=${TMP:-/home/sbo/tmp}\fP
+.fi
+.RE
+.PP
+entonces se estableceria
+.B TMP
+a
+.I /home/sbo/tmp
+para construir paquetes SBo y tambien permitir la sobreescritura en 
+tiempo de ejecucion invocando
+.B sbopkg
+como
+.RS
+.PP
+.nf
+\fC# export TMP=foo; sbopkg\fP
+.fi
+.RE
+.PP
+.B OUTPUT
+puede tambien cambiar el guardado de paquetes compilados en otra localizacion en lugar de la predeterminada
+.IR /tmp .
+.PP
+Tu tambien puedes exportar variables en
+.I sbopkg.conf
+que no son usadas por
+.B sbopkg .
+.\"---------------------------------------------------------------------
+.SS Sobre la variable ARCH
+Quiza te preguntes porque
+.B ARCH
+no es una opcion de configuracion por defecto en el archivo
+.I sbopkg.conf .
+La razon es que no lo tiene que ser.
+Si
+.B ARCH
+no esta establecida,
+.B sbopkg
+hace una comprobacion (utilizando la salida de
+.BR "uname \-m" )
+para determinar que arquitectura de sistema es.
+Si la arquitectura es x86, x86_64, o arm*, entonces
+.B sbopkg
+automaticamente establecera
+.B ARCH
+a i486, x86_64, o arm, respectivamente.
+Si
+.B ARCH
+esta establecida,
+.B sbopkg
+heredara esa configuracion.
+Esto significa que cada usuario puede añadir, por ejemplo,
+.B export ARCH=i686
+en su
+.I .bashrc
+o archivo similar, u otro usuario puede tambien ejecutar algo 
+como si pareciera la terminal de root
+.RS
+.PP
+.nf
+\fC# export ARCH=i686; sbopkg\fP
+.fi
+.RE
+.PP
+El usuario puede tambien añadir manualmente su archivo
+.I sbopkg.conf
+si desea.
+Finalmente, si
+.B ARCH
+no esta establecida por el usuario y
+.B sbopkg
+no detectara una de las arquitecturas previamente mencionadas, entonces
+.B ARCH
+sera establecida por cualquiera que este en SlackBuilds.
+Notese que SlackBuild puede, en algunas ocasiones, descartar o 
+sobreescribir las anteriores configuraciones de
+.B ARCH
+si es requerido para la construccion.
+.\"=====================================================================
+.SH ARCHIVOS
+.TP 3
+.I /etc/sbopkg/sbopkg.conf
+Archivo que especifica opciones de configuracion.
+.TP
+.I /etc/sbopkg/renames.d/50-default
+Archivo por defecto que lista software en el repositorio SBo que ha sido
+renombrado.
+Ver el documento
+.I README-renames.d
+en el directorio de documentacion de
+.B sbopkg
+para mas informacion.
+.TP
+.I /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
+Tres archivos por defecto para varios tipos de repositorios de
+.B sbopkg .
+Ver el documento
+.I README-repos.d
+en el directorio de documentacion de
+.B sbopkg
+para mas informacion.
+.\"=====================================================================
+.SH AUTORES
+Chess Griffin
+<chess@chessgriffin.com>
+.PP
+Mauro Giachero
+<mauro.giachero@gmail.com>
+.PP
+slakmagik
+<slakmagik@gmail.com>
+.\"=====================================================================
+.\" Make the release process handle a DOCDIR here? But the files from
+.\" the official tarball go here.
+.SH SEE ALSO
+.BR diff (1),
+.BR rsync (1),
+.BR sbopkg (8),
+.BR uname (1),
+.BR wget (1),
+.IR /usr/doc/sbopkg-0.34.0/*
+.\" vim:set tw=72:
+.SH TRADUCCION
+Esta traduccion ha sido realizada por Pablo Castaño Fernandez 
+<waruto@hurricane-project.org> el 17 de Enero de 2011. Envien todos los 
+errores a ese correo.

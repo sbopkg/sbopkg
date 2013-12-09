@@ -1,0 +1,180 @@
+#!/bin/bash
+
+# $Id: sqg 923 2013-12-09 02:13:44Z chess.griffin@gmail.com $
+
+# sqg - sbopkg queuefile generator
+# A script designed to generate queuefiles for sbopkg with recursively-listed
+# dependencies from the REQUIRES line of the .info files.
+
+# Copyright 2013 Chess Griffin <chess@chessgriffin.com> and
+# slakmagik <slakmagik@gmail.com>
+
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN
+#  NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+SCRIPT=${0##*/}
+
+### OPTIONAL CONFIGURATION BELOW ###
+
+SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
+
+# If necessary, override SBOPKG_CONF below or directly from the environment.
+# The user may want to change QUEUEDIR to a local temporary directory in $HOME
+# since queuefiles in QUEUEDIR will be overwritten by this script.  QUEUEDIR
+# is commented out on purpose to get the user to review these variables.
+# QUEUEDIR must be writable by the user executing the script.  SKIP_EMPTY
+# means the script will not create queuefiles for packages with an empty
+# REQUIRES= line in the .info file.  Uncomment or export a value to create
+# queuefiles for packages with an empty REQUIRES= line (which will only
+# contain the package name in the queuefile since there are no REQUIRES).
+
+#QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
+REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}
+REPO_NAME=${REPO_NAME:-SBo}
+REPO_BRANCH=${REPO_BRANCH:-14.0}
+#SKIP_EMPTY=${SKIP_EMPTY:-NO}
+
+### NO CHANGES SHOULD BE NECESSARY BELOW THIS LINE ###
+
+sanity_checks () {
+  if [[ ! -e $SBOPKG_CONF ]]; then
+    echo "$SBOPKG_CONF not found."
+    echo "Check the configurable variables at the top of the script."
+    exit 1
+  else
+    . $SBOPKG_CONF
+  fi
+  if [ -d $REPO_ROOT/$REPO_NAME/.git ]; then
+    REPO_SUBPATH=$REPO_NAME
+  else
+    REPO_SUBPATH=$REPO_NAME/$REPO_BRANCH
+  fi
+  REPO_DIR=$REPO_ROOT/$REPO_SUBPATH
+  if [[ ! -w $QUEUEDIR || ! -d $REPO_DIR ]]; then
+    echo "ERROR: $QUEUEDIR or $REPO_DIR do not exist or are not writable."
+    echo "Check the configurable variables at the top of the script."
+    exit 1
+  fi
+}
+
+usage() {
+cat << EOF
+Usage: $SCRIPT [-a] to build all queuefiles or [-p <package>] for individual
+packages.  Multiple packages can be passed with quotes, e.g. -p "pkg1" "pkg2".
+Packages with an empty REQUIRES= line will be skipped unless SKIP_EMPTY is
+uncommented at the top of the script.  Package names are case-sensitive.  Use
+'sbopkg -g pkg' to search if needed.
+
+This script will overwrite existing queuefiles in \$QUEUEDIR so back up any
+existing queuefiles or local modifications.  Check the top of the script for
+configurable variables.
+EOF
+exit
+}
+
+search_package () {
+  local SRCHAPP="$1"
+
+  cd $REPO_DIR
+  PKGPATH=( $(find -type d -mindepth 2 -maxdepth 2 -name "$SRCHAPP" | sort) )
+  if [[ -z $PKGPATH ]]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+parse_queuefile_requires () {
+  local PARSEAPP="$1"
+  local DEPLIST DEP
+
+  if search_package $PARSEAPP; then
+    . $REPO_DIR/$PKGPATH/$PARSEAPP.info
+    DEPLIST=($REQUIRES)
+    for DEP in "${DEPLIST[@]}"; do
+      if search_package $DEP; then
+        sed -i "/^$DEP$/ d" $QUEUEFILE
+        echo "$DEP" >> $QUEUEFILE
+        parse_queuefile_requires $DEP
+      elif [[ "$DEP" == "%README%" ]]; then
+        echo "# %README%: see the $PARSEAPP README file. " >> $QUEUEFILE
+      fi
+    done
+  else
+    continue
+  fi
+}
+
+build_queuefile () {
+  OLDFILE=$QUEUEDIR/$PRGNAM.sqf
+  QUEUEFILE=$QUEUEDIR/$PRGNAM.sqf.tmp
+  CATFILE=$QUEUEDIR/tmp.sqf
+  touch $QUEUEFILE
+  echo "$PRGNAM" > $QUEUEFILE
+  parse_queuefile_requires $PRGNAM
+  tac $QUEUEFILE > $CATFILE
+  if cmp -s "$CATFILE" "$OLDFILE"; then
+    rm $QUEUEFILE $CATFILE
+  else
+    mv $CATFILE $OLDFILE
+    rm $QUEUEFILE
+  fi
+}
+
+main_loop () {
+  local MAINAPP="$1" INFO
+  if [[ $MAINAPP == "_all" ]]; then
+    printf "Processing all SlackBuilds in the $REPO_SUBPATH repo..."
+    for INFO in $(find $REPO_DIR -name *.info); do
+      . $INFO
+      if [[ -z $REQUIRES && $SKIP_EMPTY == "" ]]; then
+        continue
+      else
+        printf "."
+        build_queuefile
+      fi
+    done
+  else
+    for MAINAPP in $PKG; do
+      if search_package $MAINAPP; then
+        . $REPO_DIR/$PKGPATH/$MAINAPP.info
+        if [[ -z $REQUIRES && $SKIP_EMPTY == "" ]]; then
+          echo "$MAINAPP: empty REQUIRES line. No queuefile generated."
+          echo "Uncomment SKIP_EMPTY to change this."
+          continue
+        else
+          echo "Processing $MAINAPP."
+          build_queuefile
+        fi
+      else
+        echo "$MAINAPP: not found."
+        exit 1
+      fi
+    done
+  fi
+}
+
+case $1 in
+  -a) shift; PKG="_all" ;;
+  -p) shift; PKG="$@" ;;
+   *) usage ;;
+esac
+
+sanity_checks
+main_loop "$PKG"
+echo "Done."
+exit 0

@@ -1,0 +1,50 @@
+README-repos
+
+In sbopkg terminology, a "repository" (or "repo") is a local or remote
+service used as a source of SlackBuilds. For example, slackbuilds.org is
+a repository. Every repository has one or more "branches". Branches
+consist of a single tree of scripts in a category/application hierarchy.
+For example, slackbuilds.org has an 11.0 branch, a 12.0 branch and so
+on.
+
+The repos and their branches that sbopkg will use are defined in a set
+of files which are stored in /etc/sbopkg/repos.d. All *.repo files are
+scanned in alphabetical order. Every line in a *.repo file defines a
+branch except those _containing_ a '#' which are ignored. Lines
+containing backslashes (\) are not allowed.
+
+Each line contains the following seven fields (if a field is not
+applicable, it still _must_ be present in the form of an empty quote
+(""):
+
+1. REPO
+    A _short_ name identifying the repository; e.g., 'SBo'.
+2. BRANCH
+    A _short_ name identifying the branch of that repository; e.g.,
+    'xxxSWVERxxx'.
+3. DESCRIPTION
+    A description of the repo, which _must be quoted_ and must be less
+    than 50 characters long; e.g., '"SBo repository for Slackware
+    xxxSWVERxxx"'.
+4. TAG
+    The tag the built packages will have. (If the built package is
+    'app-1.0-i486-1_SBo', the tag is '_SBo'.)
+5. TOOL
+    The tools used to download the repository/branch. The currently
+    supported value is 'rsync'. Using 'git' is also possible. Local
+    repos will have an empty quote. If this field is an empty quote, it
+    will not be possible to automatically update the branch (i.e., it
+    has no upstream).
+6. LINK
+    The link (URL) to the branch that the TOOL will use. Local repos
+    will have an empty quote. In the case of git links, it _must_ be in
+    the form url@branch.
+7. CHECKGPG
+    Filled with 'GPG' if the repo provides .asc signature files and
+    signed tarballs that can be verified with GPG, and an empty quote
+    otherwise.
+
+For example, one branch (line) of the sbo.repo file looks like this
+(note the seven fields):
+
+SBo xxxSWVERxxx "SBo repository for Slackware xxxSWVERxxx" _SBo rsync slackbuilds.org::slackbuilds/xxxSWVERxxx GPG

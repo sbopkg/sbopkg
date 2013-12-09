@@ -1,0 +1,602 @@
+.\"=====================================================================
+.TH SBOPKG.CONF 5 "xxxDATExxx" sbopkg-SVN ""
+.\"=====================================================================
+.SH NAME
+sbopkg.conf \- Fichier de Configuration de sbopkg
+.\"=====================================================================
+.SH DESCRIPTION
+
+Le fichier 
+.I sbopkg.conf
+contient les paramètres de configuration pour
+.BR sbopkg (8),
+un outil pour utiliser le dépôt de SlackBuilds.org ("SBo"), 
+une collection de scripts Slackbuild tiers pour construire des 
+packages Slackware.
+Le fichier de configuration par défaut est   
+.IR /etc/sbopkg/sbopkg.conf .
+L'utilisateur peut remplacer n'importe quel paramètre de ce fichier 
+en créant un fichier 
+.IR ~/.sbopkg.conf .
+.PP
+Lisez aussi, s'il vous plait, la section 
+.B NOTES
+pour plus d'information sur les variables, y compris 
+.BR $ARCH.
+.PP
+Les options booléennes nécessitent un
+.B YES
+ou un
+.B NO
+et sont insensibles à la casse.
+Tous les chemins utilisés doivent être absolus.
+.PP
+Voici les différentes options de configuration\ :
+.\"---------------------------------------------------------------------
+.TP 3
+.B ALLOW_MULTI
+Booléen.
+.IP
+Si sa valeur est
+.BR YES ,
+cette option permet à l'utilisateur de lancer plusieurs instances 
+simultanées de 
+.B sbopkg
+.IP
+Comprenez bien que cette option est là pour votre commodité, mais étant 
+donné le nombre d'erreurs potentielles qu'elle peut entraîner (et nous 
+n'allons pas tenter de prévoir toutes les bêtises que peut 
+faire un utilisateur), il faut considérer que c'est une fonctionnalité 
+EXPÉRIMENTALE et NON PRISE EN CHARGE. 
+Si vous rencontrez des problèmes, vérifiez bien qu'ils ne viennent pas 
+d'actions inappropriées de votre part.
+
+Pour information, voici quelques unes des choses à ne pas faire lors 
+de l'utilisation de cette option\ : 
+.RS 5
+.TP 3
+\(bu
+Lancer plusieurs instances avec un mélange de paramètres
+.B YES
+et de paramètres
+.B NO
+.TP
+\(bu
+Synchroniser un dépôt lorsqu'une autre instance l'utilise.
+.TP
+\(bu
+Changer de branche sur un depôt git lorsqu'une autre instance l'utilise 
+(cet avertissement ne concerne pas les dépôts rsync)
+.TP
+\(bu
+Compiler ou installer simultanément le même logiciel à partir de 
+différentes instances
+.TP
+\(bu
+Sauvegarder une file d'attente en cours d'utilisation 
+par une autre instance
+.RE
+.IP
+Il peut y avoir encore d'autres situations dangereuses auxquelles 
+nous n'avons pas pensé. Soyez prudents.
+.IP
+La valeur par défaut est\ :
+.IP
+\fCxxxALLOW_MULTIxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B CLEANUP
+Booléen.
+.IP
+Quand il vaut
+.BR YES ,
+les fichiers source décompressés et l'arborescence du paquet dans
+.I $TMP
+sont effacés immédiatement après la construction, alors que l'archive 
+source et le paquet réalisé sont conservés dans 
+.I $SRCDIR
+et
+.IR $OUTPUT .
+.IP
+Un effet secondaire de
+.B CLEANUP
+à
+.B YES
+est que
+.B TMP
+a pour valeur le répertoire temporaire de 
+.BR sbopkg 
+.RI ( $TMPDIR/sbopkg.RANDOM_STRING )
+et toute autre configuration de 
+.B TMP
+est ignorée.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxCLEANUPxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DEBUG_UPDATES
+Énumeration.
+.IP
+Cette option peut prendre les valeurs
+.BR 0 ,
+.BR 1 ,
+ou
+.BR 2 .
+.B DEBUG_UPDATES
+définit le niveau de débogage par défaut de la liste de mise à jour de 
+.BR sbopkg .
+Quand elle vaut
+.BR 0 ,
+on affiche seulement les paquets pouvant être mis à jour (ou dégradés).
+Quand elle vaut
+.BR 1 ,
+on affiche les paquets qui peuvent être mis à jour, les paquets qui ne 
+sont pas dans le dépôt et les paquets qui sont plus neufs que ceux du 
+dépôt.
+Quand elle vaut
+.BR 2 ,
+on affiche aussi tous les paquets non à jour.
+Modifier
+.B DEBUG_UPDATES
+à
+.B 1
+ou
+.B 2
+peut être utile si la liste des mises à jour parait incompléte. 
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxDEBUG_UPDATESxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DIFF
+Commande.
+.IP
+Cette option permet à l'utilisateur de définir le programme de 
+comparaison à utiliser quand 
+.B sbopkg
+affiche les différences entre fichiers édités.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxDIFFxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B DIFFOPTS
+Options de commande.
+.IP
+Cette option permet à l'utilisateur de définir les options utilisées 
+par le programme 
+.I $DIFF
+quand 
+.B sbopkg
+affiche les différences entre fichiers édités.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxDIFFOPTSxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B KEEPLOG
+Booléen.
+.IP
+Cette option permet à l'utilisateur de conserver un journal permanent 
+des paquets qui sont construits avec 
+.B sbopkg
+pour pouvoir revoir les compilations pour mémoire ou pour d'éventuelles
+erreurs.
+Voir
+.B LOGFILE
+pour l'emplacement de ce journal.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxKEEPLOGxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B LOGFILE
+Chemin.
+.IP
+Cette option définit l'emplacement du journal de compilation si l'option
+.B KEEPLOG
+vaut
+.BR YES .
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxLOGFILExxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B MKDIR_PROMPT
+Booléen.
+.IP
+Quand il vaut
+.BR YES ,
+.B sbopkg
+demandera confirmation avant de modifier le système de fichiers en 
+créant ses répertoires.
+Si vous ne souhaitez pas avoir à confirmer (par exemple, certains de 
+ces répertoires sont dans un système de fichiers temporaires et vous 
+ne voulez avoir à confirmer à chaque réinitialisation du système de 
+fichiers), vous pouvez mettre cette valeur à 
+.BR NO .
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxMKDIR_PROMPTxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B OUTPUT
+Chemin.
+.IP
+Cette option définit le répertoire où seront sauvegardés les paquets 
+compilés.
+.B OUTPUT
+doit être exporté car il est aussi utilisé par les SlackBuilds SBo. 
+À noter que La valeur par défaut de 
+.B OUTPUT
+est donc la même que celle des SlackBuildS SBO.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxOUTPUTxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B QUEUEDIR
+Chemin.
+.IP
+Cette option définit le répertoire dans lequel seront enregistrées les 
+files d'attente sauvegardées.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxQUEUEDIRxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_BRANCH
+Énumeration.
+.IP
+Cette option permet à l'utilisateur de définir la branche active 
+par défaut. Les valeurs actuellement possibles sont indiquées dans le 
+fichier
+.I repos.d/*
+et peuvent aussi être affichées en tapant
+.RS
+.IP
+.nf
+\fC# sbopkg -V ?\fP
+.fi
+.RE
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxREPO_BRANCHxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_NAME
+Énumeration.
+.IP
+Cette option permet à l'utilisateur de choisir le dépôt à utiliser. 
+Voir
+.B REPO_BRANCH
+pour savoir comment obtenir une liste des valeurs admises.
+Le choix "local" correspond à un dépôt géré par l'utilisateur et 
+dont la structure doit être identique à celle de SBo, c'est à dire avec 
+une hiérarchie
+.I category/package/files
+
+Note\ : toutes les variables 
+.B REPO_*
+sont concernées par les fichiers de dépôt gérés dans le répertoire 
+.I /etc/sbopkg/repos.d.
+Lire le fichier
+.I README-repos
+dans le répertoire de documentation de
+.B sbopkg
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxREPO_NAMExxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B REPO_ROOT
+Chemin.
+.IP
+Cette option permet à l'utilisateur de définir l'emplacement des 
+miroirs locaux des dépôts externes. 
+Actuellement la taille d'une copie locale du dépôt SBo est d'environ xxxSIZExxx.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxREPO_ROOTxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B RSYNCFLAGS
+Options de commande.
+.IP
+.B Rsync
+est utilisé par 
+.B sbopkg
+pour dupliquer le dépôt de SlackBuilds.org.
+Cette option permet à l'utilisateur d'ajuster les indicateurs (options) 
+de 
+.B rsync
+utilisés par
+.BR sbopkg .
+Les utilisateurs sont mis en garde contre toute modification des 
+valeurs par défaut de ces indicateurs, de nouvelles valeurs pouvant 
+fonctionner ou non.
+Note\ : la commande 
+.B rsync
+de
+.B sbopkg
+utilise déjà les indicateurs 
+.BR \-\-archive ,
+.BR \-\-delete ,
+.BR \-\-no-owner ,
+et
+.B \-\-exclude
+il n'est donc pas nécessaire de les ajouter dans les options de 
+.B RSYNCFLAGS
+Modifier ces options par défaut n'est pas conseillé.
+Cependant,
+.B \-\-timeout
+est une option utile à tester en cas d'erreur de synchronisation.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxRSYNCFLAGSxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B SRCDIR
+Chemin.
+.IP
+Cette option indique l'emplacement du répertoire cache qui  
+contiendra la sauvegarde des sources téléchargés.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxSRCDIRxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B TMP
+Chemin.
+.IP
+Cette option définit le répertoire dans lequel seront sauvegardés les 
+paquets construits.
+.B TMP
+doit être exporté car il est aussi utilisé par les SlackBuilds SBo.
+À noter que la valeur par défaut de 
+.B TMP
+est donc identique à celle des SlackBuildS SBo.
+.IP
+À noter aussi que si la variable
+.B CLEANUP
+vaut
+.BR YES ,
+toute personnalisation de 
+.B TMP
+est ignorée
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxTMPxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B TMPDIR
+Path.
+.IP
+Cette option indique le répertoire dans lequel certains fichiers 
+de travail spécifiques à 
+.B sbopkg
+seront sauvegardés temporairement. À noter que cette variable est 
+actuellement utilisée par 
+.BR mktemp (1),
+et que le répertoire actuel est codé en dur, en interne, par 
+.I sbopkg.XXXXXX
+où 'XXXXXX' est une chaîne aléatoire.
+Cette variable détermine le répertoire conteneur utilisé.
+Si /tmp n'est pas le répertoire conteneur approprié, la valeur de 
+TMPDIR peut être modifiée dans la ligne de commande en appelant
+.B sbopkg
+ou dans le fichier
+.IR sbopkg.conf .
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxTMPDIRxxx\fP
+.\"---------------------------------------------------------------------
+.TP
+.B WGETFLAGS
+Options de commande.
+.IP
+.B Wget
+est utilisé par
+.B sbopkg
+pour télécharger les sources des paquets à compiler.
+Cette option permet à l'utilisateur d'ajuster les indicateurs 
+(options) de 
+.B wget
+utilisés par 
+.BR sbopkg .
+Les utilisateurs sont mis en garde contre toute modification des 
+valeurs par défaut de ces indicateurs, de nouvelles valeurs pouvant 
+fonctionner ou non.
+Cependant,
+.B \-\-timeout
+est une option utile à tester en cas d'erreur de téléchargement.
+.IP
+La valeur par défaut est\ : 
+.IP
+\fCxxxWGETFLAGSxxx\fP
+.\"=====================================================================
+.SH NOTES
+.\"---------------------------------------------------------------------
+.SS Overriding Environmental Variables
+Il est possible de définir ou de redéfinir des variables d'environnement 
+et de les exporter vers les scripts SlackBuilds lorsqu'il sont 
+construits avec 
+.BR sbopkg .
+Ceci est déjà demontré dans l'exemple suivant (et d'autres 
+semblables) dans le fichier 
+.I sbopkg.conf .
+.RS
+.PP
+.nf
+\fCexport TMP=${TMP:-/tmp/SBo}\fP
+.fi
+.RE
+.PP
+Ceci définit la valeur de 
+.B TMP
+à
+.I /tmp/SBo
+for building SBo packages within
+pour la construction des paquets SBo dans 
+.B sbopkg
+(c'est déjà la valeur par défaut dans les SlackBuilds SBo). 
+Puisque cette variable est exportée, elle peut être modifiée à la fois 
+pour 
+.B sbopkg
+et pour la construction des paquets dans 
+.BR sbopkg .
+Par exemple, modifier cette ligne pour\ :
+.RS
+.PP
+.nf
+\fCexport TMP=${TMP:-/home/sbo/tmp}\fP
+.fi
+.RE
+.PP
+définit
+.B TMP
+comme
+.I /home/sbo/tmp
+pour la construction des paquets SBo, mais permet cependant de 
+l'outrepasser au démarrage en lançant 
+.B sbopkg
+ainsi 
+.RS
+.PP
+.nf
+\fC# export TMP=foo; sbopkg\fP
+.fi
+.RE
+.PP
+.B OUTPUT
+peut aussi être modifié pour sauvegarder les paquets compilés dans un 
+autre emplacement que celui par défaut,
+.IR /tmp .
+.PP
+On peut également exporter dans
+.I sbopkg.conf
+des variables qui ne sont aucunement utilisées par 
+.B sbopkg .
+.\"---------------------------------------------------------------------
+.SS À propos de la variable ARCH
+Vous pouvez vous demander pourquoi 
+.B ARCH
+n'est pas configuré dans le fichier par défaut
+.I sbopkg.conf .
+La raison est qu'il n'a pas à y être.
+Si
+.B ARCH
+n'est pas défini,
+.B sbopkg
+fait certaines vérifications (utilisant la sortie de
+.BR "uname \-m" )
+pour déterminer l'architecture du système. 
+Si cette architecture est x86, x86_64 ou arm*, alors
+.B sbopkg
+définit automatiquement 
+.B ARCH
+à i486, x86_64, ou arm, respectivement.
+Si
+.B ARCH
+est défini,
+.B sbopkg
+récupère cette définition.
+Ce qui signifie que l'utilisateur peut, par exemple, ajouter
+.B export ARCH=i686
+dans son
+.I .bashrc
+ou dans un fichier similaire, il peut aussi exécuter, dans un terminal 
+root, quelque chose comme
+.RS
+.PP
+.nf
+\fC# export ARCH=i686; sbopkg\fP
+.fi
+.RE
+.PP
+L'utilisateur peut aussi l'ajouter manuellement dans son fichier 
+.I sbopkg.conf
+s'il le souhaite.
+En conclusion, si
+.B ARCH
+n'est pas défini par l'utilisateur et si 
+.B sbopkg
+ne détecte pas l'une des architectures citées précédemment, alors
+.B ARCH
+prendra par défaut la valeur définie dans les SlackBuilds.
+À noter que le SlackBuild peut, dans certains cas, écarter ou 
+outrepasser des paramètres précédents de 
+.B ARCH
+si c'est nécessaire pour la compilation.
+.\"=====================================================================
+.SH FILES
+.TP 3
+.I /etc/sbopkg/sbopkg.conf
+Fichier qui contient les options de configuration.
+.TP
+.I ~/.sbopkg.conf
+Fichier pour remplacer les options de la configuration système.
+.TP
+.I /etc/sbopkg/renames.d/*.renames
+Fichiers contenant la liste des logiciels du dépôt SBo qui ont été 
+renommés.
+Voir le fichier
+.I README-renames
+dans le répertoire de documentation de 
+.B sbopkg
+pour plus d'information.
+.TP
+.I /etc/sbopkg/repos.d/*.repo
+Fichiers pour les différents types de dépôts de 
+.B sbopkg .
+Voir le fichier
+.I README-repos
+dans le répertoire de documentation de 
+.B sbopkg
+pour plus d'information.
+.\"=====================================================================
+.SH AUTHORS
+Chess Griffin
+<chess@chessgriffin.com>
+.PP
+Mauro Giachero
+<mauro.giachero@gmail.com>
+.PP
+slakmagik
+<slakmagik@gmail.com>
+.\"=====================================================================
+.\" Make the release process handle a DOCDIR here? But the files from
+.\" the official tarball go here.
+.SH VOIR AUSSI
+.BR diff (1),
+.BR mktemp (1),
+.BR rsync (1),
+.BR sbopkg (8),
+.BR uname (1),
+.BR wget (1),
+.IR /usr/doc/sbopkg-SVN/*
+.\"=====================================================================
+.SH TRADUCTION
+Ce document est une traduction réalisée par M.C Collilieux 
+<mccnews@free.fr> le 18\ mars\ 2011.
+N'hésitez pas à signaler au traducteur, toute erreur dans cette 
+page de manuel.
+La version anglaise la plus à jour de ce document est toujours 
+consultable via la commande\ : «\ \fBLANG=en\ man\ 5\ sbopkg.conf\fR\ ».
