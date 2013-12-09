@@ -3,9 +3,9 @@
 # $Id$
 #
 # sbopkg - The SlackBuilds.org Package Browser
-# Copyright 2007-2010 Chess Griffin <chess@chessgriffin.com>
+# Copyright 2007-2010,2013 Chess Griffin <chess@chessgriffin.com>
 # Copyright 2009-2011 Mauro Giachero <mauro.giachero@gmail.com>
-#                     slakmagik <slakmagik@gmail.com>
+# Copyright 2009-2013 slakmagik <slakmagik@gmail.com>
 #
 # Redistribution and use of this script, with or without modification, is
 # permitted provided that the following conditions are met:
