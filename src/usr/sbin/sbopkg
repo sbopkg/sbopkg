@@ -528,7 +528,7 @@ list_packages() {
                                 20 65 13 \
                                 --file $CONFIRM_LIST 2> $REMOVE_LIST
                             if [[ $? == 0 ]]; then
-                                removepkg $(cat $REMOVE_LIST)
+                                /sbin/removepkg $(cat $REMOVE_LIST)
                                 mk_pkg_lists
                                 read -n1 -ep "Press any key to continue: "
                             fi
@@ -3326,7 +3326,7 @@ install_package() {
             grep -m1 "^$OLDNAME-[^-]*-[^-]*-[^-]*$REPO_TAG$"); then
         OLDPKG=$INSTPKG
     fi
-    upgradepkg --reinstall --install-new $OLDPKG%$INSTDIR/$INSTPKG
+    /sbin/upgradepkg --reinstall --install-new $OLDPKG%$INSTDIR/$INSTPKG
     echo "Done upgrading/installing package."
 }
 
