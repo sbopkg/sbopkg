@@ -1,8 +1,9 @@
-sbopkg 0.36.0
+sbopkg 0.37.0
 Usage: sbopkg [OPTIONS] <packagename(s)>
 Options are:
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
                   are specified, build the packages they refer to.
+  -B              Bulk process the queue without confirmation.
   -c              Check for updates to installed packages.
   -D localdir     Location of local copy of the repositories.
   -d pkg/queue(s) Like '-b', but only download sources.

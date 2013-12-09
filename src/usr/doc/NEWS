@@ -1,7 +1,18 @@
 SBOPKG NEWS
 
-sbopkg xxxVERSIONxxx (xxxDATExxx)
+sbopkg 0.37.0 (2013-12-09 15:10 UTC)
 
+    FEATURES
+
+        * This release of sbopkg is Slackware 14.1-ready. Congrats to
+          the entire Slackware team for another great release!
+        * Sbopkg now has a -B flag which will allow the user to
+	  process the queue from the command line in 'bulk' without
+	  confirmation first.
+
+    MODIFICATIONS
+
+        * No other modifications have been made.
 
 sbopkg 0.36.0 (2012-10-04 03:05 UTC)
 
