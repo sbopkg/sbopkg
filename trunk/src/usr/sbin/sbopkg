@@ -3906,24 +3906,22 @@ process_queue() {
         echo
         echo "Pre-check complete."
         echo
-        if [[ ! $QUIET ]]; then
-            crunch_fmt "Do you wish to proceed based on the search \
-                results above? Packages not found will be skipped during \
-                the process."
-            echo
-            while :; do
-                read $NFLAG -ep "(P)roceed or (Q)uit?: "
-                case $REPLY in
-                    P|p) break ;;
-                    Q|q)
-                        rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
-                        rm -f $PKGPATH/options.build
-                        return 0
-                        ;;
-                    *) unknown_response ;;
-                esac
-            done
-        fi
+        crunch_fmt "Do you wish to proceed based on the search \
+            results above? Packages not found will be skipped during \
+            the process."
+        echo
+        while :; do
+            read $NFLAG -ep "(P)roceed or (Q)uit?: "
+            case $REPLY in
+                P|p) break ;;
+                Q|q)
+                    rm -f $PKGPATH/$CHKBUILD.{info,SlackBuild}.build
+                    rm -f $PKGPATH/options.build
+                    return 0
+                    ;;
+                *) unknown_response ;;
+            esac
+        done
         echo
     fi
     if [[ $KEEPLOG ]]; then
