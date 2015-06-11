@@ -1,7 +1,7 @@
 # sbopkg
 **Slackbuilds.org Package Browser**
 
-Sbopkg is a command-line and dialog-based tool to synchronize with the SlackBuilds.org ("SBo") repository, a collection of third-party SlackBuild scripts to build Slackware packages. Sbopkg is actively maintained and a new version is released one or more times per Slackware/SBo release. Numerous people have contributed diffs, bug reports, and helpful suggestions and they are all mentioned in the THANKS file in /usr/doc/sbopkg-$VERSION. This utility would not be anywhere close to its present state without the help of these folks.
+Sbopkg is a command-line and dialog-based tool to synchronize with the [SlackBuilds.org ("SBo")](http://www.slackbuilds.org/) repository, a collection of third-party SlackBuild scripts to build [Slackware](http://www.slackware.com/) packages. Sbopkg is actively maintained and a new version is released one or more times per Slackware/SBo release. Numerous people have contributed diffs, bug reports, and helpful suggestions and they are all mentioned in the THANKS file in /usr/doc/sbopkg-$VERSION. This utility would not be anywhere close to its present state without the help of these folks.
 
 **Features**
 
@@ -15,7 +15,7 @@ Sbopkg will allow the user to:
 * Copy the original .info file or SlackBuild for editing.
 * Automatically download the source code, check the md5sum, and build or build and install a Slackware package from either the original .info file and SlackBuild or the locally-edited copies.
 * Batch queue packages for building or building and installing.
-* Load, save, and use sbopkg queuefiles (.sqf), several of which are included with the package.
+* Load, save, and use sbopkg [queuefiles](https://github.com/sbopkg/sbopkg/wiki/Queuefiles) (.sqf), several of which are included with the package.
 * View the contents of the cache directory (where source code tarballs are stored).
 * View the permanent build log that is optionally maintained to keep a record of the entire compilation process.
 * Check for an update to sbopkg itself.
