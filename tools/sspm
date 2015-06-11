@@ -8,7 +8,7 @@ script=${0##*/}
 # USER-MODIFIABLE VARIABLES
 # this needs to be where the checked out svn directory is.
 repo="/tmp/sbopkg-read-only"
-remote_repo="http://sbopkg.googlecode.com/svn/trunk/"
+remote_repo="https://github.com/sbopkg/sbopkg.git"
 export OUTPUT="${OUTPUT:-/tmp}"
 
 usage() {
@@ -56,7 +56,7 @@ fi
 
 if [[ $sync == yes ]]; then
     if [[ -w $repo ]] || [[ ! -e $repo && -w ${repo%/*} ]]; then
-        svn checkout $remote_repo $repo || printe "checkout failed"
+        git checkout $remote_repo $repo || printe "checkout failed"
     else
         printe "$repo is not writable.\nChange your privileges or the \
             value of the \"repo\" variable.\n"
@@ -68,11 +68,11 @@ fi
 # old package. But, as the doctor said to the guy who complained that it hurt
 # when he did that, don't DO that.
 if [[ $build == yes || $inst == yes ]]; then
-    svn_script="$repo/src/usr/sbin/sbopkg"
-    if [ -r $svn_script ]; then
-        export VERSION=svn$(svnversion $repo)
+    git_script="$repo/src/usr/sbin/sbopkg"
+    if [ -r $git_script ]; then
+        export VERSION=git$(gitversion $repo)
     else
-        printe "unable to find $svn_script.\nPlease check your repository."
+        printe "unable to find $git_script.\nPlease check your repository."
     fi
 
     if [[ $OUTPUT =~ "$repo/(sbopkg-$VERSION|root-tools)" ]]; then
