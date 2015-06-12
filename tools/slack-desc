@@ -12,8 +12,8 @@ sbopkg: Sbopkg is a command-line and dialog-based tool to interact with the
 sbopkg: SlackBuilds.org repository, a collection of third-party SlackBuild
 sbopkg: scripts to build Slackware packages.
 sbopkg:
-sbopkg: Homepage:  https://github.com/sbopkg/sbopkg
-sbopkg:
+sbopkg: Homepage   :  http://www.sbopkg.org
+sbopkg: Development:  https://github.com/sbopkg/sbopkg
 sbopkg:
 sbopkg:
 sbopkg:

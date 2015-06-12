@@ -57,15 +57,28 @@ GETTING HELP
     TODO              Things that may be added or modified in the future
     contrib/          Additional user-contributed files
 
+    If you have read the manuals and the relevant documents and still
+    need help, you may want to join the sbopkg mailing list. Subscribe
+    by sending a mail whose body is "subscribe your-email@address-here"
+    to:
+
+        sbopkg-users-request@sbopkg.org
+
+    or use the web interface:
+
+        http://sbopkg.org/mailman/listinfo/sbopkg-users
+
     There is also an IRC channel for sbopkg on Freenode at #sbopkg.
 
     Further information on these and other resources is on the project
     website:
 
+	http://sbopkg.org
         https://github.com/sbopkg/sbopkg
 
     Specifically, the documentation page is:
 
+	http://sbopkg.org/docs.php
         https://github.com/sbopkg/sbopkg/wiki
 
 CONTRIBUTING

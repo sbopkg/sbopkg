@@ -10,6 +10,12 @@ or on Slackware -current. If you wish to use these at your own risk,
 remove the '.sample' extension and either put them in $QUEUEDIR or set
 QUEUEDIR to where they are (see sbopkg.conf(5) for details).
 
+Additionally, the hope is that user-contributed queues can be shared.
+Please consider sending a copy of your queuefile(s) to the sbopkg
+mailing list:
+
+    http://sbopkg.org/mailman/listinfo/sbopkg-users
+
 SELECTING ON OR OFF IN DIALOG
 
     If a line starts with an application's name, it will default to 'ON'
