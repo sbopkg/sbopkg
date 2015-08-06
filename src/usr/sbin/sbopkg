@@ -4225,6 +4225,18 @@ utilities_menu() {
     rm -f $ANSWERFILE
 }
 
+cleanup_user()
+{
+    # Clean up cruft and remove temporary files.
+    # except the pid file
+    if [[ $HAS_NCURSES ]]; then
+        tput cnorm # Restore cursor
+    fi
+    if [[ -d $SBOPKGTMP ]]; then
+        rm -r $SBOPKGTMP
+    fi
+}
+
 cleanup() {
     # Clean up cruft and remove temporary files.
 
@@ -4458,6 +4470,12 @@ main_menu() {
     done
 }
 
+is_root()
+{
+    [[ $(id -u) = 0 ]] && return 0
+    return 1
+}
+
 # END OF FUNCTIONS
 
 if [[ $SBOPKG_DEBUG ]]; then
@@ -4468,7 +4486,13 @@ fi
 
 trap 'control_c; trap INT; kill -2 $$' INT
 trap 'exit 2' HUP QUIT PIPE TERM
+if is_root; then
 trap 'cleanup' EXIT
+else
+  # user actions dont need the pidfile
+  trap 'cleanup_user' EXIT
+fi
+
 
 # Global variables
 # There are two groups of global variables:
@@ -4521,12 +4545,7 @@ SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
-
-# Make sure we are root.
-if [[ $(id -u) != 0 ]]; then
-    echo "$SCRIPT: $SCRIPT must be run by the root user.  Exiting." >&2
-    exit 1
-fi
+ROOTREQ=0
 
 # Set up ARCH - borrowed from SBo SlackBuild template
 # Automatically determine the architecture we're building on:
@@ -4555,6 +4574,7 @@ while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
             set_type build
             BUILDLIST+=("$OPTARG")
             unset DIAG
+            ROOTREQ=1
             ;;
         B ) # Bulk process without confirmation
             BULK=1
@@ -4571,6 +4591,7 @@ while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
             set_type download
             BUILDLIST+=("$OPTARG")
             unset DIAG
+            ROOTREQ=1
             ;;
         e ) # Default on-error behavior
             ON_ERROR=$OPTARG
@@ -4587,6 +4608,7 @@ while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
             set_type install
             BUILDLIST+=("$OPTARG")
             unset DIAG
+            ROOTREQ=1
             ;;
         k ) # Skip installed packages
             SKIP_INSTALLED=1
@@ -4619,10 +4641,12 @@ while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
         r ) # Sync with the remote repository
             SYNC=1
             unset DIAG
+            ROOTREQ=1
             ;;
         s ) # Name search
             SEARCH+=("$OPTARG")
             unset DIAG
+            ROOTREQ=1
             ;;
         u ) # Search an updated sbopkg package
             UPDATE=1
@@ -4631,6 +4655,7 @@ while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
         V ) # Set repository
             VERSION=1
             CUSTOMVER="$OPTARG"
+            ROOTREQ=1
             ;;
         v ) # print version
             echo $SBOVER
@@ -4750,6 +4775,48 @@ if ! set_repo_vars; then
     exit 1
 fi
 
+# user actions without a need for the PIDFILE
+if [[ $CHK_UPDATES ]]; then
+    check_for_updates
+fi
+
+if [[ $CHANGELOG ]]; then
+    show_changelog
+fi
+
+if [[ $OBSOLETESRC ]]; then
+    remove_obsolete_sources
+fi
+
+if [[ $GETPKGS ]]; then
+    list_packages
+fi
+
+if [[ $UPDATE ]]; then
+    check_for_latest
+fi
+
+if [[ -n $GENSEARCH ]]; then
+    check_if_repo_exists
+    set -f
+    for PKGSEARCH in ${GENSEARCH[*]}; do
+        echo "Searching for $PKGSEARCH"
+        gen_search_package $PKGSEARCH
+    done
+    set +f
+fi
+
+if ! is_root; then
+    # Make sure we are root when we need to 
+    if [[ $ROOTREQ -ne 0 ]]; then
+      echo "$SCRIPT: $SCRIPT must be run by the root user.  Exiting." >&2
+      exit 1
+    fi
+    # all user actions are already performed
+    exit 0
+fi
+
+
 # Check for required directories
 dir_init
 
@@ -4863,43 +4930,14 @@ else
         process_queue $TYPE
     fi
 
-    if [[ $CHK_UPDATES ]]; then
-        check_for_updates
-    fi
-
-    if [[ $CHANGELOG ]]; then
-        show_changelog
-    fi
-
     if [[ $UNINSTPKG ]]; then
         remove_uninstalled_packages
-    fi
-
-    if [[ $OBSOLETESRC ]]; then
-        remove_obsolete_sources
-    fi
-
-    if [[ $GETPKGS ]]; then
-        list_packages
     fi
 
     if [[ -n $SEARCH ]]; then
         search_and_display "${SEARCH[*]}"
     fi
 
-    if [[ $UPDATE ]]; then
-        check_for_latest
-    fi
-
-    if [[ -n $GENSEARCH ]]; then
-        check_if_repo_exists
-        set -f
-        for PKGSEARCH in ${GENSEARCH[*]}; do
-            echo "Searching for $PKGSEARCH"
-            gen_search_package $PKGSEARCH
-        done
-        set +f
-    fi
 fi
 
 exit 0
