@@ -511,7 +511,7 @@ list_packages() {
     if [[ -s $PKG_LIST ]]; then
         if [[ $DIAG ]]; then
             while :; do
-                dialog --separate-output \
+                dialog --separate-output --visit-items \
                     --title "Installed $REPO_NAME Packages" \
                     --extra-button --extra-label "View READMEs" \
                     --checklist "Check any packages you wish to remove." \
@@ -522,7 +522,7 @@ list_packages() {
                     0)
                         if [[ -s $REMOVE_LIST ]]; then
                             sed 's/$/ "" ON/' $REMOVE_LIST > $CONFIRM_LIST
-                            dialog --separate-output --defaultno \
+                            dialog --separate-output --visit-items --defaultno \
                                 --title "Removepkg confirmation" \
                                 --checklist "Remove the following packages?" \
                                 20 65 13 \
@@ -1103,7 +1103,7 @@ select_repository() {
     local OLD_REPO_BRANCH=$REPO_BRANCH
 
     while :; do
-        eval dialog --cancel-label "Back" --title '"Repository Selection"' \
+        eval dialog --visit-items --cancel-label "Back" --title '"Repository Selection"' \
             --menu '"$(crunch "You are currently working with the \
             $REPO_DESC. If you would like to work with a different \
             one, please select it from the list below. If not, choose \
@@ -1159,7 +1159,7 @@ app_files_chooser() {
 
     while :; do
         find $DIR -type f -printf "\"%P\" \"\"\n" | sort > $AFM
-        dialog --ok-label "View" --cancel-label "Back" --title "$TITLE" \
+        dialog --visit-items --ok-label "View" --cancel-label "Back" --title "$TITLE" \
             --default-item "$DEFAULTITEM" --menu "$(crunch "Please choose \
             the file you would like to view or press <Back> to go back.")"\
             15 45 7 --file $AFM 2> $AFS
@@ -1269,7 +1269,7 @@ info_item() {
         else
             TITLEPACKAGE="$APP (Installed: $INSTALLEDPACKAGE)"
         fi
-        dialog --default-item "$DEFAULTITEM" \
+        dialog --visit-items --default-item "$DEFAULTITEM" \
             --title "$APP ($CURVERSION-$CURARCH-$CURBUILD$REPO_TAG)" \
             --backtitle "$TITLEPACKAGE" --extra-button --extra-label "Back" \
             --cancel-label "Main Menu" --menu \
@@ -1441,7 +1441,7 @@ customize_item() {
     local DEFAULTITEM
 
     while :; do
-    dialog --default-item "$DEFAULTITEM" --title "$APP Customization" \
+    dialog --visit-items --default-item "$DEFAULTITEM" --title "$APP Customization" \
         --cancel-label "Back" --menu \
         "Please choose an item or press <Back> to go back.\n" 13 75 6 \
         "Edit SlackBuild" "Create and edit a local copy of the SlackBuild" \
@@ -1496,7 +1496,7 @@ browse_categories() {
     fi
     get_category_list
     while :; do
-        dialog --default-item "$DEFAULTITEM" --cancel-label "Back" \
+        dialog --visit-items --default-item "$DEFAULTITEM" --cancel-label "Back" \
             --title "Choose a category" --backtitle \
             "$(eval echo $BACKTITLE)" \
             --menu "Please select a category or press <Back> to go back." \
@@ -1579,7 +1579,7 @@ sort_queue() {
     local PKGSCOUNT=$(wc -l < $TMPQUEUE)
     cp $TMPQUEUE $TMPSORTQUEUE
     while :; do
-        dialog --title "Sort Queue" --ok-label "Up" \
+        dialog --visit-items --title "Sort Queue" --ok-label "Up" \
             --extra-button --extra-label "Down" \
             --cancel-label "OK" \
             --help-button --help-label "Reverse" \
@@ -1665,7 +1665,7 @@ queue_dir_lister() {
     # The --default item doesn't work on deletions and renames (because the
     # variable expands to a no-longer existing file) but you can't give it an
     # index argument, unfortunately
-    dialog --title "$1" --default-item "${USERQUEUE##*/}" \
+    dialog --visit-items --title "$1" --default-item "${USERQUEUE##*/}" \
         --cancel-label "Back" --checklist "$2" 20 40 8 --file $QFM 2> $QFS
     if [[ $? != 0 ]]; then
         # unset this so there's no left over junk and the loop from the
@@ -1783,7 +1783,7 @@ rename_user_queue() {
             # This loops so the user can be brought back to the inputbox on a
             # failure (continue) or back to the dir lister on success (break)
             while :; do
-                dialog --title "Rename Queue" \
+                dialog --visit-items --title "Rename Queue" \
                     --inputbox "Enter the new filename for ${USERQUEUE[$i]}" \
                     0 0 $NEWNAME 2> $QRN
                 NEWNAME="$(< $QRN)"
@@ -1883,7 +1883,7 @@ save_user_queue() {
     fi
 
     while :; do
-        dialog --title "Save Queue" --inputbox "$MSG" 10 50 $DEFAULT \
+        dialog --visit-items --title "Save Queue" --inputbox "$MSG" 10 50 $DEFAULT \
             2> $USERQUEUE
         if [[ $? == 0 ]]; then
             if [[ ! -s $USERQUEUE ]]; then
@@ -1934,7 +1934,7 @@ remove_from_queue() {
         if [[ $(wc -w < $REMOVEQUEUE) -eq 0 ]]; then
             echo '"" "The queue is empty."' > $REMOVEQUEUE
         fi
-        dialog --title "Remove From Queue" --ok-label "Delete" \
+        dialog --visit-items --title "Remove From Queue" --ok-label "Delete" \
             --extra-button --extra-label "Clear" --help-button \
             --help-label "Done" --cancel-label "Cancel" \
             --menu "$(crunch "The following packages are currently in \
@@ -2164,7 +2164,7 @@ view_queue() {
     empty_queue && return 1
     cp $TMPQUEUE $ORIGINALQUEUE
     while :; do
-        dialog --title "Viewing Queue" --separate-output \
+        dialog --visit-items --title "Viewing Queue" --separate-output \
             --extra-button --extra-label "View READMEs" \
             --help-button --help-label "Clear inst'd" --help-status \
             --cancel-label "Back" --checklist "$(crunch "The \
@@ -2535,7 +2535,7 @@ gen_search_package() {
             while [[ -f $SEARCH_RESULTS ]]; do
                 # The default item can be "". In that case, dialog defaults to
                 # the first item.
-                dialog --title "Matches for $PKG in $CATEGORY" \
+                dialog --visit-items --title "Matches for $PKG in $CATEGORY" \
                     --backtitle "$(eval echo $BACKTITLE)" \
                     --default-item "$SRCHPICK" --extra-button \
                     --cancel-label "Back" \
@@ -2642,7 +2642,7 @@ string_search() {
     cd $REPO_DIR
 
     while :; do
-        dialog --title "String Search Results" --default-item "$PICKED" \
+        dialog --visit-items --title "String Search Results" --default-item "$PICKED" \
             --extra-button --extra-label "Add to Queue" \
             --cancel-label "Back" \
             --menu "$(crunch "Please select an item you wish to view or \
@@ -3198,7 +3198,7 @@ remove_files() {
         sed "s/.*/& \"\" $ONOFF/g" $FILES | sort > $FILES_CHECKLIST
         if [[ $DIAG ]]; then
             while :; do
-                dialog --separate-output --defaultno \
+                dialog --visit-items --separate-output --defaultno \
                     --title "Displaying $TOPIC" \
                     --extra-button --extra-label "Invert Sel" \
                     --checklist "Delete the $TOPIC in $FILESPATH?" \
@@ -3271,7 +3271,7 @@ add_options() {
     else
         CUROPTIONS=$(< $OPTIONFILE)
     fi
-    dialog --cancel-label "Clear Options" --inputbox \
+    dialog --visit-items --cancel-label "Clear Options" --inputbox \
         "$(crunch "Some SlackBuild scripts offer the ability to pass \
         variables, or options, or flavors to the SlackBuild scripts before \
         they are run.  This is often noted in the README or the SlackBuild \
@@ -3567,7 +3567,7 @@ pick_file() {
     if [[ -s $DIFF_OUT ]]; then
         if [[ $DIAG ]]; then
             while :; do
-                dialog --title "Choose $PKG $FILE file" --menu \
+                dialog --visit-items --title "Choose $PKG $FILE file" --menu \
                     "$(crunch "A local $FILE file for $PKG was found in \
                     addition to the original file. Which one \
                     would you like to use?")" 12 60 3 \
@@ -3664,7 +3664,7 @@ use_options() {
                 OPTIONS_MSG+="\nQueuefile options:\n$LDOPTIONS\n"
             fi
             echo 'None "Build with no options"' >> $OPTLIST
-            dialog --title 'Build options' --menu "$(crunch "One or \
+            dialog --visit-items --title 'Build options' --menu "$(crunch "One or \
                 more build option files for the $OPTAPP \
                 SlackBuild were found.\n$OPTIONS_MSG\nPlease choose \
                 whether to use them.")" 0 0 0 \
@@ -4031,7 +4031,7 @@ start_dialog_queue() {
     local PROCTYPE_FILE=$SBOPKGTMP/proctype
     local PROCTYPE
 
-    dialog --title "Process Type" --default-item Install --menu \
+    dialog --visit-items --title "Process Type" --default-item Install --menu \
         "Please select how you wish the item(s) to be processed." \
         11 50 3 \
         Download "Download only" \
@@ -4154,7 +4154,7 @@ queue_menu() {
     local ANSWERFILE=$SBOPKGTMP/sbopkg_queue_menu_answer
 
     while :; do
-        dialog --title "Queue Menu" --backtitle \
+        dialog --visit-items --title "Queue Menu" --backtitle \
             "$(eval echo $BACKTITLE)" \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "Choose one of the following or press <Back> to go back.\n" \
@@ -4197,7 +4197,7 @@ utilities_menu() {
     local ANSWERFILE=$SBOPKGTMP/sbopkg_utilities_menu_answer
 
     while :; do
-        dialog --title "Utilities Menu" --backtitle \
+        dialog --visit-items --title "Utilities Menu" --backtitle \
             "$(eval echo $BACKTITLE)" \
             --cancel-label "Back" --default-item "$DEFAULTITEM" --menu \
             "\nChoose one of the following or press <Back> to go back.\n" \
@@ -4310,7 +4310,7 @@ main_search() {
     while :; do
         unset PKG STRING
 
-        dialog --title "Search" --ok-label "PKG" \
+        dialog --visit-items --title "Search" --ok-label "PKG" \
             --extra-button --extra-label "String" \
             --help-button --inputbox \
             "Enter your search term (prefix your string search with 'inst:' \
@@ -4411,7 +4411,7 @@ main_menu() {
     local ANSWER_FILE=$SBOPKGTMP/sbopkg_main_menu_answer
 
     while :; do
-        dialog --cancel-label "Exit" --default-item "$DEFAULTITEM" --title \
+        dialog --visit-items --cancel-label "Exit" --default-item "$DEFAULTITEM" --title \
             "SlackBuilds.org Package Browser (sbopkg version $SBOVER)" \
             --backtitle "$(eval echo $BACKTITLE)" \
             --menu \

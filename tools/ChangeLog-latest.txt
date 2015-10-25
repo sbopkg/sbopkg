@@ -1,5 +1,10 @@
 SBOPKG NEWS
 
+sbopkg-dev (2015-10-25 01:58:52 UTC)
+    FEATURES
+	* Add --visit-items option in certain part of dialog to help
+	  disabled people
+
 sbopkg 0.37.0 (2013-12-09 15:10 UTC)
 
     FEATURES
