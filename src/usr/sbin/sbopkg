@@ -4401,7 +4401,7 @@ help_item() {
         /usr/doc/sbopkg-$SBOVER/, join the mailing list at \
         http://sbopkg.org/mailman/listinfo/sbopkg-users, or join #sbopkg \
         on freenode. If you've found a bug please report it to \
-        http://code.google.com/p/sbopkg/issues/list.")" 10 70
+        https://github.com/sbopkg/sbopkg/issues.")" 10 70
 }
 
 main_menu() {
