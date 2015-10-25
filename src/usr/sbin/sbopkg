@@ -4069,17 +4069,12 @@ check_for_latest() {
                 Please try again later."
         fi
     elif [[ $CVRS != $NVRS ]]; then
-        if grep -q svn_r <<< $CVRS; then
-            MSG="You are running sbopkg from SVN and not using a regular \
-                package.  Therefore, package versions cannot be compared."
+        SBOPKGUP=1
+        if [[ $DIAG ]]; then
+            MSG="Different versions reported.  Press <OK> to continue."
         else
-            SBOPKGUP=1
-            if [[ $DIAG ]]; then
-                MSG="Different versions reported.  Press <OK> to continue."
-            else
-                MSG="Different versions reported.  (D)ownload the remote \
-                package or (Q)uit?: "
-            fi
+            MSG="Different versions reported.  (D)ownload the remote \
+            package or (Q)uit?: "
         fi
     else
         MSG="It appears your version of sbopkg is up to date."
@@ -4478,7 +4473,6 @@ trap 'cleanup' EXIT
 # The second group should be reduced/removed. For now, they are simply listed
 # here in a group, instead of being commented one by one.
 unset SCRIPT          # The script name (usually "sbopkg")
-unset REV             # Revision number
 unset SBOVER          # The sbopkg version
 unset CWD             # sbopkg starting directory
 unset DIAG            # When set, run in dialog mode (instead of CLI mode)
@@ -4517,8 +4511,7 @@ SBOPKG_REPOS_D=${SBOPKG_REPOS_D:-/etc/sbopkg/repos.d}
 EDITOR=${EDITOR:-vi}
 PAGER=${PAGER:-more}
 CWD=$(pwd)
-REV="$Revision$"
-SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
+SBOVER=0.37.0
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
