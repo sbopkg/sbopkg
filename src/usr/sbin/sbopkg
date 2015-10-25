@@ -364,7 +364,6 @@ pid_check() {
     [[ $ALLOW_MULTI ]] && return
 
     # Set and check for pid file.
-    local PIDFILE=/var/run/sbopkg.pid
     local OTHERPID
 
     if [[ -e $PIDFILE ]]; then
@@ -4521,6 +4520,7 @@ SBOVER=svn_r$(cut -d' ' -f2 <<< "$REV")
 DIAG=1
 ON_ERROR=ask
 REPOS_FIELDS=7
+PIDFILE=/var/run/sbopkg.pid
 
 # Make sure we are root.
 if [[ $(id -u) != 0 ]]; then
