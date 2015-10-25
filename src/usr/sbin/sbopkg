@@ -4504,6 +4504,7 @@ unset CLEANUP         # If set, delete the sources & c. after the build
 unset KEEPLOG         # If set, keep a permanent build log
 unset ALLOW_MULTI     # If set, allow more that one instance of sbopkg running
 unset BUILDLIST       # List of packages to build/install (from CLI)
+unset PIDFILE         # PID
 
 unset BUILD CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED VIEW_READMES
