@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2015-10-25 01:58:52 UTC)
+sbopkg-0.37.1 (2015-10-27 03:02:59 UTC)
 
     FEATURES
 	* Add --visit-items option in certain part of dialog to help
