@@ -1,6 +1,21 @@
 SBOPKG NEWS
 
-sbopkg 0.37.1 (2015-10-27 03:03 UTC)
+sbopkg-0.37.1 (2015-10-27 03:02:59 UTC)
+
+    FEATURES
+	* Add --visit-items option in certain part of dialog to help
+	  disabled people
+	* Added SBo master branch repo (git)
+
+    MODIFICATIONS
+
+	* Move PIDFILE to global variable
+	* Update copyright
+	* Transitions from code.google.com to github.com
+	* Remove SVN-stuff
+	* Fix sqg branch to 14.1 by default.
+
+sbopkg 0.37.0 (2013-12-09 15:10 UTC)
 
     FEATURES
 
