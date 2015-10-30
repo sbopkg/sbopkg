@@ -1,6 +1,13 @@
 SBOPKG NEWS
 
-sbopkg-dev (2016-08-30 23:14:21 UTC)
+sbopkg-dev (2016-08-30 22:19:30 UTC)
+    FEATURES
+        * Added option to download from third party source repository
+          in case the one mentioned in .info failed or having bad checksums.
+        * Added new option in sbopkg.conf: SRC_REPO
+          This is used to define third party source repository
+          sbopkg: Added option to download from third party source.
+
     MODIFICATIONS
         * Do not use wildcard for GPG checking (Fix #19)
 

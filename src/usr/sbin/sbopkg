@@ -2891,7 +2891,8 @@ check_source() {
     # - $3 = source file name
     # Returns 0 if the source is OK, 1 if the source should be (re)downloaded
     # (this includes the cases where $3 is empty or refers to a nonexistent
-    # file) and 2 if the user asked to abort the build.
+    # file) and 2 if the user asked to abort the build or 3 if the user
+    # asked to look in the alternate repository
 
     local PKG=$1
     local MD5SUM="$2"
@@ -2931,11 +2932,11 @@ $SRCNAME in $SRCDIR?
 
 You can choose among the following options:
  - (Y)es, keep the source and continue the build process;
- - (N)o, delete the source and abort the build process; or
- - (R)etry download and continue the build process.
-
+ - (N)o, delete the source and abort the build process;
+ - (R)etry download and continue the build process; or
+ - (A)ttempt to download from third party source repository.
 EOF
-            printf "(Y)es, (N)o, (R)etry?: "
+            printf "(Y)es, (N)o, (R)etry, (A)lternative ?: "
             error_read
             case $REPLY in
                 Y|y)
@@ -2952,6 +2953,10 @@ EOF
                 R|r)
                     echo "    Downloading again." | tee -a $TMPSUMMARYLOG
                     return 1
+                    ;;
+                A|a)
+                    echo "    Searching source repository." | tee -a $TMPSUMMARYLOG
+                    return 3
                     ;;
                 *)
                     unknown_response
@@ -2986,6 +2991,15 @@ check_cert_prompt() {
             *) unknown_response ;;
         esac
     done
+}
+
+make_archive_url() {
+    # Get (and echo) the sbosrcarch URL for a source
+    local MD5SUM=$1
+    local SRCNAME=$2
+
+    local ARCHIVE=${SRC_REPO:-"http://slackware.uk/sbosrcarch"}
+    echo $ARCHIVE/by-md5/${MD5SUM:0:1}/${MD5SUM:1:1}/$MD5SUM/$SRCNAME
 }
 
 get_source() {
@@ -3044,6 +3058,9 @@ get_source() {
                 2 ) # Abort
                     FAILURE=download
                     break 2
+                    ;;
+                3 ) # Archive
+                    DOWNLOAD[$i]=$( make_archive_url ${MD5SUM[$i]} ${SRCNAME[$i]} )
                     ;;
             esac
 
