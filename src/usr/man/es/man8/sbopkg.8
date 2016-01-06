@@ -18,17 +18,17 @@ Slackware.
 .\"---------------------------------------------------------------------
 .SS Instrucciones
 .B Sbopkg
-su uso asume un entendemiento de SlackBuilds, generalmente, y el
-repositorio de terceros de SBo, especificamente.
+su uso generalmente asume un entendemiento de SlackBuilds y el
+repositorio no oficial de SBo, especificamente.
 Para saber mas es recomendable leer
 .I http://www.slackbuilds.org/howto/
-y es muy recomendable leer las páginas en
+y también leer en
 .I http://www.slackwiki.org
-sobre SlackBuilds.
+las páginas sobre SlackBuilds.
 .PP
 Para usar
-.B sbopkg
-, un archivo de configuración debe existir en
+.B sbopkg ,
+un archivo de configuración debe existir en
 .IR /etc/sbopkg/sbopkg.conf .
 Una instalación inicial le proporcionará al usuario ese archivo,
 mientras que las actualizaciones añadirán un archivo
@@ -41,11 +41,10 @@ para mas información sobre el archivo de configuración.
 .B Sbopkg
 debe ser iniciado como usuario root (ya que los SlackBuilds de SBo son escritos con
 la intención de ser iniciados como root).
-Ademas, usar la opción
+Ademas, es muy importante y recomendado usar la opción
 .B \-
 con
-.B su
-es muy aconsejado.
+.B su .
 La razón es porque algunos SlackBuilds confían en que algunas herramientas estén
 disponibles en el 
 .B PATH
@@ -105,7 +104,7 @@ entonces
 .B sbopkg
 añadirá automáticamente una nueva entrada de menú, permitiendo al usuario instalar
 el paquete si así lo elige.
-Alternativamente, el usuarios puede elegir descargar automáticamente, construir o 
+Alternativamente, el usuario puede elegir descargar automáticamente, construir o 
 instalar individualmente los paquetes o varios de ellos en una cola.
 Finalmente, si
 .B KEEPLOG
@@ -135,18 +134,18 @@ creados por el usuario.
 Estos archivos de cola, son archivos simples de texto con el nombre de 
 una aplicación por linea.
 Por defecto, cuando un archivo de cola es cargado en la interfaz dialog, 
-la aplicación es seleccionada o "ON" (habilitada)
+la aplicación es seleccionada o "ON" (habilitada/activada)
 Esto puede ser cambiado insertando un "-" enfrente del nombre de la
 aplicación en el archivo de cola.
 También, los archivos de cola pueden referenciar a otros archivos 
 de cola cuando el primer caracter es una "@".
 Vea el documento
-.I readme-queuefiles
+.I README-queuefiles
 en el directorio de la documentación para mas información.
 .PP
 Algunas características de
 .B sbopkg
-utilizan archivos binarios externos, como un paginador para ver 
+utilizan aplicaciones binarias externas, como un paginador para ver 
 los archivos de texto cuando
 .B sbopkg
 se esta iniciado desde la línea de comandos, y un editor de texto para
@@ -278,7 +277,7 @@ Búsqueda general de
 .I PAQUETE(s)
 sin diferenciar entre mayúsculas y minúsculas donde el argumento es automáticamente
 .BR * s.
-Si mas de un glob (patrón) es especificado, debe ser encerrado entre comillas o la bandera \-g debe ser usada múltiples veces, una para cada glob.
+Si mas de un glob (caracter comodín) es especificado, debe ser encerrado entre comillas o la bandera \-g debe ser usada múltiples veces, una para cada glob.
 .IP
 Por ejemplo:
 .RS
@@ -529,5 +528,6 @@ slakmagik
 .SH TRADUCCIÓN
 Esta traducción ha sido realizada por Pablo Castaño Fernández 
 <waruto@hurricane-project.org> el 17 de Enero de 2011. 
+.PP
 Actualizado por Dhaby Xiloj <slack.dhabyx@gmail.com> el 06 de 
 Enero de 2016.
