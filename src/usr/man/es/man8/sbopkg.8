@@ -1,5 +1,5 @@
 .\"=====================================================================
-.TH SBOPKG 8 "NOVIEMBRE 2010" sbopkg-0.37.0 ""
+.TH SBOPKG 8 "ENERO 2016" sbopkg-0.37.1 ""
 .\"=====================================================================
 .SH NOMBRE
 sbopkg \- el buscador de paquetes de SlackBuilds.org
@@ -8,121 +8,113 @@ sbopkg \- el buscador de paquetes de SlackBuilds.org
 .B sbopkg
 .RI [ opciones ]
 .\"=====================================================================
-.SH DESCRIPTION
+.SH DESCRIPCIÓN
 .B Sbopkg
 es una linea de comandos basada en la herramienta
 .BR dialog
-para interactuar con el repositorio SlackBuilds.org (``Sbo''), una
-coleccion de scripts de terceros para construir paquetes
+para interactuar con el repositorio de SlackBuilds.org ("Sbo"), una
+colección de scripts de terceros para construir paquetes para
 Slackware.
 .\"---------------------------------------------------------------------
 .SS Instrucciones
 .B Sbopkg
-su uso asume un entendemiento de SlackBuilds, generalmente, y el
-repositorio de terceros de SBo, especificamente.
-Para saber mas, leer
+su uso generalmente asume un entendemiento de SlackBuilds y el
+repositorio no oficial de SBo, especificamente.
+Para saber mas es recomendable leer
 .I http://www.slackbuilds.org/howto/
-y las paginas en
+y también leer en
 .I http://www.slackwiki.org
-sobre SlackBuilds es muy aconsejable.
+las páginas sobre SlackBuilds.
 .PP
 Para usar
-.B sbopkg
-, un archivo de configuracion debe existir en
+.B sbopkg ,
+un archivo de configuración debe existir en
 .IR /etc/sbopkg/sbopkg.conf .
-Una instalacion inicial le proporcionara al usuario ese archivo,
-mientras que las actualizaciones aÃ±adiran un
+Una instalación inicial le proporcionará al usuario ese archivo,
+mientras que las actualizaciones añadirán un archivo
 .I /etc/sbopkg/sbopkg.conf.new
-el cual se fusionara o reemplazara con versiones antiguas.
+el cual se fusionara o reemplazara las versiones antiguas.
 Ver
 .BR sbopkg.conf (5)
-para mas informacion sobre el archivo de configuracion.
+para mas información sobre el archivo de configuración.
 .PP
 .B Sbopkg
-debe ser iniciado como usuario root (desde que SBo SlackBuilds son escritos con
-la intencion de ser iniciados como root).
-Ademas, usar la opcion
+debe ser iniciado como usuario root (ya que los SlackBuilds de SBo son escritos con
+la intención de ser iniciados como root).
+Ademas, es muy importante y recomendado usar la opción
 .B \-
 con
-.B su
-es muy aconsejado.
-La razon es porque algunos SlackBuilds confian en que algunas herramientas lo hagan
-disponible para el 
+.B su .
+La razón es porque algunos SlackBuilds confían en que algunas herramientas estén
+disponibles en el 
 .B PATH
-de root, mientras los scripts en
+de root, generalmente cuando los scripts en
 .I /etc/profile.d
 han sido iniciados (p.e.,
 .B texmf
-para  construir paginas man), las cuales son solo hechas para shells de entrada, o de otra 
-manera requieren un entorno root ``mas verdadero'' del que solo le es proporcionado por
+para  construir paginas man), las cuales solamente están disponibles para shells de login, o de otra manera requieren un entorno root "mas real" del que solo es proporcionado por
 .BR su .
-En cualquier caso, invocando
+En cualquier caso, ejecutando
 .B sbopkg
-sin ningun argumento (o con solo
+sin ningún argumento (o con solo
 .BR \-d ,
 .BR \-f ,
 o
 .BR \-V )
-lanzara la interfaz 
-.BR basada 
-en 
-.BR dialog 
-, y los menus proporcionados deben ser explicados por si mismos.
+lanzara la interfaz basada en
+.BR dialog ,
+y los menús proporcionados se explican por si mismos.
 .PP
-El menu principal permite al usuario sincronizarse con el repositorio SBo.
-Este es el primer paso que se debe tomar (despues de la configuracion) con una nueva 
-instalacion de
+El menú principal permite al usuario sincronizarse con el repositorio SBo.
+Este es el primer paso que se debe tomar (después de la configuración) con una nueva 
+instalación de
 .BR sbopkg .
-Actualmente, el tamaÃ±o de una copia local del repositorio SBo, es aproximadamente
-de 90MB.
-El menu principal tambien permite al usuario ver el SBo
-.IR ChangeLog ,
-que busca actualizaciones potenciales de los paquetes SBo, mostrando los contenidos del
-directorio de cache local donde los paquetes de codigo fuente son salvados, mostrando
-siempre el log de construccion, y ve o busca una copia local del repositorio SBo.
-Una vez que la funcion ver es elegida, el usuario puede escoger la categoria de software
-para ver.
-Despues de escoger una categoria, el usuario puede entonces ver los diferentes paquetes de
-software disponibles en esa categoria dentro del repositorio SBo local.
-Al seleccionar un paquete, se mostrara otro menu permitiendo al usuario ver los archivos 
-del paquete
+Actualmente, el tamaño de una copia local del repositorio SBo, es aproximadamente
+de 210MB.
+El menú principal también permite al usuario ver el 
+.IR ChangeLog 
+de SBo, buscar actualizaciones potenciales de los paquetes SBo, desplegar el
+contenido del directorio de cache local donde los paquetes de código fuente son
+almacenados, mostrando siempre el log de construcción, y ver o buscar una copia local del repositorio SBo. 
+Una vez que la función es elegida, el usuario puede escoger una categoría de software.
+Despues de escoger una categoria, el usuario puede entonces ver los diferentes 
+paquetes de software disponibles en esa categoría dentro del repositorio SBo local.
+Al seleccionar un paquete, se mostrara otro menú permitiendo al usuario ver los archivos que vienen con el paquete, tales como los archivos
 .IR README ,
 .IR SlackBuild ,
 .IR .info ,
 o
 .I slack-desc .
-El usuario tambien puede editar el archivo
+El usuario también puede editar el archivo
 .I .info
-y
+y el archivo
+.I SlackBuild ,
+los archivos editados se mantienen aún después de realizar una sincronización.
+Adicionalmente, el usuario puede escoger construir el 
 .I SlackBuild
-y los archivos editados lo seguiran siendo despues de hacer la sincronizacion.
-Ademas, el usuario puede escoger construir el 
-.I SlackBuild
-original o el editado localmente, si esta presente.
+original o el editado localmente, si está presente.
 Si se usa la interfaz
 .B dialog
 y si
 .B sbopkg
-encuentra un paquete construido para una pieza particular de software en el
+encuentra un paquete construido para el software en particular en el
 directorio de
-.B SALIDA
-, entonces
+.B SALIDA ,
+entonces
 .B sbopkg
-aÃ±adira automaticamente una nueva entrada de menu permitiendo al usuario instalar
-el paquete si el lo elige.
-Alternativamente, el usuario puede escoger una construcciÃ³n automatica, o una 
-construccion e instalacion, paquetes individuales o varios paquetes en una 
-construccion de cola.
+añadirá automáticamente una nueva entrada de menú, permitiendo al usuario instalar
+el paquete si así lo elige.
+Alternativamente, el usuario puede elegir descargar automáticamente, construir o 
+instalar individualmente los paquetes o varios de ellos en una cola.
 Finalmente, si
 .B KEEPLOG
-estÃ¡ establecido como
+está establecido como
 .B YES
-en el archivo
-.I sbopkg.conf
-entonces un log permanente de construcciones procesadas es guardado.
-Ver
+en el archivo de configuración,
+se mantendrá un log permanente de las construcciones procesadas y será guardado.
+Ver 
 .BR sbopkg.conf (5)
-bajo
+y localizar
 .B KEEPLOG
 y
 .B LOGFILE
@@ -137,59 +129,60 @@ Ver la seccion
 para saber los comandos de opciones disponibles.
 .PP
 .B Sbopkg
-tambien tiene la capacidad de cargar, salvar y usar archivos de cola 
+también tiene la capacidad de cargar, salvar y usar archivos de cola 
 creados por el usuario.
-Estes archivos de cola son archivos simples de texto con una aplicaciÃ³n 
-por linea.
+Estos archivos de cola, son archivos simples de texto con el nombre de 
+una aplicación por linea.
 Por defecto, cuando un archivo de cola es cargado en la interfaz dialog, 
-la aplicacion es seleccionada o ``ON.''
-Esto puede ser cambiado insertando un ``-'' enfrente del nombre de la
-aplicacion en el archivo de cola.
-Tambien, los archivos de cola pueden referenciar a otro archivos 
-de cola cuando el primer caracter es un ``@''.
-Ver el documento
-.I readme-queuefiles
-en el directorio de la documentacion para mas informacion.
+la aplicación es seleccionada o "ON" (habilitada/activada)
+Esto puede ser cambiado insertando un "-" enfrente del nombre de la
+aplicación en el archivo de cola.
+También, los archivos de cola pueden referenciar a otros archivos 
+de cola cuando el primer caracter es una "@".
+Vea el documento
+.I README-queuefiles
+en el directorio de la documentación para mas información.
 .PP
-Algunas caracteristicas de
+Algunas características de
 .B sbopkg
-confian en archivos binarios externos, como un paginador para ver 
+utilizan aplicaciones binarias externas, como un paginador para ver 
 los archivos de texto cuando
 .B sbopkg
-esta iniciado desde la linea de comandos, y un editor para editar
+se esta iniciado desde la línea de comandos, y un editor de texto para
 los archivos
 .I .info
 o
 .I SlackBuild .
-Las funciones de paginacion miraran en la variable de entorno
+Las funciones de paginación usan la variable de entorno
 .B PAGER
-y, si esa variable no esta definida, mirara por defecto en
-.BR mas .
-Similarmente, las funciones de edicion, las buscara en
+y, si esa variable no esta definida, usará por defecto el comando
+.BR more .
+Similarmente, las funciones de edición, las buscara en la variable
 .B EDITOR
-y lo hara por defecto en
+y usará por defecto
 .BR vi .
 Si el usuario quiere que
 .B sbopkg
 use otro editor, como
 .BR nano ,
-entonces aÃ±adir la informacion necesitada en
+entonces debe añadir la información necesaria en
 .IR ~/.bashrc ,
 .IR /etc/profile ,
-u otro archivo de configuracion similar para exportar
+u otro archivo de configuración similar para exportar la variable
 .B EDITOR
-sera suficiente.
+y con ésto sera suficiente.
 .\"=====================================================================
 .SH OPCIONES
 .\"---------------------------------------------------------------------
 .TP 5
 .BI \-b " PAQUETE(s)/ARCHIVO(s) DE COLA"
-Construye paquetes de el(los) argumento(s) del repositorio activo.
-Si esta especificado mÃ¡s de un paquete, pueden ambos ser citados o el 
-cambio puede ser dado en tiempos multiples.
-Usando esta segunda forma, una lista separada con dos puntos listara las 
-opciones que pueden ser dadas.
-Si ocurren espacios en blanco entre los dos puntos, debera ser citado.
+Construye paquetes de el(los) argumento(s) pasados usando repositorio activo.
+Si esta especificado más de un paquete, deben de ser encerrados entre comillas o
+pueden ser escritos múltiples veces.
+Usando esta segunda forma, se pueden agregar opciones mediante una lista separada
+con dos puntos.
+Si aparecen espacios en blanco entre los dos puntos, deberán ser encerrados entre
+comillas.
 .IP
 Por ejemplo:
 .RS
@@ -201,7 +194,7 @@ Por ejemplo:
 .IP
 sera construido
 .I foo
-y entonces
+y luego
 .IR bar .
 .IP
 O
@@ -212,32 +205,45 @@ O
 .fi
 .RE
 .IP
-sera construido app1 con las opciones ``foo bar'' y ``baz'', y app2 
-con la opcion ``mu''.
+sera construido app1 con las opciones "foo bar" y "baz", y app2 
+con la opción "mu".
 .IP
-Los nombres de los archivos de colas pueden tambien ser especificados.
+Los nombres de los archivos de colas pueden también ser usados.
 En este caso, todos los paquetes especificados en el archivo de cola 
-seran construidos
+serán construidos.
 En el desafortunado caso de que un token coincida con un un nombre de 
 archivo de cola y un nombre de paquete (p.e., el usuario llamo un 
 archivo de cola con el nombre de un paquete).
 .B sbopkg
-le preguntara al usuario cual deberia ser usada.
-Una forma de evitar esto es especificar el archivo de cola con la extension
+le preguntara al usuario cual deberá ser usado.
+Una forma de evitar esto es especificar el archivo de cola con la extensión
 .I .sqf .
-Tambien, una mezcla de ambos paquetes y archivos de colas puede ser dada.
+También, una mezcla de ambos paquetes y archivos de colas puede ser dada.
 Los tokens (nombres de paquetes o archivos de colas) son procesados en 
-el orden que son especificados en la linea de comandos, y la orden de 
-construccion especificada en los archivos de colas es retenida.
-Si un paquete es mÃ¡s especifico que otro, se pone en cola el primero que 
+el orden que son especificados en la línea de comandos, y la orden de 
+construcción especificada en los archivos de colas es retenida.
+Si un paquete es más especifico que otro, se pone en cola el primero que 
 es encontrado.
 .\"---------------------------------------------------------------------
 .TP
-.B \-c
-Muestra una lista de paquetes SBo instalados y actualizaciones potenciales.
+.B \-B
+Procesa los paquetes o colas sin solicitar una confirmación.
 .\"---------------------------------------------------------------------
 .TP
-.BI \-d " DIRECTORIO"
+.B \-c
+Muestra una lista de paquetes SBo instalados y las actualizaciones potenciales.
+.\"---------------------------------------------------------------------
+.TP
+.BI \-d " PAQUETE(s)/COLA(s)"
+Descarca los archivos fuente de el(los) argumento(s) desde la URL especificada
+en el repositorio activo.
+.IP
+Vea la opción
+.B \-b
+para mas detalles, aparte de construir, estas dos opciones operan similarmente.
+.\"---------------------------------------------------------------------
+.TP
+.BI \-D " DIRECTORIO"
 Especifica manualmente la ruta entera hasta el
 .I DIRECTORIO
  que contiene el repositorio SBo local.
@@ -246,33 +252,32 @@ Especifica manualmente la ruta entera hasta el
 .B \-e ask\fR|\fPcontinue\fR|\fPstop
 Especifica lo que
 .B sbopkg
-debe hacer cuando encuentra un error durante la construccion de un paquete.
+debe hacer cuando encuentra un error durante la construcción de un paquete.
 Opciones validas son:
 .IP
 .BR ask :
 Este es el comportamiento por defecto, preguntando al usuario que hacer.
 .IP
 .BR continue :
-Ignora el error y continua procesando (como si la respuesta del usuario hubiese sido ``Si'' a todas las preguntas).
+Ignora el error y continua procesando (como si la respuesta del usuario hubiese sido "Si" a todas las preguntas).
 .IP
 .BR stop :
-Para el proceso (actua como si el usuario hubiera respondido ``No'' a todas las preguntas).
+Para el proceso (actúa como si el usuario hubiera respondido "No" a todas las preguntas).
 .\"---------------------------------------------------------------------
 .TP
 .BI \-f " ARCHIVO"
-Sobreescribe el archivo de configuracion por defecto,
+Sobreescribe el archivo de configuración por defecto,
 .IR /etc/sbopkg/sbopkg.conf ,
 con
 .IR ARCHIVO .
 .\"---------------------------------------------------------------------
 .TP
 .BI \-g " PAQUETE(s)"
-Busqueda general de
+Búsqueda general de
 .I PAQUETE(s)
-sin diferenciar entre mayusculas y minusculas donde el argumento es automaticamente
+sin diferenciar entre mayúsculas y minúsculas donde el argumento es automáticamente
 .BR * s.
-Si mas de un glob es especificado, debe ser citado o la bandera \-g debe ser usada 
-multiples veces, una para cada glob.
+Si mas de un glob (caracter comodín) es especificado, debe ser encerrado entre comillas o la bandera \-g debe ser usada múltiples veces, una para cada glob.
 .IP
 Por ejemplo:
 .RS
@@ -282,7 +287,7 @@ Por ejemplo:
 .fi
 .RE
 .IP
-devolvera una lista de paquetes con
+devolverá una lista de paquetes con
 .I foo
 o
 .I bar
@@ -299,60 +304,57 @@ activo.
 .IP
 Ver la opcion
 .B \-b
-para mas detalles, ya que, aparte de la instalacion, estas dos opciones 
+para mas detalles, ya que, aparte de la instalación, estas dos opciones 
 operan similarmente.
 .IP
 Considere cuidadosamente el orden de los paquetes listados, el usuario
 debe ser capaz de construir e instalar las dependencias en el orden 
-correcto antes de que la aplicacion final es construida e instalada.
-Por supuesto, dada la naturaleza de las dependencias, esto no es siempre 
-posible, asique construir dependencias no es realmente una funcion 
-soportada.
-Aun asi, cuando esto trabaja, puede ser util.
+correcto antes de que la aplicación final sea construida e instalada.
 .\"---------------------------------------------------------------------
 .TP
 .B \-k
 Cuando se usa junto con
-.B \-b
+.BR \-b ,
+.BR \-d ,
 o
 .BR \-i ,
-esta opcion le dice a
+esta opción le dice a
 .B sbopkg
 que omita (p.e., no construir) cualquier paquete que encuentre ya instalado.
 .IP
-Por favor, note que solo se lleva a cabo la comparacion por nombre, asique 
-cuando esta opcion es especificada
+Por favor, note que solo se lleva a cabo la comparación del nombre, asique 
+cuando esta opción es especificada
 .B sbopkg
-tambien omitira la construcciÃ³n de diferentes versiones de paquetes instalados.
+también omitirá la construcción de diferentes versiones de los paquetes instalados.
 .\"---------------------------------------------------------------------
 .TP
 .B \-l
-Muestra el SBo
+Muestra el 
 .I ChangeLog
-y sale.
+de SBo y sale.
 .\"---------------------------------------------------------------------
 .TP
 .B \-o
-Lista los archivos de fuente cacheados actualmente instalados, los cuales 
-se consideran obsoletos, y opcionalmente borrados.
+Lista los archivos de fuente cacheados de los paquetes actualmente instalados, 
+los cuales se consideran obsoletos, y que opcionalmente pueden ser borrados.
 .IP
-Los archivos fuente son obsoletos cuando el(los) campo(s) de 
-.B DESCARGA
-de archivos
+Los archivos fuente son obsoletos cuando el campo
+.B DOWNLOAD
+de los archivos
 .I .info
-se referencian a unos menores, lo cual es algo que puede pasar despues 
-de sincronizar el repositorio local.
+ya no los refiere mas, lo cual es algo que puede pasar luego de 
+sincronizar el repositorio local.
 .IP
-Por favor, note que solo el repositorio activo actual es usado para 
-identificar los fuentes obsoletos, asique si el usuario construye 
+Por favor, note que solo el actual repositorio activo es usado para 
+identificar las fuentes obsoletas, así que si el usuario construye 
 paquetes con repositorios diferentes (p.e., para diferentes versiones 
-de Slackware) los archivos fuente solo se usaran en el ``otro'' 
-repositorio que seran listados.
+de Slackware) los archivos fuente solo serán listados en el "otro" 
+repositorio.
 .\"---------------------------------------------------------------------
 .TP
 .B \-P
-Lista los archivos de paquete cacheados que no estan actualmente 
-instalados en el sistema y opcionalmente se borran.
+Lista los archivos de paquete cacheados que no están actualmente 
+instalados en el sistema y opcionalmente pueden ser borrados.
 .\"---------------------------------------------------------------------
 .TP
 .B \-p
@@ -360,26 +362,36 @@ Lista paquetes SBo instalados.
 .\"---------------------------------------------------------------------
 .TP
 .B \-q
-Permite el ``modo silencio.''Enable the ``quiet mode.''
+Habilita el "quiet mode" (modo silencio).
 Cuando esta bandera esta especificada, la salida de algunas opciones de 
-comandos es reducida.
+línea de comandos son minimizadas.
 .\"---------------------------------------------------------------------
 .TP
 .B \-R
+Cuando es combinado con
+.BR -b ,
+.BR -d ,
+or
+.BR -i ,
 Muestra todos los archivos
-.I LÃ‰EME
-de los paquetes de archivos de cola antes de empezar la construccion.
-Esto es util cuando el usuario quiere hacer una comprobacion final.
+.I README (LEEME)
+de los paquetes a construir antes de empezar la construcción.
+Esto es útil cuando el usuario quiere hacer una comprobación final.
+Cuando se combina con
+.BR -p ,
+muestra el archivo
+.I README
+de todos los paquetes instalados en el repositorio activo.
 .\"---------------------------------------------------------------------
 .TP
 .B \-r
-``Resincroniza'' el repositorio local con SBo y sale.
+Resincroniza el repositorio local con SBo y sale.
 .\"---------------------------------------------------------------------
 .TP
 .BI \-s " PAQUETE(s)"
-Busqueda especifica de
+Búsqueda especifica de
 .I PAQUETE(s)
-diferenciando mayusculas y minusculas y, si lo encuentra, muestra los 
+diferenciando mayúsculas y minúsculas y, si lo encuentra, muestra los 
 archivos
 .IR README ,
 .IR SlackBuild ,
@@ -390,8 +402,8 @@ en el orden en el que cada
 .I PAQUETE
 fue encontrado, usando
 .IR $PAGER .
-Si mas de un glob es especificado, debera ser citado o la bandera \-s 
-debe ser usada multiples veces, una para cada glob.
+Si mas de un patrón es especificado, deberá ser citado o se debe usar 
+la bandera \-s múltiples veces, una para cada patrón.
 .IP
 Por ejemplo:
 .RS
@@ -407,7 +419,7 @@ nombres son exactamente
 o
 .IR bar .
 .IP
-Notese que los metacaracteres de la shell deben ser proporcionados en 
+Nótese que los metacaracteres de la shell pueden ser proporcionados en 
 los argumentos. Por ejemplo,
 .RS
 .IP
@@ -416,24 +428,24 @@ los argumentos. Por ejemplo,
 .fi
 .RE
 .IP
-devolvera todos los paquetes con 'open' o 'Open' en cualquier sitio del 
+devolverá todos los paquetes con 'open' o 'Open' en cualquier parte del 
 nombre.
-Si devuelve muchas aplicaciones, se le presentaran al usuario como un menu
+Si devuelve muchas aplicaciones, se le presentaran al usuario como un menú
 en el cual seleccionarlas.
 .\"---------------------------------------------------------------------
 .TP
 .B \-u
-Busca una actualizacion para
+Busca una actualización para
 .B sbopkg
 y sale.
 .\"---------------------------------------------------------------------
 .TP
-.BI \-V " VERSIÃ“N"
+.BI \-V " VERSION"
 Establece el repositorio y la rama a usar.
 .IP
-Para una lista valida de ramas, invocar
+Para una lista valida de ramas, use 
 .B sbopkg
-como
+de la siguiente manera
 .RS
 .IP
 .nf
@@ -443,47 +455,49 @@ como
 .IP
 Ver la pagina de manual
 .BR sbopkg.conf (5)
-para mas informacion sobre el repositorio ``local''.
+para mas información sobre el repositorio "local".
 .IP
-El formato de
-.I VERSIÃ“N
-es repositorio/rama (p.e., SBo/13.1).
+El formato de la
+.I VERSION
+es: repositorio/rama (p.e., SBo/13.1).
 Si el repositorio es omitido,
 .B sbopkg
-primero buscara la rama especifica en el repositorio por defecto.
+buscara la rama especifica en el repositorio por defecto.
 Si este intento falla,
 .B sbopkg
-buscara la primera rama marcada en cualquier repositorio.
+buscara la primera rama que coincida en cualquier repositorio.
 .\"---------------------------------------------------------------------
 .TP
 .B \-v
-Imprime la version actual de
+Imprime la versión actual de
 .B sbopkg
 en stdout.
 .\"=====================================================================
 .SH FILES
 .TP 5
 .I /etc/sbopkg/sbopkg.conf
-Archivo de todo el sistema por defecto para especificar sus opciones de 
-configuracion.
+Archivo usado para configurar las opciones por defecto de todo el sistema,
 .TP
-.I /etc/sbopkg/renames.d/50-default
-Archivo por defecto que lista el software en los repositorios de SBo que 
-ha cambiado de nombre.
-Ver tambien
-.I README-renames.d
-documentado en el directorio de documentacion de
+.I ~/.sbopkg.conf
+Archivo para sobreescribir todas las opciones de configuración.
+.TP
+.I /etc/sbopkg/renames.d/*.renames
+Archivos que listan el software en el repositorio SBo que serán renombrados.
+Vea el documento
+.I README-renames
+en el directorio de documentación de
 .B sbopkg
-para mas informaciÃ³n.
+para mas información.
 .TP
-.I /etc/sbopkg/repos.d/{40-sbo.repo,50-sb64.repo,60-local.repo}
-Tres archivos por defecto para diversos tipos de repositorios
+.I /etc/sbopkg/repos.d/*.repo
+Archivos para varios tipos de repositorios de
 .B sbopkg .
-Ver tambien
-.I README-repos.d
-documentado en el directorio de documentacion de
+Vea el documento
+.I README-repos
+en el directorio de la documentación de
 .B sbopkg
-para mas informaciÃ³n.
+para mas información.
+
 .\"=====================================================================
 .SH AUTORES
 Willy Sudiarto Raharjo
@@ -509,9 +523,11 @@ slakmagik
 .BR su (1),
 .BR upgradepkg (8),
 .BR vi (1),
-.IR /usr/doc/sbopkg-0.37.0/*
+.IR /usr/doc/sbopkg-0.37.1/*
+.SH TRADUCCIÓN
+Esta traducción ha sido realizada por Pablo Castaño Fernández 
+<waruto@hurricane-project.org> el 17 de Enero de 2011. 
+.PP
+Actualizado por Dhaby Xiloj <slack.dhabyx@gmail.com> el 06 de 
+Enero de 2016.
 .\" vim:set tw=72:
-.SH TRADUCCION
-Esta traduccion ha sido realizada por Pablo CastaÃ±o Fernandez 
-<waruto@hurricane-project.org> el 17 de Enero de 2011. Envien todos los 
-errores a ese correo.
