@@ -2364,7 +2364,7 @@ rsync_command() {
 
     local SYNC_LOCK=$SBOPKGTMP/sbopkg_sync.lck
 
-    rsync --archive --delete --no-owner --exclude="*.sbopkg" \
+    rsync --archive --delete --no-owner --no-group --exclude="*.sbopkg" \
         $RSYNCFLAGS $REPO_LINK/ $REPO_DIR/
     case $? in
         35)
