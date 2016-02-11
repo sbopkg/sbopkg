@@ -6,6 +6,7 @@ sbopkg-dev (2016-02-12 17:25:22 UTC)
 	  Patch by pyllyukko
 	* Updated es translations (Dhaby Xiloj)
 	* Moved sqg to /usr/sbin
+        * Added support for Slackware 14.2.
 
 sbopkg-0.37.1 (2015-10-27 03:02:59 UTC)
 
