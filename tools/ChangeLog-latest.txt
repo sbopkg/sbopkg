@@ -1,5 +1,12 @@
 SBOPKG NEWS
 
+sbopkg-dev (2016-02-12 17:25:22 UTC)
+    FEATURES
+	* Add --no-group to rsync so files are owned by root:root
+	  Patch by pyllyukko
+	* Updated es translations (Dhaby Xiloj)
+	* Moved sqg to /usr/sbin
+
 sbopkg-0.37.1 (2015-10-27 03:02:59 UTC)
 
     FEATURES
