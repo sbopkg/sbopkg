@@ -9,7 +9,7 @@ MEDIUM PRIORITY
 
         * Add lftp to sync methods.
 
-        * Add flag to skip prompts and force building packages or queues
+	* Add flag to skip prompts and force building packages or queues
           when both exist with the same name. (Suggested by OzanBurada.)
 
     Modification Category
@@ -18,6 +18,12 @@ MEDIUM PRIORITY
           option combinations are allowed, thus replacing the current
           crude test which only prevents -b and -i from being used
           together.
+
+        * Change generated tag from _SBo -> _sbopkg
+          http://slackbuilds.org/faq/#package_repos
+
+	* Add third party source repository
+	  This feature is tracked under sbosrcarch branch
 
 LOW PRIORITY
 
@@ -30,6 +36,8 @@ LOW PRIORITY
         * Replace all calls to dialog with a DIALOG variable (which
           would still default to dialog), allowing users to more easily
           try other interfaces.
+
+	* Use sqg to generate one queue file for multiple programs
 
     Modification Category
 
