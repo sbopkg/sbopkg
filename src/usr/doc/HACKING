@@ -15,7 +15,7 @@ INTRODUCTION
     sbopkg mailing list and post your bug report or feature request
     there.
 
-	http://sbopkg.org/mailman/listinfo/sbopkg-users
+	https://sbopkg.org/mailman/listinfo/sbopkg-users
 
     As far as hacking on the code, the best thing to do is to checkout
     the latest version from git using something like the
@@ -23,7 +23,7 @@ INTRODUCTION
 
         git checkout https://github.com/sbopkg/sbopkg.git
 
-    (See http://www.sbopkg.org/devel.php for more information.)
+    (See https://www.sbopkg.org/devel.php for more information.)
     Then contribute patches with something like 'diff -Naurp'.
 
     Please try to make each patch do one thing and do it well. Also,
