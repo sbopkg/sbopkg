@@ -1,5 +1,15 @@
 SBOPKG NEWS
 
+sbopkg 0.38.0 (2016-07-01 17:12 UTC)
+
+    FEATURES
+        * Add --no-group to rsync so files are owned by root:root
+          Patch by pyllyukko
+        * Updated es translations (Dhaby Xiloj)
+        * Moved sqg to /usr/sbin
+        * Added support for Slackware 14.2.
+        * Update queue sample files
+
 sbopkg-0.37.1 (2015-10-27 03:02:59 UTC)
 
     FEATURES
