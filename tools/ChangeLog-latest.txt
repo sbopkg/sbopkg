@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-0.38.0 (2016-06-01 16:52:27 UTC)
+sbopkg-0.38.0 (2016-07-01 16:52:27 UTC)
     FEATURES
 	* Add --no-group to rsync so files are owned by root:root
 	  Patch by pyllyukko
