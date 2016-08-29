@@ -1415,7 +1415,7 @@ check_gpg() {
             $GPGNAME tarball found.")" 8 40
         return 1
     fi
-    if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
+    if ! gpg --verify $CHKPKG.tar.gz.asc > /dev/null 2>&1; then
         dialog --title "WARNING" --yesno "$(crunch "GPG CHECK FAILED!\n\n \
             Would you like to delete the $GPGNAME directory and tarball \
             so you can perform a new sync?  If so, all local changes to \
@@ -3757,9 +3757,9 @@ check_asc() {
     local REPLY
 
     echo -n "  Checking GPG for $GPGNAME.tar.gz ... " >> $TMPLOG
-    if ! gpg --verify $CHKPKG.*.asc > /dev/null 2>&1; then
+    if ! gpg --verify $CHKPKG.tar.gz.asc > /dev/null 2>&1; then
         echo "GPG check FAILED!" | tee -a $TMPLOG
-        if [[ ! -e $CHKPKG.tar.gz && ! -e $CHKPKG.*.asc ]]; then
+        if [[ ! -e $CHKPKG.tar.gz && ! -e $CHKPKG.tar.gz.asc ]]; then
             echo "  No tarball or .asc file found." | tee -a $TMPLOG
         fi
         while :; do

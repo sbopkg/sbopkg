@@ -1,5 +1,9 @@
 SBOPKG NEWS
 
+sbopkg-dev (2016-08-30 23:14:21 UTC)
+    MODIFICATIONS
+        * Do not use wildcard for GPG checking (Fix #19)
+
 sbopkg-0.38.0 (2016-07-01 16:52:27 UTC)
     FEATURES
 	* Add --no-group to rsync so files are owned by root:root
