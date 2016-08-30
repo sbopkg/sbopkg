@@ -2395,7 +2395,7 @@ rsync_command() {
             echo "Rsync with the $REPO_DESC complete."
             echo
             echo "Importing $REPO_DESC GPG Key..."
-            gpg --quiet --fetch-key http://www.slackbuilds.org/GPG-KEY
+            gpg --quiet --fetch-key https://www.slackbuilds.org/GPG-KEY
             echo "Import done."
             echo
             echo "***SYNC COMPLETE***"
@@ -4053,12 +4053,12 @@ check_for_latest() {
     # by Eric Hameleers which you can find at
     # http://www.slackware.com/~alien.  Thanks, Eric!
 
-    local ORIGSCR=http://www.sbopkg.org/currentversion
+    local ORIGSCR=https://www.sbopkg.org/currentversion
     local CVRS=$SBOVER
     local NVRS=$(wget -T 10 -q -O - $ORIGSCR)
-    local NEWPKG=http://www.sbopkg.org/currentpackage
+    local NEWPKG=https://www.sbopkg.org/currentpackage
     local NEWSBOPKG=$(wget -T 10 -q -O - $NEWPKG)
-    local NEWDL=http://www.sbopkg.org/currentdownload
+    local NEWDL=https://www.sbopkg.org/currentdownload
     local NEWDLPKG=$(wget -T 10 -q -O - $NEWDL)
     local SBOPKGUP MSG REPLY
 
@@ -4081,7 +4081,7 @@ check_for_latest() {
     fi
     if [[ $DIAG ]]; then
         dialog --title "Done" --msgbox "$(crunch "Checking \
-            http://www.sbopkg.org for an update...\n\nYour version of \
+            https://www.sbopkg.org for an update...\n\nYour version of \
             sbopkg: $CVRS\n\nLatest version of sbopkg found on \
             sbopkg.org: $NVRS\n\n$MSG")" 16 40
         if [[ $? != 0 ]]; then
@@ -4098,7 +4098,7 @@ check_for_latest() {
         fi
     else
         echo
-        echo "Checking http://www.sbopkg.org for an update..."
+        echo "Checking https://www.sbopkg.org for an update..."
         echo
         echo "Your version of sbopkg: $CVRS"
         echo
@@ -4134,7 +4134,7 @@ check_for_latest() {
             \n\
             \nYou can also view a complete ChangeLog.txt in the\
             /usr/share/doc/sbopkg-$NVRS/ directory or online at:\
-            \nhttp://www.sbopkg.org/changelog\
+            \nhttps://www.sbopkg.org/changelog\
             \n"
         if [[ $DIAG ]]; then
             read -n1 -ep "Press any key to continue: "
@@ -4394,7 +4394,7 @@ help_item() {
     dialog --msgbox "$(crunch "For help with sbopkg, please read \
         the manual pages sbopkg(8) and sbopkg.conf(5), the files in \
         /usr/doc/sbopkg-$SBOVER/, join the mailing list at \
-        http://sbopkg.org/mailman/listinfo/sbopkg-users, or join #sbopkg \
+        https://sbopkg.org/mailman/listinfo/sbopkg-users, or join #sbopkg \
         on freenode. If you've found a bug please report it to \
         https://github.com/sbopkg/sbopkg/issues.")" 10 70
 }
