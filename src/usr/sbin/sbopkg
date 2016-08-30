@@ -4132,8 +4132,7 @@ check_for_latest() {
             need to be merged into your existing /etc/sbopkg/sbopkg.conf \
             file.\
             \n\
-            \nYou can also view a complete ChangeLog.txt in the\
-            /usr/share/doc/sbopkg-$NVRS/ directory or online at:\
+            \nYou can also view the complete ChangeLog online at:\
             \nhttps://www.sbopkg.org/changelog\
             \n"
         if [[ $DIAG ]]; then
