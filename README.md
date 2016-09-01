@@ -1,7 +1,8 @@
 # sbopkg
 **Slackbuilds.org Package Browser**
 
-Sbopkg is a command-line and dialog-based tool to synchronize with the [SlackBuilds.org ("SBo")](http://www.slackbuilds.org/) repository, a collection of third-party SlackBuild scripts to build [Slackware](http://www.slackware.com/) packages. Sbopkg is actively maintained and a new version is released one or more times per Slackware/SBo release. Numerous people have contributed diffs, bug reports, and helpful suggestions and they are all mentioned in the THANKS file in /usr/doc/sbopkg-$VERSION. This utility would not be anywhere close to its present state without the help of these folks.
+Sbopkg is a command-line and dialog-based tool to synchronize with the [SlackBuilds.org ("SBo")](https://www.slackbuilds.org/) repository, a 
+collection of third-party SlackBuild scripts to build [Slackware](http://www.slackware.com/) packages. Sbopkg is actively maintained and a new version is released one or more times per Slackware/SBo release. Numerous people have contributed diffs, bug reports, and helpful suggestions and they are all mentioned in the THANKS file in /usr/doc/sbopkg-$VERSION. This utility would not be anywhere close to its present state without the help of these folks.
 
 **Features**
 
