@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2016-08-30 22:19:30 UTC)
+sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES
         * Added option to download from third party source repository
           in case the one mentioned in .info failed or having bad checksums.
