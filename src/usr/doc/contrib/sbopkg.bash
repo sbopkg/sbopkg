@@ -65,10 +65,20 @@ _sbopkg()
         esac
     done
 
-    if [ ! -r "$REPO_ROOT/$REPO_NAME/$REPO_BRANCH/SLACKBUILDS.TXT" ]; then
-        return 0
+    if [ -d "$QUEUEDIR" ]; then
+        local queues=($(cd $QUEUEDIR; compgen -f -X "!*.sqf" -- "$cur"))
     fi
-    COMPREPLY=( $( sed -ne "/^SLACKBUILD NAME: $cur/{s/^SLACKBUILD NAME: //;p}"\
-        $REPO_ROOT/$REPO_NAME/$REPO_BRANCH/SLACKBUILDS.TXT )
-        $( cd $QUEUEDIR; compgen -f -X "!*.sqf"  -- "$cur" ) )
+
+    if [ -r "$REPO_ROOT/$REPO_NAME/$REPO_BRANCH/SLACKBUILDS.TXT" ]; then
+        COMPREPLY=($(sed -ne "/^SLACKBUILD NAME: $cur/{s/^SLACKBUILD NAME: //;p}" \
+                         $REPO_ROOT/$REPO_NAME/$REPO_BRANCH/SLACKBUILDS.TXT)
+                   ${queues[@]})
+    elif [ -d "$REPO_ROOT/$REPO_NAME/" ]; then
+        COMPREPLY=($(find $REPO_ROOT/$REPO_NAME \
+                          \! -path $REPO_ROOT/$REPO_NAME/'.git/*' \
+                          -mindepth 2 -maxdepth 2 \
+                          -type d -name $cur\* \
+                          -printf '%f\n')
+                   ${queues[@]})
+    fi
 } && complete -o filenames -F _sbopkg sbopkg
