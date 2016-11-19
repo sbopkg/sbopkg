@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# source all sqg functions
+. /usr/share/sbopkg/sqg/functions
+
+REPO_DIR="$1"
+QUEUEDIR="$2"
+INFO="$3"
+SKIP_EMPTY=${4:-""}
+VERBOSE=${5:-"no"}
+
+. $INFO
+
+if [ "$VERBOSE" == "yes" ]; then
+  INFO_BASENAME=$(basename $INFO .info)
+
+  if [[ -z $REQUIRES && $SKIP_EMPTY == "" ]]; then
+    echo "$INFO_BASENAME: empty REQUIRES line. No queuefile generated."
+    echo "Uncomment SKIP_EMPTY to change this."
+  fi
+
+  echo "Processing $INFO_BASENAME."
+fi
+
+if [[ ! -z $REQUIRES || $SKIP_EMPTY == "NO" ]]; then
+  build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM"
+fi

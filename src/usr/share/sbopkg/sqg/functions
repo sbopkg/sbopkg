@@ -1,0 +1,180 @@
+#!/bin/sh
+
+sanity_checks () {
+  if [ ! -e "$SBOPKG_CONF" ]; then
+    echo "$SBOPKG_CONF not found."
+    echo "Check the configurable variables at the top of the script."
+    exit 1
+  else
+    . $SBOPKG_CONF
+  fi
+
+  if [ -d $REPO_ROOT/$REPO_NAME/.git ]; then
+    REPO_SUBPATH=$REPO_NAME
+  else
+    REPO_SUBPATH=$REPO_NAME/$REPO_BRANCH
+  fi
+
+  REPO_DIR=$REPO_ROOT/$REPO_SUBPATH
+  if [ ! -w "$QUEUEDIR" ] || [ ! -d "$REPO_DIR" ]; then
+    echo "ERROR: $QUEUEDIR or $REPO_DIR do not exist or are not writable."
+    echo "Check the configurable variables at the top of the script."
+    exit 1
+  fi
+}
+
+has_parallel () {
+  parallel --help &> /dev/null
+  if [ $? -eq 0 ]; then
+    return 1
+  fi
+
+  return 0
+}
+
+usage () {
+  local SCRIPT="$1"
+
+cat << EOF
+Usage: $SCRIPT -p <packagename(s)> | -a [-j]
+Options are:
+  -p package(s) Creates queuefile(s) for individual package(s).
+                Multiple packages can be passed with quotes,
+                e.g. -p "pkg1 pkg2".
+                Packages with an empty REQUIRES= line will be skipped unless
+                SKIP_EMPTY is uncommented at the top of the script.
+                Package names are case-sensitive.
+  -a            Builds queuefiles for all packages.
+  -j            Number of concurrent queuefile generation processes.
+                This could heavily raise disk I/O so use with care.
+                Requires: GNU parallel
+                Default: 1
+
+This script will overwrite existing queuefiles in \$QUEUEDIR so back up any
+existing queuefile(s) or local modifications. Check the top of the script for
+configurable variables.
+EOF
+exit
+}
+
+get_jobs () {
+  local JOBS=${1:-1}
+
+  if [ ! $JOBS -ge 1 ]; then
+    echo "ERROR: Value for -j must be an unsigned integer > 0."
+    exit 1
+  else
+    JOBS=$1
+  fi
+
+  return $JOBS
+}
+
+search_package () {
+  local REPO_DIR="$1"
+  local SRCHAPP="$2"
+
+  cd $REPO_DIR
+  PKGPATH=($(find -type d -mindepth 2 -maxdepth 2 -name "$SRCHAPP" | sort))
+  if [ -z "$PKGPATH" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+parse_queuefile_requires () {
+  local REPO_DIR="$1"
+  local PARSEAPP="$2"
+  local QUEUEFILE="$3"
+  local DEPLIST DEP RESPONSE
+
+  if search_package "$REPO_DIR" "$PARSEAPP"; then
+    . $REPO_DIR/$PKGPATH/$PARSEAPP.info
+    DEPLIST=($REQUIRES)
+    for DEP in "${DEPLIST[@]}"; do
+      if [ "$DEP" == "%README%" ]; then
+        echo "# %README%: see the $PARSEAPP README file. " >> $QUEUEFILE
+        continue
+      fi
+
+      if search_package "$REPO_DIR" "$DEP"; then
+        sed -i "/^$DEP$/ d" $QUEUEFILE
+        echo "$DEP" >> $QUEUEFILE
+        parse_queuefile_requires "$REPO_DIR" "$DEP" "$QUEUEFILE"
+      fi
+    done
+  else
+    echo "$PARSEAPP: not found."
+    read -s -p ' Do you want to continue? [y/N]' RESPONSE
+    RESPONSE=$(echo "$RESPONSE" | awk '{print tolower($0)}')
+
+    if [ "$RESPONSE" =~ ^\(yes|y\)$ ]; then
+      continue
+    else
+      exit 1
+    fi
+  fi
+}
+
+build_queuefile () {
+  local REPO_DIR="$1"
+  local QUEUEDIR="$2"
+  local PRGNAM="$3"
+  local OLDFILE=$QUEUEDIR/$PRGNAM.sqf
+  local QUEUEFILE=$QUEUEDIR/$PRGNAM.sqf.tmp
+  local CATFILE=$QUEUEDIR/$PRGNAM.tmp.sqf
+
+  touch $QUEUEFILE
+  echo "$PRGNAM" > $QUEUEFILE
+  parse_queuefile_requires "$REPO_DIR" "$PRGNAM" "$QUEUEFILE"
+  tac $QUEUEFILE > $CATFILE
+  if cmp -s "$CATFILE" "$OLDFILE"; then
+    rm $QUEUEFILE $CATFILE
+  else
+    mv $CATFILE $OLDFILE
+    rm $QUEUEFILE
+  fi
+}
+
+execute_build () {
+  local REPO_DIR="$1"
+  local QUEUEDIR="$2"
+  local PKGS="$3"
+  local ALL=${4:-"no"}
+  local JOBS=${5:-1}
+  local PKGSNEW=()
+  local VERBOSE="no"
+  local PKG INFOPATH
+
+  if [ "$ALL" == "yes" ]; then
+    printf "Processing all SlackBuilds in the $REPO_SUBPATH repository..."
+    PKGSNEW=($(find "$REPO_DIR" -name *.info -print0 | xargs -r0))
+  else
+    for PKG in ${PKGS[@]}; do
+      INFOPATH=$(find "$REPO_DIR" -name ${PKG}.info)
+
+      if [ -z "$INFOPATH" ]; then
+        echo "$PKG: Not found."
+        exit
+      fi
+
+      PKGSNEW+=($INFOPATH)
+    done
+
+    VERBOSE="yes"
+  fi
+
+  has_parallel
+  if [ $? -eq 1 ]; then
+    printf '%s\n' "${PKGSNEW[@]}" | \
+      parallel --eta --will-cite --jobs $JOBS \
+      /usr/share/sbopkg/sqg/sqg-build-queuefile \
+      "$REPO_DIR" "$QUEUEDIR" {} "$SKIP_EMPTY" $VERBOSE
+  else
+    for PKG in "${PKGSNEW[@]}"; do
+      /usr/share/sbopkg/sqg/sqg-build-queuefile \
+        "$REPO_DIR" "$QUEUEDIR" "$PKG" "$SKIP_EMPTY" $VERBOSE
+    done
+  fi
+}
