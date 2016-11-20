@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # $Id$
 
@@ -27,8 +27,6 @@
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-SCRIPT=${0##*/}
-
 ### OPTIONAL CONFIGURATION BELOW ###
 
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
@@ -43,34 +41,28 @@ SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
 # queuefiles for packages with an empty REQUIRES= line (which will only
 # contain the package name in the queuefile since there are no REQUIRES).
 
-#QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
-REPO_ROOT=${REPO_ROOT:-/var/lib/sbopkg}
-REPO_NAME=${REPO_NAME:-SBo}
-REPO_BRANCH=${REPO_BRANCH:-14.2}
+REPO_BRANCH=${REPO_BRANCH:-$(cat /etc/slackware-version | awk '{print $2}')}
 #SKIP_EMPTY=${SKIP_EMPTY:-NO}
 
 ### NO CHANGES SHOULD BE NECESSARY BELOW THIS LINE ###
 
 . /usr/share/sbopkg/sqg/functions
 
+SCRIPT=${0##*/}
+
 sanity_checks
 
 case $1 in
   -a)
-    shift;
-    JOBS=1
-    if [[ "$1" == "-j" ]]; then
-      if [[ ! $2 =~ ^[1-9]\d*$ ]]; then
-        echo "ERROR: Value for -j must be an unsigned integer > 0."
-        exit 1
-      else
-        JOBS=$2
-      fi
+    if [ "$2" == "-j" ] && [ -n $3 ]; then
+      get_jobs $3
+      JOBS=$?
     fi
-    main_loop_all "$REPO_DIR" "$QUEUEDIR" $JOBS ;;
+    shift;
+    execute_build "$REPO_DIR" "$QUEUEDIR" "" "yes" $JOBS ;;
   -p)
     shift;
-    main_loop "$@" ;;
+    execute_build "$REPO_DIR" "$QUEUEDIR" "$@" "no" $JOBS ;;
    *) usage $SCRIPT ;;
 esac
 

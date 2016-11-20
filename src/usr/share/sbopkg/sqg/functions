@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sanity_checks() {
-  if [[ ! -e $SBOPKG_CONF ]]; then
+sanity_checks () {
+  if [ ! -e "$SBOPKG_CONF" ]; then
     echo "$SBOPKG_CONF not found."
     echo "Check the configurable variables at the top of the script."
     exit 1
@@ -16,33 +16,36 @@ sanity_checks() {
   fi
   
   REPO_DIR=$REPO_ROOT/$REPO_SUBPATH
-  if [[ ! -w $QUEUEDIR || ! -d $REPO_DIR ]]; then
+  if [ ! -w "$QUEUEDIR" ] || [ ! -d "$REPO_DIR" ]; then
     echo "ERROR: $QUEUEDIR or $REPO_DIR do not exist or are not writable."
     echo "Check the configurable variables at the top of the script."
     exit 1
   fi
-  
-  HASPARALLEL="no"
-  parallel --help &> /dev/null
-  if [ $? -eq 255 ]; then
-    HASPARALLEL="yes"
-  fi
 }
 
-usage() {
+has_parallel () {
+  parallel --help &> /dev/null
+  if [ $? -eq 255 ]; then
+    return 1
+  fi
+
+  return 0
+}
+
+usage () {
   local SCRIPT="$1"
 
 cat << EOF
 Usage: $SCRIPT -p <packagename(s)> | -a [-j]
 Options are:
-  -p package(s) Creates queuefile(s) individual package(s).
+  -p package(s) Creates queuefile(s) for individual package(s).
                 Multiple packages can be passed with quotes,
                 e.g. -p "pkg1 pkg2".
                 Packages with an empty REQUIRES= line will be skipped unless
                 SKIP_EMPTY is uncommented at the top of the script.
                 Package names are case-sensitive.
-  -a            Build queuefile for all packages.
-  -j            Number of concurrent queue file generation.
+  -a            Builds queuefiles for all packages.
+  -j            Number of concurrent queuefile generation processes.
                 This could heavily raise disk I/O so use with care.
                 Requires: GNU parallel
                 Default: 1
@@ -54,13 +57,26 @@ EOF
 exit
 }
 
+get_jobs () {
+  local JOBS=${1:-1}
+
+  if [ ! $JOBS -ge 1 ]; then
+    echo "ERROR: Value for -j must be an unsigned integer > 0."
+    exit 1
+  else
+    JOBS=$1
+  fi
+
+  return $JOBS
+}
+
 search_package () {
   local REPO_DIR="$1"
   local SRCHAPP="$2"
 
   cd $REPO_DIR
-  PKGPATH=( $(find -type d -mindepth 2 -maxdepth 2 -name "$SRCHAPP" | sort) )
-  if [[ -z $PKGPATH ]]; then
+  PKGPATH=($(find -type d -mindepth 2 -maxdepth 2 -name "$SRCHAPP" | sort))
+  if [ -z "$PKGPATH" ]; then
     return 1
   else
     return 0
@@ -71,13 +87,13 @@ parse_queuefile_requires () {
   local REPO_DIR="$1"
   local PARSEAPP="$2"
   local QUEUEFILE="$3"
-  local DEPLIST DEP
+  local DEPLIST DEP RESPONSE
 
   if search_package "$REPO_DIR" "$PARSEAPP"; then
     . $REPO_DIR/$PKGPATH/$PARSEAPP.info
     DEPLIST=($REQUIRES)
     for DEP in "${DEPLIST[@]}"; do
-      if [[ "$DEP" == "%README%" ]]; then
+      if [ "$DEP" == "%README%" ]; then
         echo "# %README%: see the $PARSEAPP README file. " >> $QUEUEFILE
         continue
       fi
@@ -89,7 +105,15 @@ parse_queuefile_requires () {
       fi
     done
   else
-    continue
+    echo "$PARSEAPP: not found."
+    read -s -p ' Do you want to continue? [y/N]' RESPONSE
+    RESPONSE=$(echo "$RESPONSE" | awk '{print tolower($0)}')
+
+    if [ "$RESPONSE" =~ ^\(yes|y\)$ ]; then
+      continue
+    else
+      exit 1
+    fi
   fi
 }
 
@@ -113,45 +137,44 @@ build_queuefile () {
   fi
 }
 
-main_loop () {
-  local PKGS="$1"
-  local INFO
-
-  for MAINAPP in $PKGS; do
-    if search_package "$REPO_DIR" "$MAINAPP"; then
-      . $REPO_DIR/$PKGPATH/$MAINAPP.info
-      if [[ -z $REQUIRES && $SKIP_EMPTY == "" ]]; then
-        echo "$MAINAPP: empty REQUIRES line. No queuefile generated."
-        echo "Uncomment SKIP_EMPTY to change this."
-        continue
-      else
-        echo "Processing $MAINAPP."
-        build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM"
-      fi
-    else
-      echo "$MAINAPP: not found."
-      exit 1
-    fi
-  done
-}
-
-main_loop_all () {
+execute_build () {
   local REPO_DIR="$1"
   local QUEUEDIR="$2"
-  local JOBS="$3"
-  local INFO
+  local PKGS="$3"
+  local ALL=${4:-"no"}
+  local JOBS=${5:-1}
+  local PKGSNEW=()
+  local VERBOSE="no"
+  local PKG INFOPATH
 
-  printf "Processing all SlackBuilds in the $REPO_SUBPATH repository..."
-
-  if [ $HASPARALLEL == "yes" ]; then
-    find $REPO_DIR -name *.info | \
-      parallel --eta --will-cite --jobs $JOBS \
-      /usr/share/sbopkg/sqg/main_loop_all "$REPO_DIR" "$QUEUEDIR" {}
+  if [ "$ALL" == "yes" ]; then
+    printf "Processing all SlackBuilds in the $REPO_SUBPATH repository..."
+    PKGSNEW=($(find "$REPO_DIR" -name *.info -print0 | xargs -r0))
   else
-    for INFO in $(find $REPO_DIR -name *.info); do
-      . $INFO
-      main_loop "$PRGNAM" &> /dev/null
-      printf "."
+    for PKG in ${PKGS[@]}; do
+      INFOPATH=$(find "$REPO_DIR" -name ${PKG}.info)
+      
+      if [ -z "$INFOPATH" ]; then
+        echo "$PKG: Not found."
+        exit
+      fi
+
+      PKGSNEW+=($INFOPATH)
+    done
+
+    VERBOSE="yes"
+  fi
+
+  has_parallel
+  if [ $? -eq 1 ]; then
+    printf '%s\n' "${PKGSNEW[@]}" | \
+      parallel --eta --will-cite --jobs $JOBS \
+      /usr/share/sbopkg/sqg/sqg-build-queuefile \
+      "$REPO_DIR" "$QUEUEDIR" {} "$SKIP_EMPTY" $VERBOSE
+  else
+    for PKG in "${PKGSNEW[@]}"; do
+      /usr/share/sbopkg/sqg/sqg-build-queuefile \
+        "$REPO_DIR" "$QUEUEDIR" "$PKG" "$SKIP_EMPTY" $VERBOSE
     done
   fi
 }
