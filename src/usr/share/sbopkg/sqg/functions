@@ -25,7 +25,7 @@ sanity_checks () {
 
 has_parallel () {
   parallel --help &> /dev/null
-  if [ $? -eq 255 ]; then
+  if [ $? -eq 0 ]; then
     return 1
   fi
 
