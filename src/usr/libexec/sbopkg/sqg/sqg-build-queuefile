@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # source all sqg functions
-. /usr/share/sbopkg/sqg/functions
+. /usr/libexec/sbopkg/sqg/functions
 
 REPO_DIR="$1"
 QUEUEDIR="$2"
