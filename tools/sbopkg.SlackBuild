@@ -42,6 +42,9 @@ mv $PKG/etc/sbopkg/sbopkg.conf $PKG/etc/sbopkg/sbopkg.conf.new
 mkdir -p $PKG/usr/sbin
 cp usr/sbin/* $PKG/usr/sbin
 
+mkdir -p $PKG/usr/libexec/$PRGNAM
+cp -ar usr/libexec/$PRGNAM/* $PKG/usr/libexec/$PRGNAM
+
 mkdir -p $PKG/usr/man
 cp -a usr/man/* $PKG/usr/man
 find $PKG/usr/man -type f -exec gzip -9 {} \;
