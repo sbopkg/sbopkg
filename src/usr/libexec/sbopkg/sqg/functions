@@ -169,11 +169,11 @@ execute_build () {
   if [ $? -eq 1 ]; then
     printf '%s\n' "${PKGSNEW[@]}" | \
       parallel --eta --will-cite --jobs $JOBS \
-      /usr/share/sbopkg/sqg/sqg-build-queuefile \
+      /usr/libexec/sbopkg/sqg/sqg-build-queuefile \
       "$REPO_DIR" "$QUEUEDIR" {} "$SKIP_EMPTY" $VERBOSE
   else
     for PKG in "${PKGSNEW[@]}"; do
-      /usr/share/sbopkg/sqg/sqg-build-queuefile \
+      /usr/libexec/sbopkg/sqg/sqg-build-queuefile \
         "$REPO_DIR" "$QUEUEDIR" "$PKG" "$SKIP_EMPTY" $VERBOSE
     done
   fi

@@ -48,7 +48,7 @@ REPO_BRANCH=${REPO_BRANCH:-$(cat /etc/slackware-version | awk '{print $2}')}
 ### NO CHANGES SHOULD BE NECESSARY BELOW THIS LINE ###
 
 # source all sqg functions
-. /usr/share/sbopkg/sqg/functions
+. /usr/libexec/sbopkg/sqg/functions
 
 SCRIPT=${0##*/}
 
