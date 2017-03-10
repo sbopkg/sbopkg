@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# use filesystem for caching SlackBuilds
+SQG_TMP_DIR=${SQG_TMP_DIR:-/tmp/sqg}
+
 sanity_checks () {
   if [ ! -e "$SBOPKG_CONF" ]; then
     echo "$SBOPKG_CONF not found."
@@ -21,6 +24,14 @@ sanity_checks () {
     echo "Check the configurable variables at the top of the script."
     exit 1
   fi
+
+  if [[ ! -d "$SQL_TMP_DIR" ]]; then
+    echo "ERROR: Directory $SQG_TMP_DIR not writable."
+    exit 1
+  fi
+
+  rm -rf "$SQG_TMP_DIR"
+  mkdir -p "$SQG_TMP_DIR"
 }
 
 has_parallel () {
@@ -74,8 +85,14 @@ search_package () {
   local REPO_DIR="$1"
   local SRCHAPP="$2"
 
-  cd $REPO_DIR
-  PKGPATH=($(find -type d -mindepth 2 -maxdepth 2 -name "$SRCHAPP" | sort))
+  if [[ -f "$SQG_TMP_DIR/$SRCHAPP" ]]; then
+    PKGPATH=$(cat "$SQG_TMP_DIR/$SRCHAPP")
+  else
+    cd $REPO_DIR
+    PKGPATH=($(find -type d -mindepth 2 -maxdepth 2 -name "$SRCHAPP" | sort))
+    echo "$PKGPATH" > "$SQG_TMP_DIR/$SRCHAPP"
+  fi
+
   if [ -z "$PKGPATH" ]; then
     return 1
   else
