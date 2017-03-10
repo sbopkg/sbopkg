@@ -25,11 +25,6 @@ sanity_checks () {
     exit 1
   fi
 
-  if [[ ! -d "$SQL_TMP_DIR" ]]; then
-    echo "ERROR: Directory $SQG_TMP_DIR not writable."
-    exit 1
-  fi
-
   rm -rf "$SQG_TMP_DIR"
   mkdir -p "$SQG_TMP_DIR"
 }
