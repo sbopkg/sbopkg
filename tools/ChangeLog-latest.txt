@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2017-01-02 12:51 UTC)
+sbopkg-dev (2017-03-11 17:05 UTC)
     FEATURES
 	* sqg: Parallelize building of all packages by option -j.
 	  Requires GNU Parallel.
@@ -9,6 +9,8 @@ sbopkg-dev (2017-01-02 12:51 UTC)
     MODIFICATIONS
 	* bash-completion: Complete -i and -b when git repo is used
 	  Patch by Sergey V.
+        * move sqg functions to /usr/libexec
+	  Patch by Marcel Saegebarth
 
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES
