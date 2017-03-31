@@ -15,8 +15,9 @@ if [ "$VERBOSE" == "yes" ]; then
   INFO_BASENAME=$(basename $INFO .info)
 
   if [[ -z $REQUIRES && $SKIP_EMPTY == "" ]]; then
-    echo "$INFO_BASENAME: empty REQUIRES line. No queuefile generated."
-    echo "Uncomment SKIP_EMPTY to change this."
+    echo "$INFO_BASENAME: No dep(s) defined for this package."
+    echo "No queuefile generated."
+    echo "Uncomment SKIP_EMPTY variable in sqg to change this behavior."
   fi
 
   echo "Processing $INFO_BASENAME."
