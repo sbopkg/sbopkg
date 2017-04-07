@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2017-03-11 17:34 UTC)
+sbopkg-dev (2017-04-07 23:35:09 UTC)
     FEATURES
 	* sqg: Parallelize building of all packages by option -j.
 	  Requires GNU Parallel.
@@ -15,6 +15,7 @@ sbopkg-dev (2017-03-11 17:34 UTC)
 	  Patch by Sergey V.
         * move sqg functions to /usr/libexec
 	  Patch by Marcel Saegebarth
+        * use exit 1 when rsync failed instead of 0
 
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES
