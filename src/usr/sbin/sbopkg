@@ -2374,6 +2374,8 @@ rsync_command() {
             echo "if this problem persists."
             echo "(TIMEOUT is currently set to:  $TIMEOUT seconds)".
             echo
+            rm -f $SYNC_LOCK
+            exit 1
             ;;
         30)
             echo
@@ -2381,6 +2383,8 @@ rsync_command() {
             echo "$REPO_LINK may under a heavy load."
             echo "Please try again later."
             echo
+            rm -f $SYNC_LOCK
+            exit 1
             ;;
         10)
             echo
@@ -2389,6 +2393,8 @@ rsync_command() {
             echo "(The repo's LINK is currently set to: $REPO_LINK)."
             echo "Please check your settings and try again later."
             echo
+            rm -f $SYNC_LOCK
+            exit 1
             ;;
         0)
             echo
@@ -2405,6 +2411,8 @@ rsync_command() {
             echo "Rsync with the $REPO_DESC failed."
             echo "Please try again."
             echo
+            rm -f $SYNC_LOCK
+            exit 1
             ;;
     esac
     rm -f $SYNC_LOCK
