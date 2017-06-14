@@ -1,8 +1,16 @@
 #!/bin/sh
 
-# use filesystem for caching SlackBuilds
+#
+# Use file system for caching SlackBuilds.
+#
 SQG_TMP_DIR=${SQG_TMP_DIR:-/tmp/sqg}
 
+#
+# Sanity checks:
+# - sbopkg.conf is available
+# - slackbuilds.org was synced with `rsync` or `git`
+# - directory checks
+#
 sanity_checks () {
   if [ ! -e "$SBOPKG_CONF" ]; then
     echo "$SBOPKG_CONF not found."
@@ -29,6 +37,9 @@ sanity_checks () {
   mkdir -p "$SQG_TMP_DIR"
 }
 
+#
+# Returns 1 if GNU Parallel is installed. Otherwise 0.
+#
 has_parallel () {
   parallel --help &> /dev/null
   if [ $? -eq 0 ]; then
@@ -38,11 +49,14 @@ has_parallel () {
   return 0
 }
 
+#
+# Prints the help message.
+#
 usage () {
   local SCRIPT="$1"
 
 cat << EOF
-Usage: $SCRIPT -p <packagename(s)> | -a [-j]
+Usage: $SCRIPT -p <packagename(s)> [-j #] | -a [-j #]
 Options are:
   -p package(s) Creates queuefile(s) for individual package(s).
                 Multiple packages can be passed with quotes,
@@ -63,6 +77,11 @@ EOF
 exit
 }
 
+#
+# Parses and validates the amount of parallel processes defined by option -j.
+# Returns the amount of jobs if value is an unsigned integer.
+# Otherwise exits with code 1.
+#
 get_jobs () {
   local JOBS=${1:-1}
 
@@ -76,6 +95,13 @@ get_jobs () {
   return $JOBS
 }
 
+#
+# Tries to find the dependency listed in the SlackBuilds .info file and writes
+# the path into a temporary file. If the package was already found, it gets the
+# path from inside the temporary file to speed up the overall process.
+# If the package path of the dependent package isn't empty, the function
+# returns 1. Otherwise 0.
+#
 search_package () {
   local REPO_DIR="$1"
   local SRCHAPP="$2"
@@ -95,6 +121,10 @@ search_package () {
   fi
 }
 
+#
+# Parses the REQUIRES variable inside the SlackBuild .info file and recursively
+# writes the dependent package name into the queue file.
+#
 parse_queuefile_requires () {
   local REPO_DIR="$1"
   local PARSEAPP="$2"
@@ -129,6 +159,9 @@ parse_queuefile_requires () {
   fi
 }
 
+#
+# Starts the process of building the packages queue file.
+#
 build_queuefile () {
   local REPO_DIR="$1"
   local QUEUEDIR="$2"
@@ -149,6 +182,9 @@ build_queuefile () {
   fi
 }
 
+#
+# Processes all or given packages depending on option.
+#
 execute_build () {
   local REPO_DIR="$1"
   local QUEUEDIR="$2"

@@ -51,22 +51,29 @@ REPO_BRANCH=${REPO_BRANCH:-$(cat /etc/slackware-version | awk '{print $2}')}
 . /usr/libexec/sbopkg/sqg/functions
 
 SCRIPT=${0##*/}
+OPT_JOBS=1
+OPT_ALL="no"
+OPT_PACKAGES=""
 
 sanity_checks
 
-case $1 in
-  -a)
-    if [ "$2" == "-j" ] && [ -n $3 ]; then
-      get_jobs $3
-      JOBS=$?
-    fi
-    shift;
-    execute_build "$REPO_DIR" "$QUEUEDIR" "" "yes" $JOBS ;;
-  -p)
-    shift;
-    execute_build "$REPO_DIR" "$QUEUEDIR" "$@" "no" $JOBS ;;
-   *) usage $SCRIPT ;;
-esac
+while getopts "ap:j:h" OPT; do
+  case $OPT in
+    a ) OPT_ALL="yes" ;;
+    p ) OPT_PACKAGES=$OPTARG ;;
+    j ) get_jobs "$OPTARG"; OPT_JOBS=$?; ;;
+    h ) usage $SCRIPT; exit 0; ;;
+    ? ) exit 1; ;;
+  esac
+done
+
+if [ $OPTIND -eq 1 ]; then
+  echo -e "Missing argument(s).\n"
+  usage $SCRIPT
+  exit 1
+fi
+
+execute_build "$REPO_DIR" "$QUEUEDIR" "$OPT_PACKAGES" "$OPT_ALL" $OPT_JOBS
 
 echo "Done."
 exit 0
