@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2017-06-15 09:13:00 UTC)
+sbopkg-dev (2017-06-18 01:40:00 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Requires GNU Parallel.
@@ -9,6 +9,10 @@ sbopkg-dev (2017-06-15 09:13:00 UTC)
 	  This will reduce queue generation time significantly when
 	  invoked with -j N+1 (N: Number of cores)
 	  Patch by Marcel Saegebarth.
+        * sqg: Generate one queue file for multiple programs by option -o.
+          The output is fixed as custom.sqf.
+          You can then run sbopkg -i custom to install all packages+deps.
+          Feature Request by Jeremy/bassmadrigal (Fixed #13).
 
     MODIFICATIONS
 	* bash-completion: Complete -i and -b when git repo is used

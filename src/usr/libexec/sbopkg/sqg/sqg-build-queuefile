@@ -6,8 +6,9 @@
 REPO_DIR="$1"
 QUEUEDIR="$2"
 INFO="$3"
-SKIP_EMPTY=${4:-""}
-VERBOSE=${5:-"no"}
+SKIP_EMPTY="${4:-}"
+VERBOSE="${5:-no}"
+CUSTOM_QUEUE="${6}"
 
 . $INFO
 
@@ -24,5 +25,5 @@ if [ "$VERBOSE" == "yes" ]; then
 fi
 
 if [[ ! -z $REQUIRES || $SKIP_EMPTY == "NO" ]]; then
-  build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM"
+  build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM" "$CUSTOM_QUEUE"
 fi

@@ -54,14 +54,16 @@ SCRIPT=${0##*/}
 OPT_JOBS=1
 OPT_ALL="no"
 OPT_PACKAGES=""
+OPT_OUTPUT=""
 
 sanity_checks
 
-while getopts "ap:j:h" OPT; do
+while getopts "ap:j:ho" OPT; do
   case $OPT in
     a ) OPT_ALL="yes" ;;
     p ) OPT_PACKAGES=$OPTARG ;;
     j ) get_jobs "$OPTARG"; OPT_JOBS=$?; ;;
+    o ) OPT_OUTPUT=1 ;;
     h ) usage $SCRIPT; exit 0; ;;
     ? ) exit 1; ;;
   esac
@@ -73,7 +75,11 @@ if [ $OPTIND -eq 1 ]; then
   exit 1
 fi
 
-execute_build "$REPO_DIR" "$QUEUEDIR" "$OPT_PACKAGES" "$OPT_ALL" $OPT_JOBS
+if [ -z $OPT_OUTPUT ]; then
+   execute_build "$REPO_DIR" "$QUEUEDIR" "$OPT_PACKAGES" "$OPT_ALL" $OPT_JOBS
+else
+   execute_build "$REPO_DIR" "$QUEUEDIR" "$OPT_PACKAGES" "$OPT_ALL" $OPT_JOBS "$OPT_OUTPUT"
+fi
 
 echo "Done."
 exit 0
