@@ -61,16 +61,16 @@ Options are:
   -p package(s) Creates queuefile(s) for individual package(s).
                 Multiple packages can be passed with quotes,
                 e.g. -p "pkg1 pkg2".
-                Packages with an empty REQUIRES= line will be skipped unless
-                SKIP_EMPTY is uncommented in sqg script.
                 Package names are case-sensitive.
   -a            Builds queuefiles for all packages.
   -j            Number of concurrent queuefile generation processes.
                 This could heavily raise disk I/O so use with care.
                 Requires: GNU parallel
                 Default: 1
-  -o            Save QUEUE(s) to custom.sqf.
+  -o            User-defined queue output filename (without .sqf extension).
                 This could be useful to create custom queue file.
+                Multiple packages can be passed with quotes,
+                eg. -p "qt5-webkit sshblock letsencrypt" -o myqueue
 
 This script will overwrite existing queuefiles in \$QUEUEDIR so back up any
 existing queuefile(s) or local modifications. Check the top of the script for
@@ -153,7 +153,7 @@ parse_queuefile_requires () {
     read -s -p ' Do you want to continue? [y/N]' RESPONSE
     RESPONSE=$(echo "$RESPONSE" | awk '{print tolower($0)}')
 
-    if [ "$RESPONSE" =~ ^\(yes|y\)$ ]; then
+    if [[ "$RESPONSE" =~ ^\(yes|y\)$ ]]; then
       continue
     else
       exit 1
@@ -168,7 +168,7 @@ build_queuefile () {
   local REPO_DIR="$1"
   local QUEUEDIR="$2"
   local PRGNAM="$3"
-  local CUSTOM_QUEUE="$4"
+
   local OLDFILE=$QUEUEDIR/$PRGNAM.sqf
   local QUEUEFILE=$QUEUEDIR/$PRGNAM.sqf.tmp
   local CATFILE=$QUEUEDIR/$PRGNAM.tmp.sqf
@@ -178,19 +178,29 @@ build_queuefile () {
   parse_queuefile_requires "$REPO_DIR" "$PRGNAM" "$QUEUEFILE"
   tac $QUEUEFILE > $CATFILE
   if cmp -s "$CATFILE" "$OLDFILE"; then
-    if [ ! -z $CUSTOM_QUEUE ]; then
-       cat $CATFILE >> $QUEUEDIR/$CUSTOM_QUEUE.sqf
-    fi
     rm $QUEUEFILE $CATFILE
   else
-    if [ ! -z $CUSTOM_QUEUE ]; then
-        cat $CATFILE >> $QUEUEDIR/$CUSTOM_QUEUE.sqf
-        rm $CATFILE
-    else
-        mv $CATFILE $OLDFILE
-    fi
+    mv $CATFILE $OLDFILE
     rm $QUEUEFILE
   fi
+}
+
+#
+# `cat` all given packages into one custom queue file.
+#
+build_queuefile_custom () {
+  local QUEUEDIR=$1
+  local QUEUENAME=$2
+  local PACKAGES=$3
+
+  $(
+    cd "$QUEUEDIR"
+    rm -f "$QUEUEDIR/$QUEUENAME.sqf"
+
+    for PKG in ${PACKAGES[@]}; do
+      cat "$PKG.sqf" >> "$QUEUENAME.sqf"
+    done
+  )
 }
 
 #
@@ -206,9 +216,6 @@ execute_build () {
   local PKGSNEW=()
   local VERBOSE="no"
   local PKG INFOPATH
-
-  # make sure the custom queue is empty
-  rm -f $QUEUEDIR/custom.sqf
 
   if [ "$ALL" == "yes" ]; then
     printf "Processing all SlackBuilds in the $REPO_SUBPATH repository..."
@@ -233,13 +240,15 @@ execute_build () {
     printf '%s\n' "${PKGSNEW[@]}" | \
       parallel --eta --will-cite --jobs $JOBS \
       /usr/libexec/sbopkg/sqg/sqg-build-queuefile \
-      "$REPO_DIR" "$QUEUEDIR" {} "$SKIP_EMPTY" "$VERBOSE" \
-      "$CUSTOM_QUEUE" "custom"
+      "$REPO_DIR" "$QUEUEDIR" {} "$SKIP_EMPTY" "$VERBOSE"
   else
     for PKG in "${PKGSNEW[@]}"; do
       /usr/libexec/sbopkg/sqg/sqg-build-queuefile \
-        "$REPO_DIR" "$QUEUEDIR" "$PKG" "$SKIP_EMPTY" "$VERBOSE" \
-        "$CUSTOM_QUEUE" "custom"
+        "$REPO_DIR" "$QUEUEDIR" "$PKG" "$SKIP_EMPTY" "$VERBOSE"
     done
+  fi
+
+  if [ ! -z $CUSTOM_QUEUE ]; then
+    build_queuefile_custom "$QUEUEDIR" "$CUSTOM_QUEUE" "$PKGS"
   fi
 }

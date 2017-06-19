@@ -43,7 +43,7 @@ SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
 
 #QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
 REPO_BRANCH=${REPO_BRANCH:-$(cat /etc/slackware-version | awk '{print $2}')}
-#SKIP_EMPTY=${SKIP_EMPTY:-NO}
+SKIP_EMPTY=${SKIP_EMPTY:-yes}
 
 ### NO CHANGES SHOULD BE NECESSARY BELOW THIS LINE ###
 
@@ -58,12 +58,12 @@ OPT_OUTPUT=""
 
 sanity_checks
 
-while getopts "ap:j:ho" OPT; do
+while getopts "ap:j:ho:" OPT; do
   case $OPT in
     a ) OPT_ALL="yes" ;;
     p ) OPT_PACKAGES=$OPTARG ;;
     j ) get_jobs "$OPTARG"; OPT_JOBS=$?; ;;
-    o ) OPT_OUTPUT=1 ;;
+    o ) OPT_OUTPUT="$OPTARG" ;;
     h ) usage $SCRIPT; exit 0; ;;
     ? ) exit 1; ;;
   esac
@@ -75,11 +75,7 @@ if [ $OPTIND -eq 1 ]; then
   exit 1
 fi
 
-if [ -z $OPT_OUTPUT ]; then
-   execute_build "$REPO_DIR" "$QUEUEDIR" "$OPT_PACKAGES" "$OPT_ALL" $OPT_JOBS
-else
-   execute_build "$REPO_DIR" "$QUEUEDIR" "$OPT_PACKAGES" "$OPT_ALL" $OPT_JOBS "$OPT_OUTPUT"
-fi
+execute_build "$REPO_DIR" "$QUEUEDIR" "$OPT_PACKAGES" "$OPT_ALL" $OPT_JOBS "$OPT_OUTPUT"
 
 echo "Done."
 exit 0

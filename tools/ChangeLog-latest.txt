@@ -10,9 +10,10 @@ sbopkg-dev (2017-06-18 01:40:00 UTC)
 	  invoked with -j N+1 (N: Number of cores)
 	  Patch by Marcel Saegebarth.
         * sqg: Generate one queue file for multiple programs by option -o.
-          The output is fixed as custom.sqf.
-          You can then run sbopkg -i custom to install all packages+deps.
+          The output queue filename is user-defined.
+          You can then run sbopkg -i <queue-name> to install all packages+deps.
           Feature Request by Jeremy/bassmadrigal (Fixed #13).
+          Implement contributions from Marcel Saegebarth.
 
     MODIFICATIONS
 	* bash-completion: Complete -i and -b when git repo is used

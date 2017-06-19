@@ -8,14 +8,14 @@ QUEUEDIR="$2"
 INFO="$3"
 SKIP_EMPTY="${4:-}"
 VERBOSE="${5:-no}"
-CUSTOM_QUEUE="${6}"
+CUSTOM_QUEUE="${6:-}"
 
 . $INFO
 
 if [ "$VERBOSE" == "yes" ]; then
   INFO_BASENAME=$(basename $INFO .info)
 
-  if [[ -z $REQUIRES && $SKIP_EMPTY == "" ]]; then
+  if [[ -z $REQUIRES && $SKIP_EMPTY == "yes" ]]; then
     echo "$INFO_BASENAME: No dep(s) defined for this package."
     echo "No queuefile generated."
     echo "Uncomment SKIP_EMPTY variable in sqg to change this behavior."
@@ -24,6 +24,6 @@ if [ "$VERBOSE" == "yes" ]; then
   echo "Processing $INFO_BASENAME."
 fi
 
-if [[ ! -z $REQUIRES || $SKIP_EMPTY == "NO" ]]; then
+if [[ ! -z $REQUIRES || $SKIP_EMPTY == "no" ]]; then
   build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM" "$CUSTOM_QUEUE"
 fi
