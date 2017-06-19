@@ -198,7 +198,9 @@ build_queuefile_custom () {
     rm -f "$QUEUEDIR/$QUEUENAME.sqf"
 
     for PKG in ${PACKAGES[@]}; do
-      cat "$PKG.sqf" >> "$QUEUENAME.sqf"
+      if [ -f "$PKG.sqf" ]; then
+         cat "$PKG.sqf" >> "$QUEUENAME.sqf"
+      fi
     done
   )
 }
