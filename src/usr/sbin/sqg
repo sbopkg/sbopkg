@@ -31,20 +31,6 @@
 
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
 
-# If necessary, override SBOPKG_CONF above or directly from the environment.
-# The user may want to change QUEUEDIR to a local temporary directory in $HOME
-# since queuefiles in QUEUEDIR will be overwritten by this script. QUEUEDIR
-# is commented out on purpose to get the user to review these variables.
-# QUEUEDIR must be writable by the user executing the script. SKIP_EMPTY
-# means the script will not create queuefiles for packages with an empty
-# REQUIRES= line in the .info file. Uncomment or export a value to create
-# queuefiles for packages with an empty REQUIRES= line (which will only
-# contain the package name in the queuefile since there are no REQUIRES).
-
-#QUEUEDIR=${QUEUEDIR:-/var/lib/sbopkg/queues}
-REPO_BRANCH=${REPO_BRANCH:-$(cat /etc/slackware-version | awk '{print $2}')}
-SKIP_EMPTY=${SKIP_EMPTY:-yes}
-
 ### NO CHANGES SHOULD BE NECESSARY BELOW THIS LINE ###
 
 # source all sqg functions

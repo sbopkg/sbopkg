@@ -23,6 +23,7 @@ sbopkg-dev (2017-06-18 01:40:00 UTC)
         * use exit 1 when rsync failed instead of 0
         * Fix 90-SBo-master.repo to accomodate SBo's new server
           Patch by Matteo Bernardini
+        * Remove SKIP_EMPTY option.
 
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES
