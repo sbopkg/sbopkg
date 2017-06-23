@@ -1,3 +1,4 @@
+pcre2
 vala
 vte3
 spice-protocol
@@ -7,8 +8,11 @@ celt051
 spice
 spice-gtk
 gtk-vnc
-python-requests
 python-urllib3
+idna
+python-chardet
+python-certifi
+python-requests
 ipaddr-py
 tunctl
 gnome-python2-gconf
@@ -17,5 +21,7 @@ yajl
 libvirt
 libvirt-python
 libvirt-glib
+osinfo-db-tools
+osinfo-db
 libosinfo
 virt-manager

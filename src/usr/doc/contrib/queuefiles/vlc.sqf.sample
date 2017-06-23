@@ -7,15 +7,14 @@ schroedinger
 fluidsynth
 libdvdcss
 rtmpdump
+libinput
+libxkbcommon
+qt5
 live555
 ORBit2
 libbonobo
 gnome-mime-data
 gnome-vfs
-opencv
-ftgl
-glfw
-vsxu
 dirac
 vcdimager
 libreplaygain
@@ -27,6 +26,7 @@ faad2
 zvbi
 libsidplay2
 jack-audio-connection-kit
+ftgl
 projectM
 libdaemon
 avahi
@@ -39,6 +39,7 @@ libmp4v2
 faac
 libkate
 libtar
+opencv
 gsm
 libwebp
 # %README%: see the ffmpeg README file. 

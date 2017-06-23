@@ -1,8 +1,10 @@
 perl-PAR-Dist
 perl-Module-Build
-perl-JSON
 perl-common-sense
+perl-Types-Serialiser
+perl-Canary-Stability
 perl-JSON-XS
+perl-JSON
 perl-www-robotrules
 perl-net-http
 perl-IO-HTML
