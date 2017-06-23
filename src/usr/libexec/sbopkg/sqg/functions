@@ -190,7 +190,7 @@ build_queuefile () {
 #
 build_queuefile_custom () {
   local QUEUEDIR=$1
-  local QUEUENAME=$2
+  local QUEUENAME=$(basename $2 .sqf)
   local PACKAGES=$3
 
   $(
