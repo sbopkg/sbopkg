@@ -1,0 +1,90 @@
+.\"=====================================================================
+.TH sqg 8 "xxxDATExxx" sbopkg-xxxVERSIONxxx ""
+.\"=====================================================================
+.SH NAME
+sqg \- SBo Queue Generator
+.\"=====================================================================
+.SH SYNOPSIS
+.B sqg
+.RI [ options ]
+.\"=====================================================================
+.SH DESCRIPTION
+.B sqg
+is a command-line script to generate queue file(s) to be used by
+sbopkg in order to list all dependencies for a certain package.
+.\"=====================================================================
+.SH OPTIONS
+.\"---------------------------------------------------------------------
+.TP 5
+.BI \-p " PACKAGE(s)"
+Creates queuefile(s) for individual package(s). 
+Multiple packages can be passed with quotes.
+.IP
+.B
+Package names are case-sensitive.
+.IP
+For example:
+.RS
+.IP
+.nf
+\fC# sqg -p "pkg1 pkg2".\fP
+.fi
+.RE
+.IP
+will generate queue file for
+.IR pkg1
+and
+.IR pkg2 .
+.TP
+.BI \-a
+Builds queuefiles for all packages.
+.TP
+.BI \-j " <num>"
+Number of concurrent queuefile generation processes.
+This could heavily raise disk I/O so use with care.
+.IP
+.B
+Requires: GNU parallel (auto-detected)
+.IP
+Default: 1
+.TP
+.BI \-o " <output>"
+ User-defined queue output filename (without .sqf extension).
+This could be useful to create custom queue file.
+Multiple packages can be passed with quotes.
+.IP
+For example:
+.RS
+.IP
+.nf
+\fC# sqg -p "qt5-webkit sshblock letsencrypt" -o myqueue\fP
+.fi
+.RE
+.IP
+will create a new queue called
+.B myqueue
+containing all dependencies for qt5-webkit, sshblock, and letsencrypt.
+.IP
+You can then run 
+.B
+sbopkg -i myqueue
+to have them installed (make sure to pick Queue).
+.\"=====================================================================
+.SH AUTHORS
+Willy Sudiarto Raharjo
+<willysr@sbopkg.org>
+
+Chess Griffin
+<chess@chessgriffin.com>
+.PP
+Mauro Giachero
+<mauro.giachero@gmail.com>
+.PP
+slakmagik
+<slakmagik@gmail.com>
+.\"=====================================================================
+.\" Make the release process handle a DOCDIR here? But the files from
+.\" the official tarball go here.
+.SH SEE ALSO
+.BR sbopkg.conf (5),
+.IR /usr/doc/sbopkg-xxxVERSIONxxx/README-queuefiles

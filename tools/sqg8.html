@@ -1,0 +1,151 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of sqg</TITLE>
+</HEAD><BODY>
+<H1>sqg</H1>
+Section:  (8)<BR>Updated: June 2017<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+sqg - SBo Queue Generator
+
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>sqg</B>
+
+[<I>options</I>]
+
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<B>sqg</B>
+
+is a command-line script to generate queue file(s) to be used by
+sbopkg in order to list all dependencies for a certain package.
+
+<A NAME="lbAE">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+
+<DL COMPACT>
+<DT><B>-p</B><I> PACKAGE(s)</I>
+
+<DD>
+Creates queuefile(s) for individual package(s). 
+Multiple packages can be passed with quotes.
+<DT><DD>
+<B>Package names are case-sensitive.</B>
+
+<DT><DD>
+For example:
+<DL COMPACT><DT><DD>
+<DL COMPACT>
+<DT><DD>
+<PRE>
+# sqg -p &quot;pkg1 pkg2&quot;.
+</PRE>
+
+</DL>
+</DL>
+
+<DT><DD>
+will generate queue file for
+<I>pkg1</I>
+
+and
+<I>pkg2</I>.
+
+<DT><B>-a</B>
+
+<DD>
+Builds queuefiles for all packages.
+<DT><B>-j</B><I> &lt;num&gt;</I>
+
+<DD>
+Number of concurrent queuefile generation processes.
+This could heavily raise disk I/O so use with care.
+<DT><DD>
+<B>Requires: GNU parallel (auto-detected)</B>
+
+<DT><DD>
+Default: 1
+<DT><B>-o</B><I> &lt;output&gt;</I>
+
+<DD>
+<BR>&nbsp;User-defined&nbsp;queue&nbsp;output&nbsp;filename&nbsp;(without&nbsp;.sqf&nbsp;extension).
+This could be useful to create custom queue file.
+Multiple packages can be passed with quotes.
+<DT><DD>
+For example:
+<DL COMPACT><DT><DD>
+<DL COMPACT>
+<DT><DD>
+<PRE>
+# sqg -p &quot;qt5-webkit sshblock letsencrypt&quot; -o myqueue
+</PRE>
+
+</DL>
+</DL>
+
+<DT><DD>
+will create a new queue called
+<B>myqueue</B>
+
+containing all dependencies for qt5-webkit, sshblock, and letsencrypt.
+<DT><DD>
+You can then run 
+<B>sbopkg -i myqueue</B>
+
+to have them installed (make sure to pick Queue).
+
+</DL>
+<A NAME="lbAF">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+Willy Sudiarto Raharjo
+&lt;<A HREF="mailto:willysr@sbopkg.org">willysr@sbopkg.org</A>&gt;
+<P>
+Chess Griffin
+&lt;<A HREF="mailto:chess@chessgriffin.com">chess@chessgriffin.com</A>&gt;
+<P>
+
+Mauro Giachero
+&lt;<A HREF="mailto:mauro.giachero@gmail.com">mauro.giachero@gmail.com</A>&gt;
+<P>
+
+slakmagik
+&lt;<A HREF="mailto:slakmagik@gmail.com">slakmagik@gmail.com</A>&gt;
+
+
+
+<A NAME="lbAG">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+sbopkg.conf">sbopkg.conf</A></B>(5),
+
+<I>/usr/doc/sbopkg-0.38.2/README-queuefiles</I>
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">OPTIONS</A><DD>
+<DT><A HREF="#lbAF">AUTHORS</A><DD>
+<DT><A HREF="#lbAG">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 08:55:23 GMT, June 25, 2017
+</BODY>
+</HTML>
