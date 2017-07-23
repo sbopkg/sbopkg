@@ -15,6 +15,8 @@ sbopkg-dev (2017-06-25 08:58:00 UTC)
           Feature Request by Jeremy/bassmadrigal (Fixed #13).
           Implement contributions from Marcel Saegebarth.
         * sqg: Added manual page for sqg.
+	* sbopkg: No need to do complete check for old sources if no sources available
+	  Initial patch by Loki Harfagr
 
     MODIFICATIONS
 	* bash-completion: Complete -i and -b when git repo is used

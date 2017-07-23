@@ -3147,6 +3147,14 @@ remove_obsolete_sources() {
 
     rm -f $PROGRESSBAR_INTERRUPTED
 
+### avoiding unecessary work and time lapse in case the user
+### does not remember he just deleted the sources previously
+    (( $(find $SRCDIR -type f | wc -l ) == 0 ))
+    if [ $? -eq 0 ]; then
+        echo "No sources available"
+        exit 1
+    fi
+
     { # Grouping for progressbar
     echo 0 # Progressbar begin
 
