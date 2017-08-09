@@ -245,6 +245,7 @@ execute_build () {
       "$REPO_DIR" "$QUEUEDIR" {} "$VERBOSE"
   else
     for PKG in "${PKGSNEW[@]}"; do
+      printf "."
       /usr/libexec/sbopkg/sqg/sqg-build-queuefile \
         "$REPO_DIR" "$QUEUEDIR" "$PKG" "$VERBOSE"
     done
