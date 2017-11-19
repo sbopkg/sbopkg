@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2017-06-25 08:58:00 UTC)
+sbopkg-dev (2017-11-19 08:10:29 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Requires GNU Parallel.
@@ -17,6 +17,7 @@ sbopkg-dev (2017-06-25 08:58:00 UTC)
         * sqg: Added manual page for sqg.
 	* sbopkg: No need to do complete check for old sources if no sources available
 	  Initial patch by Loki Harfagr
+        * sbopkg: Added support for Slackware 15.0
 
     MODIFICATIONS
 	* bash-completion: Complete -i and -b when git repo is used
