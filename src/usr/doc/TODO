@@ -9,9 +9,6 @@ MEDIUM PRIORITY
 
         * Add lftp to sync methods.
 
-	* Add flag to skip prompts and force building packages or queues
-          when both exist with the same name. (Suggested by OzanBurada.)
-
     Modification Category
 
         * Properly test supplied options to ensure that only sensible
