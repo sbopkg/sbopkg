@@ -221,7 +221,7 @@ execute_build () {
 
   if [ "$ALL" == "yes" ]; then
     printf "Processing all SlackBuilds in the $REPO_SUBPATH repository..."
-    PKGSNEW=($(find "$REPO_DIR" -name *.info -print0 | xargs -r0))
+    PKGSNEW=($(find "$REPO_DIR" -name "*.info" -print0 | xargs -r0))
   else
     for PKG in ${PKGS[@]}; do
       INFOPATH=$(find "$REPO_DIR" -name ${PKG}.info)
