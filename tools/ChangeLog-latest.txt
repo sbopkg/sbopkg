@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2018-01-08 23:08:43 UTC)
+sbopkg-dev (2018-01-12 00:52:10 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Requires GNU Parallel.
@@ -30,6 +30,8 @@ sbopkg-dev (2018-01-08 23:08:43 UTC)
         * Remove SKIP_EMPTY option.
         * Fix wrong glob expansion
           Patch by Alan
+        * Use correct SlackBuild file name to build package
+          Patch by Erich Ritz
 
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES

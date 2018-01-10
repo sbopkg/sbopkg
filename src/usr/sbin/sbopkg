@@ -3412,6 +3412,8 @@ process_package() {
     mkdir -p $SB_OUTPUT
 
     cd $REPO_DIR/$PKGPATH
+    mv $PKGNAME.SlackBuild $PKGNAME.SlackBuild.original
+    cp $PKGNAME.SlackBuild.build $PKGNAME.SlackBuild
 
     # Start the actual build
     # We loop here to enable a 'retry' if anything goes wrong with the build
@@ -3475,6 +3477,7 @@ process_package() {
 
     # Cleanup
     cd $REPO_DIR/$PKGPATH
+    mv $PKGNAME.SlackBuild.original $PKGNAME.SlackBuild
     rm -f $PKGNAME.{info,SlackBuild}.build
     rm -f options.build
 
@@ -3499,10 +3502,10 @@ build_package() {
             # deleting too much or leaving garbage behind us), a nice
             # approach is to use sbopkg's own temp directory.
             export TMP=$SBOPKGTMP
-            nice -n ${NICE:-10} sh $PKGNAME.SlackBuild.build
+            nice -n ${NICE:-10} sh $PKGNAME.SlackBuild
             echo "Cleaning up..."
         else
-            nice -n ${NICE:-10} sh $PKGNAME.SlackBuild.build
+            nice -n ${NICE:-10} sh $PKGNAME.SlackBuild
         fi
     )
 }
