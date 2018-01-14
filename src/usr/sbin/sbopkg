@@ -136,7 +136,7 @@ EOF
     # Some configuration options are mandatory
     for VAR in REPO_ROOT QUEUEDIR SRCDIR REPO_NAME REPO_BRANCH \
         KEEPLOG CLEANUP LOGFILE DEBUG_UPDATES TMP OUTPUT RSYNCFLAGS \
-        WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D ALLOW_MULTI; do
+        WGETFLAGS DIFF DIFFOPTS SBOPKG_REPOS_D ALLOW_MULTI BLACKLISTFILE; do
         if [[ -z "${!VAR}" ]]; then
             MISSING+="$VAR "
         fi
@@ -735,7 +735,21 @@ check_for_updates() {
     UPDATELIST=$SBOPKGTMP/sbopkg_updatelist
     rm -f $UPDATELIST $ERRORMSG
     cd /var/log/packages
-    PKGS=$(ls *$REPO_TAG 2> /dev/null)
+
+    # Check if blacklist file exists
+    if [[ -s $BLACKLISTFILE ]]; then
+       # Remove comments (lines starting with #) and empty lines
+       # If there exists content(s), we will filter that out
+       # Otherwise, do a normal check for update procedure
+       BLKFILE=$(grep -v "^#" $BLACKLISTFILE | grep -v "^$")
+       if [[ ! -z $BLKFILE ]]; then
+         PKGS=$(ls *$REPO_TAG | grep -v $BLKFILE 2> /dev/null)
+       else
+         PKGS=$(ls *$REPO_TAG 2> /dev/null)
+       fi
+    else
+       PKGS=$(ls *$REPO_TAG 2> /dev/null)
+    fi
     NUMPKGS=$(wc -w <<< "$PKGS")
     VERSION_FILE=$SBOPKGTMP/sbopkg-script-version
     PROGRESSBAR_INTERRUPTED=$SBOPKGTMP/sbopkg_progressbar-interrupted
