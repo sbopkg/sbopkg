@@ -38,6 +38,7 @@ find -L . \
 mkdir -p $PKG/etc/sbopkg
 cp -a etc/sbopkg/* $PKG/etc/sbopkg
 mv $PKG/etc/sbopkg/sbopkg.conf $PKG/etc/sbopkg/sbopkg.conf.new
+mv $PKG/etc/sbopkg/blacklist $PKG/etc/sbopkg/blacklist.new
 
 mkdir -p $PKG/usr/sbin
 cp usr/sbin/* $PKG/usr/sbin
