@@ -743,7 +743,7 @@ check_for_updates() {
        # Otherwise, do a normal check for update procedure
        BLKFILE=$(grep -v "^#" $BLACKLISTFILE | grep -v "^$")
        if [[ ! -z $BLKFILE ]]; then
-         PKGS=$(ls *$REPO_TAG | grep -v $BLKFILE 2> /dev/null)
+         PKGS=$(ls *$REPO_TAG | grep -v "$BLKFILE" 2> /dev/null)
        else
          PKGS=$(ls *$REPO_TAG 2> /dev/null)
        fi
