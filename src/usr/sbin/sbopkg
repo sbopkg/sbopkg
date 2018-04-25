@@ -971,14 +971,14 @@ updates_compare_versions() {
     # 1.2.50 build 4, the argument list is
     # 1 2 3 7 1 2 50 4
     # Prints -1 if the "left" package is newer (not an update), 0 if
-    # the version is unchanged, 1 if the "left" package is newer.
+    # the version is unchanged, 1 if the "left" package is older.
 
     local COUNT=$(($# / 2))
     local i RESULT=0
     local LEFT RIGHT
 
     for ((i=1; i<=$COUNT; i++)); do
-        eval LEFT=\$$i
+        eval LEFT=\${$i}
         eval RIGHT=\${$(($i + $COUNT))}
         if [[ 10#$LEFT -lt 10#$RIGHT ]]; then
             RESULT=1
