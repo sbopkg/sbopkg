@@ -38,18 +38,6 @@ sanity_checks () {
 }
 
 #
-# Returns 1 if GNU Parallel is installed. Otherwise 0.
-#
-has_parallel () {
-  parallel --help &> /dev/null
-  if [ $? -eq 0 ]; then
-    return 1
-  fi
-
-  return 0
-}
-
-#
 # Prints the help message.
 #
 usage () {
@@ -237,19 +225,10 @@ execute_build () {
     VERBOSE="yes"
   fi
 
-  has_parallel
-  if [ $? -eq 1 ]; then
-    printf '%s\n' "${PKGSNEW[@]}" | \
+  printf '%s\n' "${PKGSNEW[@]}" | \
       parallel --eta --will-cite --jobs $JOBS \
       /usr/libexec/sbopkg/sqg/sqg-build-queuefile \
       "$REPO_DIR" "$QUEUEDIR" {} "$VERBOSE"
-  else
-    for PKG in "${PKGSNEW[@]}"; do
-      printf "."
-      /usr/libexec/sbopkg/sqg/sqg-build-queuefile \
-        "$REPO_DIR" "$QUEUEDIR" "$PKG" "$VERBOSE"
-    done
-  fi
 
   if [ ! -z $CUSTOM_QUEUE ]; then
     build_queuefile_custom "$QUEUEDIR" "$CUSTOM_QUEUE" "$PKGS"

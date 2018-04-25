@@ -1,9 +1,8 @@
 SBOPKG NEWS
 
-sbopkg-dev (2018-01-14 10:17:13 UTC)
+sbopkg-dev (2018-04-25 10:27:24 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
-	  Requires GNU Parallel.
 	  Patch by Marcel Saegebarth.
 	* sqg: Introduced new simple filesystem cache.
 	  This will reduce queue generation time significantly when
