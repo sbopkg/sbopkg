@@ -218,7 +218,7 @@ load_repositories() {
         # Reading from $FILE...
         while read LINE; do
             grep -q '#' <<< "$LINE" && continue
-            eval TMPARRAY=( "$LINE" )
+            eval "TMPARRAY=( $LINE )"
             [[ ${#TMPARRAY[@]} -eq 0 ]] && continue;
             # Sanity checks
             # these two assignments work around a bash3-4 incompatibility
@@ -3062,11 +3062,11 @@ get_source() {
             # inside file names.
             # We know that we could obtain the same result faster by mangling
             # with IFS, but the resulting code was a bit too hacky.
-            eval SRCNAME=( $(
+            eval "SRCNAME=( $(
                 while read LINE; do
-                    printf '%q ' "$LINE"
-                done <<< "$SRCNAME"
-            ) )
+                    printf '%q ' $LINE
+                done <<< $SRCNAME
+            ) )"
 
             check_source $PKG ${MD5SUM[$i]} "${SRCNAME[$i]}"
             case $? in
