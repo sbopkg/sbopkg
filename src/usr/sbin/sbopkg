@@ -4105,11 +4105,11 @@ check_for_latest() {
 
     local ORIGSCR=https://www.sbopkg.org/currentversion
     local CVRS=$SBOVER
-    local NVRS=$(wget -T 10 -q -O - $ORIGSCR)
+    local NVRS=$(wget -T 20 -q -O - $ORIGSCR)
     local NEWPKG=https://www.sbopkg.org/currentpackage
-    local NEWSBOPKG=$(wget -T 10 -q -O - $NEWPKG)
+    local NEWSBOPKG=$(wget -T 20 -q -O - $NEWPKG)
     local NEWDL=https://www.sbopkg.org/currentdownload
-    local NEWDLPKG=$(wget -T 10 -q -O - $NEWDL)
+    local NEWDLPKG=$(wget -T 20 -q -O - $NEWDL)
     local SBOPKGUP MSG REPLY
 
     if [[ -z $CVRS || -z $NVRS ]]; then
