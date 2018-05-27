@@ -2537,9 +2537,10 @@ gen_search_package() {
     local ITEM_SELECTION=$SBOPKGTMP/sbopkg_item_selection
     local SEARCH_CHOICE=$SBOPKGTMP/sbopkg_search_choice
     local SEARCH_RESULTS=$SBOPKGTMP/sbopkg_search_results
+    local RESULTS_VERSIONS=$SBOPKGTMP/sbopkg_search_results_versions
     local RESULTS=$(find -mindepth 2 -maxdepth 2 -type d \
         -iwholename "./$CATEGORY/*$PKG*" -printf "%P\n" | sort)
-    local NAME DESC CHOICE
+    local NAME DESC CHOICE RESULT_VERSION
     local SRCHPICK SRCHCAT SRCHPKG
 
     if [[ $RESULTS ]]; then
@@ -2595,9 +2596,12 @@ gen_search_package() {
             done
         else
             echo "Found the following matches for $PKG:"
+            echo -e "NAME\tVERSION" >> $RESULTS_VERSIONS
             for i in $RESULTS; do
-                echo $i
+                RESULT_VERSION=$(grep ^VERSION $(find $i -name *.info) | cut -d= -f2 | tr -d \")
+                echo -e "$i\t$RESULT_VERSION" >> $RESULTS_VERSIONS
             done
+            column -t $RESULTS_VERSIONS
         fi
     else
         if [[ $DIAG ]]; then
