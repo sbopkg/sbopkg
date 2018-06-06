@@ -9,13 +9,22 @@ INFO="$3"
 VERBOSE="${4:-no}"
 CUSTOM_QUEUE="${5:-}"
 
-. $INFO
+check_validity $INFO
 
-if [ "$VERBOSE" == "yes" ]; then
-  INFO_BASENAME=$(basename $INFO .info)
-  echo "Processing $INFO_BASENAME."
-fi
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "Found invalid .info file: $INFO. Skipping."
+  echo ""
+  continue;
+else
+  . $INFO
 
-if [[ ! -z $REQUIRES ]]; then
-  build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM" "$CUSTOM_QUEUE"
+  if [ "$VERBOSE" == "yes" ]; then
+    INFO_BASENAME=$(basename $INFO .info)
+    echo "Processing $INFO_BASENAME."
+  fi
+
+  if [[ ! -z $REQUIRES ]]; then
+    build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM" "$CUSTOM_QUEUE"
+  fi
 fi

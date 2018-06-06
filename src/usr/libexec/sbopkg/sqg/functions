@@ -234,3 +234,19 @@ execute_build () {
     build_queuefile_custom "$QUEUEDIR" "$CUSTOM_QUEUE" "$PKGS"
   fi
 }
+
+#
+# Check .info validity
+# We only check for PRGNAM for now, but more may be added in the future
+#
+check_validity() {
+  local INFO_FILE="$1"
+
+  check_program=`grep PRGNAM $INFO_FILE`
+
+  if [ $? -eq 0 ]; then
+    return 0
+  else
+    return 1
+  fi
+}
