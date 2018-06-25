@@ -491,7 +491,7 @@ mk_pkg_lists() {
     # least for right now, this is purely an auxilary function called from
     # list_packages().
 
-    find /var/log/packages -type f -name "*$REPO_TAG" \
+    find /var/log/packages/ -type f -name "*$REPO_TAG" \
         -printf "%P\n" 2> /dev/null | sort > $PKG_LIST
     sed 's/$/ "" OFF/' $PKG_LIST > $PKG_CHECKLIST
     nvabt2n $PKG_LIST $README_LIST
@@ -694,7 +694,7 @@ get_old_name() {
     # Reading from $substitutions...
     while read CANDIDATE; do
         [[ -z "$CANDIDATE" ]] && continue
-        INSTALLED=$(ls /var/log/packages |
+        INSTALLED=$(ls /var/log/packages/ |
             grep -x "$CANDIDATE-[^-]*-[^-]*-[^-]*")
         if [[ -n "$INSTALLED" ]]; then
             # Old-named installed package found, assume this is the correct
@@ -1250,7 +1250,7 @@ info_item() {
     while :; do
         # we use GNU grep extensions rather than egrep to avoid issues with
         # the '+' metacharacter which can be found in package names
-        INSTALLEDPACKAGE=$(ls /var/log/packages |
+        INSTALLEDPACKAGE=$(ls /var/log/packages/ |
             grep "^\($APP\|$OLDPKG\)-[^-]*-[^-]*-[^-]*\$")
         # Only get the first package (not that the same package should be
         # installed more than once on a sane system...)
@@ -2129,7 +2129,7 @@ add_item_to_queue() {
         # note that this regex was missing the ^ as of r826 and this caused a
         # false match when running 'sbopkg -k -i queue' because 'foo' and
         # 'libfoo' matched
-        INSTALLED=$(ls -1 /var/log/packages |
+        INSTALLED=$(ls -1 /var/log/packages/ |
             grep "^$APP-[^-]*-[^-]*-[^-]*$REPO_TAG$")
         if [[ -n $INSTALLED ]]; then
             VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
