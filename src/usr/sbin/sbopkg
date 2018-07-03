@@ -491,7 +491,7 @@ mk_pkg_lists() {
     # least for right now, this is purely an auxilary function called from
     # list_packages().
 
-    find /var/log/packages/ -type f -name "*$REPO_TAG" \
+    find /var/lib/pkgtools/packages/ -type f -name "*$REPO_TAG" \
         -printf "%P\n" 2> /dev/null | sort > $PKG_LIST
     sed 's/$/ "" OFF/' $PKG_LIST > $PKG_CHECKLIST
     nvabt2n $PKG_LIST $README_LIST
@@ -694,7 +694,7 @@ get_old_name() {
     # Reading from $substitutions...
     while read CANDIDATE; do
         [[ -z "$CANDIDATE" ]] && continue
-        INSTALLED=$(ls /var/log/packages/ |
+        INSTALLED=$(ls /var/lib/pkgtools/packages/ |
             grep -x "$CANDIDATE-[^-]*-[^-]*-[^-]*")
         if [[ -n "$INSTALLED" ]]; then
             # Old-named installed package found, assume this is the correct
@@ -1250,7 +1250,7 @@ info_item() {
     while :; do
         # we use GNU grep extensions rather than egrep to avoid issues with
         # the '+' metacharacter which can be found in package names
-        INSTALLEDPACKAGE=$(ls /var/log/packages/ |
+        INSTALLEDPACKAGE=$(ls /var/lib/pkgtools/packages/ |
             grep "^\($APP\|$OLDPKG\)-[^-]*-[^-]*-[^-]*\$")
         # Only get the first package (not that the same package should be
         # installed more than once on a sane system...)
@@ -2129,7 +2129,7 @@ add_item_to_queue() {
         # note that this regex was missing the ^ as of r826 and this caused a
         # false match when running 'sbopkg -k -i queue' because 'foo' and
         # 'libfoo' matched
-        INSTALLED=$(ls -1 /var/log/packages/ |
+        INSTALLED=$(ls -1 /var/lib/pkgtools/packages/ |
             grep "^$APP-[^-]*-[^-]*-[^-]*$REPO_TAG$")
         if [[ -n $INSTALLED ]]; then
             VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
@@ -2626,7 +2626,7 @@ string_search() {
 
     if [[ ${SEARCH_TERM%%:*} == "inst" ]]; then
         local SEARCH_TERM="${SEARCH_TERM#*:}"
-        local SBOPKGS=($(ls /var/log/packages/*$REPO_TAG))
+        local SBOPKGS=($(ls /var/lib/pkgtools/packages/*$REPO_TAG))
         for ((i=0; i<${#SBOPKGS[*]}; i++)); do
             local PKGNAME=$(
                 sed 's,.*/,,;s/-[^-]*-[^-]*-[^-]*$//' <<< "${SBOPKGS[$i]}")
@@ -3220,7 +3220,7 @@ remove_uninstalled_packages() {
     rm -f $PACKAGES
     ls $OUTPUT/*$REPO_TAG.t?z 2>/dev/null | while read PKG; do
         PKG=${PKG##*/}
-        if [ ! -f /var/log/packages/${PKG%.t?z} ]; then
+        if [ ! -f /var/lib/pkgtools/packages/${PKG%.t?z} ]; then
             echo "$PKG" >> $PACKAGES
         fi
     done
@@ -3373,7 +3373,7 @@ install_package() {
     get_old_name OLDNAME $PKG_NAME
     # we grep ls's output rather than have ls return a glob so 'foo'
     # doesn't match 'foo-bar'
-    if ! OLDPKG=$(ls /var/log/packages/ |
+    if ! OLDPKG=$(ls /var/lib/pkgtools/packages/ |
             grep -m1 "^$OLDNAME-[^-]*-[^-]*-[^-]*$REPO_TAG$"); then
         OLDPKG=$INSTPKG
     fi
