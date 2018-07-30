@@ -31,6 +31,10 @@
 
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
 
+if [ -e "${SBOPKG_CONF}" ] ; then
+	source "${SBOPKG_CONF}"
+fi
+
 ### NO CHANGES SHOULD BE NECESSARY BELOW THIS LINE ###
 
 # source all sqg functions
