@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2018-06-07 13:59:08 UTC)
+sbopkg-dev (2018-08-13 22:53:29 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Patch by Marcel Saegebarth.
@@ -22,6 +22,8 @@ sbopkg-dev (2018-06-07 13:59:08 UTC)
           Feature Request by khronosschoty
         * sbopkg: Show version when using -g in command line
           Patch by Yaroslav Shmelev.
+        * sbopkg: Add optional sandbox support.
+          Initial patch by Orbea (#49).
 
     MODIFICATIONS
 	* bash-completion: Complete -i and -b when git repo is used
