@@ -3520,10 +3520,10 @@ build_package() {
             # deleting too much or leaving garbage behind us), a nice
             # approach is to use sbopkg's own temp directory.
             export TMP=$SBOPKGTMP
-            nice -n ${NICE:-10} sh $PKGNAME.SlackBuild
+            nice -n ${NICE:-10} $sandbox sh $PKGNAME.SlackBuild
             echo "Cleaning up..."
         else
-            nice -n ${NICE:-10} sh $PKGNAME.SlackBuild
+            nice -n ${NICE:-10} $sandbox sh $PKGNAME.SlackBuild
         fi
     )
 }
@@ -3872,6 +3872,19 @@ log_queuetype() {
 process_queue() {
     local QUEUETYPE=$1 # download|build|install
     local CHKBUILD REPLY
+
+    # Checks if sandbox is requested and installed which can be used for
+    # building packages in a sandboxed environment. This will prevent the
+    # build from modifying files it should not.
+    if [[ $SANDBOX ]]; then
+        sandbox="/usr/bin/sandbox"
+        if [[ ! -f $sandbox || ! -x $sandbox ]]; then
+            echo "Error: sandbox is not installed." >&2
+            exit 1
+        fi
+    else
+        sandbox=""
+    fi
 
     # The first (and largest) of three sections in this function is a precheck
     # section.
@@ -4530,6 +4543,7 @@ unset SBOVER          # The sbopkg version
 unset CWD             # sbopkg starting directory
 unset DIAG            # When set, run in dialog mode (instead of CLI mode)
 unset QUIET           # When set, suppress less important output in CLI mode
+unset SANDBOX         # When set, use sandbox to build packages.
 unset ON_ERROR        # The policy used in error conditions (see "-e")
 unset LAST_USER_QUEUE_ON_DISK # The name of the last loaded/saved user queue
 unset BUILDOPTIONS    # TODO
@@ -4597,7 +4611,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
+while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrSs:uV:v" OPT; do
     case $OPT in
         b ) # Download, build
             set_type build
@@ -4668,6 +4682,10 @@ while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrs:uV:v" OPT; do
             SYNC=1
             unset DIAG
             ;;
+        S ) # Sandbox mode
+            SANDBOX=1
+            unset DIAG
+            ;;
         s ) # Name search
             SEARCH+=("$OPTARG")
             unset DIAG
@@ -4713,6 +4731,7 @@ Options are:
                   installed packages from the active repo.
   -r              Sync the remote repository with the local mirror and then
                   quit.
+  -S              Use sandbox when building packages.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.
