@@ -394,6 +394,12 @@ files of all installed packages from the active repo.
 ``Rsync'' the local repository with SBo and quit.
 .\"---------------------------------------------------------------------
 .TP
+.B \-S
+Enable the ``sandbox mode.''
+When this flag is specified packages will be built with sandbox.
+This will prevent the build from modifying files it should not.
+.\"---------------------------------------------------------------------
+.TP
 .BI \-s " PACKAGE(s)"
 Specific search for
 .I PACKAGE(s)
