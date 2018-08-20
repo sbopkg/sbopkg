@@ -9,7 +9,7 @@
 # Based on the SlackBuilds.org template.
 
 PRGNAM=sbopkg
-VERSION=${VERSION:-0.38.1}
+VERSION=${VERSION:-0.38.2}
 ARCH=${ARCH:-noarch}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_wsr}
@@ -35,8 +35,9 @@ find -L . \
  \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
   -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
 
-mkdir -p $PKG/etc/sbopkg
+mkdir -p $PKG/etc/sbopkg $PKG/etc/logrotate.d/
 cp -a etc/sbopkg/* $PKG/etc/sbopkg
+cp -a etc/logrotate.d/sbopkg $PKG/etc/logrotate.d/
 mv $PKG/etc/sbopkg/sbopkg.conf $PKG/etc/sbopkg/sbopkg.conf.new
 mv $PKG/etc/sbopkg/blacklist $PKG/etc/sbopkg/blacklist.new
 

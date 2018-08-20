@@ -1,0 +1,6 @@
+/var/log/sbopkg/sbopkg-build-log {
+    monthly
+    notifempty
+    missingok
+    compress
+}
