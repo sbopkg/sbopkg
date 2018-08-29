@@ -2432,6 +2432,23 @@ rsync_command() {
     rm -f $SYNC_LOCK
 }
 
+current_check_updates() {
+    # This function checks for updates if repository is set to -current.
+
+    local URL BRANCH REMOTE LOCAL
+    
+    eval $(sed 's/^\(.*\)@\(.*\)$/URL=\1; BRANCH=\2/g' <<< $REPO_LINK)
+
+    cd $REPO_DIR
+    REMOTE=$(git ls-remote $URL $BRANCH | cut -f 1)
+    LOCAL=$(git rev-parse HEAD)
+    # If the remote has changed, wipe the local version
+    if [[ $REMOTE != $LOCAL ]]; then
+        cd ..
+        rm -fR $REPO_DIR
+    fi
+}
+
 git_command() {
     # This function synchronizes a local git repository with upstream.
 
@@ -2441,6 +2458,10 @@ git_command() {
     eval $(sed 's/^\(.*\)@\(.*\)$/URL=\1; BRANCH=\2/g' <<< $REPO_LINK)
 
     CWD=$(pwd)
+    # If -CURRENT, handle correctly
+    if [[ $REPO_BRANCH == "current" ]]; then
+        current_check_updates
+    fi 
     # Create the repository if needed
     if [[ ! -d $REPO_DIR/.git ]]; then
         mkdir -p $REPO_DIR
