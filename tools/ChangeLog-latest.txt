@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2018-09-01 23:00:08 UTC)
+sbopkg-dev (2019-03-15 14:24:30 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Patch by Marcel Saegebarth.
@@ -26,6 +26,8 @@ sbopkg-dev (2018-09-01 23:00:08 UTC)
           Initial patch by Orbea (#49).
         * sbopkg: Add logrotate support.
           Feature Request by wronguser (#50).
+        * sbokg: Add better non-interactive/cron run support
+          Initial patch by smallid (#56).
 
     MODIFICATIONS
 	* bash-completion: Complete -i and -b when git repo is used

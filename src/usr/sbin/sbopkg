@@ -175,7 +175,7 @@ EOF
     load_repositories || exit 1
 
     # Check for ncurses
-    [[ -x /usr/bin/tput ]] && HAS_NCURSES=1
+    [[ -n $interactive ]] && [[ -x /usr/bin/tput ]] && HAS_NCURSES=1
 }
 
 yesno_to_setunset() {
@@ -771,7 +771,7 @@ check_for_updates() {
 
         for CURPKG in $PKGS; do
             # Bail out if the user pressed ESC
-            progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
+            [[ -n $interactive ]] && progressbar_interrupted && touch $PROGRESSBAR_INTERRUPTED && break
 
             # split CURPKG into its components
             split_pkg_name $CURPKG
@@ -4611,6 +4611,13 @@ PIDFILE=/var/run/sbopkg.pid
 if [[ $(id -u) != 0 ]]; then
     echo "$SCRIPT: $SCRIPT must be run by the root user.  Exiting." >&2
     exit 1
+fi
+
+# Check if we are interactive.
+if [ -t 0 ]; then
+    interactive=1
+else
+    non_interactive=1
 fi
 
 # Set up ARCH - borrowed from SBo SlackBuild template
