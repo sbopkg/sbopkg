@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2019-03-15 14:24:30 UTC)
+sbopkg-dev (2019-03-16 13:27:46 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Patch by Marcel Saegebarth.
@@ -49,7 +49,9 @@ sbopkg-dev (2019-03-15 14:24:30 UTC)
         * Increase timeout on update detection (#43)
         * sqg: Check for invalid .info files before processing.
         * Support update ability for -current repo
-          Patch by JK Wood, reviewed by Matteo Bernardini (51)
+          Patch by JK Wood, reviewed by Matteo Bernardini (#51)
+        * Fix file ownership changes when unpacking tarball
+          Patch by pv4 (#54)
 
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES

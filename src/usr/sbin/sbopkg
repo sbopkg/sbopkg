@@ -1415,7 +1415,7 @@ extract_tarball() {
         fi
         return 1
     fi
-    tar -C $DESTINATION -zxf $DELPKG.tar.gz
+    tar -C $DESTINATION -zxof $DELPKG.tar.gz
     return 0
 }
 
@@ -3874,7 +3874,7 @@ EOF
     else
         echo "OK" >> $TMPLOG
     fi
-    tar -C ./$CATEGORY -zxf $CHKPKG.tar.gz
+    tar -C ./$CATEGORY -zxof $CHKPKG.tar.gz
     return 0
 }
 
