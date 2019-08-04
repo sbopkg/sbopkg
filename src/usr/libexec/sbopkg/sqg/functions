@@ -44,7 +44,7 @@ usage () {
   local SCRIPT="$1"
 
 cat << EOF
-Usage: $SCRIPT -p <packagename(s)> [-j #] | -a [-j #]
+Usage: $SCRIPT -p <packagename(s)> [-j #] | -a [-j #] | [ -o <output> ]
 Options are:
   -p package(s) Creates queuefile(s) for individual package(s).
                 Multiple packages can be passed with quotes,
