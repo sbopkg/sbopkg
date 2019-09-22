@@ -2944,7 +2944,7 @@ check_source() {
     # asked to look in the alternate repository
 
     local PKG=$1
-    local MD5SUM="$2"
+    local MD5SUM=$(echo "$2" | tr [:upper:] [:lower:])
     local SRCNAME="$3"
     local MD5CHK REPLY
 
