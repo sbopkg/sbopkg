@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2019-03-16 13:27:46 UTC)
+sbopkg-dev (2019-11-10 09:16:13 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Patch by Marcel Saegebarth.
@@ -52,6 +52,7 @@ sbopkg-dev (2019-03-16 13:27:46 UTC)
           Patch by JK Wood, reviewed by Matteo Bernardini (#51)
         * Fix file ownership changes when unpacking tarball
           Patch by pv4 (#54)
+        * Handle upper case value for MD5SUMS
 
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES
