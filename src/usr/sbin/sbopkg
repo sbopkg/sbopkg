@@ -1088,6 +1088,9 @@ set_repo_vars() {
 
             if [[ $REPO_TOOL = "rsync" || $REPO_TOOL = "git" ]]; then
                 checkout_${REPO_TOOL}_branch
+            else
+                # In case of local repo ensure REPO_DIR ends with a branch.
+                REPO_DIR=$REPO_ROOT/$REPO_NAME/$REPO_BRANCH
             fi
 
             # If the user specified a custom tag, use that one instead.
