@@ -2458,6 +2458,7 @@ git_command() {
 
     local SYNC_LOCK=$SBOPKGTMP/sbopkg_sync.lck
     local URL BRANCH CWD
+    local NEW_REPO=0
 
     eval $(sed 's/^\(.*\)@\(.*\)$/URL=\1; BRANCH=\2/g' <<< $REPO_LINK)
 
@@ -2473,10 +2474,22 @@ git_command() {
         mkdir -p $REPO_DIR
         cd $REPO_DIR
         git init
+        NEW_REPO=1
     fi
     # Update the repository
     cd $REPO_DIR
     git pull $URL $BRANCH
+
+    # If the initial pull fails right after a "git init", the .git
+    # directory is garbage and will cause further attempts to fail.
+    if [ "$NEW_REPO" = "1" -a "$?" != 0 ]; then
+        echo
+        echo "Failed to check out repository, check the URL or your"
+        echo "network connection."
+        rm -rf .git $SYNC_LOCK
+        return
+    fi
+
     # Remove leftovers
     # This is optional, think of it as a way to emulate the --delete --exclude
     # rsync directives
