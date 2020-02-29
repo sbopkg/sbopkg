@@ -734,7 +734,7 @@ check_for_updates() {
     check_if_repo_exists
     UPDATELIST=$SBOPKGTMP/sbopkg_updatelist
     rm -f $UPDATELIST $ERRORMSG
-    cd /var/log/packages
+    cd /var/lib/pkgtools/packages/
 
     # Check if blacklist file exists
     if [[ -s $BLACKLISTFILE ]]; then
@@ -2318,7 +2318,7 @@ add_all_to_queue() {
     rm -f $SBOPKGLIST $MISSING_LIST_FILE $PROGRESSBAR_INTERRUPTED
     cp $TMPQUEUE $TMPQUEUE_BACKUP 2> /dev/null
     touch $USERQUEUE_LOCK
-    cd /var/log/packages
+    cd /var/lib/pkgtools/packages/
     PKGS=$(ls *$REPO_TAG* 2> /dev/null)
     for FILE in $PKGS; do
         echo $FILE >> $SBOPKGLIST
