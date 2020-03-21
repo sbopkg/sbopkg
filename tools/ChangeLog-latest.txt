@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2020-01-16 05:55:44 UTC)
+sbopkg-dev (2020-03-21 13:25:48 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Patch by Marcel Saegebarth.
@@ -57,6 +57,7 @@ sbopkg-dev (2020-01-16 05:55:44 UTC)
         * Handle upper case value for MD5SUMS
         * Better handling at git repository during bad network connection.
           Patch by Urchlay
+        * sqg: Use /root/.sbopkg.conf if it exists.
 
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES

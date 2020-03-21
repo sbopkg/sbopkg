@@ -7,7 +7,7 @@ SQG_TMP_DIR=${SQG_TMP_DIR:-/tmp/sqg}
 
 #
 # Sanity checks:
-# - sbopkg.conf is available
+# - .sbopkg.conf or sbopkg.conf is available
 # - slackbuilds.org was synced with `rsync` or `git`
 # - directory checks
 #
@@ -25,12 +25,14 @@ sanity_checks () {
     . $SBOPKG_CONF
   fi
 
+  # check whether we are using git or rsync
   if [ -d $REPO_ROOT/$REPO_NAME/.git ]; then
     REPO_SUBPATH=$REPO_NAME
   else
     REPO_SUBPATH=$REPO_NAME/$REPO_BRANCH
   fi
 
+  # check whether the directory exist or not
   REPO_DIR=$REPO_ROOT/$REPO_SUBPATH
   if [ ! -w "$QUEUEDIR" ] || [ ! -d "$REPO_DIR" ]; then
     echo "ERROR: $QUEUEDIR or $REPO_DIR do not exist or are not writable."
