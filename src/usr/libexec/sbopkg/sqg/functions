@@ -12,17 +12,18 @@ SQG_TMP_DIR=${SQG_TMP_DIR:-/tmp/sqg}
 # - directory checks
 #
 sanity_checks () {
-  # if local configuration exist, we will use it first
-  if [ -e "$LOCAL_SBOPKG_CONF" ]; then
-    echo "Using local configuration in $LOCAL_SBOPKG_CONF"
-    . $LOCAL_SBOPKG_CONF
-  elif [ ! -e "$SBOPKG_CONF" ]; then
+  if [ ! -e "$SBOPKG_CONF" ]; then
     echo "$SBOPKG_CONF not found."
     echo "Check the configurable variables at the top of the script."
     exit 1
   else
-    echo "Using system wide configuration in $SBOPKG_CONF"
+    echo "Setting system wide configuration in $SBOPKG_CONF"
     . $SBOPKG_CONF
+      # if local configuration exist, use those instead
+      if [ -e "$LOCAL_SBOPKG_CONF" ]; then
+        echo "Overriding with local configuration in $LOCAL_SBOPKG_CONF"
+        . $LOCAL_SBOPKG_CONF
+      fi
   fi
 
   # check whether we are using git or rsync
