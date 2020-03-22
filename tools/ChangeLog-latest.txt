@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2020-03-21 13:25:48 UTC)
+sbopkg-dev (2020-03-22 10:12:52 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Patch by Marcel Saegebarth.
@@ -58,6 +58,7 @@ sbopkg-dev (2020-03-21 13:25:48 UTC)
         * Better handling at git repository during bad network connection.
           Patch by Urchlay
         * sqg: Use /root/.sbopkg.conf if it exists.
+        * Set the tag for SBo-git to _SBo to match the rest of the packages.
 
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES
