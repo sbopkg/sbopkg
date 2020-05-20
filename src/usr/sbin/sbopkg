@@ -934,8 +934,6 @@ check_for_updates() {
         # enabled.
         if [[ $DEBUG_UPDATES -ge 1 ]]; then
             cp $UPDATELIST $SBOPKGTMP/sbopkg-debug-updatelist
-        else
-            rm $UPDATELIST
         fi
     else
         rm -f $PROGRESSBAR_INTERRUPTED
@@ -2096,9 +2094,10 @@ add_item_to_queue() {
     local LOADOPTIONS="$2"
     local USERQUEUE_LOCK=$SBOPKGTMP/sbopkg_user_queue.lck
     local UPDATEQUEUE=$SBOPKGTMP/sbopkg-update-queue
+    local UPDATELIST=$SBOPKGTMP/sbopkg_updatelist
     local QUEUELIST=$SBOPKGTMP/sbopkg_queue_list
     local MISSING_LIST_FILE=$SBOPKGTMP/sbopkg_addall_missing
-    local FILE ONOFF VERSION INSTALLED
+    local FILE ONOFF VERSION NEW_VERSION INSTALLED QUEUESTR
 
     # This next if is for legacy queuefiles with $APP $VERSION$BUILD $ONOFF
     if [[ $3 =~ [Oo][Ff][Ff] ]]; then
@@ -2137,9 +2136,20 @@ add_item_to_queue() {
             grep "^$APP-[^-]*-[^-]*-[^-]*$REPO_TAG$")
         if [[ -n $INSTALLED ]]; then
             VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
+            if [[ -e $UPDATELIST ]]; then
+                NEW_VERSION=$(grep -A 3 '^'$APP':' $UPDATELIST |
+                    sed -e '4!d' -e 's/  Repo version:  //' \
+                        -e 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:')
+            fi
+            if [[ -n $NEW_VERSION ]]; then
+                QUEUESTR=$(printf "%s \"Installed %-12s → %s\" %s\n" \
+                    $APP $VERSION $NEW_VERSION $ONOFF)
+            else
+                QUEUESTR="$APP \"Installed $VERSION\" $ONOFF"
+            fi
             # NOTE: When changing, see the uncheck_installed() comment
-            echo "$APP \"Installed $VERSION\" $ONOFF" >> $TMPQUEUE
-            echo "$APP \"Installed $VERSION\" $ONOFF" >> $QUEUELIST
+            echo "$QUEUESTR" >> $TMPQUEUE
+            echo "$QUEUESTR" >> $QUEUELIST
         else
             # NOTE: When changing, see the uncheck_installed() comment
             echo "$APP New $ONOFF" >> $TMPQUEUE
