@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-dev (2020-04-07 14:51:13 UTC)
+sbopkg-dev (2020-05-21 21:02:18 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
 	  Patch by Marcel Saegebarth.
@@ -30,6 +30,8 @@ sbopkg-dev (2020-04-07 14:51:13 UTC)
           Initial patch by smallid (#56).
         * sbopkg: Add more detection to local repository
           Initial patch by arcctgx (#58)
+        * sbopkg: Show new version in view queue in GUI
+          Patch by Geremia (#62)
 
     MODIFICATIONS
 	* bash-completion: Complete -i and -b when git repo is used
