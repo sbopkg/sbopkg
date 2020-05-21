@@ -2142,7 +2142,7 @@ add_item_to_queue() {
                         -e 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:')
             fi
             if [[ -n $NEW_VERSION ]]; then
-                QUEUESTR=$(printf "%s \"Installed %-12s → %s\" %s\n" \
+                QUEUESTR=$(printf "%s \"Installed %-15s → %s\" %s\n" \
                     $APP $VERSION $NEW_VERSION $ONOFF)
             else
                 QUEUESTR="$APP \"Installed $VERSION\" $ONOFF"
