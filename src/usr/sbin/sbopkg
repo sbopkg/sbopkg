@@ -2752,7 +2752,7 @@ read_info() {
     # (possibly ARCH-dependent) values.
 
     local INFO=$1
-    local i DOWNLOAD_ARCH DLSAVE MDSAVE REPLY
+    local i DOWNLOAD_ARCH DLSAVE MDSAVE WGETFLAGS REPLY
     local {DOWNLOAD,MD5SUM}_$ARCH
 
     unset DOWNLOAD MD5SUM
@@ -2767,6 +2767,7 @@ read_info() {
         DOWNLOAD=$DOWNLOAD_ARCH
         MD5SUM=$(eval echo \$MD5SUM_$ARCH)
     fi
+    LWGETFLAGS=$WGETFLAGS
     # Note: on SBo pre-13.0 repositories, as well as on current non-SBo
     # repositories, none of the above triggers. In that case, we use the
     # provided DOWNLOAD and MD5SUM variables, which is exactly the old-style
@@ -2854,11 +2855,24 @@ get_source_names() {
     INFO=$1
 
     read_info $INFO
-    for DL in "${DOWNLOAD[@]}"; do
+    for i in "${!DOWNLOAD[@]}"; do
+
+    if [[ "${LWGETFLAGS[$i]}" =~ "content-disposition" ]]; then
+        DETAILS=$(wget --spider --server-response -c "${DOWNLOAD[$i]}" 2>&1)
+        if [[ $? == 0 ]]; then
+            SRCNAME=$(echo "${DETAILS}" | grep Content-Disposition | awk -F 'filename=' '{print $2}')
+            SRCNAME="${SRCNAME%\"}"
+            SRCNAME="${SRCNAME#\"}"
+        fi
+        if [[ -z $SRCNAME ]]; then
+            SRCNAME=$(basename ${DOWNLOAD[$DL]})
+        fi
+        echo $SRCNAME
+    else
         # remove the '/download' from several SRCNAMEs that end that way
         # rather than in the actual tarball so the subsequent basename doesn't
         # end with 'download'
-        SRCNAME=${DL%\/download}
+        SRCNAME=${DOWNLOAD[$i]%\/download}
         SRCNAME=${SRCNAME##*/}
         # calcurse has a nonsense url in the info file - this is to get it
         # through this function and on to remove_obsolete_sources()
@@ -2929,6 +2943,7 @@ get_source_names() {
                 echo $PLACEHOLDER
             fi
         fi
+    fi
     done
 }
 
@@ -3079,7 +3094,8 @@ get_source() {
     echo | tee -a $TMPSUMMARYLOG
     echo "$PKG:" | tee -a $TMPSUMMARYLOG
     for i in ${!MD5SUM[@]}; do
-        TWGETFLAGS=$WGETFLAGS
+        TWGETFLAGS=${LWGETFLAGS[$i]}
+        TWGETFLAGS+=$WGETFLAGS
         while :; do
             cd "$CWD"
             SRCNAME=$(get_source_names --placeholder $INFO)
