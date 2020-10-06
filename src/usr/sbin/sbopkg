@@ -2460,6 +2460,7 @@ current_check_updates() {
     if [[ $REMOTE != $LOCAL ]]; then
         cd ..
         rm -fR $REPO_DIR
+        git clone --single-branch --branch current --depth 1 $URL $REPO_DIR
     fi
 }
 
@@ -4651,7 +4652,7 @@ fi
 # Automatically determine the architecture we're building on:
 if [[ -z "$ARCH" ]]; then
     case "$( uname -m )" in
-        i?86) ARCH=i486 ;;
+        i?86) ARCH=i586 ;;
         arm*) export ARCH=arm ;;
         # Unless $ARCH is already set, use uname -m for all other
         # archs:
