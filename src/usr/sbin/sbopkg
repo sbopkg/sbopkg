@@ -712,7 +712,7 @@ check_for_updates() {
     local TEMPFILE=$SBOPKGTMP/sbopkg_updates_tempfile
     local ERRORMSG=$SBOPKGTMP/sbopkg_updates_errormsg
     local PROGRESSCOUNTER=0
-    local FIND_FLAGS="$REPO_DIR -mindepth 3 -maxdepth 3"
+    local FIND_FLAGS="-mindepth 3 -maxdepth 3"
     local NEWSB NEWINFO NEWVER
     local VERSION_EXPRESSION
     local UPDATELIST VERSION_FILE PROGRESSBAR_INTERRUPTED
@@ -781,13 +781,13 @@ check_for_updates() {
             get_new_name NAME $OLDNAME
 
             # Find the current SlackBuild
-            NEWSB=$(find $FIND_FLAGS -name $NAME.SlackBuild)
+            NEWSB=$(ls $REPO_DIR/*/$NAME/$NAME.SlackBuild 2> /dev/null)
             if [[ -z $NEWSB ]]; then
                 # Maybe we're running an old repository where the rename
                 # didn't take place
                 if [[ $NAME != $OLDNAME ]]; then
                     NAME=$OLDNAME
-                    NEWSB=$(find $FIND_FLAGS -name $NAME.SlackBuild)
+                    NEWSB=$(ls $REPO_DIR/*/$NAME/$NAME.SlackBuild 2> /dev/null)
                 fi
             fi
 
