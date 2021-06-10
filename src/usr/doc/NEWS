@@ -1,5 +1,73 @@
 SBOPKG NEWS
 
+sbopkg-dev (2021-05-18 18:32:02 UTC)
+    FEATURES
+	* sqg: Parallelize building of single and all packages by option -j.
+	  Patch by Marcel Saegebarth.
+	* sqg: Introduced new simple filesystem cache.
+	  This will reduce queue generation time significantly when
+	  invoked with -j N+1 (N: Number of cores)
+	  Patch by Marcel Saegebarth.
+        * sqg: Generate one queue file for multiple programs by option -o.
+          The output queue filename is user-defined.
+          You can then run sbopkg -i <queue-name> to install all packages+deps.
+          Feature Request by Jeremy/bassmadrigal (Fixed #13).
+          Implement contributions from Marcel Saegebarth.
+        * sqg: Added manual page for sqg.
+	* sbopkg: No need to do complete check for old sources if no sources available
+	  Initial patch by Loki Harfagr
+	* sbopkg: Added support for Slackware 15.0
+	* sbopkg: Added new option in sbopkg.conf: BLACKLISTFILE
+          This is used to define blacklisted package(s)
+          Feature Request by khronosschoty
+        * sbopkg: Show version when using -g in command line
+          Patch by Yaroslav Shmelev.
+        * sbopkg: Add optional sandbox support.
+          Initial patch by Orbea (#49).
+        * sbopkg: Add logrotate support.
+          Feature Request by wronguser (#50).
+        * sbokg: Add better non-interactive/cron run support
+          Initial patch by smallid (#56).
+        * sbopkg: Add more detection to local repository
+          Initial patch by arcctgx (#58)
+        * sbopkg: Show new version in view queue in GUI
+          Patch by Geremia (#62)
+        * sbopkg: Faster clone on SBo-git configuration
+          Patch by djunzu (#67)
+	* sbopkg: Checking for updates is now twice faster.
+	  Patch by Benjamin Trigona-Harany (#68)
+
+    MODIFICATIONS
+	* bash-completion: Complete -i and -b when git repo is used
+	  Patch by Sergey V.
+        * move sqg functions to /usr/libexec
+	  Patch by Marcel Saegebarth
+        * use exit 1 when rsync failed instead of 0
+        * Fix 90-SBo-master.repo to accomodate SBo's new server
+          Patch by Matteo Bernardini
+        * Remove SKIP_EMPTY option.
+        * Fix wrong glob expansion
+          Patch by Alan
+        * Use correct SlackBuild file name to build package
+          Patch by Erich Ritz
+        * Fix bug in updates_compare_versions()
+          Patch by arcctgx (#41)
+        * Fix parsing errors with shellcheck.
+          Patch by orbea (#42)
+        * Increase timeout on update detection (#43)
+        * sqg: Check for invalid .info files before processing.
+        * Support update ability for -current repo
+          Patch by JK Wood, reviewed by Matteo Bernardini (#51)
+        * Fix file ownership changes when unpacking tarball
+          Patch by pv4 (#54)
+        * Handle upper case value for MD5SUMS
+        * Better handling at git repository during bad network connection.
+          Patch by Urchlay
+        * sqg: Use /root/.sbopkg.conf if it exists.
+        * Set the tag for SBo-git to _SBo to match the rest of the packages.
+        * By default, sbopkg will not ask for directory creation for initial startup.
+        * Fix sbopkg SlackBuild to reflect latest changes (nobodino)
+
 sbopkg 0.38.1 (2016-09-01 13:42 UTC)
     FEATURES
         * Added option to download from third party source repository
