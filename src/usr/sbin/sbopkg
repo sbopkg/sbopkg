@@ -3106,22 +3106,23 @@ get_source() {
 
     echo | tee -a $TMPSUMMARYLOG
     echo "$PKG:" | tee -a $TMPSUMMARYLOG
+
+    SRCNAME=$(get_source_names --placeholder $INFO)
+    # Put SRCNAME lines into array elements.
+    # This is a little bit involved since it has to deal with spaces
+    # inside file names.
+    # We know that we could obtain the same result faster by mangling
+    # with IFS, but the resulting code was a bit too hacky.
+    eval "SRCNAME=( $(
+        while read LINE; do
+            printf '%q ' $LINE
+        done <<< $SRCNAME
+    ) )"
+
     for i in ${!MD5SUM[@]}; do
         TWGETFLAGS=$WGETFLAGS
         while :; do
             cd "$CWD"
-            SRCNAME=$(get_source_names --placeholder $INFO)
-
-            # Put SRCNAME lines into array elements.
-            # This is a little bit involved since it has to deal with spaces
-            # inside file names.
-            # We know that we could obtain the same result faster by mangling
-            # with IFS, but the resulting code was a bit too hacky.
-            eval "SRCNAME=( $(
-                while read LINE; do
-                    printf '%q ' $LINE
-                done <<< $SRCNAME
-            ) )"
 
             check_source $PKG ${MD5SUM[$i]} "${SRCNAME[$i]}"
             case $? in
