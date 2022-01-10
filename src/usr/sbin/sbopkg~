@@ -2243,6 +2243,9 @@ view_readmes() {
     local REPORT_FILE=$SBOPKGTMP/sbopkg-all-readmes-report
     local NAME ONOFF PICK
 
+    #READMES=$(find $REPO_DIR -mindepth 3 -maxdepth 3 -name README)
+    #INFOS=$(find $REPO_DIR -mindepth 3 -maxdepth 3 -name *.info)
+
     printf "$HEADER_STRING\n" > $HEAD_FILE
 
     while read PICK; do
