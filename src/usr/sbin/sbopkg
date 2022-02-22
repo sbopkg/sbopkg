@@ -2776,37 +2776,37 @@ read_info() {
     # This used to be a plain ". $INFO", but due to the changes required to
     # support multiple arches and source files (both features are planned
     # for the Slackware 13.0 release) it needs some more work.
-    # The DOWNLOAD and MD5SUM arrays will always contain the "right"
+    # The DOWNLOAD and CHECKSUM arrays will always contain the "right"
     # (possibly ARCH-dependent) values.
 
     local INFO=$1
-    local i DOWNLOAD_ARCH DLSAVE MDSAVE REPLY
-    local {DOWNLOAD,MD5SUM}_$ARCH
+    local i DOWNLOAD_ARCH DLSAVE CHECKSUMSAVE REPLY
+    local {DOWNLOAD,CHECKSUM}_$ARCH
 
-    unset DOWNLOAD MD5SUM
+    unset DOWNLOAD CHECKSUM
 
     # Parse the .info file
     . $INFO
-    # Assign the proper entries to DOWNLOAD and MD5SUM.
+    # Assign the proper entries to DOWNLOAD and CHECKSUM.
     DOWNLOAD_ARCH=$(eval echo \$DOWNLOAD_$ARCH)
     if [[ -n $DOWNLOAD_ARCH ]]; then
         DLSAVE=$DOWNLOAD
-        MDSAVE=$MD5SUM
+        CHECKSUMSAVE=$CHECKSUM
         DOWNLOAD=$DOWNLOAD_ARCH
-        MD5SUM=$(eval echo \$MD5SUM_$ARCH)
+        CHECKSUM=$(eval echo \$CHECKSUM_$ARCH)
     fi
     # Note: on SBo pre-13.0 repositories, as well as on current non-SBo
     # repositories, none of the above triggers. In that case, we use the
-    # provided DOWNLOAD and MD5SUM variables, which is exactly the old-style
+    # provided DOWNLOAD and CHECKSUM variables, which is exactly the old-style
     # behavior.
 
     # This next bit is called in process_queue and is here to test if the
     # package is marked UNSUPPORTED or UNTESTED and ask the user what he wants
     # to do.  If the user chooses to proceed, then the valid DOWNLOAD and
-    # MD5SUM lines from the .info file are tacked on to the end of the
+    # CHECKSUM lines from the .info file are tacked on to the end of the
     # *.info.build file.  This way, when read_info is called elsewhere, like
     # in get_source via process_package, the newly tacked-on lines will provide
-    # the 'correct' DOWNLOAD and MD5SUM values.  This is more or less a
+    # the 'correct' DOWNLOAD and CHECKSUM values.  This is more or less a
     # band aid until the multiple read_info invocations can be addressed.
 
     if [[ $2 == --check_buildable ]]; then
@@ -2826,17 +2826,17 @@ read_info() {
             done
             if [[ $ARCH != "x86_64" ]]; then
                 echo "DOWNLOAD=\"$DOWNLOAD_x86_64\"" >> $INFO
-                echo "MD5SUM=\"$MD5SUM_x86_64\"" >> $INFO
+                echo "CHECKSUM=\"$CHECKSUM_x86_64\"" >> $INFO
             else
                 echo "DOWNLOAD_$ARCH=\"$DLSAVE\"" >> $INFO
-                echo "MD5SUM_$ARCH=\"$MDSAVE\"" >> $INFO
+                echo "CHECKSUM_$ARCH=\"$CHECKSUMSAVE\"" >> $INFO
             fi
         fi
     fi
 
     # Convert the space-separated strings to arrays
     DOWNLOAD=($DOWNLOAD)
-    MD5SUM=($MD5SUM)
+    CHECKSUM=($CHECKSUM)
 }
 
 fix_urls() {
@@ -2869,7 +2869,7 @@ get_source_names() {
 
     local SRCNAME INFO ALL CWD DL PLACEHOLDER VER
     # Don't pollute the environment with the .info content...
-    local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
+    local PRGNAM VERSION HOMEPAGE DOWNLOAD CHECKSUM MAINTAINER EMAIL APPROVED
 
     if [[ $1 == "--all" ]]; then
         ALL=yes
@@ -2964,7 +2964,7 @@ check_source() {
     # Check the source file for correctness.
     # Parameters:
     # - $1 = package name
-    # - $2 = expected MD5
+    # - $2 = checksum name and expected CHECKSUM
     # - $3 = source file name
     # Returns 0 if the source is OK, 1 if the source should be (re)downloaded
     # (this includes the cases where $3 is empty or refers to a nonexistent
@@ -2972,9 +2972,12 @@ check_source() {
     # asked to look in the alternate repository
 
     local PKG=$1
-    local MD5SUM=$(echo "$2" | tr [:upper:] [:lower:])
+    local CHECKSUMRAW="$2" 
+    local CHECKSUMNAME=$(echo $CHECKSUMRAW | cut -f1 -d'_' | tr [:lower:] [:upper:])
+    local CHECKSUM=$(echo $CHECKSUMRAW | cut -f2 -d'_')
     local SRCNAME="$3"
-    local MD5CHK REPLY
+    local CHECK REPLY
+    local CHECKSUMPROG=$(echo $CHECKSUMNAME | tr [:upper:] [:lower:])'sum'
 
     # If there's no known source name, or if it doesn't exist, it has to be
     # downloaded...
@@ -2990,16 +2993,16 @@ check_source() {
         return 1
     fi
 
-    # Check MD5
-    echo "Checking MD5SUM:"
-    MD5CHK=$(md5sum "$SRCDIR/$SRCNAME" | cut -d' ' -f1)
-    echo -n "  MD5SUM check for $SRCNAME ... " | tee -a $TMPSUMMARYLOG
-    if [[ $MD5CHK == $MD5SUM ]]; then
+    # Check checksum
+    echo "Checking ${CHECKSUMNAME}SUM:"
+    CHECK=$($CHECKSUMPROG "$SRCDIR/$SRCNAME" | cut -d' ' -f1)
+    echo -n "  ${CHECKSUMNAME} check for $SRCNAME ... " | tee -a $TMPSUMMARYLOG
+    if [[ $CHECK == $CHECKSUM ]]; then
         echo "OK" | tee -a $TMPSUMMARYLOG
     else
         echo "FAILED!" | tee -a $TMPSUMMARYLOG
-        echo "    Expected: $MD5SUM" | tee -a $TMPSUMMARYLOG
-        echo "    Found:    $MD5CHK" | tee -a $TMPSUMMARYLOG
+        echo "    Expected: $CHECKSUM" | tee -a $TMPSUMMARYLOG
+        echo "    Found:    $CHECK" | tee -a $TMPSUMMARYLOG
         # Ask the user what to do with the bad source
         while :; do
             cat << EOF
@@ -3017,7 +3020,7 @@ EOF
             error_read
             case $REPLY in
                 Y|y)
-                    MD5SUM=$(tr / _ <<< "$MD5CHK")
+                    CHECKSUM=$(tr / _ <<< "$CHECK")
                     echo "    Keeping the source and continuing." |
                         tee -a $TMPSUMMARYLOG
                     return 0
@@ -3072,11 +3075,11 @@ check_cert_prompt() {
 
 make_archive_url() {
     # Get (and echo) the sbosrcarch URL for a source
-    local MD5SUM=$1
+    local CHECKSUM=$1
     local SRCNAME=$2
 
     local ARCHIVE=${SRC_REPO:-"http://slackware.uk/sbosrcarch"}
-    echo $ARCHIVE/by-md5/${MD5SUM:0:1}/${MD5SUM:1:1}/$MD5SUM/$SRCNAME
+    echo $ARCHIVE/by-checksum/${CHECKSUM:0:1}/${CHECKSUM:1:1}/$CHECKSUM/$SRCNAME
 }
 
 get_source() {
@@ -3097,16 +3100,16 @@ get_source() {
     local DLDIR=$SBOPKGTMP/sbopkg-download
     local SBOPKG_PIDLIST=$SBOPKGTMP/sbopkgpidlist
     local TMPSUMMARYLOG=$SBOPKGTMP/sbopkg-tmp-summarylog
-    local SRCNAME DL_SRCNAME DL FAILURE MD5CHK i CWD TWGETFLAGS WGETRC
+    local SRCNAME DL_SRCNAME DL FAILURE CHECK i CWD TWGETFLAGS WGETRC
     # Don't pollute the environment with the .info content...
-    local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
+    local PRGNAM VERSION HOMEPAGE DOWNLOAD CHECKSUM MAINTAINER EMAIL APPROVED
 
     CWD=$(pwd)
     read_info $INFO
 
     echo | tee -a $TMPSUMMARYLOG
     echo "$PKG:" | tee -a $TMPSUMMARYLOG
-    for i in ${!MD5SUM[@]}; do
+    for i in ${!CHECKSUM[@]}; do
         TWGETFLAGS=$WGETFLAGS
         while :; do
             cd "$CWD"
@@ -3123,7 +3126,7 @@ get_source() {
                 done <<< $SRCNAME
             ) )"
 
-            check_source $PKG ${MD5SUM[$i]} "${SRCNAME[$i]}"
+            check_source $PKG ${CHECKSUM[$i]} "${SRCNAME[$i]}"
             case $? in
                 0 ) # Source OK
                     ln -sf "$SRCDIR/${SRCNAME[$i]}" \
@@ -3137,7 +3140,7 @@ get_source() {
                     break 2
                     ;;
                 3 ) # Archive
-                    DOWNLOAD[$i]=$( make_archive_url ${MD5SUM[$i]} ${SRCNAME[$i]} )
+                    DOWNLOAD[$i]=$( make_archive_url ${CHECKSUM[$i]} ${SRCNAME[$i]} )
                     ;;
             esac
 
