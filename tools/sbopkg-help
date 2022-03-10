@@ -25,6 +25,7 @@ Options are:
                   installed packages from the active repo.
   -r              Sync the remote repository with the local mirror and then
                   quit.
+  -S              Use sandbox when building packages.
   -s package(s)   Specific search by specific package and, if found,
                   display package information.
   -u              Check for an update to sbopkg.

@@ -1,9 +1,8 @@
-Content-type: text/html
-
 <HTML><HEAD><TITLE>Manpage of SBOPKG.CONF</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 </HEAD><BODY>
 <H1>SBOPKG.CONF</H1>
-Section:  (5)<BR>Updated: September 2016<BR><A HREF="#index">Index</A>
+Section:  (5)<BR>Updated: March 2022<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 
@@ -282,7 +281,7 @@ to
 <DT><DD>
 The default assignment is:
 <DT><DD>
-MKDIR_PROMPT=${MKDIR_PROMPT:-YES}
+MKDIR_PROMPT=${MKDIR_PROMPT:-NO}
 
 <DT><B>NICE</B>
 
@@ -376,7 +375,7 @@ files and can also be listed by issuing
 <DT><DD>
 The default assignment is:
 <DT><DD>
-REPO_BRANCH=${REPO_BRANCH:-14.2}
+REPO_BRANCH=${REPO_BRANCH:-15.0}
 
 <DT><B>REPO_NAME</B>
 
@@ -485,6 +484,19 @@ The default assignment is:
 <DT><DD>
 SRCDIR=${SRCDIR:-/var/cache/sbopkg}
 
+
+<DT><B>BLACKLISTFILE</B>
+
+<DD>
+Path.
+<DT><DD>
+This option contains the location of the file that list all blacklisted
+package(s).
+<DT><DD>
+The default assignment is:
+<DT><DD>
+BLACKLISTFILE=${BLACKLISTFILE:-/etc/sbopkg/blacklist}
+
 <DT><B>TMP</B>
 
 <DD>
@@ -575,12 +587,13 @@ WGETFLAGS=&quot;${WGETFLAGS:--c --progress=bar:force --timeout=30 --tries=5}&quo
 <DT><B>SRC_REPO</B>
 
 <DD>
-Path.
+Path
 <DT><DD>
 This option sets the alternative third party source repository that can
 be used to download the source files for package building.
 <DT><DD>
-The default value is hard-coded to http://slackware.uk/sbosrcarch
+The default value is hard-coded to <A HREF="http://slackware.uk/sbosrcarch">http://slackware.uk/sbosrcarch</A>
+
 </DL>
 <A NAME="lbAD">&nbsp;</A>
 <H2>NOTES</H2>
@@ -702,7 +715,7 @@ If the architecture is x86, x86_64, or arm*, then
 automatically sets
 <B>ARCH</B>
 
-to i486, x86_64, or arm, respectively.
+to i586, x86_64, or arm, respectively.
 If
 <B>ARCH</B>
 
@@ -792,18 +805,18 @@ documentation directory for more information.
 <H2>AUTHORS</H2>
 
 Willy Sudiarto Raharjo
-&lt;<A HREF="mailto:willysr@sbopkg.org">willysr@sbopkg.org</A>&gt;
+&lt;willysr@sbopkg.org&gt;
 <P>
 Chess Griffin
-&lt;<A HREF="mailto:chess@chessgriffin.com">chess@chessgriffin.com</A>&gt;
+&lt;chess@chessgriffin.com&gt;
 <P>
 
 Mauro Giachero
-&lt;<A HREF="mailto:mauro.giachero@gmail.com">mauro.giachero@gmail.com</A>&gt;
+&lt;mauro.giachero@gmail.com&gt;
 <P>
 
 slakmagik
-&lt;<A HREF="mailto:slakmagik@gmail.com">slakmagik@gmail.com</A>&gt;
+&lt;slakmagik@gmail.com&gt;
 
 
 
@@ -824,7 +837,7 @@ slakmagik
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+wget">wget</A></B>(1),
 
-<I>/usr/doc/sbopkg-0.38.1/*</I>
+<I>/usr/doc/sbopkg-0.38.2/*</I>
 
 
 <P>
@@ -845,8 +858,8 @@ slakmagik
 </DL>
 <HR>
 This document was created by
-<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+<A HREF="http://github.com/hamano/man2html/">man2html</A>,
 using the manual pages.<BR>
-Time: 13:42:15 GMT, September 01, 2016
+Time: 16:29:25 GMT, March 10, 2022
 </BODY>
 </HTML>
