@@ -27,7 +27,7 @@ sanity_checks () {
   fi
 
   # check whether we are using git or rsync
-  if [ -d $REPO_ROOT/$REPO_NAME/.git ]; then
+  if [ $REPO_BRANCH == "master" ] || [ $REPO_BRANCH == "current" ]; then
     REPO_SUBPATH=$REPO_NAME
   else
     REPO_SUBPATH=$REPO_NAME/$REPO_BRANCH
