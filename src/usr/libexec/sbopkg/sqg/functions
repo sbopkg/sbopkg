@@ -108,7 +108,7 @@ search_package () {
     PKGPATH=$(cat "$SQG_TMP_DIR/$SRCHAPP")
   else
     cd $REPO_DIR
-    PKGPATH=($(find -type d -mindepth 2 -maxdepth 2 -name "$SRCHAPP" | sort))
+    PKGPATH=($(find -type d -mindepth 3 -maxdepth 3 -name "$SRCHAPP" | sort))
     echo "$PKGPATH" > "$SQG_TMP_DIR/$SRCHAPP"
   fi
 
