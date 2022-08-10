@@ -1299,6 +1299,7 @@ info_item() {
             "Custom" "Customize the .info or SlackBuild" \
             "Remove" "Remove $APP sources in cache" \
             "Options" "Edit Build Options/Flavors" \
+            "Build queue" "Build queue file with sqg" \
             "Check GPG" "Check the GPG signature of the $REPO_NAME tarball" \
             "Extract" "Re-extract the $REPO_NAME tarball" \
             "Queue" "Add $APP to queue" \
@@ -1358,6 +1359,7 @@ info_item() {
                                 repository.")" 8 30
                         fi
                         ;;
+                    "Build queue" ) nohup sqg -p $APP >/dev/null 2>&1 &  ;;
                     Extract )
                         if [[ ! -z $REPO_GPG ]]; then
                             extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
