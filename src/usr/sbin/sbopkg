@@ -1299,6 +1299,7 @@ info_item() {
             "Custom" "Customize the .info or SlackBuild" \
             "Remove" "Remove $APP sources in cache" \
             "Options" "Edit Build Options/Flavors" \
+            "Build queue" "Build queue file with sqg" \
             "Check GPG" "Check the GPG signature of the $REPO_NAME tarball" \
             "Extract" "Re-extract the $REPO_NAME tarball" \
             "Queue" "Add $APP to queue" \
@@ -1357,6 +1358,12 @@ info_item() {
                                 checks are not enabled for the $REPO_NAME \
                                 repository.")" 8 30
                         fi
+                        ;;
+                    "Build queue" )
+                        /usr/sbin/sqg -p "$APP"
+                        dialog --title "Done" \
+                                    --msgbox "$(crunch "The \
+                                    queue has been generated.")" 8 30
                         ;;
                     Extract )
                         if [[ ! -z $REPO_GPG ]]; then
