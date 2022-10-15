@@ -1,10 +1,12 @@
 SBOPKG NEWS
 
-sbopkg-devel (2022-03-16 11:56 UTC)
+sbopkg-devel (2022-10-15 11:59 UTC)
     MODIFICATIONS
         * Update renames
         * sqg: Fix repo detection when people switch from stable to master or vice versa
           Patch by Jeremy Hansen (#77)
+        * sqg: Fix duplicate lines when executing custom queue (partial fix for #83)
+          Reported by Jeremy Hansen
 
 sbopkg 0.38.2 (2022-03-10 16:29 UTC)
     FEATURES

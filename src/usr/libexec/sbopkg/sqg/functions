@@ -199,6 +199,11 @@ build_queuefile_custom () {
       fi
     done
   )
+
+  # Remove all duplicates while preserving the order of lines
+  # Reference: https://unix.stackexchange.com/questions/194780/remove-duplicate-lines-while-keeping-the-order-of-the-lines
+  cat -n "$QUEUEDIR/$QUEUENAME.sqf" | sort -k2 | uniq -f1 | sort -k1 | cut -f2- > "$QUEUEDIR/$QUEUENAME.tmp"
+  mv "$QUEUEDIR/$QUEUENAME.tmp" "$QUEUEDIR/$QUEUENAME.sqf"
 }
 
 #
