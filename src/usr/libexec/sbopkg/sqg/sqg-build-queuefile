@@ -24,7 +24,9 @@ else
     echo "Processing $INFO_BASENAME."
   fi
 
-  if [[ ! -z $REQUIRES ]]; then
+  if [[ ! -z $CUSTOM_QUEUE ]]; then
     build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM" "$CUSTOM_QUEUE"
+  elif [[ ! -z $REQUIRES ]]; then
+    build_queuefile "$REPO_DIR" "$QUEUEDIR" "$PRGNAM"
   fi
 fi

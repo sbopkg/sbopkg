@@ -164,6 +164,7 @@ build_queuefile () {
   local REPO_DIR="$1"
   local QUEUEDIR="$2"
   local PRGNAM="$3"
+  local CUSTOM_QUEUE="${4:-}"
 
   local OLDFILE=$QUEUEDIR/$PRGNAM.sqf
   local QUEUEFILE=$QUEUEDIR/$PRGNAM.sqf.tmp
@@ -174,7 +175,9 @@ build_queuefile () {
   parse_queuefile_requires "$REPO_DIR" "$PRGNAM" "$QUEUEFILE"
   tac $QUEUEFILE > $CATFILE
   if cmp -s "$CATFILE" "$OLDFILE"; then
-    rm $QUEUEFILE $CATFILE
+    if [ -z $CUSTOM_QUEUE ]; then
+      rm $QUEUEFILE $CATFILE
+    fi
   else
     mv $CATFILE $OLDFILE
     rm $QUEUEFILE
@@ -242,7 +245,7 @@ execute_build () {
   printf '%s\n' "${PKGSNEW[@]}" | \
       parallel --eta --will-cite --jobs $JOBS \
       /usr/libexec/sbopkg/sqg/sqg-build-queuefile \
-      "$REPO_DIR" "$QUEUEDIR" {} "$VERBOSE"
+      "$REPO_DIR" "$QUEUEDIR" {} "$VERBOSE" $CUSTOM_QUEUE
 
   if [ ! -z $CUSTOM_QUEUE ]; then
     build_queuefile_custom "$QUEUEDIR" "$CUSTOM_QUEUE" "$PKGS"
