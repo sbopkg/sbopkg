@@ -55,7 +55,7 @@ RECURSIVE QUEUEFILES
         app5
         @multimedia.sqf
 
-    In this case, when the 'mydesktop.sqf' queuefile is loaded, it will
+    In this case, when the 'desktop.sqf' queuefile is loaded, it will
     first load app4, then app5, then the contents of the multimedia.sqf
     queuefile. The final queue will look like this:
 
