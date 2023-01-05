@@ -1,0 +1,30 @@
+name: Test
+
+on:
+  push:
+    branches: master
+    paths-ignore:
+      - '**.md'
+
+  pull_request:
+    branches: master
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  slackware:
+    runs-on: ubuntu-latest
+    container: andy5995/slackware-build-essential:15.0
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Remove existing package
+      run: removepkg sbopkg
+
+    - name: Copy current
+      run: |
+        cd src
+        cp -av * /
+
+    - name: Sync
+      run: sbopkg -r
