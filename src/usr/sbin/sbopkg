@@ -3011,10 +3011,11 @@ You can choose among the following options:
  - (Y)es, keep the source and continue the build process;
  - (N)o, delete the source and abort the build process;
  - (R)etry download and continue the build process; or
- - (A)ttempt to download from third party source repository.
+ - (A)ttempt to download from the SBo Source Archive [default].
 EOF
-            printf "(Y)es, (N)o, (R)etry, (A)lternative ?: "
+            printf "Your choice [y/n/r/A]: "
             error_read
+            echo
             case $REPLY in
                 Y|y)
                     MD5SUM=$(tr / _ <<< "$MD5CHK")
@@ -3031,7 +3032,7 @@ EOF
                     echo "    Downloading again." | tee -a $TMPSUMMARYLOG
                     return 1
                     ;;
-                A|a)
+                A|a|'')
                     echo "    Searching source repository." | tee -a $TMPSUMMARYLOG
                     return 3
                     ;;
@@ -3070,10 +3071,52 @@ check_cert_prompt() {
     done
 }
 
+archive_prompt() {
+    # 20240326 bkw: this gets called if the download of the original URL fails,
+    # asks whether to try sbosrcarch.
+    #
+    # Parameters: none
+    #
+    # Return value:
+    # true (0)  = user wants to try the archive
+    # false (1) = user doesn't want to try the archive
+
+    local REPLY
+
+    echo
+    crunch_fmt "$SCRIPT: Download failed. Source may be available in the archive."
+    echo
+
+    while :; do
+        printf "Download the source from the SBo Source Archive? [Y/n]: "
+        error_read
+        echo
+        case $REPLY in
+            Y|y|'') echo "    Searching source repository." | tee -a $TMPSUMMARYLOG
+                    return 0 ;;
+            N|n)    echo "    Not searching source repository." | tee -a $TMPSUMMARYLOG
+                    return 1 ;;
+            *)      unknown_response ;;
+        esac
+    done
+}
+
 make_archive_url() {
-    # Get (and echo) the sbosrcarch URL for a source
+    # 20240326 bkw: Get (and echo) the sbosrcarch URL for a source.
+    # SRC_REPO gets set in the config file, but in case someone's got an
+    # old config, use a reasonable default (in fact, currently, the only
+    # possible setting is the default, nobody else is running a sbosrcarch
+    # instance AFAIK).
+    #
+    # Parameters:
+    # $1 = md5sum
+    # $2 = original download URL from .info file.
+    #
+    # Return value:
+    # void, but prints the URL (use $() to capture).
+
     local MD5SUM=$1
-    local SRCNAME=$2
+    local SRCNAME="$( echo $2 | sed 's,.*/,,' )"
 
     local ARCHIVE=${SRC_REPO:-"http://slackware.uk/sbosrcarch"}
     echo $ARCHIVE/by-md5/${MD5SUM:0:1}/${MD5SUM:1:1}/$MD5SUM/$SRCNAME
@@ -3123,6 +3166,12 @@ get_source() {
                 done <<< $SRCNAME
             ) )"
 
+            # 20240326 bkw: SRCNAME[] sometimes contains "." instead of the
+            # actual filename, so don't pass it to make_archive_url; instead,
+            # make_archive_url takes the full URL and extracts the filename.
+            # We always construct this URL, even if we end up not using it.
+            ARCHIVEURL=$( make_archive_url ${MD5SUM[$i]} ${DOWNLOAD[$i]} )
+
             check_source $PKG ${MD5SUM[$i]} "${SRCNAME[$i]}"
             case $? in
                 0 ) # Source OK
@@ -3137,7 +3186,7 @@ get_source() {
                     break 2
                     ;;
                 3 ) # Archive
-                    DOWNLOAD[$i]=$( make_archive_url ${MD5SUM[$i]} ${SRCNAME[$i]} )
+                    DOWNLOAD[$i]=$ARCHIVEURL
                     ;;
             esac
 
@@ -3168,6 +3217,11 @@ get_source() {
                 if [[ $WGETRC == 5 &&
                         $TWGETFLAGS != *no-check-certificate* ]]; then
                     check_cert_prompt && continue
+                elif [[ $WGETRC != 0 && ${DOWNLOAD[$i]} != $ARCHIVEURL ]]; then
+                    if archive_prompt; then
+                        DOWNLOAD[$i]=$ARCHIVEURL
+                        continue
+                    fi
                 fi
                 FAILURE=download
                 echo "  Download failed." >> $TMPSUMMARYLOG

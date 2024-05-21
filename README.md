@@ -15,6 +15,7 @@ Sbopkg will allow the user to:
 * View the README, SlackBuild, .info, and slack-desc files for each individual piece of software in the repository.
 * Copy the original .info file or SlackBuild for editing.
 * Automatically download the source code, check the md5sum, and build or build and install a Slackware package from either the original .info file and SlackBuild or the locally-edited copies.
+* Download source code from the [SBo Source Archive](https://slackware.uk/sbosrcarch/) if the original URL no longer works.
 * Batch queue packages for building or building and installing.
 * Load, save, and use sbopkg [queuefiles](https://github.com/sbopkg/sbopkg/wiki/Queuefiles) (.sqf), several of which are included with the package.
 * View the contents of the cache directory (where source code tarballs are stored).
