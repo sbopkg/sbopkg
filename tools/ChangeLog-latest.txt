@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-devel (2024-05-21 00:31 UTC)
+sbopkg-devel (2024-07-02 16:45 UTC)
     MODIFICATIONS
         * Update renames
         * sqg: Fix repo detection when people switch from stable to master or vice versa
@@ -9,6 +9,8 @@ sbopkg-devel (2024-05-21 00:31 UTC)
           Reported by Jeremy Hansen
 	* sbopkg: Support download from sbosrcarch
 	  Patch by Urchlay
+	* sqg: Fix 'find' command to work with symlinked REPO_DIR
+	  Patch by Logan Rathbone (#92)
 
 sbopkg 0.38.2 (2022-03-10 16:29 UTC)
     FEATURES
