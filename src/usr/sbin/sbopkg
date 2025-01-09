@@ -2140,7 +2140,7 @@ add_item_to_queue() {
         # false match when running 'sbopkg -k -i queue' because 'foo' and
         # 'libfoo' matched
         INSTALLED=$(ls -1 /var/lib/pkgtools/packages/ |
-            grep "^$APP-[^-]*-[^-]*-[^-]*$REPO_TAG$")
+            grep "^$APP-[^-]*-[^-]*-[^-]*$")
         if [[ -n $INSTALLED ]]; then
             VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
             if [[ -e $UPDATELIST ]]; then
