@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-devel (2025-02-16 18:53 UTC)
+sbopkg-devel (2025-02-17 16:11 UTC)
     MODIFICATIONS
         * Update renames
         * sqg: Fix repo detection when people switch from stable to master or vice versa
@@ -15,6 +15,8 @@ sbopkg-devel (2025-02-16 18:53 UTC)
 	  Patch by Qury (#80)
 	* sbopkg.SlackBuild: Fixed variable for man pages.
 	  Reported by Tim Dickson
+	* Added pre-specified options in Bulk mode
+	  Patch by Spycrowsoft (#94)
 
 sbopkg 0.38.2 (2022-03-10 16:29 UTC)
     FEATURES

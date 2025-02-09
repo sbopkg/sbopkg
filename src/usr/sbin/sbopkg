@@ -3869,47 +3869,71 @@ use_options() {
                 QUEUEOPT=" (Q)ueuefile,"
             fi
             echo
-            while :; do
-                read $NFLAG \
-                    -ep "Use (N)one,$CLI_OPT$SAVEDOPT$QUEUEOPT or (A)bort?: "
-                case $REPLY in
-                    N|n) break ;;
-                    C|c)
-                        if [[ $CLI_OPTIONS ]]; then
-                            BUILDOPTIONS="$CLI_OPTIONS"
-                            cp $CLI_OPTFILE $PKGPATH/options.build
-                            break
-                        fi
-                        ;;
-                    S|s)
-                        if [[ $TMPOPTIONS ]]; then
-                            cp $PKGPATH/options.sbopkg $PKGPATH/options.build
-                            BUILDOPTIONS=$TMPOPTIONS
-                            break
-                        else
-                            echo
-                            crunch_fmt "ERROR:  No saved options found. \
-                                Please make another choice."
-                            echo
-                        fi
-                        ;;
-                    Q|q)
-                        if [[ $LDOPTIONS ]]; then
-                            cp $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions \
-                                $PKGPATH/options.build
-                            BUILDOPTIONS=$LDOPTIONS
-                            break
-                        else
-                            echo
-                            crunch_fmt "ERROR:  No queuefile options found. \
-                                Please make another choice."
-                            echo
-                        fi
-                        ;;
-                    A|a) return 1 ;;
-                    *) unknown_response ;;
-                esac
-            done
+            if [[ $BULK ]]; then
+                # When running in BULK mode, use the most specific option by default.
+                # The order of specificity is defined as: Queuefile < Saved < CLI.
+                if [[ $LDOPTIONS ]]; then
+                    cp $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions \
+                        $PKGPATH/options.build
+                    BUILDOPTIONS=$LDOPTIONS
+                    BULK_OPT="queuefile options: $LDOPTIONS"
+                fi
+                if [[ $TMPOPTIONS ]]; then
+                    cp $PKGPATH/options.sbopkg $PKGPATH/options.build
+                    BUILDOPTIONS=$TMPOPTIONS
+                    BULK_OPT="saved options: $TMPOPTIONS"
+                fi
+                if [[ $CLI_OPTIONS ]]; then
+                    BUILDOPTIONS="$CLI_OPTIONS"
+                    cp $CLI_OPTFILE $PKGPATH/options.build
+                    BULK_OPT="command line options: $CLI_OPTIONS"
+                fi
+                echo "Running in bulk mode."
+                echo "Using $BULK_OPT"
+                unset BULK_OPT
+            else
+                while :; do
+                    read $NFLAG \
+                        -ep "Use (N)one,$CLI_OPT$SAVEDOPT$QUEUEOPT or (A)bort?: "
+                    case $REPLY in
+                        N|n) break ;;
+                        C|c)
+                            if [[ $CLI_OPTIONS ]]; then
+                                BUILDOPTIONS="$CLI_OPTIONS"
+                                cp $CLI_OPTFILE $PKGPATH/options.build
+                                break
+                            fi
+                            ;;
+                        S|s)
+                            if [[ $TMPOPTIONS ]]; then
+                                cp $PKGPATH/options.sbopkg $PKGPATH/options.build
+                                BUILDOPTIONS=$TMPOPTIONS
+                                break
+                            else
+                                echo
+                                crunch_fmt "ERROR:  No saved options found. \
+                                    Please make another choice."
+                                echo
+                            fi
+                            ;;
+                        Q|q)
+                            if [[ $LDOPTIONS ]]; then
+                                cp $SBOPKGTMP/sbopkg_"$OPTAPP"_loadoptions \
+                                    $PKGPATH/options.build
+                                BUILDOPTIONS=$LDOPTIONS
+                                break
+                            else
+                                echo
+                                crunch_fmt "ERROR:  No queuefile options found. \
+                                    Please make another choice."
+                                echo
+                            fi
+                            ;;
+                        A|a) return 1 ;;
+                        *) unknown_response ;;
+                    esac
+                done
+            fi
             echo
         fi
     fi
