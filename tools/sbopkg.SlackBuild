@@ -49,6 +49,21 @@ cp -ar src/usr/libexec/$PRGNAM/* $PKG/usr/libexec/$PRGNAM
 
 mkdir -p $PKG/usr/man
 cp -a src/usr/man/* $PKG/usr/man
+
+MONTH="$(date +%B)"
+YEAR="$(date +%Y)"
+UTCDATE="$(date -u +"%F %R UTC")"
+size="about 336MB"
+sed -i "
+    s/sbopkg-SVN/sbopkg-$VERSION/
+    s/xxxDATExxx/$MONTH $YEAR/
+    s/xxxUTCDATExxx/$UTCDATE/
+    s/xxxSIZExxx/$size/
+    s/xxxVERSIONxxx/$VERSION/
+    " $PKG/usr/man/man5/sbopkg.conf.5 $PKG/usr/man/man8/sbopkg.8 $PKG/usr/man/man8/sqg.8 \
+      $PKG/usr/man/es/man5/sbopkg.conf.5 $PKG/usr/man/es/man8/sbopkg.8 \
+      $PKG/usr/man/fr/man5/sbopkg.conf.5 $PKG/usr/man/fr/man8/sbopkg.8
+
 find $PKG/usr/man -type f -exec gzip -9 {} \;
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
@@ -58,6 +73,7 @@ ln -s /usr/doc/$PRGNAM-$VERSION/README-renames \
     $PKG/etc/$PRGNAM/renames.d/README
 cp -a $CWD/sbopkg.SlackBuild $PKG/usr/doc/$PRGNAM-$VERSION
 chown root:root $PKG/usr/doc/$PRGNAM-$VERSION/sbopkg.SlackBuild
+rm -f $PKG/usr/doc/$PRGNAM-$VERSION/*.tmp
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
