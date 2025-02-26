@@ -380,3 +380,4 @@ zc.lockfile=python3-zc.lockfile
 zdaemon=python3-zdaemon
 zfs-on-linux=openzfs
 zxcvbn-python=python3-zxcvbn-python
+STM32CubeIDE=stm32cubeide
