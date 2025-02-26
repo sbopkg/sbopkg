@@ -1,8 +1,13 @@
 SBOPKG NEWS
 
-sbopkg-devel (2025-02-17 16:11 UTC)
+sbopkg-devel (2025-02-26 02:55 UTC)
+    FEATURES
+    * Added new option (-n) to download rename file from upstream directly
+      This will allow people to get the latest renamed scripts in SBo without waiting
+      for next release of sbopkg.
+
     MODIFICATIONS
-        * Update renames
+        * Update renames up to latest public update
         * sqg: Fix repo detection when people switch from stable to master or vice versa
           Patch by Jeremy Hansen (#77)
         * sqg: Fix duplicate lines when executing custom queue (partial fix for #83)

@@ -4250,6 +4250,19 @@ start_dialog_queue() {
     esac
 }
 
+download_rename() {
+    # download rename file from upstream
+    wget -T 20 -q https://raw.githubusercontent.com/sbopkg/sbopkg/refs/heads/master/src/etc/sbopkg/renames.d/50-default.renames -O /etc/sbopkg/renames.d/50-default.renames
+
+    if [[ $? -eq 0 ]]; then
+        if [[ $DIAG ]]; then
+        dialog --title "Done" --msgbox "$(crunch "Rename file updated")" 16 40
+
+        else
+            echo "Rename file updated"
+        fi
+    fi
+}
 check_for_latest() {
     # Check for an update to sbopkg.  This code is borrowed with
     # permission from the superb mirror-slackware-current.sh
@@ -4404,6 +4417,7 @@ utilities_menu() {
             "Repository" "Select repository [ $REPO_NAME ($REPO_BRANCH) ]" \
             "Latest" "Check for an update to sbopkg"  \
             "Uninstalled packages" "View uninstalled packages" \
+            "Download rename" "Download latest rename file" \
             "Obsolete sources" "View obsolete cached sources" 2> $ANSWERFILE
 
         DEFAULTITEM=$(< $ANSWERFILE)
@@ -4414,6 +4428,7 @@ utilities_menu() {
             "Repository" ) select_repository ;;
             "Latest" ) check_for_latest ;;
             "Uninstalled packages" ) remove_uninstalled_packages ;;
+            "Download rename" ) download_rename ;;
             "Obsolete sources" ) remove_obsolete_sources ;;
             *) break ;;
         esac
@@ -4754,7 +4769,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrSs:uV:v" OPT; do
+while getopts ":b:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:v" OPT; do
     case $OPT in
         b ) # Download, build
             set_type build
@@ -4799,6 +4814,10 @@ while getopts ":b:BcD:d:e:f:g:hi:kloPpqRrSs:uV:v" OPT; do
             ;;
         l ) # Show SBo ChangeLog
             CHANGELOG=1
+            unset DIAG
+            ;;
+        n ) # Download rename file
+            DOWNLOAD_RENAME=1
             unset DIAG
             ;;
         o ) # Show obsolete sources
@@ -4864,6 +4883,7 @@ Options are:
   -i pkg/queue(s) Like '-b', but also install built packages.
   -k              Skip installed packages when building.
   -l              Display the repo's ChangeLog.txt and then quit.
+  -n              Download latest renames
   -o              Display the obsolete source files & prompt for deletion.
   -P              List uninstalled cached package files & prompt for deletion.
   -p              List installed packages from active repo.
@@ -5109,6 +5129,10 @@ else
             gen_search_package $PKGSEARCH
         done
         set +f
+    fi
+
+    if [[ $DOWNLOAD_RENAME ]]; then
+        download_rename
     fi
 fi
 
