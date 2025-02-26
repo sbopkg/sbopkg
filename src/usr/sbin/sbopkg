@@ -4256,10 +4256,15 @@ download_rename() {
 
     if [[ $? -eq 0 ]]; then
         if [[ $DIAG ]]; then
-        dialog --title "Done" --msgbox "$(crunch "Rename file updated")" 16 40
-
+            dialog --title "Done" --msgbox "$(crunch "Rename file updated")" 16 40
         else
             echo "Rename file updated"
+        fi
+    else
+        if [[ $DIAG ]]; then
+            dialog --title "Done" --msgbox "$(crunch "Download failed")" 16 40
+        else
+            echo "Download failed"
         fi
     fi
 }
