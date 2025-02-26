@@ -15,6 +15,7 @@ Options are:
   -i pkg/queue(s) Like '-b', but also install built packages.
   -k              Skip installed packages when building.
   -l              Display the repo's ChangeLog.txt and then quit.
+  -n              Download latest renames
   -o              Display the obsolete source files & prompt for deletion.
   -P              List uninstalled cached package files & prompt for deletion.
   -p              List installed packages from active repo.
