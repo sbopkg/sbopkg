@@ -9,7 +9,7 @@
 # Based on the SlackBuilds.org template.
 
 PRGNAM=sbopkg
-VERSION=${VERSION:-0.38.2}
+VERSION=${VERSION:-0.38.3}
 ARCH=${ARCH:-noarch}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_wsr}
@@ -53,7 +53,7 @@ cp -a src/usr/man/* $PKG/usr/man
 MONTH="$(date +%B)"
 YEAR="$(date +%Y)"
 UTCDATE="$(date -u +"%F %R UTC")"
-size="about 336MB"
+size="about 457MB"
 sed -i "
     s/sbopkg-SVN/sbopkg-$VERSION/
     s/xxxDATExxx/$MONTH $YEAR/

@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-devel (2025-02-26 02:55 UTC)
+sbopkg 0.38.3 (2025-02-27 14:07 UTC)
     FEATURES
     * Added new option (-n) to download rename file from upstream directly
       This will allow people to get the latest renamed scripts in SBo without waiting

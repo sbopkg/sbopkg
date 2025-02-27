@@ -1,5 +1,28 @@
 SBOPKG NEWS
 
+sbopkg 0.38.3 (2025-02-27 14:25 UTC)
+
+    * Added new option (-n) to download rename file from upstream directly
+      This will allow people to get the latest renamed scripts in SBo without waiting
+      for next release of sbopkg.
+
+    MODIFICATIONS
+        * Update renames up to latest public update
+        * sqg: Fix repo detection when people switch from stable to master or vice versa
+          Patch by Jeremy Hansen (#77)
+        * sqg: Fix duplicate lines when executing custom queue (partial fix for #83)
+          Reported by Jeremy Hansen
+	* sbopkg: Support download from sbosrcarch
+	  Patch by Urchlay
+	* sqg: Fix 'find' command to work with symlinked REPO_DIR
+	  Patch by Logan Rathbone (#92)
+	* sbopkg: Add option to generate queue file
+	  Patch by Qury (#80)
+	* sbopkg.SlackBuild: Fixed variable for man pages.
+	  Reported by Tim Dickson
+	* Added pre-specified options in Bulk mode
+	  Patch by Spycrowsoft (#94)
+
 sbopkg 0.38.2 (2022-03-10 16:29 UTC)
     FEATURES
 	* sqg: Parallelize building of single and all packages by option -j.
