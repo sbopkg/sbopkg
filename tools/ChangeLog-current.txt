@@ -1,4 +1,4 @@
 SBOPKG NEWS
 
-sbopkg 0.38.3 (2025-02-27 14:26 UTC)
+sbopkg xxxVERSIONxxx (xxxUTCDATExxx)
 
