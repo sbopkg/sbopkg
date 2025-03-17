@@ -1,5 +1,10 @@
 SBOPKG NEWS
 
+sbopkg-devel (2025-03-17 13:34 UTC)
+    MODIFICATIONS
+	* Fix parsing sources with space
+          Patch by bormant (#99)
+
 sbopkg 0.38.3 (2025-02-27 14:07 UTC)
     FEATURES
     * Added new option (-n) to download rename file from upstream directly

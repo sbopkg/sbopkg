@@ -3162,16 +3162,13 @@ get_source() {
             cd "$CWD"
             SRCNAME=$(get_source_names --placeholder $INFO)
 
-            # Put SRCNAME lines into array elements.
-            # This is a little bit involved since it has to deal with spaces
-            # inside file names.
-            # We know that we could obtain the same result faster by mangling
-            # with IFS, but the resulting code was a bit too hacky.
-            eval "SRCNAME=( $(
-                while read LINE; do
-                    printf '%q ' $LINE
-                done <<< $SRCNAME
-            ) )"
+            # Parse SRCNAME into array elements, preserving spaces and special characters in filenames.
+            # We avoid faster but less readable IFS-based splitting in favor of clarity and maintainability.
+            eval SRCNAME=( $(
+            while IFS= read -r LINE; do
+            printf '%q ' "$LINE"
+            done <<< "$SRCNAME"
+) )
 
             # 20240326 bkw: SRCNAME[] sometimes contains "." instead of the
             # actual filename, so don't pass it to make_archive_url; instead,
