@@ -383,3 +383,5 @@ zdaemon=python3-zdaemon
 zfs-on-linux=openzfs
 zxcvbn-python=python3-zxcvbn-python
 platform=p8-platform
+trezor=python3-trezor
+mnemonic=python3-mnemonic
