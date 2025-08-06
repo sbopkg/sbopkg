@@ -385,3 +385,4 @@ zxcvbn-python=python3-zxcvbn-python
 platform=p8-platform
 trezor=python3-trezor
 mnemonic=python3-mnemonic
+python3-xdg=python3-xdg-base-dirs
