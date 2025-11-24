@@ -388,3 +388,4 @@ mnemonic=python3-mnemonic
 python3-xdg=python3-xdg-base-dirs
 pynacl=python3-pynacl
 sbotools3=sbotools
+numpydoc=python3-numpydoc
