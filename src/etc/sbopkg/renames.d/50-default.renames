@@ -389,3 +389,5 @@ python3-xdg=python3-xdg-base-dirs
 pynacl=python3-pynacl
 sbotools3=sbotools
 numpydoc=python3-numpydoc
+tinycss2=python3-tinycss2
+pushover=domino-chain
