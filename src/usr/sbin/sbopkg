@@ -2890,14 +2890,19 @@ get_source_names() {
 
     read_info $INFO
     for DL in "${DOWNLOAD[@]}"; do
-        # remove the '/download' from several SRCNAMEs that end that way
-        # rather than in the actual tarball so the subsequent basename doesn't
-        # end with 'download'
-        SRCNAME=${DL%\/download}
-        SRCNAME=${SRCNAME##*/}
-        # calcurse has a nonsense url in the info file - this is to get it
-        # through this function and on to remove_obsolete_sources()
-        SRCNAME=$(fix_urls <<< "$SRCNAME")
+        # Handle URLs with fn= or f= parameters (e.g., git web interfaces)
+        if [[ "$DL" =~ [\?\;]fn?=([^\?\;\&]+) ]]; then
+            SRCNAME="${BASH_REMATCH[1]}"
+        else
+            # remove the '/download' from several SRCNAMEs that end that way
+            # rather than in the actual tarball so the subsequent basename doesn't
+            # end with 'download'
+            SRCNAME=${DL%\/download}
+            SRCNAME=${SRCNAME##*/}
+            # calcurse has a nonsense url in the info file - this is to get it
+            # through this function and on to remove_obsolete_sources()
+            SRCNAME=$(fix_urls <<< "$SRCNAME")
+        fi
         # Replace URI hex sequences (like %20 for ' ' and %2B for '+') with
         # their corresponding characters.
         # This is done by replacing '%' with '\x' and passing the string to
@@ -3151,6 +3156,9 @@ get_source() {
     # Don't pollute the environment with the .info content...
     local PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM MAINTAINER EMAIL APPROVED
 
+    find "$REPO_DIR/$PKGPATH" -maxdepth 1 -type l -name '*\?*' -delete 2>/dev/null
+    find "$REPO_DIR/$PKGPATH" -maxdepth 1 -type l -name '*;*' -delete 2>/dev/null
+
     CWD=$(pwd)
     read_info $INFO
 
@@ -3199,10 +3207,17 @@ get_source() {
             cd $DLDIR
 
             if [[ -z $NO_DL_LOOP ]]; then
-                wget $TWGETFLAGS ${DOWNLOAD[$i]} >> $SBOPKGOUTPUT &
+                dl_url="${DOWNLOAD[$i]}"
+
+                if [[ "$dl_url" =~ [\?';']fn?= ]]; then
+                wget $TWGETFLAGS --content-disposition -- "$dl_url" >> $SBOPKGOUTPUT &
+                else
+                wget $TWGETFLAGS -- "$dl_url" >> $SBOPKGOUTPUT &
+                fi
+
                 echo "$!" >> $SBOPKG_PIDLIST 2>> $SBOPKGOUTPUT
                 wait $!
-                WGETRC=$?
+                WGETRC=$
             else
                 FAILURE=loop
                 echo "  Download failed. Please report this as a bug." >> \
@@ -3562,9 +3577,25 @@ process_package() {
                 echo "Done downloading source for $PKGBUILD."
                 return 1
             fi
+            # Fix DOWNLOAD URLs with fn=/f= parameters in .info.build files
+            # Replace complex URLs with just the filename so tar can find the source
+            # This must happen AFTER download but BEFORE build
+            local INFO_BUILD="$REPO_DIR/$PKGPATH/$PKGNAME.info.build"
+            if [[ -f "$INFO_BUILD" ]]; then
+                local DL_LINE DL_URL DL_FILENAME
+                DL_LINE=$(grep '^DOWNLOAD' "$INFO_BUILD")
+                if [[ "$DL_LINE" =~ [\?\;]fn?= ]]; then
+                    while read -r DL_URL; do
+                        [[ -z "$DL_URL" ]] && continue
+                        if [[ "$DL_URL" =~ [\?\;]fn?=([^\?\;\&\"\ ]+) ]]; then
+                            DL_FILENAME="${BASH_REMATCH[1]}"
+                            sed -i "s|${DL_URL}|${DL_FILENAME}|g" "$INFO_BUILD"
+                        fi
+                    done <<< "$(echo "$DL_LINE" | grep -oE 'https?://[^"]+' | tr ' ' '\n')"
+                fi
+            fi
             build_package $PKGNAME
         fi
-
         # Let's see the result
         if [ -f $SB_OUTPUT/*.t?z ]; then
             RETVAL=0
