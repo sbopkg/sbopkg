@@ -3217,7 +3217,7 @@ get_source() {
 
                 echo "$!" >> $SBOPKG_PIDLIST 2>> $SBOPKGOUTPUT
                 wait $!
-                WGETRC=$
+                WGETRC=$?
             else
                 FAILURE=loop
                 echo "  Download failed. Please report this as a bug." >> \
