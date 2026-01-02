@@ -391,3 +391,4 @@ sbotools3=sbotools
 numpydoc=python3-numpydoc
 tinycss2=python3-tinycss2
 pushover=domino-chain
+audenc=microenc
