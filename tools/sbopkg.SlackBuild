@@ -54,12 +54,14 @@ MONTH="$(date +%B)"
 YEAR="$(date +%Y)"
 UTCDATE="$(date -u +"%F %R UTC")"
 size="about 457MB"
+SWVER="15.0"
 sed -i "
     s/sbopkg-SVN/sbopkg-$VERSION/
     s/xxxDATExxx/$MONTH $YEAR/
     s/xxxUTCDATExxx/$UTCDATE/
     s/xxxSIZExxx/$size/
     s/xxxVERSIONxxx/$VERSION/
+    s/xxxSWVERxxx/$SWVER/
     " $PKG/usr/man/man5/sbopkg.conf.5 $PKG/usr/man/man8/sbopkg.8 $PKG/usr/man/man8/sqg.8 \
       $PKG/usr/man/es/man5/sbopkg.conf.5 $PKG/usr/man/es/man8/sbopkg.8 \
       $PKG/usr/man/fr/man5/sbopkg.conf.5 $PKG/usr/man/fr/man8/sbopkg.8
@@ -71,9 +73,11 @@ cp -a src/usr/doc/* $PKG/usr/doc/$PRGNAM-$VERSION
 ln -s /usr/doc/$PRGNAM-$VERSION/README-repos $PKG/etc/$PRGNAM/repos.d/README
 ln -s /usr/doc/$PRGNAM-$VERSION/README-renames \
     $PKG/etc/$PRGNAM/renames.d/README
+sed -i "s/xxxSWVERxxx/$SWVER/g" $PKG/usr/doc/$PRGNAM-$VERSION/README-repos
 cp -a $CWD/sbopkg.SlackBuild $PKG/usr/doc/$PRGNAM-$VERSION
 chown root:root $PKG/usr/doc/$PRGNAM-$VERSION/sbopkg.SlackBuild
 rm -f $PKG/usr/doc/$PRGNAM-$VERSION/*.tmp
+rm -rf $PKG/usr/share/doc/$PRGNAM-$VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
