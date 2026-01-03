@@ -392,3 +392,5 @@ numpydoc=python3-numpydoc
 tinycss2=python3-tinycss2
 pushover=domino-chain
 audenc=microenc
+distrho-mini-series=DPF-Plugins
+

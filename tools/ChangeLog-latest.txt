@@ -1,10 +1,14 @@
 SBOPKG NEWS
 
-sbopkg-devel (2025-03-17 13:34 UTC)
+sbopkg-devel (2026-01-03 01:45 UTC)
     MODIFICATIONS
 	* Fix parsing sources with space
           Reported by bormant
           Patch by Anagnostakis Ioannis (#99)
+    *  Add support for URLs with fn=/f= filename parameters
+          Patch by Anagnostakis Ioannis (#102)
+    *  Fix Spurious 'xxx' pre- and suffixes across documentation in released package
+          Reported by Peter Sevens (#104)
 
 sbopkg 0.38.3 (2025-02-27 14:07 UTC)
     FEATURES
