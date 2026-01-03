@@ -77,7 +77,6 @@ sed -i "s/xxxSWVERxxx/$SWVER/g" $PKG/usr/doc/$PRGNAM-$VERSION/README-repos
 cp -a $CWD/sbopkg.SlackBuild $PKG/usr/doc/$PRGNAM-$VERSION
 chown root:root $PKG/usr/doc/$PRGNAM-$VERSION/sbopkg.SlackBuild
 rm -f $PKG/usr/doc/$PRGNAM-$VERSION/*.tmp
-rm -rf $PKG/usr/share/doc/$PRGNAM-$VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
