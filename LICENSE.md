@@ -4,7 +4,7 @@ Copyright 2009-2011 Mauro Giachero <mauro.giachero@gmail.com>
 
 Copyright 2009-2013 slakmagik <slakmagik@gmail.com>
 
-Copyright 2015-2025 Willy Sudiarto Raharjo <willysr@sbopkg.org>
+Copyright 2015-2026 Willy Sudiarto Raharjo <willysr@sbopkg.org>
 
 Redistribution and use of this script, with or without modification, is
 permitted provided that the following conditions are met:
