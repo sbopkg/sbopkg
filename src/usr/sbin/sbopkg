@@ -4703,6 +4703,16 @@ main_menu() {
     done
 }
 
+do_file_search() {
+    local findstr="${FILESEARCH_STR#/}"
+
+    for p in /var/adm/packages/*_SBo; do
+        if grep -q "$findstr" "$p" 2>/dev/null; then
+            basename "$p"
+        fi
+    done
+}
+
 # END OF FUNCTIONS
 
 if [[ $SBOPKG_DEBUG ]]; then
@@ -4802,7 +4812,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:v" OPT; do
+while getopts ":b:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vW:" OPT; do
     case $OPT in
         b ) # Download, build
             set_type build
@@ -4897,6 +4907,10 @@ while getopts ":b:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:v" OPT; do
             echo $SBOVER
             exit
             ;;
+        W )
+            FILESEARCH=1
+            FILESEARCH_STR="$OPTARG"
+            ;;
         h | * ) # Help
             cat << EOF
 $SCRIPT $SBOVER
@@ -4936,6 +4950,7 @@ Options are:
                   starting with the default repo. For a list of valid repos,
                   issue '-V ?'
   -v              Print sbopkg's version on stdout.
+  -W string       Search installed SBo packages by file or path/string
 
 Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2") or
 can be specified multiple times (-i foo -i bar). If using the latter syntax,
@@ -4950,6 +4965,11 @@ done
 
 # End of option parsing.
 shift $(($OPTIND - 1))
+if [[ "$FILESEARCH" = "1" ]]; then
+    do_file_search
+    exit 0
+fi
+
 if [[ $# -gt 0 ]]; then
     echo "Error: unknown token \"$@\"" >&2
     exit 1

@@ -1,6 +1,12 @@
 SBOPKG NEWS
 
-sbopkg-devel (2026-01-03 01:45 UTC)
+sbopkg-devel (2026-01-12 01:29 UTC)
+    FEATURES
+    * Added new option (-W) for file/path search in installed SBo packages
+      This will allow people to search for packages containing given file or path.
+      This behaviour is similar to slackpkg file-search
+      Patch by  Ioannis Anagnostakis (#106)
+
     MODIFICATIONS
 	* Fix parsing sources with space
           Reported by bormant

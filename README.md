@@ -23,6 +23,7 @@ Sbopkg will allow the user to:
 * Check for an update to sbopkg itself.
 * Download renamed scripts
 * Blacklist package(s) that you don't want to update
+* Search for packages containing a given file or path
 
 Sbopkg (by default) will not check dependencies since that is not a feature native to Slackware. Sbopkg is one thing and one thing only: a medium to easily browse a local copy of the SlackBuilds.org repository and build packages from it. However, since 0.38.0, sqg (SBo Queue Generator) is included in the main package, so users can easily generate queue file(s) which list all dependencies and install them along with the requested package.
 
