@@ -2537,6 +2537,7 @@ sync_repo() {
                 "You cannot sync the $REPO_DESC." 8 40
         else
             crunch_fmt "You cannot sync the $REPO_DESC."
+            exit 1
         fi
         continue
     fi
@@ -2544,7 +2545,7 @@ sync_repo() {
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox \
                 "Unsupported fetching tool \"$REPO_TOOL\"." 8 30
-            continue
+            return
         else
             echo "Unsupported fetching tool \"$REPO_TOOL\"."
             exit 1
