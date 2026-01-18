@@ -2535,6 +2535,7 @@ sync_repo() {
         if [[ $DIAG ]]; then
             dialog --title "ERROR" --msgbox \
                 "You cannot sync the $REPO_DESC." 8 40
+                return
         else
             crunch_fmt "You cannot sync the $REPO_DESC."
             exit 1
