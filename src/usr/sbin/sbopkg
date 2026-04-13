@@ -1291,7 +1291,7 @@ info_item() {
             --cancel-label "Main Menu" --menu \
             "$(crunch "Please choose an item or press <Back> to go back \
             or press <Main Menu> to return to the main menu.\n")" \
-            20 62 12 \
+            20 62 13 \
             "README" "View the README file" \
             "Info" "View the .info file" \
             "SlackBuild" "View the SlackBuild file" \
@@ -1304,6 +1304,7 @@ info_item() {
             "Extract" "Re-extract the $REPO_NAME tarball" \
             "Queue" "Add $APP to queue" \
             "Process" "Download/build/install $APP" \
+            "Process+deps" "Install $APP with dependencies" \
             $MENUPACKAGE \
             2> $SBOPKGTMP/sbopkg_info_selection
         case $? in
@@ -1364,6 +1365,21 @@ info_item() {
                         dialog --title "Done" \
                                     --msgbox "$(crunch "The \
                                     queue has been generated.")" 8 30
+                        ;;
+                    "Process+deps" )
+                        if ! command -v /usr/sbin/sqg &>/dev/null; then
+                            dialog --title "ERROR" --msgbox "$(crunch "sqg not found. \
+                                Install sqg to use this option.")" 8 30
+                            break
+                        fi
+                        /usr/sbin/sqg -p "$APP"
+                        if [[ -r $QUEUEDIR/$APP.sqf ]]; then
+                            parse_queue $QUEUEDIR/$APP.sqf
+                            process_queue install
+                        else
+                            dialog --title "ERROR" --msgbox "$(crunch "sqg failed to \
+                                generate queue for $APP.")" 8 30
+                        fi
                         ;;
                     Extract )
                         if [[ ! -z $REPO_GPG ]]; then
@@ -4814,8 +4830,11 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vW:" OPT; do
-    case $OPT in
+while getopts ":ab:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vW:" OPT; do
+case $OPT in
+        a ) # Auto-resolve dependencies via sqg
+            RESOLVE_DEPS=1
+            ;;
         b ) # Download, build
             set_type build
             BUILDLIST+=("$OPTARG")
@@ -4918,6 +4937,8 @@ while getopts ":b:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vW:" OPT; do
 $SCRIPT $SBOVER
 Usage: $SCRIPT [OPTIONS] <packagename(s)>
 Options are:
+  -a              Auto-resolve and install dependencies.
+                  Must be used with -i: sbopkg -a -i vlc
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
                   are specified, build the packages they refer to.
   -B              Bulk process the queue without confirmation.
@@ -4985,6 +5006,11 @@ if [[ $ON_ERROR != ask && \
     exit 1
 else
     readonly ON_ERROR
+fi
+
+if [[ $RESOLVE_DEPS && $TYPE != install ]]; then
+    echo "$SCRIPT: -a can only be used with -i (install)." >&2
+    exit 1
 fi
 
 # Check for a good config file and set initial variables
@@ -5088,7 +5114,21 @@ else
                     # Add an entire queue
                     parse_queue $QUEUEDIR/$PKGBUILD.sqf
                 else
-                    parse_arguments "$PKGBUILD"
+                    if [[ $RESOLVE_DEPS ]]; then
+                        if ! command -v sqg &>/dev/null; then
+                            echo "$SCRIPT: sqg not found. Install sqg to use -a." >&2
+                            exit 1
+                        fi
+                        sqg -p "$PKGBUILD"
+                        if [[ -r $QUEUEDIR/$PKGBUILD.sqf ]]; then
+                            parse_queue $QUEUEDIR/$PKGBUILD.sqf
+                        else
+                            echo "$SCRIPT: sqg failed to generate queue for $PKGBUILD." >&2
+                            exit 1
+                        fi
+                    else
+                        parse_arguments "$PKGBUILD"
+                    fi
                 fi
             fi
         done
