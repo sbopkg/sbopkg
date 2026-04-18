@@ -12,14 +12,14 @@ sbopkg-devel (2026-04-18 04:54 UTC)
 
     MODIFICATIONS
     * Fix parsing sources with space
-          Reported by bormant
-          Patch by Anagnostakis Ioannis (#99)
-    *  Add support for URLs with fn=/f= filename parameters
-          Patch by Anagnostakis Ioannis (#102)
-    *  Fix Spurious 'xxx' pre- and suffixes across documentation in released package
-          Reported by Peter Sevens (#104)
-    *  sbopkg: remove bad continue in sync_repo()
-          Patch by Peter Sevens (#105)
+      Reported by bormant
+      Patch by Anagnostakis Ioannis (#99)
+    * Add support for URLs with fn=/f= filename parameters
+      Patch by Anagnostakis Ioannis (#102)
+    * Fix Spurious 'xxx' pre- and suffixes across documentation in released package
+      Reported by Peter Sevens (#104)
+    * sbopkg: remove bad continue in sync_repo()
+      Patch by Peter Sevens (#105)
 
 sbopkg 0.38.3 (2025-02-27 14:07 UTC)
     FEATURES
@@ -28,21 +28,21 @@ sbopkg 0.38.3 (2025-02-27 14:07 UTC)
       for next release of sbopkg.
 
     MODIFICATIONS
-        * Update renames up to latest public update
-        * sqg: Fix repo detection when people switch from stable to master or vice versa
-          Patch by Jeremy Hansen (#77)
-        * sqg: Fix duplicate lines when executing custom queue (partial fix for #83)
-          Reported by Jeremy Hansen
-	* sbopkg: Support download from sbosrcarch
-	  Patch by Urchlay
-	* sqg: Fix 'find' command to work with symlinked REPO_DIR
-	  Patch by Logan Rathbone (#92)
-	* sbopkg: Add option to generate queue file
-	  Patch by Qury (#80)
-	* sbopkg.SlackBuild: Fixed variable for man pages.
-	  Reported by Tim Dickson
-	* Added pre-specified options in Bulk mode
-	  Patch by Spycrowsoft (#94)
+    * Update renames up to latest public update
+    * sqg: Fix repo detection when people switch from stable to master or vice versa
+      Patch by Jeremy Hansen (#77)
+    * sqg: Fix duplicate lines when executing custom queue (partial fix for #83)
+      Reported by Jeremy Hansen
+    * sbopkg: Support download from sbosrcarch
+      Patch by Urchlay
+    * sqg: Fix 'find' command to work with symlinked REPO_DIR
+      Patch by Logan Rathbone (#92)
+    * sbopkg: Add option to generate queue file
+      Patch by Qury (#80)
+    * sbopkg.SlackBuild: Fixed variable for man pages.
+      Reported by Tim Dickson
+    * Added pre-specified options in Bulk mode
+      Patch by Spycrowsoft (#94)
 
 sbopkg 0.38.2 (2022-03-10 16:29 UTC)
     FEATURES
@@ -52,12 +52,12 @@ sbopkg 0.38.2 (2022-03-10 16:29 UTC)
 	  This will reduce queue generation time significantly when
 	  invoked with -j N+1 (N: Number of cores)
 	  Patch by Marcel Saegebarth.
-        * sqg: Generate one queue file for multiple programs by option -o.
-          The output queue filename is user-defined.
-          You can then run sbopkg -i <queue-name> to install all packages+deps.
-          Feature Request by Jeremy/bassmadrigal (Fixed #13).
-          Implement contributions from Marcel Saegebarth.
-        * sqg: Added manual page for sqg.
+    * sqg: Generate one queue file for multiple programs by option -o.
+      The output queue filename is user-defined.
+      You can then run sbopkg -i <queue-name> to install all packages+deps.
+      Feature Request by Jeremy/bassmadrigal (Fixed #13).
+      Implement contributions from Marcel Saegebarth.
+    * sqg: Added manual page for sqg.
 	* sbopkg: No need to do complete check for old sources if no sources available
 	  Initial patch by Loki Harfagr
 	* sbopkg: Added support for Slackware 15.0
