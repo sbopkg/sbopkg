@@ -11,7 +11,7 @@ sbopkg-devel (2026-04-18 04:54 UTC)
       Patch by Ioannis Anagnostakis (#107)
 
     MODIFICATIONS
-	* Fix parsing sources with space
+    * Fix parsing sources with space
           Reported by bormant
           Patch by Anagnostakis Ioannis (#99)
     *  Add support for URLs with fn=/f= filename parameters
