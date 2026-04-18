@@ -394,3 +394,7 @@ pushover=domino-chain
 audenc=microenc
 distrho-mini-series=DPF-Plugins
 aces-dev=aces-core
+setproctitle=python3-setproctitle
+jsonpatch=python3-jsonpatch
+jsonpointer=python3-jsonpointer
+gospel-pdf-viewer=pdf-bunny
