@@ -6,6 +6,9 @@ sbopkg-devel (2026-01-18 01:50 UTC)
       This will allow people to search for packages containing given file or path.
       This behaviour is similar to slackpkg file-search
       Patch by  Ioannis Anagnostakis (#106)
+    * Added new option to save local edit
+      Requested by Albert1st1 (#2)
+      Patch by Ioannis Anagnostakis (#107)
 
     MODIFICATIONS
 	* Fix parsing sources with space

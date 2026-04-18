@@ -1470,9 +1470,11 @@ customize_item() {
         "Edit SlackBuild" "Create and edit a local copy of the SlackBuild" \
         "Delete SlackBuild" "Delete the local copy of the SlackBuild" \
         "Diff SlackBuild" "Compare the local and the original SlackBuild" \
+        "Save Diff SlackBuild" "Save diff as patch file" \
         "Edit Info" "Create and edit a local copy of the .info file" \
         "Delete Info" "Delete the local copy of the .info file" \
         "Diff Info" "Compare the local and the original .info file" \
+        "Save Diff Info" "Save diff as patch file" \
         2> $SBOPKGTMP/sbopkg_custom_selection
     if [[ $? = 0 ]]; then
         DEFAULTITEM="$(< $SBOPKGTMP/sbopkg_custom_selection)"
@@ -1494,6 +1496,12 @@ customize_item() {
                 ;;
             "Diff Info" )
                 diff_local_file info $SHORTPATH $APP
+                ;;
+            "Save Diff SlackBuild" )
+                save_diff_local_file SlackBuild "$SHORTPATH" "$APP"
+                ;;
+            "Save Diff Info" )
+                save_diff_local_file info "$SHORTPATH" "$APP"
                 ;;
         esac
     else # Cancel or ESC
@@ -3730,6 +3738,37 @@ diff_local_file() {
             --textbox $DIFF_FILE 0 0
         rm -f $DIFF_FILE
     fi
+}
+
+save_diff_local_file() {
+    # $1 = info|SlackBuild
+    # $2 = application path
+    # $3 = application name
+
+    local FILE=$1
+    local SHORTPATH=$2
+    local APP=$3
+
+    local OUTDIR="$TMP/$APP"
+    local PATCH_FILE="$OUTDIR/$APP-$FILE.patch"
+
+    mkdir -p "$OUTDIR"
+
+    if [[ ! -e $SHORTPATH/$APP.$FILE.sbopkg ]]; then
+        dialog --title "ERROR" --msgbox \
+            "There is no local copy of the $FILE file to generate a patch." 8 40
+        return 1
+    fi
+
+    $DIFF $DIFFOPTS \
+        "$SHORTPATH/$APP.$FILE" \
+        "$SHORTPATH/$APP.$FILE.sbopkg" \
+        > "$PATCH_FILE"
+
+    dialog --title "Saved" --msgbox \
+        "Patch saved to:\n$PATCH_FILE" 7 60
+
+    return 0
 }
 
 pick_file() {
