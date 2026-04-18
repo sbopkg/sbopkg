@@ -1291,7 +1291,7 @@ info_item() {
             --cancel-label "Main Menu" --menu \
             "$(crunch "Please choose an item or press <Back> to go back \
             or press <Main Menu> to return to the main menu.\n")" \
-            20 62 12 \
+            20 62 13 \
             "README" "View the README file" \
             "Info" "View the .info file" \
             "SlackBuild" "View the SlackBuild file" \
@@ -1304,6 +1304,7 @@ info_item() {
             "Extract" "Re-extract the $REPO_NAME tarball" \
             "Queue" "Add $APP to queue" \
             "Process" "Download/build/install $APP" \
+            "Process+deps" "Install $APP with dependencies" \
             $MENUPACKAGE \
             2> $SBOPKGTMP/sbopkg_info_selection
         case $? in
@@ -1365,6 +1366,34 @@ info_item() {
                                     --msgbox "$(crunch "The \
                                     queue has been generated.")" 8 30
                         ;;
+                    "Process+deps" )
+                        if ! command -v /usr/sbin/sqg &>/dev/null; then
+        dialog --title "ERROR" --msgbox "$(crunch "sqg not found. \
+            You have broken sbopkg or something is wrong")" 8 30
+        break
+    fi
+    > $STARTQUEUE
+    > $TMPQUEUE
+    touch $USERQUEUE_LOCK
+    /usr/sbin/sqg -p "$APP"
+    if [[ -r $QUEUEDIR/$APP.sqf ]]; then
+        parse_queue $QUEUEDIR/$APP.sqf
+        dialog --title "Skip installed?" --yesno \
+            "Skip already installed packages?" 6 40
+        [[ $? -eq 0 ]] && uncheck_installed $TMPQUEUE
+        while read PICK; do
+            can_skip_line $PICK && continue
+            PICK_NAME=${PICK%% *}
+            [[ ${PICK:(-3)} == "OFF" ]] && continue
+            grep -qx "$PICK_NAME" $STARTQUEUE || echo "$PICK_NAME" >> $STARTQUEUE
+        done < $TMPQUEUE
+        rm -f $TMPQUEUE $USERQUEUE_LOCK
+        process_queue install
+    else
+        dialog --title "ERROR" --msgbox "$(crunch "sqg failed to \
+            generate queue for $APP.")" 8 30
+    fi
+    ;;
                     Extract )
                         if [[ ! -z $REPO_GPG ]]; then
                             extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
@@ -2099,7 +2128,6 @@ add_item_to_queue() {
     # an APP is found in the repo, then add it to TMPQUEUE. LOADOPTIONS may be
     # supplied when parsing a queuefile or similar and are eventually passed
     # on to the SlackBuild.
-
     # If an obsolete name is used, add_item_to_queue() automatically retrieves
     # and uses the current name.
     #
@@ -2116,7 +2144,7 @@ add_item_to_queue() {
 
     # This next if is for legacy queuefiles with $APP $VERSION$BUILD $ONOFF
     if [[ $3 =~ [Oo][Ff][Ff] ]]; then
-          APP=-$APP
+        APP=-$APP
     fi
     if [[ ${APP:0:1} == "-" ]]; then
         APP=${APP:1}
@@ -2147,8 +2175,12 @@ add_item_to_queue() {
         # note that this regex was missing the ^ as of r826 and this caused a
         # false match when running 'sbopkg -k -i queue' because 'foo' and
         # 'libfoo' matched
-        INSTALLED=$(ls -1 /var/lib/pkgtools/packages/ |
+        INSTALLED=$(ls -1 /var/lib/pkgtools/packages/ | \
             grep "^$APP-[^-]*-[^-]*-[^-]*$REPO_TAG$")
+        if [[ -z $INSTALLED ]]; then
+            INSTALLED=$(ls -1 /var/lib/pkgtools/packages/ | \
+                grep "^$APP-[^-]*-[^-]*-[^-]*$")
+        fi
         if [[ -n $INSTALLED ]]; then
             VERSION=$(sed 's:^.*-\([^-]*\)-[^-]*-[^-]*$:\1:'<<<$INSTALLED)
             if [[ -e $UPDATELIST ]]; then
@@ -4853,8 +4885,11 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":b:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vW:" OPT; do
-    case $OPT in
+while getopts ":ab:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vW:" OPT; do
+case $OPT in
+        a ) # Auto-resolve dependencies via sqg
+            RESOLVE_DEPS=1
+            ;;
         b ) # Download, build
             set_type build
             BUILDLIST+=("$OPTARG")
@@ -4957,6 +4992,8 @@ while getopts ":b:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vW:" OPT; do
 $SCRIPT $SBOVER
 Usage: $SCRIPT [OPTIONS] <packagename(s)>
 Options are:
+  -a              Auto-resolve and install dependencies.
+                  Must be used with -i: sbopkg -a -i vlc
   -b pkg/queue(s) Build the specified package(s). If one or more queuefiles
                   are specified, build the packages they refer to.
   -B              Bulk process the queue without confirmation.
@@ -5024,6 +5061,11 @@ if [[ $ON_ERROR != ask && \
     exit 1
 else
     readonly ON_ERROR
+fi
+
+if [[ $RESOLVE_DEPS && $TYPE != install ]]; then
+    echo "$SCRIPT: -a can only be used with -i (install)." >&2
+    exit 1
 fi
 
 # Check for a good config file and set initial variables
@@ -5127,7 +5169,21 @@ else
                     # Add an entire queue
                     parse_queue $QUEUEDIR/$PKGBUILD.sqf
                 else
-                    parse_arguments "$PKGBUILD"
+                    if [[ $RESOLVE_DEPS ]]; then
+                        if ! command -v sqg &>/dev/null; then
+                            echo "$SCRIPT: sqg not found. Install sqg to use -a." >&2
+                            exit 1
+                        fi
+                        sqg -p "$PKGBUILD"
+                        if [[ -r $QUEUEDIR/$PKGBUILD.sqf ]]; then
+                            parse_queue $QUEUEDIR/$PKGBUILD.sqf
+                        else
+                            echo "$SCRIPT: sqg failed to generate queue for $PKGBUILD." >&2
+                            exit 1
+                        fi
+                    else
+                        parse_arguments "$PKGBUILD"
+                    fi
                 fi
             fi
         done
