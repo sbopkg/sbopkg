@@ -1368,19 +1368,29 @@ info_item() {
                         ;;
                     "Process+deps" )
                         if ! command -v /usr/sbin/sqg &>/dev/null; then
-                            dialog --title "ERROR" --msgbox "$(crunch "sqg not found. \
-                                Install sqg to use this option.")" 8 30
-                            break
+                           dialog --title "ERROR" --msgbox "$(crunch "sqg not found. \
+                              You have broken sbopkg or something is wrong")" 8 30
+                           break
                         fi
+                        > $STARTQUEUE
+                        > $TMPQUEUE
+                        touch $USERQUEUE_LOCK
                         /usr/sbin/sqg -p "$APP"
                         if [[ -r $QUEUEDIR/$APP.sqf ]]; then
-                            parse_queue $QUEUEDIR/$APP.sqf
-                            process_queue install
-                        else
-                            dialog --title "ERROR" --msgbox "$(crunch "sqg failed to \
-                                generate queue for $APP.")" 8 30
-                        fi
-                        ;;
+                           parse_queue $QUEUEDIR/$APP.sqf
+                           while read PICK; do
+                               can_skip_line $PICK && continue
+                               PICK_NAME=${PICK%% *}
+                               [[ ${PICK:(-3)} == "OFF" ]] && continue
+                               grep -qx "$PICK_NAME" $STARTQUEUE || echo "$PICK_NAME" >> $STARTQUEUE
+                        done < $TMPQUEUE
+                        rm -f $TMPQUEUE $USERQUEUE_LOCK
+                        process_queue install
+                      else
+                         dialog --title "ERROR" --msgbox "$(crunch "sqg failed to \
+                             generate queue for $APP.")" 8 30
+                       fi
+                       ;;
                     Extract )
                         if [[ ! -z $REPO_GPG ]]; then
                             extract_tarball $SHORTPATH $REPO_DIR/$CATEGORY
