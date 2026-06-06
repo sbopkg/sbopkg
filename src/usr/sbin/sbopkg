@@ -3230,8 +3230,8 @@ get_source() {
             check_source $PKG ${MD5SUM[$i]} "${SRCNAME[$i]}"
             case $? in
                 0 ) # Source OK
-                    ln -sf "$SRCDIR/${SRCNAME[$i]}" \
-                        "$REPO_DIR/$PKGPATH/${SRCNAME[$i]}"
+                    ln -f "$SRCDIR/${SRCNAME[$i]}" \
+                       "$PKGSTAGE/${SRCNAME[$i]}"
                     continue 2
                     ;;
                 1 ) # Fall through and (re)try below
@@ -3294,11 +3294,11 @@ get_source() {
             [[ $FAILURE ]] && break 2
             # this is required so we make a link as soon as we have the source
             # and don't enter the guessing code in get_source_names()
-            ln -sf "$SRCDIR/$DL_SRCNAME" "$REPO_DIR/$PKGPATH/$DL_SRCNAME"
+            ln -f "$SRCDIR/$DL_SRCNAME" "$PKGSTAGE/$DL_SRCNAME"
         done
     done
 
-    cd $REPO_DIR/$PKGPATH
+    cd $PKGSTAGE
 
     [[ $FAILURE ]] && return 1
 
@@ -3596,9 +3596,8 @@ process_package() {
     rm -rf $SB_OUTPUT
     mkdir -p $SB_OUTPUT
 
-    cd $REPO_DIR/$PKGPATH
-    mv $PKGNAME.SlackBuild $PKGNAME.SlackBuild.original
-    cp $PKGNAME.SlackBuild.build $PKGNAME.SlackBuild
+    cd $PKGPATH
+    mv $PKGNAME.SlackBuild.build $PKGNAME.SlackBuild
 
     # Start the actual build
     # We loop here to enable a 'retry' if anything goes wrong with the build
@@ -3623,7 +3622,7 @@ process_package() {
             # Fix DOWNLOAD URLs with fn=/f= parameters in .info.build files
             # Replace complex URLs with just the filename so tar can find the source
             # This must happen AFTER download but BEFORE build
-            local INFO_BUILD="$REPO_DIR/$PKGPATH/$PKGNAME.info.build"
+            local INFO_BUILD="$PKGPATH/$PKGNAME.info.build"
             if [[ -f "$INFO_BUILD" ]]; then
                 local DL_LINE DL_URL DL_FILENAME
                 DL_LINE=$(grep '^DOWNLOAD' "$INFO_BUILD")
@@ -3675,12 +3674,6 @@ process_package() {
             done
         fi
     done
-
-    # Cleanup
-    cd $REPO_DIR/$PKGPATH
-    mv $PKGNAME.SlackBuild.original $PKGNAME.SlackBuild
-    rm -f $PKGNAME.{info,SlackBuild}.build
-    rm -f options.build
 
     return $RETVAL
 }
@@ -4140,7 +4133,7 @@ process_queue() {
     log_queuetype
     echo >> $TMPLOG
     for CHKBUILD in $(< $STARTQUEUE); do
-        unset PKG PKGPATH PKGNAME VERSION BUILD PICKFILE FILE
+        unset PKG PKGPATH PKGNAME PKGSTAGE VERSION BUILD PICKFILE FILE
         echo "$CHKBUILD:" >> $TMPLOG
         if ! search_package $CHKBUILD; then
             echo "$CHKBUILD not found!" >> $TMPLOG
@@ -4244,21 +4237,39 @@ process_queue() {
             echo "$PKGBUILD not found!" >> $TMPLOG
             continue
         fi
-        read_info $PKGPATH/$PKGBUILD.info.build --check_buildable
+        local STAGING="$(mktemp -d $SRCDIR/$PKGBUILD.staging.XXXXXX)"
+        if [[ $? != 0 || ! -d "$STAGING" ]]; then
+            echo >> $TMPSUMMARYLOG
+            echo "$PKGBUILD:" >> $TMPSUMMARYLOG
+            echo "  Failed to create a staging directory. Skipping." \
+                >> $TMPSUMMARYLOG
+            continue
+        fi
+        cp -r $PKGPATH "$STAGING"
+        PKGSTAGE="$STAGING/$PKGBUILD"
+        if [[ ! -d "$PKGSTAGE" ]]; then
+            echo >> $TMPSUMMARYLOG
+            echo "$PKGBUILD:" >> $TMPSUMMARYLOG
+            echo "  Failed to populate the staging directory. Skipping." \
+                >> $TMPSUMMARYLOG
+            rm -rf "$STAGING"
+            continue
+        fi
+        read_info $PKGSTAGE/$PKGBUILD.info.build --check_buildable
         if [[ $? != 0 ]]; then
             echo >> $TMPSUMMARYLOG
             echo "$PKGBUILD:" >> $TMPSUMMARYLOG
             echo "  Marked as UNSUPPORTED/UNTESTED. Skipping." \
                 >> $TMPSUMMARYLOG
-            rm -f $PKGPATH/$PKGBUILD.{info,SlackBuild}.build
-            rm -f $PKGPATH/$PKGBUILD/options.build
+            rm -rf "$STAGING"
             continue
         fi
         # We test for the lockfile because it may be removed in
         # process_package() when we call that
         if [[ -f $SBOPKGTMP/sbopkg_build.lck ]]; then
             set -o pipefail
-            process_package $PKGPATH $PKGBUILD 2>&1 | tee -a $TMPBUILDLOG
+            process_package $PKGSTAGE $PKGBUILD 2>&1 | tee -a $TMPBUILDLOG
+            rm -rf "$STAGING"
             case $? in
                 0 ) ;;
                 1 ) continue ;;
@@ -4283,6 +4294,7 @@ process_queue() {
             echo "$PKGBUILD:" >> $TMPSUMMARYLOG
             echo "  Not processed - queue aborted." >> $TMPSUMMARYLOG
             echo >> $TMPSUMMARYLOG
+            rm -rf "$STAGING"
         fi
     done
 
