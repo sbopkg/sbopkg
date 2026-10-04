@@ -1291,7 +1291,7 @@ info_item() {
             --cancel-label "Main Menu" --menu \
             "$(crunch "Please choose an item or press <Back> to go back \
             or press <Main Menu> to return to the main menu.\n")" \
-            20 62 13 \
+            22 62 15 \
             "README" "View the README file" \
             "Info" "View the .info file" \
             "SlackBuild" "View the SlackBuild file" \
@@ -1305,6 +1305,7 @@ info_item() {
             "Queue" "Add $APP to queue" \
             "Process" "Download/build/install $APP" \
             "Process+deps" "Install $APP with dependencies" \
+            "Required by" "Show packages that require $APP" \
             $MENUPACKAGE \
             2> $SBOPKGTMP/sbopkg_info_selection
         case $? in
@@ -1360,6 +1361,7 @@ info_item() {
                                 repository.")" 8 30
                         fi
                         ;;
+                    "Required by" ) reverse_deps $APP ;;
                     "Build queue" )
                         /usr/sbin/sqg -p "$APP"
                         dialog --title "Done" \
@@ -4787,6 +4789,92 @@ do_file_search() {
     done
 }
 
+reverse_deps() {
+    # Show which packages in the active repo list $1 in the REQUIRES=""
+    # line of their .info file.
+    # $1 = the name of the package we're looking for
+    # Returns 0 if at least one package was found, 1 otherwise.
+
+    local PKG=$1
+    local RESULTS_VERSIONS=$SBOPKGTMP/sbopkg_revdeps_versions
+    local NAME VER INST P
+    local FOUND=0
+
+    check_if_repo_exists
+    cd $REPO_DIR
+
+    if [[ ! $DIAG ]] && ! search_package $PKG; then
+        echo "$SCRIPT: Warning: $PKG not found in $REPO_DIR." >&2
+    fi
+
+    echo -e "NAME\tVERSION\tINSTALLED" > $RESULTS_VERSIONS
+    # One pass over all .info files: print "category/name<TAB>version" for
+    # every package whose REQUIRES (incl. backslash-continued lines) lists
+    # $PKG as a whole word.
+    find . -mindepth 3 -maxdepth 3 -name '*.info' -exec awk -v pkg="$PKG" '
+        function flush(  n, i, w) {
+            n = split(req, w, " ")
+            for (i = 1; i <= n; i++)
+                if (w[i] == pkg) { print name "\t" ver; break }
+        }
+        FNR == 1 {
+            if (name != "") flush()
+            name = FILENAME
+            sub(/^\.\//, "", name); sub(/\/[^\/]*$/, "", name)
+            ver = req = ""; inreq = 0
+        }
+        /^VERSION=/ {
+            ver = $0; sub(/^VERSION="?/, "", ver); sub(/".*$/, "", ver)
+        }
+        /^REQUIRES=/ { req = $0; sub(/^REQUIRES="?/, "", req); inreq = 1 }
+        inreq && !/^REQUIRES=/ { req = req " " $0 }
+        inreq {
+            if (req ~ /\\[ \t]*$/) {
+                sub(/\\[ \t]*$/, "", req)
+            } else {
+                inreq = 0; sub(/".*$/, "", req)
+            }
+        }
+        END { if (name != "") flush() }
+    ' {} + | sort > $RESULTS_VERSIONS.tmp
+
+    while IFS=$'\t' read NAME VER; do
+        INST=no
+        for P in /var/adm/packages/${NAME##*/}-*; do
+            [[ -e $P ]] || continue
+            split_pkg_name $P
+            if [[ $PKG_NAME == ${NAME##*/} ]]; then
+                INST=yes
+                break
+            fi
+        done
+        echo -e "$NAME\t$VER\t$INST" >> $RESULTS_VERSIONS
+        FOUND=1
+    done < $RESULTS_VERSIONS.tmp
+    rm -f $RESULTS_VERSIONS.tmp
+
+    if [[ $DIAG ]]; then
+        if [[ $FOUND == 1 ]]; then
+            column -t $RESULTS_VERSIONS > $RESULTS_VERSIONS.col
+            dialog --title "Packages that require $PKG" \
+                --backtitle "$(eval echo $BACKTITLE)" \
+                --textbox $RESULTS_VERSIONS.col 20 70
+            rm -f $RESULTS_VERSIONS.col
+        else
+            dialog --title "Not Found" --msgbox "$(crunch "No package in \
+                $REPO_NAME/$REPO_BRANCH requires $PKG.")" 8 40
+        fi
+    elif [[ $FOUND == 1 ]]; then
+        echo "Packages in $REPO_NAME/$REPO_BRANCH that require $PKG:"
+        column -t $RESULTS_VERSIONS
+    else
+        echo "$SCRIPT: No package in $REPO_NAME/$REPO_BRANCH requires $PKG."
+    fi
+
+    rm -f $RESULTS_VERSIONS
+    [[ $FOUND == 1 ]]
+}
+
 # END OF FUNCTIONS
 
 if [[ $SBOPKG_DEBUG ]]; then
@@ -4837,7 +4925,7 @@ unset PIDFILE         # PID
 
 unset BUILD CHK_UPDATES GENSEARCH CHANGELOG OBSOLETESRC GETPKGS
 unset RSYNC SEARCH UPDATE VERSION CUSTOMVER SKIP_INSTALLED VIEW_READMES
-unset UNINSTPKG
+unset UNINSTPKG REVDEPS
 
 SCRIPT=${0##*/}
 SBOPKG_CONF=${SBOPKG_CONF:-/etc/sbopkg/sbopkg.conf}
@@ -4886,7 +4974,7 @@ else
 fi
 
 # This is the command line options and help.
-while getopts ":ab:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vW:" OPT; do
+while getopts ":ab:BcD:d:e:f:g:hi:klnoPpqRrSs:uV:vw:W:" OPT; do
 case $OPT in
         a ) # Auto-resolve dependencies via sqg
             RESOLVE_DEPS=1
@@ -4984,6 +5072,10 @@ case $OPT in
             echo $SBOVER
             exit
             ;;
+        w ) # Reverse dependencies
+            REVDEPS+=("$OPTARG")
+            unset DIAG
+            ;;
         W )
             FILESEARCH=1
             FILESEARCH_STR="$OPTARG"
@@ -5030,9 +5122,11 @@ Options are:
                   starting with the default repo. For a list of valid repos,
                   issue '-V ?'
   -v              Print sbopkg's version on stdout.
+  -w package(s)   Show which packages list the given package(s) in the
+                  REQUIRES="" line of their .info file.
   -W string       Search installed SBo packages by file or path/string
 
-Note: multiple arguments to -b, -g, -i, and -s must be quoted ("pkg1 pkg2") or
+Note: multiple arguments to -b, -g, -i, -s, and -w must be quoted ("pkg1 pkg2") or
 can be specified multiple times (-i foo -i bar). If using the latter syntax,
 build options may also be passed on the command line on a per app basis using
 the -b or -i flags in colon-separated groups (where whitespace must also be
@@ -5281,6 +5375,12 @@ else
             gen_search_package $PKGSEARCH
         done
         set +f
+    fi
+
+    if [[ -n $REVDEPS ]]; then
+        for PKGSEARCH in ${REVDEPS[*]}; do
+            reverse_deps $PKGSEARCH
+        done
     fi
 
     if [[ $DOWNLOAD_RENAME ]]; then

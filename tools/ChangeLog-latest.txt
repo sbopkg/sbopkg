@@ -1,6 +1,6 @@
 SBOPKG NEWS
 
-sbopkg-devel (2026-05-25 16:57 UTC)
+sbopkg-devel (2026-10-05 00:27 UTC)
     FEATURES
     * Added new option (-W) for file/path search in installed SBo packages
       This will allow people to search for packages containing given file or path.
@@ -10,6 +10,8 @@ sbopkg-devel (2026-05-25 16:57 UTC)
       Requested by Albert1st1 (#2)
       Patch by Ioannis Anagnostakis (#107)
     * Added dependency resolution via sqg (#109)
+      Patch by Ioannis Anagnostakis
+    * Show which packages list the given package(s) in the REQUIRES= line of their .info file (#114)
       Patch by Ioannis Anagnostakis
 
     MODIFICATIONS

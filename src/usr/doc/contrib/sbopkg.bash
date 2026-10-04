@@ -9,7 +9,7 @@ _sbopkg()
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '-b -c -d -e -f -g -h -i -k -l \
-                      -o -P -p -q -R -r -s -u -V -v' -- "$cur" ) )
+                      -o -P -p -q -R -r -s -u -V -v -w' -- "$cur" ) )
         return 0
     fi
 
@@ -31,7 +31,7 @@ _sbopkg()
                 $(sbopkg -V ? 2>&1 | cut -s -f1)" -- "$cur" ) )
             return 0
             ;;
-        -i|-b)
+        -i|-b|-w)
             ;;
         *)
             return 0

@@ -496,6 +496,25 @@ Prints the current version of
 .B sbopkg
 on stdout.
 .TP
+.BI \-w " PACKAGE(s)"
+Show which packages in the active repository list
+.I PACKAGE
+as a dependency in the
+.B REQUIRES
+line of their
+.I .info
+file, together with their version and whether they are installed.
+If more than one package is specified, they must be quoted or the \-w flag
+must be used multiple times, once for each package.
+.IP
+For example:
+.RS
+.IP
+.nf
+\fC# sbopkg -w rust-opt\fP
+.fi
+.RE
+.TP
 .B \-W " string "
 Search installed SBo packages by file or path/string
 .\"=====================================================================
